@@ -2,11 +2,8 @@ macro(run_conan)
   # Download automatically, you can also just copy the conan.cmake file
   if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/f8fd649b3058846188d8b12040c354fd50e30780/conan.cmake"
-                  "${CMAKE_BINARY_DIR}/conan.cmake"
-                  EXPECTED_HASH SHA256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-                  TLS_VERIFY ON)
-    # The following should be used, but doesn't work': 'DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.17.0/conan.cmake"
+    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.17.0/conan.cmake"
+                  "${CMAKE_BINARY_DIR}/conan.cmake")
   endif()
 
   set (ENV{CONAN_REVISIONS_ENABLED} 1)
