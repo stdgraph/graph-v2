@@ -3,13 +3,10 @@ macro(run_conan)
   if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
     file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/f8fd649b3058846188d8b12040c354fd50e30780/conan.cmake"
-                  "${CMAKE_BINARY_DIR}/conan.cmake"
-                  EXPECTED_HASH SHA256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-                  TLS_VERIFY ON)
+                  "${CMAKE_BINARY_DIR}/conan.cmake")
     # The following should be used, but doesn't work': 'DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.17.0/conan.cmake"
   endif()
 
-  set (ENV{CONAN_REVISIONS_ENABLED} 1)
   include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 # The following is set in ~/.conan/profiles/default
@@ -17,22 +14,20 @@ macro(run_conan)
 #    compiler.version=11
 #
 
-# note: conan_cmake_run is deprecated and should be updated with new code shown
-#       at https://github.com/conan-io/cmake-conan
+# See https://github.com/conan-io/cmake-conan for example
 
-conan_cmake_run(
-  REQUIRES
-  ${CONAN_EXTRA_REQUIRES}
-  catch2/2.13.7
-  docopt.cpp/0.6.2
-  fmt/8.0.1
-  spdlog/1.9.2
-  range-v3/0.11.0
-  OPTIONS
-  ${CONAN_EXTRA_OPTIONS}
-  SETTINGS compiler.cppstd=20 
-  BASIC_SETUP
-  CMAKE_TARGETS # individual targets to link to
-  BUILD
-  missing)
+conan_cmake_configure(REQUIRES   catch2/2.13.7
+                                 docopt.cpp/0.6.2
+                                 fmt/8.0.1
+                                 spdlog/1.9.2
+                                 range-v3/0.11.0
+                      GENERATORS cmake_find_package)
+
+conan_cmake_autodetect(settings)
+
+conan_cmake_install(PATH_OR_REFERENCE .
+                    BUILD             missing
+                    REMOTE            conancenter
+                    SETTINGS          ${settings} compiler.cppstd=20) 
+
 endmacro()
