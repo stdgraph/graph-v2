@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 3.20)
 
 # Set the project name to your project name, my project isn't very descriptive
 set(GRAPH_VERSION 0.2.0)
-project("g" VERSION ${GRAPH_VERSION} LANGUAGES CXX)
+project("graph" VERSION ${GRAPH_VERSION} LANGUAGES CXX)
 include(cmake/StandardProjectSettings.cmake)
 
 # Include sub-projects.
@@ -70,10 +70,6 @@ if (ENABLE_PCH)
     <utility>)
 endif()
 
-option(ENABLE_BGL17 "Enable Better Graph Library 17" OFF)
-if(ENABLE_BGL17)
-endif()
-
 # Set up some extra Conan dependencies based on our needs before loading Conan
 set(CONAN_EXTRA_REQUIRES "")
 set(CONAN_EXTRA_OPTIONS "")
@@ -82,11 +78,11 @@ set(CONAN_EXTRA_OPTIONS "")
 include(cmake/Conan.cmake)
 run_conan()
 
-#if(ENABLE_TESTING)
-#  enable_testing()
-#  message("Building Tests. Be sure to check out test/constexpr_tests for constexpr testing")
-#  add_subdirectory(test)
-#endif()
+if(ENABLE_TESTING)
+  enable_testing()
+  message("Building Tests. Be sure to check out test/constexpr_tests for constexpr testing")
+  add_subdirectory(test)
+endif()
 
 #if(ENABLE_FUZZING)
 #  message("Building Fuzz Tests, using fuzzing sanitizer https://www.llvm.org/docs/LibFuzzer.html")

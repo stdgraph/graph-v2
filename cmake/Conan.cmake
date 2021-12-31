@@ -16,18 +16,34 @@ macro(run_conan)
 
 # See https://github.com/conan-io/cmake-conan for example
 
-conan_cmake_configure(REQUIRES   catch2/2.13.7
-                                 docopt.cpp/0.6.3
-                                 fmt/8.0.1
-                                 spdlog/1.9.2
-                                 range-v3/0.11.0
-                      GENERATORS cmake_find_package)
+# The following conan_cmake_configure and conan_cmake_install are preferred over conan_cmake_run,
+# but they don't appear to be working yet.
 
-conan_cmake_autodetect(settings)
+#conan_cmake_configure(REQUIRES   catch2/2.13.7
+#                                 docopt.cpp/0.6.3
+#                                 fmt/8.0.1
+#                                 spdlog/1.9.2
+#                                 range-v3/0.11.0
+#                      GENERATORS cmake_find_package)
 
-conan_cmake_install(PATH_OR_REFERENCE .
-                    BUILD             missing
-                    REMOTE            conancenter
-                    SETTINGS          ${settings} compiler.cppstd=20) 
+#conan_cmake_autodetect(settings)
+
+#conan_cmake_install(PATH_OR_REFERENCE .
+#                    BUILD             missing
+#                    REMOTE            conancenter
+#                    SETTINGS          ${settings} compiler.cppstd=20) 
+
+conan_cmake_run(
+  REQUIRES      ${CONAN_EXTRA_REQUIRES}
+                catch2/2.13.7
+                docopt.cpp/0.6.3
+                fmt/8.0.1
+                spdlog/1.9.2
+                range-v3/0.11.0
+  OPTIONS       ${CONAN_EXTRA_OPTIONS}
+  SETTINGS      compiler.cppstd=20 
+  BASIC_SETUP
+  CMAKE_TARGETS # individual targets to link to
+  BUILD         missing)
 
 endmacro()

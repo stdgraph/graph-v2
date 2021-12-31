@@ -1,0 +1,12 @@
+From,        To,          Distance
+"Frankfürt", "Mannheim",   85
+"Frankfürt", "Würzburg",  217
+"Frankfürt", "Kassel",    173
+"Mannheim",  "Karlsruhe",  80
+"Karlsruhe", "Augsburg",  250
+"Augsburg",  "München",    84
+"Würzburg",  "Erfurt",    186
+"Würzburg",  "Nürnberg",  103
+"Nürnberg",  "Stuttgart", 183
+"Nürnberg",  "München",   167
+"Kassel",    "München",   502

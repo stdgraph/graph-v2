@@ -5,6 +5,7 @@ Thumbs.db
 .vscode/
 #Ignore files related to cmake
 [Bb]uild*/
+CMakeUserPresets.json
 #Ignore files related to conan
 conan.lock
 conanbuildinfo.cmake
