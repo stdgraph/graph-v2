@@ -99,15 +99,13 @@
       "name": "windows-common",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
       },
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-        "CMAKE_C_COMPILER": "cl.exe",
-        "CMAKE_CXX_COMPILER": "cl.exe"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -118,21 +116,48 @@
       }
     },
     {
-      "name": "windows-debug",
+      "name": "msvc-common",
+      "inherits" : "windows-common",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe"
+      }
+    },
+    {
+      "name": "msvc-debug",
+      "inherits" : "msvc-common",
       "displayName": "Windows x64 Debug",
       "description": "Target Windows with Visual C++.",
-      "inherits": "windows-common",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "windows-release",
+      "name": "msvc-release",
+      "inherits" : "msvc-common",
       "displayName": "Windows x64 Release",
       "description": "Target Windows with Visual C++.",
-      "inherits": "windows-common",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "msvc-relWithDebInfo",
+      "inherits" : "msvc-common",
+      "displayName": "Windows x64 RelWithDebInfo",
+      "description": "Target Windows with Visual C++.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "msvc-minSizeRel",
+      "inherits" : "msvc-common",
+      "displayName": "Windows x64 MinSizeRel",
+      "description": "Target Windows with Visual C++.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel"
       }
     }
   ],
@@ -161,13 +186,23 @@
 
     {
       "name": "msvc-debug",
-      "configurePreset": "windows-debug",
+      "configurePreset": "msvc-debug",
       "configuration": "Debug"
     },
     {
       "name": "msvc-release",
-      "configurePreset": "windows-release",
+      "configurePreset": "msvc-release",
       "configuration": "Release"
+    },
+    {
+      "name": "msvc-relWithDebInfo",
+      "configurePreset": "msvc-relWithDebInfo",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "msvc-minSizeRel",
+      "configurePreset": "msvc-minSizeRel",
+      "configuration": "MinSizeRel"
     }
   ]
 
