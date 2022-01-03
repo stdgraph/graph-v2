@@ -1,209 +1,234 @@
-﻿{
-  "version": 3,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 20,
-    "patch": 0
-  },
-  "configurePresets": [
-    {
-      "name": "linux-common",
-      "hidden": true,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [
-            "Linux"
-          ]
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "linux-common",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                },
+                "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+                    "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+                }
+            }
         },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
-        }
-      }
-    },
-    {
-      "name": "linux-gcc",
-      "inherits": "linux-common",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++"
-      }
-    },
-    {
-      "name": "linux-gcc-debug",
-      "displayName": "Linux Debug",
-      "description": "Target WSL or a remote Linux system with g++.",
-      "inherits": "linux-gcc",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "linux-gcc-release",
-      "displayName": "Linux Release",
-      "description": "Target WSL or a remote Linux system with g++.",
-      "inherits": "linux-gcc",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "linux-gcc-relWithDebInfo",
-      "displayName": "Linux RelWithDebInfo",
-      "description": "Target WSL or a remote Linux system with g++.",
-      "inherits": "linux-gcc",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
-    },
-    {
-      "name": "linux-gcc-minSizeRel",
-      "displayName": "Linux MinSizeRel",
-      "description": "Target WSL or a remote Linux system with g++.",
-      "inherits": "linux-gcc",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "MinSizeRel"
-      }
-    },
-
-    {
-      "name": "macos-default",
-      "displayName": "macOS Debug",
-      "description": "Target a remote macOS system with Ninja",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [
-            "macOS"
-          ]
+        {
+            "name": "linux-gcc",
+            "inherits": "linux-common",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            }
         },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+        {
+            "name": "linux-gcc-debug",
+            "displayName": "Linux Debug",
+            "description": "Target WSL or a remote Linux system with g++.",
+            "inherits": "linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "linux-gcc-release",
+            "displayName": "Linux Release",
+            "description": "Target WSL or a remote Linux system with g++.",
+            "inherits": "linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "linux-gcc-relWithDebInfo",
+            "displayName": "Linux RelWithDebInfo",
+            "description": "Target WSL or a remote Linux system with g++.",
+            "inherits": "linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "linux-gcc-minSizeRel",
+            "displayName": "Linux MinSizeRel",
+            "description": "Target WSL or a remote Linux system with g++.",
+            "inherits": "linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        },
+
+        {
+        "name": "macos-default",
+        "displayName": "macOS Debug",
+        "description": "Target a remote macOS system with Ninja",
+        "generator": "Ninja",
+        "binaryDir": "${sourceDir}/out/build/${presetName}",
+        "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+            "CMAKE_C_COMPILER": "gcc",
+            "CMAKE_CXX_COMPILER": "g++"
+        },
+        "vendor": {
+            "microsoft.com/VisualStudioSettings/CMake/1.0": {
+            "hostOS": [
+                "macOS"
+            ]
+            },
+            "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+            "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+            }
         }
-      }
-    },
+        },
 
-    {
-      "name": "windows-common",
-      "hidden": true,
-      "generator": "Ninja",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [
-            "Windows"
-          ]
+        {
+            "name": "windows-common",
+            "hidden": true,
+            "generator": "Ninja",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Windows"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "msvc-common",
+            "inherits": "windows-common",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
+            }
+        },
+        {
+            "name": "msvc-debug",
+            "inherits": "msvc-common",
+            "displayName": "Windows x64 Debug",
+            "description": "Target Windows with Visual C++.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "msvc-release",
+            "inherits": "msvc-common",
+            "displayName": "Windows x64 Release",
+            "description": "Target Windows with Visual C++.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "msvc-relWithDebInfo",
+            "inherits": "msvc-common",
+            "displayName": "Windows x64 RelWithDebInfo",
+            "description": "Target Windows with Visual C++.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "msvc-minSizeRel",
+            "inherits": "msvc-common",
+            "displayName": "Windows x64 MinSizeRel",
+            "description": "Target Windows with Visual C++.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
         }
-      }
-    },
-    {
-      "name": "msvc-common",
-      "inherits" : "windows-common",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl.exe",
-        "CMAKE_CXX_COMPILER": "cl.exe"
-      }
-    },
-    {
-      "name": "msvc-debug",
-      "inherits" : "msvc-common",
-      "displayName": "Windows x64 Debug",
-      "description": "Target Windows with Visual C++.",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "msvc-release",
-      "inherits" : "msvc-common",
-      "displayName": "Windows x64 Release",
-      "description": "Target Windows with Visual C++.",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "msvc-relWithDebInfo",
-      "inherits" : "msvc-common",
-      "displayName": "Windows x64 RelWithDebInfo",
-      "description": "Target Windows with Visual C++.",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
-    },
-    {
-      "name": "msvc-minSizeRel",
-      "inherits" : "msvc-common",
-      "displayName": "Windows x64 MinSizeRel",
-      "description": "Target Windows with Visual C++.",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "MinSizeRel"
-      }
-    }
-  ],
-
-  "buildPresets": [
-    {
-      "name": "gcc-debug",
-      "configurePreset": "linux-gcc-debug",
-      "configuration": "Debug"
-    },
-    {
-      "name": "gcc-release",
-      "configurePreset": "linux-gcc-release",
-      "configuration": "Release"
-    },
-    {
-      "name": "gcc-relWithDebInfo",
-      "configurePreset": "linux-gcc-relWithDebInfo",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "gcc-minSizeRel",
-      "configurePreset": "linux-gcc-minSizeRel",
-      "configuration": "MinSizeRel"
-    },
-
-    {
-      "name": "msvc-debug",
-      "configurePreset": "msvc-debug",
-      "configuration": "Debug"
-    },
-    {
-      "name": "msvc-release",
-      "configurePreset": "msvc-release",
-      "configuration": "Release"
-    },
-    {
-      "name": "msvc-relWithDebInfo",
-      "configurePreset": "msvc-relWithDebInfo",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "msvc-minSizeRel",
-      "configurePreset": "msvc-minSizeRel",
-      "configuration": "MinSizeRel"
-    }
-  ]
-
+    ],
+    "buildPresets": [
+        {
+            "name": "gcc-debug",
+            "configurePreset": "linux-gcc-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "gcc-release",
+            "configurePreset": "linux-gcc-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "gcc-relWithDebInfo",
+            "configurePreset": "linux-gcc-relWithDebInfo",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "gcc-minSizeRel",
+            "configurePreset": "linux-gcc-minSizeRel",
+            "configuration": "MinSizeRel"
+        },
+        {
+            "name": "msvc-debug",
+            "configurePreset": "msvc-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "msvc-release",
+            "configurePreset": "msvc-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "msvc-relWithDebInfo",
+            "configurePreset": "msvc-relWithDebInfo",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "msvc-minSizeRel",
+            "configurePreset": "msvc-minSizeRel",
+            "configuration": "MinSizeRel"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "gcc-debug-test",
+            "description": "test gcc",
+            "displayName": "test gcc",
+            "configurePreset": "linux-gcc-debug",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        },
+        {
+            "name": "msvc-debug-test",
+            "description": "test msvc",
+            "displayName": "test msvc",
+            "configurePreset": "msvc-debug",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        }
+    ]
 }
