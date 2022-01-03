@@ -1,9 +1,13 @@
 ﻿{
-  "version": 2,
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
   "configurePresets": [
     {
-      "name": "linux-default",
-      "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
+      "name": "linux-common",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
@@ -11,24 +15,59 @@
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
       },
       "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [
+            "Linux"
+          ]
+        },
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+        }
       }
     },
     {
-      "name": "linux-debug",
+      "name": "linux-gcc",
+      "inherits": "linux-common",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "linux-gcc-debug",
       "displayName": "Linux Debug",
-      "inherits": "linux-default",
+      "description": "Target WSL or a remote Linux system with g++.",
+      "inherits": "linux-gcc",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "linux-release",
+      "name": "linux-gcc-release",
       "displayName": "Linux Release",
-      "inherits": "linux-default",
+      "description": "Target WSL or a remote Linux system with g++.",
+      "inherits": "linux-gcc",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux-gcc-relWithDebInfo",
+      "displayName": "Linux RelWithDebInfo",
+      "description": "Target WSL or a remote Linux system with g++.",
+      "inherits": "linux-gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "linux-gcc-minSizeRel",
+      "displayName": "Linux MinSizeRel",
+      "description": "Target WSL or a remote Linux system with g++.",
+      "inherits": "linux-gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel"
       }
     },
 
@@ -40,17 +79,24 @@
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
       },
       "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "macOS" ] },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [
+            "macOS"
+          ]
+        },
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+        }
       }
     },
 
     {
-      "name": "windows-default",
-      "description": "Target Windows with the Visual Studio development environment.",
+      "name": "windows-common",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
@@ -59,14 +105,23 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe"
       },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [
+            "Windows"
+          ]
+        }
+      }
     },
     {
       "name": "windows-debug",
       "displayName": "Windows x64 Debug",
-      "inherits": "windows-default",
+      "description": "Target Windows with Visual C++.",
+      "inherits": "windows-common",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -74,10 +129,46 @@
     {
       "name": "windows-release",
       "displayName": "Windows x64 Release",
-      "inherits": "windows-default",
+      "description": "Target Windows with Visual C++.",
+      "inherits": "windows-common",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
     }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "gcc-debug",
+      "configurePreset": "linux-gcc-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "gcc-release",
+      "configurePreset": "linux-gcc-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "gcc-relWithDebInfo",
+      "configurePreset": "linux-gcc-relWithDebInfo",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "gcc-minSizeRel",
+      "configurePreset": "linux-gcc-minSizeRel",
+      "configuration": "MinSizeRel"
+    },
+
+    {
+      "name": "msvc-debug",
+      "configurePreset": "windows-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "msvc-release",
+      "configurePreset": "windows-release",
+      "configuration": "Release"
+    }
   ]
+
 }
