@@ -10,18 +10,13 @@ add_library(catch_main STATIC catch_main.cpp)
 target_link_libraries(catch_main PUBLIC CONAN_PKG::catch2)
 target_link_libraries(catch_main PRIVATE project_options)
 
-add_library(csv INTERFACE)
-target_include_directories(csv INTERFACE "${CMAKE_SOURCE_DIR}/csv-parser/")
-target_link_libraries(csv INTERFACE project_options)
-#add_compile_definitions(CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD})
-
 # todo: test_ual_graph.cpp test_concomp.cpp test_rl.cpp test_temp.cpp data_routes.cpp
 
 message("Building tests using C++${CMAKE_CXX_STANDARD}")
 add_executable(tests tests.cpp csv_tests.cpp)
 target_link_libraries(tests PRIVATE project_warnings project_options catch_main)
 target_link_libraries(tests PRIVATE CONAN_PKG::fmt)
-target_link_libraries(tests PRIVATE csv)
+target_link_libraries(tests PRIVATE csv_parser)
 #target_link_libraries(tests PRIVATE graph)
 #target_link_libraries(tests PRIVATE graph_adaptor)
 
