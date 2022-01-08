@@ -29,9 +29,6 @@ endif()
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
 add_library(project_warnings INTERFACE)
 
-# Include sub-projects.
-add_subdirectory ("g")
-
 # enable cache system
 include(cmake/Cache.cmake)
 
@@ -87,6 +84,7 @@ target_include_directories(csv_parser INTERFACE "${CMAKE_SOURCE_DIR}/csv-parser/
 if(ENABLE_TESTING)
   enable_testing()
   message("Building Tests. Be sure to check out test/constexpr_tests for constexpr testing")
+  set(TEST_DATA_ROOT_DIR "${CMAKE_SOURCE_DIR}/data/")
   add_subdirectory(test)
 endif()
 
@@ -95,5 +93,8 @@ endif()
 #  add_subdirectory(fuzz_test)
 #endif()
 
+
+# Include sub-projects.
+add_subdirectory ("g")
 
 #add_subdirectory(src)

@@ -5,15 +5,15 @@ else()
   include(${CONAN_CATCH2_ROOT}/lib/cmake/Catch2/Catch.cmake)
 endif()
 
+add_compile_definitions(TEST_DATA_ROOT_DIR="${TEST_DATA_ROOT_DIR}")
+
 
 add_library(catch_main STATIC catch_main.cpp "csv_parser.hpp")
 target_link_libraries(catch_main PUBLIC CONAN_PKG::catch2)
 target_link_libraries(catch_main PRIVATE project_options)
+target_link_options(catch_main INTERFACE $<$<CXX_COMPILER_ID:GNU>:-pthread>)
 
-# todo: test_ual_graph.cpp test_concomp.cpp test_rl.cpp test_temp.cpp data_routes.cpp
-
-message("Building tests using C++${CMAKE_CXX_STANDARD}")
-add_executable(tests tests.cpp csv_tests.cpp "csv_parser.hpp")
+add_executable(tests tests.cpp csv_tests.cpp csv_parser.hpp)
 target_link_libraries(tests PRIVATE project_warnings project_options catch_main)
 target_link_libraries(tests PRIVATE CONAN_PKG::fmt)
 target_link_libraries(tests PRIVATE csv_parser)
