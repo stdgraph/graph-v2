@@ -8,8 +8,10 @@ set(GRAPH_VERSION 0.2.0)
 project("graph" VERSION ${GRAPH_VERSION} LANGUAGES CXX)
 include(cmake/StandardProjectSettings.cmake)
 
-# Include sub-projects.
-add_subdirectory ("g")
+add_library(graph INTERFACE)
+
+#target_link_libraries(graph INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/csv-parser/")
+#target_link_libraries(graph INTERFACE CONAN_PKG::range-v3)
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
@@ -17,6 +19,7 @@ target_compile_features(project_options INTERFACE cxx_std_20)
 #target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:Clang>:>)
 target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:GNU>:--concepts>)
 target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>)
+#set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
@@ -28,6 +31,9 @@ endif()
  
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
 add_library(project_warnings INTERFACE)
+
+# Include sub-projects.
+add_subdirectory ("g")
 
 # enable cache system
 #include(cmake/Cache.cmake)
