@@ -10,16 +10,13 @@ include(cmake/StandardProjectSettings.cmake)
 
 add_library(graph INTERFACE)
 
-#target_link_libraries(graph INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/csv-parser/")
-#target_link_libraries(graph INTERFACE CONAN_PKG::range-v3)
-
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
 target_compile_features(project_options INTERFACE cxx_std_20)
-#target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:Clang>:>)
+target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:Clang>:>)
 target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:GNU>:--concepts>)
 target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>)
-#set(CMAKE_CXX_STANDARD 20)
+target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")

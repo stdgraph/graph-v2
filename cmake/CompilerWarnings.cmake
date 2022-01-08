@@ -32,8 +32,6 @@ function(set_project_warnings project_name)
       /wd4189 # 'x': local variable is initialized but not referenced
       /wd4459 # declaration of 'x' hides global declaration (in range-v3 sort)
       /D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
-      /permissive- # standards conformance mode for MSVC compiler.
-      /Zc:__cplusplus # report real value for __cplusplus preprocessor value
   )
 
   set(CLANG_WARNINGS
