@@ -33,7 +33,7 @@ add_library(project_warnings INTERFACE)
 add_subdirectory ("g")
 
 # enable cache system
-#include(cmake/Cache.cmake)
+include(cmake/Cache.cmake)
 
 # Add linker configuration
 include(cmake/Linker.cmake)
