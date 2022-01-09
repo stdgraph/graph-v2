@@ -37,7 +37,7 @@
       - [ ] Create edge type
       - [ ] Create vertex iterators
       - [ ] Create vertex_edge iterators
-      - [ ] csr_german_routes_graph
+      - [ ] routes_csr_graph
         - [ ] Load from CSV file
         - [ ] output to cout to validate
         - [ ] unit tests
@@ -53,11 +53,16 @@
   - [ ] Create mtx parser (from nwgraph)
   - [ ] Constexpr unit tests (initial tests to verify pattern)
   - [ ] Generate doxygen output
+  - [ ] Validate address sanitizer build
+  - [ ] Support Clang
 - Feature & performance comparison
   - [ ] boost::graph
   - [ ] NWGraph
 - Documentation
-  - [ ] Add general description to REAME.md
+  - [ ] REAME.md
+    - [ ] Add general description
+    - [ ] Add link to paper
+    - [ ] Add instructions for building
 - Feedback
 
 ### Issues
@@ -65,7 +70,7 @@
   - [ ] Submit a defect?
 - [ ] csv_parser
   - [ ] CSVReader doesn't conform to the input_range concept; can't define load functions properly
-    - [ ] What's missing? rvalue_reference type? const types?
+    - [ ] What's missing? rvalue_reference type; const types; other?
   - [ ] doesn't handle leading/trailing spaces for quoted values
   - [ ] Fork & modify?
 

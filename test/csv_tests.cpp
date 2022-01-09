@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
-
 #include "csv_parser.hpp"
 #include "graph/container/csr_adjacency.hpp"
 #include <set>
 #include <algorithm>
+#include <cassert>
 #ifdef _MSC_VER
 #  include "Windows.h"
 #endif
@@ -16,69 +16,116 @@ using std::endl;
 using std::move;
 using std::ranges::iterator_t;
 
+void init_console() {
+#ifdef _MSC_VER
+  SetConsoleOutputCP(CP_UTF8); // Change console from OEM to UTF-8 in Windows
+#endif
+  setvbuf(stdout, nullptr, _IOFBF, 1000); // avoid shearing multi-byte characters across buffer boundaries
+}
 
-class csr_german_routes_graph {
-public:
-  using key_type   = uint32_t;
-  using name_type  = string;
+template <typename KeyT>
+class routes_base {
+public: // types
+  using key_type   = KeyT;
+  using name_type  = std::string_view;
   using cities_vec = std::vector<name_type>;
 
-  struct route {
-    key_type target = 0;
-    double   weight = 0;
-    route(key_type targt, double wght = 0) : target(targt), weight(wght) {}
-  };
+public: // Construction/Destruction/Assignment
+  routes_base(csv::string_view csv_file) : reader_(csv_file) { load_cities(); }
+  routes_base()                        = delete;
+  routes_base(const routes_base&)      = delete;
+  constexpr routes_base(routes_base&&) = default;
+  constexpr ~routes_base()             = default;
 
-  using graph_type = std::graph::container::csr_adjacency<route, key_type>;
-
-public: // Construction/Destruction
-  csr_german_routes_graph(const string& csv_file) : cities_(), g_(load_graph(csv_file, cities_)) {}
-  ~csr_german_routes_graph() = default;
+  routes_base&           operator=(const routes_base&) = delete;
+  constexpr routes_base& operator=(routes_base&&) = default;
 
 public: // Properties
-  graph_type&       graph() { return g_; }
-  const graph_type& graph() const { return g_; }
+  constexpr cities_vec&       cities() { return cities_; }
+  constexpr const cities_vec& cities() const { return cities_; }
 
-  cities_vec&       cities() { return cities_; }
-  const cities_vec& cities() const { return cities_; }
-
-public: // Operations
-  cities_vec::iterator find_city(const string_view& city_name) {
+  constexpr cities_vec::iterator find_city(const std::string_view city_name) {
     auto it = std::ranges::lower_bound(cities_, city_name);
     if (it != end(cities_) && *it == city_name)
       return it;
     return end(cities_);
   }
-  key_type find_city_key(const string_view& city_name) {
-    return static_cast<key_type>(end(cities_) - find_city(city_name));
+  constexpr cities_vec::const_iterator find_city(const std::string_view city_name) const {
+    auto it = std::ranges::lower_bound(cities_, city_name);
+    if (it != end(cities_) && *it == city_name)
+      return it;
+    return end(cities_);
   }
 
-  void output_routes() { // used to validate core functionality
+  constexpr key_type find_city_key(const string_view city_name) const {
+    return static_cast<key_type>(find_city(city_name) - begin(cities_));
   }
 
+protected: // Properties
+  CSVReader& reader() { return reader_; }
 
-private: // construction helpers
-  graph_type load_graph(const string& csv_file, cities_vec& cities) {
-    setvbuf(stdout, nullptr, _IOFBF, 1000); // avoid shearing multi-byte characters across buffer boundaries
-    CSVReader reader(csv_file);
-    load_cities(reader, cities);
-    return load_routes(reader);
-  }
+private: // Operations
+  void load_cities() {
+    assert(reader_.get_col_names().size() >= 2); // expecting from_city, to_city [, weight]
 
-  void load_cities(CSVReader& reader, cities_vec& cities) {
+    // build set of unique city names
     std::set<string_view> city_set;
-    for (CSVRow& row : reader) { // Input iterator
+    for (CSVRow& row : reader()) { // Input iterator
       string_view from = row[0].get<string_view>();
       string_view to   = row[1].get<string_view>();
       city_set.insert(from);
       city_set.insert(to);
     }
-    cities.reserve(city_set.size());
+
+    // string_views remain valid while reader_ is open
+    cities_.reserve(city_set.size());
     for (const string_view& city_name : city_set)
-      cities.emplace_back(string(city_name));
+      cities_.emplace_back(city_name);
   }
 
-  graph_type load_routes(CSVReader& reader) {
+private:              // Member Variables
+  CSVReader  reader_; ///< CSV file reader
+  cities_vec cities_; ///< Ordered city names
+};
+
+
+class routes_csr_graph : public routes_base<uint32_t> {
+public:
+  using base_type   = routes_base<uint32_t>;
+  using key_type    = base_type::key_type;
+  using name_type   = base_type::name_type;
+  using weight_type = double;
+
+  struct route {
+    key_type    target = 0;
+    weight_type weight = 0;
+    route(key_type targt, double wght = 0) : target(targt), weight(wght) {}
+  };
+
+  using graph_type = std::graph::container::csr_adjacency<route, key_type>;
+
+public: // Construction/Destruction/Assignment
+  routes_csr_graph(const string& csv_file) : base_type(csv_file), g_(load_routes()) {}
+
+  routes_csr_graph()                             = delete;
+  routes_csr_graph(const routes_csr_graph&)      = delete;
+  constexpr routes_csr_graph(routes_csr_graph&&) = default;
+  constexpr ~routes_csr_graph()                  = default;
+
+  routes_csr_graph&           operator=(const routes_csr_graph&) = delete;
+  constexpr routes_csr_graph& operator=(routes_csr_graph&&) = default;
+
+public: // Properties
+  constexpr graph_type&       graph() { return g_; }
+  constexpr const graph_type& graph() const { return g_; }
+
+public: // Operations
+  // used to visually validate core functionality
+  void output_routes() {}
+
+
+private: // construction helpers
+  graph_type load_routes() {
     auto ekey_fnc = [this](const CSVRow& row) {
       auto from_key = find_city_key(row[0].get<string_view>());
       auto to_key   = find_city_key(row[1].get<string_view>());
@@ -89,28 +136,25 @@ private: // construction helpers
       auto dist   = row[2].get<double>();
       return route(to_key, dist);
     };
-    graph_type cc(reader, ekey_fnc, evalue_fnc);
-
-    for (CSVRow& row : reader) { // Input iterator
+    graph_type cc(reader(), ekey_fnc, evalue_fnc);
+#if 0
+    for (CSVRow& row : reader()) { // Input iterator-ish
       string_view from = row[0].get<string_view>();
       string_view to   = row[1].get<string_view>();
-      auto        dist = row[2].get<double>();
+      weight_type dist = row[2].get<weight_type>();
     }
+#endif
     return cc;
   }
 
-private:              // Member Variables
-  cities_vec cities_; // ordered city names; must be before g_
-  graph_type g_;      // csr graph
+private:         // Member Variables
+  graph_type g_; // CSR graph of routes
 };
 
 
 #if 0
 TEST_CASE("Dummy CSV test", "[csv]") {
-#  ifdef _MSC_VER
-  SetConsoleOutputCP(CP_UTF8);
-#  endif
-  setvbuf(stdout, nullptr, _IOFBF, 1000); // avoid shearing multi-byte characters across buffer boundaries
+  init_console();
   CSVReader reader(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   for (CSVRow& row : reader) { // Input iterator
@@ -122,9 +166,7 @@ TEST_CASE("Dummy CSV test", "[csv]") {
 }
 #endif
 
-TEST_CASE("German CSV test", "[csv]") {
-#ifdef _MSC_VER
-  SetConsoleOutputCP(CP_UTF8);
-#endif
-  csr_german_routes_graph routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
+TEST_CASE("Germany routes CSV test", "[csr][csv]") {
+  init_console();
+  routes_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
 }
