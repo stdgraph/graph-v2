@@ -1,12 +1,13 @@
-From,        To,          Distance
-"Frankfürt", "Mannheim",   85
-"Frankfürt", "Würzburg",  217
-"Frankfürt", "Kassel",    173
-"Mannheim",  "Karlsruhe",  80
-"Karlsruhe", "Augsburg",  250
-"Augsburg",  "München",    84
-"Würzburg",  "Erfurt",    186
-"Würzburg",  "Nürnberg",  103
-"Nürnberg",  "Stuttgart", 183
-"Nürnberg",  "München",   167
-"Kassel",    "München",   502
+ï»¿From,To,Distance
+FrankfÃ¼rt,Mannheim,85
+FrankfÃ¼rt,WÃ¼rzburg,217
+FrankfÃ¼rt,Kassel,173
+Mannheim,Karlsruhe,80
+Karlsruhe,Augsburg,250
+Augsburg,MÃ¼nchen,84
+WÃ¼rzburg,Erfurt,186
+WÃ¼rzburg,NÃ¼rnberg,103
+NÃ¼rnberg,Stuttgart,183
+NÃ¼rnberg,MÃ¼nchen,167
+Kassel,MÃ¼nchen,502
+
