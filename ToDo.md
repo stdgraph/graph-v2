@@ -69,9 +69,10 @@
 - [ ] Can't run tests in VS+WSL2 (they will run in VSCode)
   - [ ] Submit a defect?
 - [ ] csv_parser
-  - [ ] CSVReader doesn't conform to the input_range concept; can't define load functions properly
-    - [ ] What's missing? rvalue_reference type; const types; other?
-  - [ ] doesn't handle leading/trailing spaces for quoted values
+  - [ ] CSVReader doesn't conform to the C++20 input_range concept; can't define load functions properly
+    - [ ] What's missing? const types; other?
+  - [ ] leading & trailing spaces for quoted values aren't ignored
+  - [ ] can it be reused for multi-pass?
   - [ ] Fork & modify?
 
 ## Resolved

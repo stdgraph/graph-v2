@@ -35,7 +35,7 @@ public: // Construction/Destruction/Assignment
   routes_base()                        = delete;
   routes_base(const routes_base&)      = delete;
   constexpr routes_base(routes_base&&) = default;
-  constexpr ~routes_base()             = default;
+  ~routes_base()                       = default;
 
   routes_base&           operator=(const routes_base&) = delete;
   constexpr routes_base& operator=(routes_base&&) = default;
@@ -105,13 +105,13 @@ public:
 public: // Construction/Destruction/Assignment
   routes_csr_graph(csv::string_view csv_file) : base_type(csv_file), g_(load_routes(csv_file)) {}
 
-  routes_csr_graph()                             = delete;
-  routes_csr_graph(const routes_csr_graph&)      = delete;
-  constexpr routes_csr_graph(routes_csr_graph&&) = default;
-  constexpr ~routes_csr_graph()                  = default;
+  routes_csr_graph()                        = delete;
+  routes_csr_graph(const routes_csr_graph&) = delete;
+  routes_csr_graph(routes_csr_graph&&)      = default;
+  ~routes_csr_graph()                       = default;
 
-  routes_csr_graph&           operator=(const routes_csr_graph&) = delete;
-  constexpr routes_csr_graph& operator=(routes_csr_graph&&) = default;
+  routes_csr_graph& operator=(const routes_csr_graph&) = delete;
+  routes_csr_graph& operator=(routes_csr_graph&&) = default;
 
 public: // Properties
   constexpr graph_type&       graph() { return g_; }

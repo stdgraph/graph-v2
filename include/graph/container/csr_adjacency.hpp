@@ -69,9 +69,6 @@ public: // Construction/Destruction
   constexpr csr_adjacency(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
         : row_index_(alloc), col_index_(alloc), v_(alloc) {
 
-    using edata_type  = ranges::range_value_t<ERng>;
-    using evalue_type = decltype(evalue_fnc(declval<edata_type>())); // evalue_type==void suppresses loading values
-
     // Nothing to do?
     if (begin(erng) == end(erng))
       return;
