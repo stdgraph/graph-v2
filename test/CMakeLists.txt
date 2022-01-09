@@ -14,7 +14,7 @@ target_link_libraries(catch_main PRIVATE project_options)
 target_link_options(catch_main INTERFACE $<$<CXX_COMPILER_ID:GNU>:-pthread>)
 
 add_executable(tests tests.cpp csv_tests.cpp csv_parser.hpp)
-target_link_libraries(tests PRIVATE project_warnings project_options catch_main)
+target_link_libraries(tests PRIVATE project_warnings project_options catch_main graph)
 target_link_libraries(tests PRIVATE CONAN_PKG::fmt)
 target_link_libraries(tests PRIVATE csv_parser)
 #target_link_libraries(tests PRIVATE graph)

@@ -29,6 +29,7 @@ BraceWrapping:
   SplitEmptyRecord: true
   SplitEmptyNamespace: false
 BreakConstructorInitializers: BeforeComma
+BreakBeforeConceptDeclarations: true
 BreakBeforeInheritanceComma: true
 BreakInheritanceList: BeforeComma
 ColumnLimit:     120
@@ -44,6 +45,7 @@ IncludeCategories:
     Priority:        1
 IncludeIsMainRegex: '(Test)?$'
 IndentPPDirectives: AfterHash
+IndentRequires:  false
 IndentWidth:     2
 
 MacroBlockBegin: ''
