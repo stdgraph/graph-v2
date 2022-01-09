@@ -73,8 +73,8 @@ public: // Construction/Destruction
     using evalue_type = decltype(evalue_fnc(declval<edata_type>())); // evalue_type==void suppresses loading values
 
     // Nothing to do?
-    //if (size(erng) == 0)
-    //  return;
+    if (begin(erng) == end(erng))
+      return;
 
     // Evaluate max vertex key needed
     size_t          erng_size   = 0;
@@ -89,20 +89,22 @@ public: // Construction/Destruction
     v_.reserve(erng_size);
 
     // add edges
-    auto [last_ukey, last_vkey] = ekey_fnc(*begin(erng));
+    vertex_key_type last_ukey = vertex_key_type();
+    vertex_key_type last_vkey = vertex_key_type();
     for (auto& edge_data : erng) {
       auto&& [ukey, vkey] = ekey_fnc(edge_data);
-      if (ukey == last_ukey + 1 || size(row_index_) == 0) {
+      if (size(row_index_) == 0 || ukey == last_ukey + 1) {
         row_index_.push_back(static_cast<vertex_key_type>(col_index_.size()));
       } else if (ukey == last_ukey) {
         if (vkey < last_vkey)
-          throw_unordered_col();
+          runtime_error("columns not ordered on a row");
         else if (vkey == last_vkey)
-          throw_duplicate_col();
+          throw runtime_error("duplicate column on a row");
       } else if (ukey < last_ukey) {
-        throw_unordered_row();
+        throw runtime_error("rows not ordered");
       } else if (ukey > last_ukey + 1) {
-        throw_empty_row(); // could be supported if we create temp map from input_row_idx to internal_row_idx
+        // could be supported if we create temp map from input_row_idx to internal_row_idx
+        throw runtime_error("no columns defined for a row");
       }
 
       // set col index & associated value
@@ -135,12 +137,6 @@ public: // Operations
   constexpr ranges::iterator_t<const index_vector_type> find_vertex(vertex_key_type key) const {
     return row_index_.begin() + key;
   }
-
-private:
-  constexpr void throw_unordered_row() const { throw domain_error("rows not ordered"); }
-  constexpr void throw_unordered_col() const { throw domain_error("columns not ordered on a row"); }
-  constexpr void throw_duplicate_col() const { throw domain_error("duplicate column on a row"); }
-  constexpr void throw_empty_row() const { throw domain_error("no columns defined for a row"); }
 };
 
 
