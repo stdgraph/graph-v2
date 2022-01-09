@@ -1,3 +1,5 @@
+// Includes csv_parser/single_include/csv.hpp and wraps it pragma to disable distracting warnings
+
 #ifdef _MSC_VER
 #  pragma warning(push)
 #  pragma warning(disable : 4458) // declaration of 'value' hides class member

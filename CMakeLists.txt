@@ -8,7 +8,6 @@ set(GRAPH_VERSION 0.2.0)
 project("graph" VERSION ${GRAPH_VERSION} LANGUAGES CXX)
 include(cmake/StandardProjectSettings.cmake)
 
-add_library(graph INTERFACE)
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
@@ -79,7 +78,11 @@ run_conan()
 
 # Add other libraries
 add_library(csv_parser INTERFACE)
-target_include_directories(csv_parser INTERFACE "${CMAKE_SOURCE_DIR}/csv-parser/")
+target_include_directories(csv_parser INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/csv-parser/")
+
+add_library(graph INTERFACE)
+target_include_directories(graph INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+#target_link_libraries(graph INTERFACE CONAN_PKG::range-v3)
 
 if(ENABLE_TESTING)
   enable_testing()
@@ -95,6 +98,6 @@ endif()
 
 
 # Include sub-projects.
-add_subdirectory ("g")
+#add_subdirectory ("g")
 
 #add_subdirectory(src)
