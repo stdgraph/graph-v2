@@ -12,6 +12,7 @@
   - [ ] ranges
     - [ ] vertex_range
     - [ ] vertex_edge_range
+    - [ ] vertex_vertex_range
     - [ ] edge_range
 - Algorithms
   - [ ] Common
@@ -21,7 +22,8 @@
     - [ ] Toplogical Sort
   - [ ] Range Adaptors
     - [ ] edge_range<graph, vertex_range, vertex_edge_range>
-  - [ ] Algorithms
+    - [ ] vertex_vertex_range<graph, vertex_range, vertex_edge_range>
+  - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [ ] Dijkstra
       - [ ] Bellman-Ford
@@ -43,18 +45,19 @@
         - [ ] unit tests
           - [ ] Validate structure & weights
       - [ ] Validate constexpr using initializer_list
+    - [ ] vofl (vector of forward_list)
     - [ ] directed_adjacency_vector
     - [ ] undirected_adjacency_list
 - C\+\+20 and C\+\+23
   - [ ] connection points (e.g. tag_invoke)
   - [ ] modules
-  - [ ] coroutines
+  - [ ] coroutines (simplify DFS, BFS & TopoSort?)
 - Tools, Libraries & Infrastructure
   - [ ] Create mtx parser (from nwgraph)
   - [ ] Constexpr unit tests (initial tests to verify pattern)
   - [ ] Generate doxygen output
   - [ ] Validate address sanitizer build
-  - [ ] Support Clang
+  - [ ] Support Clang (waiting for full concepts support)
 - Feature & performance comparison
   - [ ] boost::graph
   - [ ] NWGraph

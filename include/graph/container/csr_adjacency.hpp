@@ -3,8 +3,223 @@
 #include "container_utility.hpp"
 #include <vector>
 #include <concepts>
+#include <cstdint>
 
 namespace std::graph::container {
+
+template <typename EV = empty_value, integral KeyT = uint32_t, typename Alloc = allocator<uint32_t>>
+class csr_adjacency;
+
+
+template <typename EV, integral KeyT, typename Alloc>
+class const_csr_vertex_iterator {
+public: // types
+  using graph_type        = csr_adjacency<EV, KeyT, Alloc>;
+  using index_vector_type = graph_type::index_vector_type;
+
+  using key_type        = graph_type::vertex_key_type;
+  using value_type      = graph_type::vertex_value_type;
+  using allocator_type  = Alloc;
+  using size_type       = index_vector_type::size_type;
+  using difference_type = index_vector_type::difference_type;
+  using reference       = const value_type&;
+  using const_reference = const value_type&;
+  using pointer         = allocator_traits<Alloc>::const_pointer;
+  using const_pointer   = allocator_traits<Alloc>::const_pointer;
+
+  using iterator_category = ranges::iterator_t<index_vector_type>::iterator_category; // contiguous
+
+protected:
+  using index_iterator = ranges::iterator_t<typename graph_type::index_vector_type>;
+
+public: // Construction/Destruction/Assignment
+  constexpr const_csr_vertex_iterator(graph_type& g, index_iterator vi) : g_(g), vi_(vi) {}
+
+  constexpr const_csr_vertex_iterator()                                 = default;
+  constexpr const_csr_vertex_iterator(const const_csr_vertex_iterator&) = default;
+  constexpr ~const_csr_vertex_iterator()                                = default;
+
+  constexpr const_csr_vertex_iterator& operator=(const const_csr_vertex_iterator&) = default;
+
+public: // Properties
+  reference operator*() const noexcept { return *vi_; }
+  pointer   operator->() const noexcept { return vi_.operator->(); }
+
+public: // Operators
+  constexpr const_csr_vertex_iterator& operator++() noexcept {
+    ++vi_;
+    return *this;
+  }
+  constexpr const_csr_vertex_iterator operator++(int) noexcept {
+    const_csr_vertex_iterator tmp(*this);
+    ++*this;
+    return tmp;
+  }
+  constexpr const_csr_vertex_iterator& operator+=(const difference_type offset) noexcept {
+    vi_ += offset;
+    return *this;
+  }
+  [[nodiscard]] constexpr const_csr_vertex_iterator operator+(const difference_type offset) const noexcept {
+    const_csr_vertex_iterator tmp(*this);
+    tmp += offset;
+    return tmp;
+  }
+
+  constexpr const_csr_vertex_iterator& operator--() noexcept {
+    --vi_;
+    return *this;
+  }
+  constexpr const_csr_vertex_iterator operator--(int) noexcept {
+    const_csr_vertex_iterator tmp(*this);
+    --*this;
+    return tmp;
+  }
+  constexpr const_csr_vertex_iterator& operator-=(const difference_type offset) noexcept {
+    vi_ -= offset;
+    return *this;
+  }
+  [[nodiscard]] constexpr const_csr_vertex_iterator operator-(const difference_type offset) const noexcept {
+    const_csr_vertex_iterator tmp(*this);
+    tmp -= offset;
+    return tmp;
+  }
+  [[nodiscard]] difference_type operator-(const const_csr_vertex_iterator& rhs) const noexcept {
+    return vi_ - rhs.vi_;
+  }
+
+  //[[nodiscard]] const_csr_vertex_iterator operator-(const const_csr_vertex_iterator& rhs) const noexcept {
+  //  return const_csr_vertex_iterator(g_, vi_ - rhs.vi_);
+  //}
+
+  [[nodiscard]] constexpr reference operator[](const difference_type offset) const noexcept {
+    return *(*this + offset);
+  }
+
+public: // Relational Operators
+  [[nodiscard]] constexpr bool operator==(const const_csr_vertex_iterator& rhs) const noexcept {
+    return g_ == rhs.g_ && vi_ == rhs.vi_;
+  }
+  [[nodiscard]] constexpr strong_ordering operator<=>(const const_csr_vertex_iterator& rhs) const noexcept {
+    if (g_ != rhs.g_)
+      return g_ <=> rhs.g_;
+    return vi_ <=> rhs.vi_;
+  }
+
+
+protected: // Member Variables
+  graph_type*    g_ = nullptr;
+  index_iterator vi_;
+};
+
+template <typename EV, integral KeyT, typename Alloc>
+const_csr_vertex_iterator<EV, KeyT, Alloc>
+operator+(typename const_csr_vertex_iterator<EV, KeyT, Alloc>::difference_type offset,
+          const_csr_vertex_iterator<EV, KeyT, Alloc>                           iter) noexcept {
+  iter += offset;
+  return iter;
+}
+
+
+template <typename EV, integral KeyT, typename Alloc>
+class csr_vertex_iterator : public const_csr_vertex_iterator<EV, KeyT, Alloc> {
+public: // types
+  using base_type         = const_csr_vertex_iterator<EV, KeyT, Alloc>;
+  using graph_type        = base_type::graph_type;
+  using index_vector_type = base_type::index_vector_type;
+
+  using key_type        = base_type::key_type;
+  using value_type      = base_type::value_type;
+  using allocator_type  = base_type::base_type;
+  using size_type       = base_type::size_type;
+  using difference_type = base_type::difference_type;
+  using reference       = value_type&;
+  using const_reference = const value_type&;
+  using pointer         = allocator_traits<Alloc>::pointer;
+  using const_pointer   = allocator_traits<Alloc>::const_pointer;
+
+  using iterator_category = base_type::iterator_category; // contiguous
+
+protected:
+  using base_type::g_;
+  using base_type::vi_;
+
+public:
+  using base_type::base_type; // constructors
+
+  constexpr csr_vertex_iterator& operator=(const csr_vertex_iterator&) noexcept = default;
+
+public: // Properties
+  reference operator*() const noexcept { return *vi_; }
+  pointer   operator->() const noexcept { return vi_.operator->(); }
+
+public: // Operators
+  constexpr csr_vertex_iterator& operator++() noexcept {
+    ++vi_;
+    return *this;
+  }
+  constexpr csr_vertex_iterator operator++(int) noexcept {
+    csr_vertex_iterator tmp(*this);
+    ++*this;
+    return tmp;
+  }
+  constexpr csr_vertex_iterator& operator+=(const difference_type offset) noexcept {
+    vi_ += offset;
+    return *this;
+  }
+  [[nodiscard]] constexpr csr_vertex_iterator operator+(const difference_type offset) const noexcept {
+    csr_vertex_iterator tmp(*this);
+    tmp += offset;
+    return tmp;
+  }
+
+  constexpr csr_vertex_iterator& operator--() noexcept {
+    --vi_;
+    return *this;
+  }
+  constexpr csr_vertex_iterator operator--(int) noexcept {
+    csr_vertex_iterator tmp(*this);
+    --*this;
+    return tmp;
+  }
+  constexpr csr_vertex_iterator& operator-=(const difference_type offset) noexcept {
+    vi_ -= offset;
+    return *this;
+  }
+  [[nodiscard]] constexpr csr_vertex_iterator operator-(const difference_type offset) const noexcept {
+    csr_vertex_iterator tmp(*this);
+    tmp -= offset;
+    return tmp;
+  }
+  [[nodiscard]] constexpr difference_type operator-(const csr_vertex_iterator& rhs) const noexcept {
+    return vi_ - rhs.vi_;
+  }
+
+  //[[nodiscard]] constexpr csr_vertex_iterator operator-(const csr_vertex_iterator& rhs) const noexcept {
+  //  return csr_vertex_iterator(g_, vi_ - rhs.vi_);
+  //}
+
+  [[nodiscard]] constexpr reference operator[](const difference_type offset) const noexcept {
+    return *(*this + offset);
+  }
+
+public: // Relational Operators
+  [[nodiscard]] constexpr bool operator==(const csr_vertex_iterator& rhs) const noexcept {
+    return g_ == rhs.g_ && vi_ == rhs.vi_;
+  }
+  [[nodiscard]] constexpr strong_ordering operator<=>(const csr_vertex_iterator& rhs) const noexcept {
+    if (g_ != rhs.g_)
+      return g_ <=> rhs.g_;
+    return vi_ <=> rhs.vi_;
+  }
+};
+
+template <typename EV, integral KeyT, typename Alloc>
+csr_vertex_iterator<EV, KeyT, Alloc> operator+(typename csr_vertex_iterator<EV, KeyT, Alloc>::difference_type offset,
+                                               csr_vertex_iterator<EV, KeyT, Alloc> iter) noexcept {
+  iter += offset;
+  return iter;
+}
+
 
 /// <summary>
 /// csr_adjacency - compressed sparse row adjacency graph
@@ -13,7 +228,7 @@ namespace std::graph::container {
 /// <typeparam name="EV"></typeparam>
 /// <typeparam name="KeyT"></typeparam>
 /// <typeparam name="Alloc"></typeparam>
-template <typename EV = empty_value, integral KeyT = uint32_t, typename Alloc = allocator<uint32_t>>
+template <typename EV, integral KeyT, typename Alloc>
 class csr_adjacency {
   using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<KeyT>;
   using v_allocator_type     = typename allocator_traits<Alloc>::template rebind_alloc<EV>;
@@ -25,15 +240,24 @@ class csr_adjacency {
   index_vector_type col_index_; //
   v_vector_type     v_;
 
+  using csr_vertex_range_type       = index_vector_type;
+  using const_csr_vertex_range_type = const index_vector_type;
+
+  using csr_vertex_edge_range_type       = index_vector_type;
+  using const_csr_vertex_edge_range_type = const index_vector_type;
+
 public: // Types
-  using vertex_key_type = KeyT;
+  using graph_type = csr_adjacency<EV, KeyT, Alloc>;
+
+  using vertex_key_type   = KeyT;
+  using vertex_value_type = vertex_key_type;
+
   using edge_key_type   = pair<KeyT, KeyT>;
   using edge_value_type = EV;
+  using edge_type       = KeyT; // index into v_
 
-  using vertex_range_type            = index_vector_type;
-  using const_vertex_range_type      = const index_vector_type;
-  using vertex_edge_range_type       = index_vector_type;
-  using const_vertex_edge_range_type = const index_vector_type;
+  using const_iterator = const_csr_vertex_iterator<EV, KeyT, Alloc>;
+  using iterator       = csr_vertex_iterator<EV, KeyT, Alloc>;
 
 public: // Construction/Destruction
   constexpr csr_adjacency()                     = default;
@@ -70,7 +294,7 @@ public: // Construction/Destruction
         : row_index_(alloc), col_index_(alloc), v_(alloc) {
 
     // Nothing to do?
-    if (begin(erng) == end(erng))
+    if (ranges::begin(erng) == ranges::end(erng))
       return;
 
     // Evaluate max vertex key needed
@@ -130,10 +354,24 @@ public: // Construction/Destruction
                 [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) { return get<2>(e); }) {}
 
 public: // Operations
-  constexpr ranges::iterator_t<index_vector_type> find_vertex(vertex_key_type key) { return row_index_.begin() + key; }
-  constexpr ranges::iterator_t<const index_vector_type> find_vertex(vertex_key_type key) const {
+  constexpr ranges::iterator_t<index_vector_type> find_vertex(vertex_key_type key) noexcept {
     return row_index_.begin() + key;
   }
+  constexpr ranges::iterator_t<const index_vector_type> find_vertex(vertex_key_type key) const noexcept {
+    return row_index_.begin() + key;
+  }
+
+public: // Iterators
+  iterator       begin() { return iterator(*this, row_index_.begin()); }
+  const_iterator begin() const { return const_iterator(*this, row_index_.begin()); }
+  const_iterator cbegin() const { return const_iterator(*this, row_index_.begin()); }
+
+  iterator       end() { return iterator(*this, row_index_.end()); }
+  const_iterator end() const { return const_iterator(*this, row_index_.end()); }
+  const_iterator cend() const { return const_iterator(*this, row_index_.end()); }
+
+  friend const_csr_vertex_iterator<EV, KeyT, Alloc>;
+  friend csr_vertex_iterator<EV, KeyT, Alloc>;
 };
 
 
