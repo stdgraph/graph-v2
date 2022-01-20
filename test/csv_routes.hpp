@@ -31,6 +31,55 @@
 void init_console(); // init cout for UTF-8
 
 /// <summary>
+/// Scans 2 columns in a CSV file and returns all the unique values in an ordered vector.
+/// This is used to get all the unique labels for vertices.
+/// </summary>
+/// <typeparam name="ColNumOrName">A name or integer for a column in the CSV file</typeparam>
+/// <param name="csv_file">The CSV file name (path)</param>
+/// <param name="col1">The first column to get labels from. If the column doesn't exist the function is undefined.</param>
+/// <param name="col2">The second column to get labels from. If the column doesn't exist the function is undefined.</param>
+/// <returns></returns>
+template <typename ColNumOrName>
+auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOrName col2) {
+  csv::CSVReader reader(csv_file); // CSV file reader
+
+  // gather unique labels (case sensitive)
+  std::set<std::string_view> lbls; // string_view valid until file is closed
+  for (csv::CSVRow& row : reader) {
+    lbls.insert(row[col1].get<std::string_view>());
+    lbls.insert(row[col2].get<std::string_view>());
+  }
+
+  // copy labels to vector (ordered)
+  std::vector<std::string> lbl_vec;
+  lbl_vec.reserve(lbls.size());
+  for (auto&& lbl : lbls)
+    lbl_vec.push_back(std::string(lbl));
+
+  return std::pair(std::move(lbl_vec), reader.n_rows()); // return (unique lbls, num rows read)
+}
+
+/// <summary>
+/// Gets the maximum value of two columns in a CSV file with integral values.
+/// </summary>
+/// <typeparam name="T">The integer type that is used to hold the maximum value found</typeparam>
+/// <typeparam name="ColNumOrName">A name or integer for a column in the CSV file</typeparam>
+/// <param name="csv_file">The CSV file name (path)</param>
+/// <param name="col1">The first column to get labels from. If the column doesn't exist the function is undefined</param>
+/// <param name="col2">The second column to get labels from. If the column doesn't exist the function is undefined</param>
+/// <returns></returns>
+template <std::integral T, typename ColNumOrName>
+auto max_vertex_key(csv::string_view csv_file, ColNumOrName col1, ColNumOrName col2) {
+  csv::CSVReader reader(csv_file); // CSV file reader
+  T              max_key = std::numeric_limits<T>::min();
+  for (csv::CSVRow& row : reader)
+    max_key = std::max(max_key, std::max(row[col1].get<T>(), row[col2].get<T>()));
+
+  return std::pair(max_key, reader.n_rows()); // return (max_key, num rows read)
+}
+
+
+/// <summary>
 /// Base class used to read CSV files in the form "<name1>,<name2>,distance".
 /// The names are read into a set of unique values (case sensitive) of cities
 /// A derived class can be used to re-read the same file to create a graph.
@@ -50,7 +99,11 @@ public: // Construction/Destruction/Assignment
   /// Reads the CSV file and constructs the vector of cities.
   /// </summary>
   /// <param name="csv_file">Path for the input CSV file of cities</param>
-  routes_base(csv::string_view csv_file) { load_cities(csv_file); }
+  routes_base(csv::string_view csv_file) {
+    auto&& [labels, row_cnt] = unique_vertex_labels(csv_file, 0, 1);
+    cities_                  = std::move(labels);
+    edges_read_              = row_cnt;
+  }
 
   routes_base()                   = default;
   routes_base(const routes_base&) = default;
