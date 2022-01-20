@@ -39,7 +39,7 @@
       - [ ] Create edge type
       - [ ] Create vertex iterators
       - [ ] Create vertex_edge iterators
-      - [ ] routes_csr_graph
+      - [ ] routes_csv_csr_graph
         - [ ] Load from CSV file
         - [ ] output to cout to validate
         - [ ] unit tests

@@ -81,6 +81,9 @@ public: // Properties
     return static_cast<key_type>(find_city(city_name) - begin(cities_));
   }
 
+  size_t num_cities() const { return cities_.size(); }
+  size_t num_routes() const { return edges_read_; }
+
 private: // Operations
   void load_cities(csv::string_view csv_file) {
     csv::CSVReader reader(csv_file);            // CSV file reader
@@ -94,6 +97,7 @@ private: // Operations
       std::string_view to   = row[1].get<std::string_view>();
       city_set.insert(from);
       city_set.insert(to);
+      ++edges_read_;
     }
 
     // Preserve the city names in an ordered vector
@@ -102,6 +106,7 @@ private: // Operations
       cities_.emplace_back(city_name);
   }
 
-private:              // Member Variables
-  cities_vec cities_; ///< Ordered UTF-8 city names (case-sensitive)
+private:                      // Member Variables
+  cities_vec cities_;         ///< Ordered UTF-8 city names (case-sensitive)
+  size_t     edges_read_ = 0; //
 };

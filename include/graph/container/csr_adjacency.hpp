@@ -83,9 +83,7 @@ public: // Operators
     tmp -= offset;
     return tmp;
   }
-  [[nodiscard]] difference_type operator-(const const_csr_vertex_iterator& rhs) const noexcept {
-    return vi_ - rhs.vi_;
-  }
+  [[nodiscard]] difference_type operator-(const const_csr_vertex_iterator& rhs) const noexcept { return vi_ - rhs.vi_; }
 
   //[[nodiscard]] const_csr_vertex_iterator operator-(const const_csr_vertex_iterator& rhs) const noexcept {
   //  return const_csr_vertex_iterator(g_, vi_ - rhs.vi_);
@@ -305,35 +303,21 @@ public: // Construction/Destruction
       max_row_idx         = max(max_row_idx, max(uidx, vidx));
       ++erng_size;
     }
-    row_index_.reserve(static_cast<size_t>(max_row_idx) + 1);
-    col_index_.reserve(erng_size);
-    v_.reserve(erng_size);
 
-    // add edges
-    vertex_key_type last_ukey = vertex_key_type();
-    vertex_key_type last_vkey = vertex_key_type();
-    for (auto& edge_data : erng) {
-      auto&& [ukey, vkey] = ekey_fnc(edge_data);
-      if (size(row_index_) == 0 || ukey == last_ukey + 1) {
-        row_index_.push_back(static_cast<vertex_key_type>(col_index_.size()));
-      } else if (ukey == last_ukey) {
-        if (vkey < last_vkey)
-          runtime_error("columns not ordered on a row");
-        else if (vkey == last_vkey)
-          throw runtime_error("duplicate column on a row");
-      } else if (ukey < last_ukey) {
-        throw runtime_error("rows not ordered");
-      } else if (ukey > last_ukey + 1) {
-        // could be supported if we create temp map from input_row_idx to internal_row_idx
-        throw runtime_error("no columns defined for a row");
-      }
+    load_edges(max_row_idx, erng_size, erng, ekey_fnc, evalue_fnc);
+  }
 
-      // set col index & associated value
-      col_index_.push_back(static_cast<vertex_key_type>(v_.size()));
-      v_.emplace_back(evalue_fnc(edge_data));
-      last_ukey = ukey;
-      last_vkey = vkey;
-    }
+  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  constexpr csr_adjacency(vertex_key_type  max_vertex_key,
+                          size_t           max_edges,
+                          ERng&            erng,
+                          const EKeyFnc&   ekey_fnc,
+                          const EValueFnc& evalue_fnc,
+                          Alloc            alloc = Alloc())
+        : row_index_(alloc), col_index_(alloc), v_(alloc) {
+
+    load_edges(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc);
   }
 
   /// Constructor for easy creation of a graph that takes an initializer
@@ -352,6 +336,44 @@ public: // Construction/Destruction
                   return pair{get<0>(e), get<1>(e)};
                 },
                 [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) { return get<2>(e); }) {}
+
+protected:
+  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  constexpr void load_edges(vertex_key_type  max_vertex_key,
+                            size_t           max_edges,
+                            ERng&            erng,
+                            const EKeyFnc&   ekey_fnc,
+                            const EValueFnc& evalue_fnc) {
+    // copy edge key+val & sort in row/col order (CSR def allows cols to be unsorted)
+    using EKey       = decltype(ekey_fnc(declval<std::ranges::range_value_t<ERng>>()));
+    using EVal       = decltype(evalue_fnc(declval<std::ranges::range_value_t<ERng>>()));
+    using EKeyVal    = std::pair<EKey, EVal>;
+    using EKeyValVec = std::vector<EKeyVal>;
+    EKeyValVec edges;
+    edges.reserve(max_edges);
+    for (auto& edge_data : erng)
+      edges.emplace_back(EKeyVal(ekey_fnc(edge_data), evalue_fnc(edge_data)));
+    auto ecmp = [](auto&& lhs, auto&& rhs) { return lhs.first < rhs.first; };
+    std::ranges::sort(edges, ecmp);
+    auto unique_edges = std::ranges::unique(edges, ecmp);
+
+    max_edges = std::ranges::size(unique_edges);
+    row_index_.reserve(static_cast<size_t>(max_vertex_key) + 1);
+    col_index_.reserve(max_edges);
+    v_.reserve(max_edges);
+
+    // add edges
+    for (auto& [key, val] : unique_edges) {
+      auto& [ukey, vkey] = key;
+
+      row_index_.resize(static_cast<size_t>(ukey) + 1, static_cast<vertex_key_type>(v_.size()));
+      col_index_.push_back(vkey);
+      v_.emplace_back(val);
+    }
+    row_index_.resize(static_cast<size_t>(max_vertex_key) + 1, static_cast<vertex_key_type>(v_.size()));
+  }
+
 
 public: // Operations
   constexpr ranges::iterator_t<index_vector_type> find_vertex(vertex_key_type key) noexcept {

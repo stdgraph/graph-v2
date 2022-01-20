@@ -3,7 +3,7 @@
 #include "graph/container/csr_adjacency.hpp"
 
 
-class routes_csr_graph : public routes_base<uint32_t> {
+class routes_csv_csr_graph : public routes_base<uint32_t> {
 public:
   using base_type   = routes_base<uint32_t>;
   using key_type    = base_type::key_type;
@@ -19,15 +19,15 @@ public:
   using graph_type = std::graph::container::csr_adjacency<route, key_type>;
 
 public: // Construction/Destruction/Assignment
-  routes_csr_graph(csv::string_view csv_file) : routes_base<uint32_t>(csv_file), g_(load_routes(csv_file)) {}
+  routes_csv_csr_graph(csv::string_view csv_file) : base_type(csv_file), g_(load_routes(csv_file)) {}
 
-  routes_csr_graph()                        = default;
-  routes_csr_graph(const routes_csr_graph&) = default;
-  routes_csr_graph(routes_csr_graph&&)      = default;
-  ~routes_csr_graph()                       = default;
+  routes_csv_csr_graph()                            = default;
+  routes_csv_csr_graph(const routes_csv_csr_graph&) = default;
+  routes_csv_csr_graph(routes_csv_csr_graph&&)      = default;
+  ~routes_csv_csr_graph()                           = default;
 
-  routes_csr_graph& operator=(const routes_csr_graph&) = default;
-  routes_csr_graph& operator=(routes_csr_graph&&) = default;
+  routes_csv_csr_graph& operator=(const routes_csv_csr_graph&) = default;
+  routes_csv_csr_graph& operator=(routes_csv_csr_graph&&) = default;
 
 public: // Properties
   constexpr graph_type&       graph() { return g_; }
@@ -54,7 +54,7 @@ private: // construction helpers
       assert(to_key < cities().size());
       return route(to_key, dist);
     };
-    graph_type cc(reader, ekey_fnc, evalue_fnc);
+    graph_type cc(static_cast<key_type>(num_cities()), num_routes(), reader, ekey_fnc, evalue_fnc);
 #if 0
     for (CSVRow& row : reader()) { // Input iterator-ish
       string_view from = row[0].get<string_view>();
