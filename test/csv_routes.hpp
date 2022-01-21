@@ -27,6 +27,7 @@
 
 #include <set>
 #include <algorithm>
+#include <string_view>
 
 void init_console(); // init cout for UTF-8
 
@@ -46,8 +47,8 @@ auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOr
   // gather unique labels (case sensitive)
   std::set<std::string_view> lbls; // string_view valid until file is closed
   for (csv::CSVRow& row : reader) {
-    lbls.insert(row[col1].get<std::string_view>());
-    lbls.insert(row[col2].get<std::string_view>());
+    lbls.insert(row[col1].get_sv());
+    lbls.insert(row[col2].get_sv());
   }
 
   // copy labels to vector (ordered)
@@ -59,6 +60,7 @@ auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOr
   return std::pair(std::move(lbl_vec), reader.n_rows()); // return (unique lbls, num rows read)
 }
 
+#ifdef FUTURE
 /// <summary>
 /// Gets the maximum value of two columns in a CSV file with integral values.
 /// </summary>
@@ -77,7 +79,7 @@ auto max_vertex_key(csv::string_view csv_file, ColNumOrName col1, ColNumOrName c
 
   return std::pair(max_key, reader.n_rows()); // return (max_key, num rows read)
 }
-
+#endif // FUTURE
 
 /// <summary>
 /// Base class used to read CSV files in the form "<name1>,<name2>,distance".
@@ -100,7 +102,7 @@ public: // Construction/Destruction/Assignment
   /// </summary>
   /// <param name="csv_file">Path for the input CSV file of cities</param>
   routes_base(csv::string_view csv_file) {
-    auto&& [labels, row_cnt] = unique_vertex_labels(csv_file, 0, 1);
+    auto&& [labels, row_cnt] = unique_vertex_labels(csv_file, 0ull, 1ull);
     cities_                  = std::move(labels);
     edges_read_              = row_cnt;
   }
@@ -136,28 +138,6 @@ public: // Properties
 
   size_t num_cities() const { return cities_.size(); }
   size_t num_routes() const { return edges_read_; }
-
-private: // Operations
-  void load_cities(csv::string_view csv_file) {
-    csv::CSVReader reader(csv_file);            // CSV file reader
-    assert(reader.get_col_names().size() >= 2); // expecting from_city, to_city [, weight]
-
-    // build set of unique city names
-    // string_views remain valid while reader is open
-    std::set<std::string_view> city_set;
-    for (csv::CSVRow& row : reader) { // Input iterator
-      std::string_view from = row[0].get<std::string_view>();
-      std::string_view to   = row[1].get<std::string_view>();
-      city_set.insert(from);
-      city_set.insert(to);
-      ++edges_read_;
-    }
-
-    // Preserve the city names in an ordered vector
-    cities_.reserve(city_set.size());
-    for (const std::string_view& city_name : city_set)
-      cities_.emplace_back(city_name);
-  }
 
 private:                      // Member Variables
   cities_vec cities_;         ///< Ordered UTF-8 city names (case-sensitive)
