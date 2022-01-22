@@ -31,8 +31,8 @@ public
       : // Operations
         // used to visually validate core functionality
   void output_routes() {
-    for (key_type ukey = 0; ukey < size(graph().vertices()); ++ukey) {
-      auto&& u = graph().vertices()[ukey];
+    for (key_type ukey = 0; ukey < size(graph()); ++ukey) {
+      auto&& u = graph()[ukey];
       for (auto&& uv : u.edges()) {
         auto vkey = uv.target_key();
         std::cout << cities()[ukey] << "[" << ukey << "] --> " << cities()[vkey] << "[" << vkey << "] " << uv.value()

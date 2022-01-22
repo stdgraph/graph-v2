@@ -4,8 +4,11 @@
 #include <concepts>
 #include <type_traits>
 
-#ifndef STD_GRAPH_HPP
-#  define STD_GRAPH_HPP
+#include "detail/graph_access.hpp"
+
+
+#ifndef GRAPH_HPP
+#  define GRAPH_HPP
 
 namespace std::graph {
 
@@ -38,18 +41,29 @@ using graph_value_t = decltype(graph_value(declval<G&&>()));
 template <typename G>
 using vertex_t = ranges::range_value_t<vertex_range_t<G>>;
 template <typename G>
-using vertex_key_t = decltype(vertex_key(declval<G&&>(), declval<vertex_iterator_t<G>>()));
+using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G&&>>;
 template <typename G>
-using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_iterator_t<G>>()));
+using vertex_key_t = decltype(vertex_key(declval<G&&>(), declval<vertex_reference_t<G>>()));
+template <typename G>
+using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_reference_t<G>>()));
 
 template <typename G, typename ER>
 using edge_t = typename ranges::range_value_t<ER>;
-template <typename G, typename EI>
-using edge_key_t = decltype(edge_key(declval<G&&>(), declval<EI>())); // e.g. pair<vertex_key_t<G>,vertex_key_t<G>>
-template <typename G, typename EI>
-using edge_value_t = decltype(edge_value(declval<G&&>(), declval<EI>()));
+template <typename G, typename ER>
+using edge_reference_t = ranges::range_reference_t<ER>;
+template <typename G, typename ER>
+using edge_key_t = decltype(edge_key(declval<G&&>(), declval<edge_reference_t<ER>>())); // e.g. pair<vertex_key_t<G>,vertex_key_t<G>>
+template <typename G, typename ER>
+using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_t<ER>>()));
+
+
+template <typename G>
+concept incidence_graph = std::ranges::range<vertex_range_t<G>> && std::ranges::range<vertex_edge_range_t<G>>;
+
+template <typename G>
+concept adjacencey_graph = std::ranges::range<vertex_range_t<G>> && std::ranges::range<vertex_vertex_range_t<G>>;
 
 
 } // namespace std::graph
 
-#endif //STD_GRAPH_HPP
+#endif //GRAPH_HPP
