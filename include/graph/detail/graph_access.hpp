@@ -11,13 +11,16 @@ namespace std::graph {
 // vertices(g)  : default: g->vertices(), g
 // vertices(g,u): default: u.vertices(g)
 //
-namespace _detail {
+
+namespace access {
   TAG_INVOKE_DEF(vertices);
 }
-template<typename G>
+
+template <typename G>
 auto vertices(G&& g) {
-  return _detail::vertices(g);
+  return access::vertices(g);
 }
+
 
 //edges(g)
 //edges(g,u)
@@ -31,6 +34,5 @@ auto vertices(G&& g) {
 //source(g,uv)
 
 } // namespace std::graph
-
 
 #endif //GRAPH_INVOKE_HPP

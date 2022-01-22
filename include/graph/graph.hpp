@@ -52,9 +52,9 @@ using edge_t = typename ranges::range_value_t<ER>;
 template <typename G, typename ER>
 using edge_reference_t = ranges::range_reference_t<ER>;
 template <typename G, typename ER>
-using edge_key_t = decltype(edge_key(declval<G&&>(), declval<edge_reference_t<ER>>())); // e.g. pair<vertex_key_t<G>,vertex_key_t<G>>
+using edge_key_t = decltype(edge_key(declval<G&&>(), declval<edge_reference_t<G,ER>>())); // e.g. pair<vertex_key_t<G>,vertex_key_t<G>>
 template <typename G, typename ER>
-using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_t<ER>>()));
+using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_t<G,ER>>()));
 
 
 template <typename G>

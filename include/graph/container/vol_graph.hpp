@@ -4,6 +4,7 @@
 #include <vector>
 #include <forward_list>
 #include "container_utility.hpp"
+#include "graph/detail/graph_access.hpp"
 
 namespace std::graph::container {
 
@@ -279,9 +280,6 @@ protected:
   }
 
 public: // Properties
-  //constexpr vertices_type&       vertices() noexcept { return vertices_; }
-  //constexpr const vertices_type& vertices() const noexcept { return vertices_; }
-
   constexpr auto begin() noexcept { return vertices_.begin(); }
   constexpr auto begin() const noexcept { return vertices_.begin(); }
   constexpr auto cbegin() const noexcept { return vertices_.begin(); }
@@ -295,8 +293,18 @@ public: // Properties
   constexpr vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
   constexpr const vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
 
+public:
+  //constexpr vertices_type&       vertices() noexcept { return vertices_; }
+  //constexpr const vertices_type& vertices() const noexcept { return vertices_; }
+
 private: // Member Variables
   vertices_type vertices_;
+
+private: // tag_invoke properties
+  friend vertices_type&       tag_invoke(::std::graph::access::vertices_fn_t, _vol_base& g) { return g.vertices_; }
+  friend const vertices_type& tag_invoke(::std::graph::access::vertices_fn_t, const _vol_base& g) {
+    return g.vertices_;
+  }
 };
 
 /// <summary>
@@ -385,6 +393,7 @@ public:
   using vertex_key_type = VKey;
   using value_type      = void;
   using allocator_type  = Alloc;
+  using base_type::vertices_type;
 
   vol_graph()                 = default;
   vol_graph(const vol_graph&) = default;

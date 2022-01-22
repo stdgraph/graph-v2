@@ -10,6 +10,8 @@
 using std::cout;
 using std::endl;
 
+using std::graph::vertices;
+
 #if 0
 /* template <typename G, typename F>
 concept target_function = // e.g. target_id(uv)
@@ -88,5 +90,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
 TEST_CASE("Germany routes CSV+vol test", "[csv][vol]") {
   init_console();
   routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
-  //germany_routes.output_routes();
+
+  for (auto&& u : vertices(germany_routes.graph())) {
+  }
 }
