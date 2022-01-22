@@ -1,6 +1,6 @@
 #pragma once
 #include "csv_routes.hpp"
-#include "graph/container/vol.hpp"
+#include "graph/container/vol_graph.hpp"
 
 
 class routes_vol_graph : public routes_base<uint32_t> {
@@ -10,7 +10,7 @@ public:
   using name_type   = base_type::name_type;
   using weight_type = double;
 
-  using graph_type = std::graph::container::vol<weight_type, void, void, key_type>;
+  using graph_type = std::graph::container::vol_graph<weight_type, void, void, key_type>;
 
 public: // Construction/Destruction/Assignment
   routes_vol_graph(csv::string_view csv_file) : base_type(csv_file), g_(load_routes(csv_file)) {}

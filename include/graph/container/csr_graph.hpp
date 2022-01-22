@@ -8,13 +8,13 @@
 namespace std::graph::container {
 
 template <typename EV = empty_value, integral KeyT = uint32_t, typename Alloc = allocator<uint32_t>>
-class csr_adjacency;
+class csr_graph;
 
 
 template <typename EV, integral KeyT, typename Alloc>
 class const_csr_vertex_iterator {
 public: // types
-  using graph_type        = csr_adjacency<EV, KeyT, Alloc>;
+  using graph_type        = csr_graph<EV, KeyT, Alloc>;
   using index_vector_type = graph_type::index_vector_type;
 
   using key_type        = graph_type::vertex_key_type;
@@ -220,14 +220,14 @@ csr_vertex_iterator<EV, KeyT, Alloc> operator+(typename csr_vertex_iterator<EV, 
 
 
 /// <summary>
-/// csr_adjacency - compressed sparse row adjacency graph
+/// csr_graph - compressed sparse row adjacency graph
 ///
 /// </summary>
 /// <typeparam name="EV"></typeparam>
 /// <typeparam name="KeyT"></typeparam>
 /// <typeparam name="Alloc"></typeparam>
 template <typename EV, integral KeyT, typename Alloc>
-class csr_adjacency {
+class csr_graph {
   using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<KeyT>;
   using v_allocator_type     = typename allocator_traits<Alloc>::template rebind_alloc<EV>;
 
@@ -245,7 +245,7 @@ class csr_adjacency {
   using const_csr_vertex_edge_range_type = const index_vector_type;
 
 public: // Types
-  using graph_type = csr_adjacency<EV, KeyT, Alloc>;
+  using graph_type = csr_graph<EV, KeyT, Alloc>;
 
   using vertex_key_type   = KeyT;
   using vertex_value_type = vertex_key_type;
@@ -258,13 +258,13 @@ public: // Types
   using iterator       = csr_vertex_iterator<EV, KeyT, Alloc>;
 
 public: // Construction/Destruction
-  constexpr csr_adjacency()                     = default;
-  constexpr csr_adjacency(const csr_adjacency&) = default;
-  constexpr csr_adjacency(csr_adjacency&&)      = default;
-  constexpr ~csr_adjacency()                    = default;
+  constexpr csr_graph()                     = default;
+  constexpr csr_graph(const csr_graph&) = default;
+  constexpr csr_graph(csr_graph&&)      = default;
+  constexpr ~csr_graph()                    = default;
 
-  constexpr csr_adjacency& operator=(const csr_adjacency&) = default;
-  constexpr csr_adjacency& operator=(csr_adjacency&&) = default;
+  constexpr csr_graph& operator=(const csr_graph&) = default;
+  constexpr csr_graph& operator=(csr_graph&&) = default;
 
   /// Constructor that takes edge ranges to create the csr graph.
   ///
@@ -288,7 +288,7 @@ public: // Construction/Destruction
   ///
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_adjacency(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
+  constexpr csr_graph(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
         : row_index_(alloc), col_index_(alloc), v_(alloc) {
 
     // Nothing to do?
@@ -309,7 +309,7 @@ public: // Construction/Destruction
 
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_adjacency(vertex_key_type  max_vertex_key,
+  constexpr csr_graph(vertex_key_type  max_vertex_key,
                           size_t           max_edges,
                           ERng&            erng,
                           const EKeyFnc&   ekey_fnc,
@@ -328,9 +328,9 @@ public: // Construction/Destruction
   ///              target_vertex_key and the edge value.
   /// @param alloc Allocator.
   ///
-  constexpr csr_adjacency(const initializer_list<tuple<vertex_key_type, vertex_key_type, edge_value_type>>& ilist,
+  constexpr csr_graph(const initializer_list<tuple<vertex_key_type, vertex_key_type, edge_value_type>>& ilist,
                           const Alloc& alloc = Alloc())
-        : csr_adjacency(
+        : csr_graph(
                 ilist,
                 [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) {
                   return pair{get<0>(e), get<1>(e)};

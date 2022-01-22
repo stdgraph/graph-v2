@@ -30,7 +30,7 @@ TEST_CASE("Germany routes CSV+CSR test", "[csr][csv]") {
   routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
 }
 
-TEST_CASE("Germany routes CSV+vol test", "[vol][csv]") {
+TEST_CASE("Germany routes CSV+vol_graph test", "[vol][csv]") {
   init_console();
   routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
   //germany_routes.output_routes();

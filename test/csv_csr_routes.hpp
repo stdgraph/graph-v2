@@ -1,6 +1,6 @@
 #pragma once
 #include "csv_routes.hpp"
-#include "graph/container/csr_adjacency.hpp"
+#include "graph/container/csr_graph.hpp"
 
 
 class routes_csv_csr_graph : public routes_base<uint32_t> {
@@ -16,7 +16,7 @@ public:
     route(key_type targt, double wght = 0) : target(targt), weight(wght) {}
   };
 
-  using graph_type = std::graph::container::csr_adjacency<route, key_type>;
+  using graph_type = std::graph::container::csr_graph<route, key_type>;
 
 public: // Construction/Destruction/Assignment
   routes_csv_csr_graph(csv::string_view csv_file) : base_type(csv_file), g_(load_routes(csv_file)) {}
