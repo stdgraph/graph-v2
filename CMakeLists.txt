@@ -18,7 +18,9 @@ target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:p
 target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+if(MSVC)
+  set(CMAKE_CXX_STANDARD 23) # use std=c++latest in MSVC for concepts
+elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
   option(ENABLE_BUILD_WITH_TIME_TRACE "Enable -ftime-trace to generate time tracing .json files on clang" OFF)
   if(ENABLE_BUILD_WITH_TIME_TRACE)
     target_compile_options(project_options INTERFACE -ftime-trace)
