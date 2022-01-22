@@ -106,11 +106,19 @@ public:
   _vol_vertex& operator=(_vol_vertex&&) = default;
 
 public:
-  edges_type&       edges() { return edges_; }
-  const edges_type& edges() const { return edges_; }
+  edges_type&       edges() noexcept { return edges_; }
+  const edges_type& edges() const noexcept { return edges_; }
 
-  value_type&       value() { return value_; }
-  const value_type& value() const { return value_; }
+  value_type&       value() noexcept { return value_; }
+  const value_type& value() const noexcept { return value_; }
+
+  auto begin() noexcept { return edges_.begin(); }
+  auto begin() const noexcept { return edges_.begin(); }
+  auto cbegin() const noexcept { return edges_.begin(); }
+
+  auto end() noexcept { return edges_.end(); }
+  auto end() const noexcept { return edges_.end(); }
+  auto cend() const noexcept { return edges_.end(); }
 
 private:
   edges_type edges_ = edges_type(Alloc());
@@ -136,8 +144,16 @@ public:
   _vol_vertex(Alloc alloc) : edges_(alloc) {}
 
 public:
-  edges_type&       edges() { return edges_; }
-  const edges_type& edges() const { return edges_; }
+  edges_type&       edges() noexcept { return edges_; }
+  const edges_type& edges() const noexcept { return edges_; }
+
+  auto begin() noexcept { return edges_.begin(); }
+  auto begin() const noexcept { return edges_.begin(); }
+  auto cbegin() const noexcept { return edges_.begin(); }
+
+  auto end() noexcept { return edges_.end(); }
+  auto end() const noexcept { return edges_.end(); }
+  auto cend() const noexcept { return edges_.end(); }
 
 private:
   edges_type edges_ = edges_type();
@@ -262,8 +278,18 @@ protected:
   }
 
 public: // Properties
-  vertices_type&       vertices() { return vertices_; }
-  const vertices_type& vertices() const { return vertices_; }
+  constexpr vertices_type&       vertices() noexcept { return vertices_; }
+  constexpr const vertices_type& vertices() const noexcept { return vertices_; }
+
+  constexpr auto begin() noexcept { return vertices_.begin(); }
+  constexpr auto begin() const noexcept { return vertices_.begin(); }
+  constexpr auto cbegin() const noexcept { return vertices_.begin(); }
+
+  constexpr auto end() noexcept { return vertices_.end(); }
+  constexpr auto end() const noexcept { return vertices_.end(); }
+  constexpr auto cend() const noexcept { return vertices_.end(); }
+
+  constexpr auto size() const noexcept { return vertices_.size(); }
 
 private: // Member Variables
   vertices_type vertices_;
