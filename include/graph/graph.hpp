@@ -41,7 +41,7 @@ using graph_value_t = decltype(graph_value(declval<G&&>()));
 template <typename G>
 using vertex_t = ranges::range_value_t<vertex_range_t<G>>;
 template <typename G>
-using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G&&>>;
+using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
 template <typename G>
 using vertex_key_t = decltype(vertex_key(declval<G&&>(), declval<vertex_reference_t<G>>()));
 template <typename G>

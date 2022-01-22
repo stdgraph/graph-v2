@@ -11,14 +11,14 @@ namespace std::graph::container {
 template <typename EV, typename VKey>
 class _vol_edge;
 
-template <typename EV, typename VV, typename VKey, typename Alloc = allocator<_vol_edge<EV, VKey>>>
+template <typename EV, typename VV, typename GV, typename VKey, typename Alloc = allocator<_vol_edge<EV, VKey>>>
 class _vol_vertex;
 
 template <typename EV    = void,
           typename VV    = void,
           typename GV    = void,
           typename VKey  = uint32_t,
-          typename Alloc = allocator<_vol_vertex<EV, VV, VKey>>>
+          typename Alloc = allocator<_vol_vertex<EV, VV, GV, VKey>>>
 class vol_graph;
 
 //--------------------------------------------------------------------------------------------------
@@ -87,16 +87,59 @@ using _vol_edges = forward_list<_vol_edge<EV, VKey>, Alloc>;
 //--------------------------------------------------------------------------------------------------
 // _vol_vertex
 //
-template <typename EV, typename VV, typename VKey, typename Alloc>
-class _vol_vertex {
+template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
+class _vol_vertex_base {
 public:
-  using value_type = VV;
-  using edges_type = _vol_edges<EV, VKey, Alloc>;
+  using allocator_type = Alloc;
+  using graph_type     = vol_graph<EV, VV, GV, VKey, Alloc>;
+  using vertex_type    = _vol_vertex<EV, VV, GV, VKey, Alloc>;
+  using value_type     = VV;
+  using edges_type     = _vol_edges<EV, VKey, Alloc>;
 
 public:
-  _vol_vertex(const value_type& value, Alloc alloc = Alloc()) : edges_(alloc), value_(value) {}
-  _vol_vertex(value_type&& value, Alloc alloc = Alloc()) : edges_(alloc), value_(forward(value)) {}
-  _vol_vertex(Alloc alloc) : edges_(alloc) {}
+  _vol_vertex_base()                        = default;
+  _vol_vertex_base(const _vol_vertex_base&) = default;
+  _vol_vertex_base(_vol_vertex_base&&)      = default;
+  ~_vol_vertex_base()                       = default;
+
+  _vol_vertex_base& operator=(const _vol_vertex_base&) = default;
+  _vol_vertex_base& operator=(_vol_vertex_base&&) = default;
+
+  _vol_vertex_base(Alloc alloc) : edges_(alloc) {}
+
+public:
+  edges_type&       edges() noexcept { return edges_; }
+  const edges_type& edges() const noexcept { return edges_; }
+
+  auto begin() noexcept { return edges_.begin(); }
+  auto begin() const noexcept { return edges_.begin(); }
+  auto cbegin() const noexcept { return edges_.begin(); }
+
+  auto end() noexcept { return edges_.end(); }
+  auto end() const noexcept { return edges_.end(); }
+  auto cend() const noexcept { return edges_.end(); }
+
+private:
+  edges_type edges_;
+
+private: // tag_invoke properties
+  friend edges_type& tag_invoke(::std::graph::access::vertices_fn_t, graph_type& g, vertex_type& u) { return u.edges_; }
+  friend const edges_type& tag_invoke(::std::graph::access::vertices_fn_t, const graph_type& g, const vertex_type& u) {
+    return u.edges_;
+  }
+};
+
+
+template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
+class _vol_vertex : public _vol_vertex_base<EV, VV, GV, VKey, Alloc> {
+public:
+  using base_type  = _vol_vertex_base<EV, VV, GV, VKey, Alloc>;
+  using value_type = VV;
+
+public:
+  _vol_vertex(const value_type& value, Alloc alloc = Alloc()) : base_type(alloc), value_(value) {}
+  _vol_vertex(value_type&& value, Alloc alloc = Alloc()) : base_type(alloc), value_(forward(value)) {}
+  _vol_vertex(Alloc alloc) : base_type(alloc) {}
 
   _vol_vertex()                   = default;
   _vol_vertex(const _vol_vertex&) = default;
@@ -107,31 +150,21 @@ public:
   _vol_vertex& operator=(_vol_vertex&&) = default;
 
 public:
-  edges_type&       edges() noexcept { return edges_; }
-  const edges_type& edges() const noexcept { return edges_; }
+  using base_type::edges;
 
   value_type&       value() noexcept { return value_; }
   const value_type& value() const noexcept { return value_; }
 
-  auto begin() noexcept { return edges_.begin(); }
-  auto begin() const noexcept { return edges_.begin(); }
-  auto cbegin() const noexcept { return edges_.begin(); }
-
-  auto end() noexcept { return edges_.end(); }
-  auto end() const noexcept { return edges_.end(); }
-  auto cend() const noexcept { return edges_.end(); }
-
 private:
-  edges_type edges_ = edges_type(Alloc());
   value_type value_ = value_type();
 };
 
 
-template <typename EV, typename VKey, typename Alloc>
-class _vol_vertex<EV, void, VKey, Alloc> {
+template <typename EV, typename GV, typename VKey, typename Alloc>
+class _vol_vertex<EV, void, GV, VKey, Alloc> : public _vol_vertex_base<EV, void, GV, VKey, Alloc> {
 public:
+  using base_type  = _vol_vertex_base<EV, void, GV, VKey, Alloc>;
   using value_type = void;
-  using edges_type = _vol_edges<EV, VKey, Alloc>;
 
 public:
   _vol_vertex()                   = default;
@@ -142,52 +175,42 @@ public:
   _vol_vertex& operator=(const _vol_vertex&) = default;
   _vol_vertex& operator=(_vol_vertex&&) = default;
 
-  _vol_vertex(Alloc alloc) : edges_(alloc) {}
+  _vol_vertex(Alloc alloc) : base_type(alloc) {}
 
 public:
-  edges_type&       edges() noexcept { return edges_; }
-  const edges_type& edges() const noexcept { return edges_; }
-
-  auto begin() noexcept { return edges_.begin(); }
-  auto begin() const noexcept { return edges_.begin(); }
-  auto cbegin() const noexcept { return edges_.begin(); }
-
-  auto end() noexcept { return edges_.end(); }
-  auto end() const noexcept { return edges_.end(); }
-  auto cend() const noexcept { return edges_.end(); }
+  using base_type::edges;
 
 private:
-  edges_type edges_ = edges_type();
 };
 
 //--------------------------------------------------------------------------------------------------
 // _vol_vertices
 //
-template <typename EV, typename VV, typename VKey, typename Alloc = allocator<_vol_vertex<EV, VV, VKey>>>
-using _vol_vertices = vector<_vol_vertex<EV, VV, VKey>, Alloc>;
+template <typename EV, typename VV, typename GV, typename VKey, typename Alloc = allocator<_vol_vertex<EV, VV, GV, VKey>>>
+using _vol_vertices = vector<_vol_vertex<EV, VV, GV, VKey>, Alloc>;
 
 
 //--------------------------------------------------------------------------------------------------
 // vol_graph - vector of list
 //
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc = allocator<_vol_vertex<EV, VV, VKey>>>
-class _vol_base {
+template <typename EV, typename VV, typename GV, typename VKey, typename Alloc = allocator<_vol_vertex<EV, VV, GV, VKey>>>
+class _vol_graph_base {
 public: // types
   using vertex_key_type = VKey;
-  using vertex_type     = _vol_vertex<EV, VV, VKey>;
-  using vertices_type   = _vol_vertices<EV, VV, VKey>;
+  using vertex_type     = _vol_vertex<EV, VV, GV, VKey>;
+  using vertices_type   = _vol_vertices<EV, VV, GV, VKey>;
   using size_type       = vertices_type::size_type;
 
   using edge_type = _vol_edge<EV, VKey>;
 
 public: // Construction/Destruction/Assignment
-  _vol_base()                 = default;
-  _vol_base(const _vol_base&) = default;
-  _vol_base(_vol_base&&)      = default;
-  ~_vol_base()                = default;
+  _vol_graph_base()                       = default;
+  _vol_graph_base(const _vol_graph_base&) = default;
+  _vol_graph_base(_vol_graph_base&&)      = default;
+  ~_vol_graph_base()                      = default;
 
-  _vol_base& operator=(const _vol_base&) = default;
-  _vol_base& operator=(_vol_base&&) = default;
+  _vol_graph_base& operator=(const _vol_graph_base&) = default;
+  _vol_graph_base& operator=(_vol_graph_base&&) = default;
 
   /// Constructor that takes edge ranges to create the graph. Edges are scanned to determine the
   /// largest vertex key needed.
@@ -212,7 +235,7 @@ public: // Construction/Destruction/Assignment
   ///
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr _vol_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc)
+  constexpr _vol_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc)
         : vertices_(alloc) {
 
     // Nothing to do?
@@ -254,7 +277,7 @@ public: // Construction/Destruction/Assignment
   ///
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr _vol_base(
+  constexpr _vol_graph_base(
         vertex_key_type max_row_idx, ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc)
         : vertices_(alloc) {
 
@@ -301,8 +324,8 @@ private: // Member Variables
   vertices_type vertices_;
 
 private: // tag_invoke properties
-  friend vertices_type&       tag_invoke(::std::graph::access::vertices_fn_t, _vol_base& g) { return g.vertices_; }
-  friend const vertices_type& tag_invoke(::std::graph::access::vertices_fn_t, const _vol_base& g) {
+  friend vertices_type& tag_invoke(::std::graph::access::vertices_fn_t, _vol_graph_base& g) { return g.vertices_; }
+  friend const vertices_type& tag_invoke(::std::graph::access::vertices_fn_t, const _vol_graph_base& g) {
     return g.vertices_;
   }
 };
@@ -321,9 +344,9 @@ private: // tag_invoke properties
 /// @tparam Alloc The allocator used for storing the vertices and edges.
 ///
 template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
-class vol_graph : public _vol_base<EV, VV, GV, VKey> {
+class vol_graph : public _vol_graph_base<EV, VV, GV, VKey> {
 public:
-  using base_type       = _vol_base<EV, VV, GV, VKey, Alloc>;
+  using base_type       = _vol_graph_base<EV, VV, GV, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = GV;
   using allocator_type  = Alloc;
@@ -387,9 +410,9 @@ private:
 
 // a specialization for vol_graph<...> that doesn't have a graph value_type
 template <typename EV, typename VV, typename VKey, typename Alloc>
-class vol_graph<EV, VV, void, VKey, Alloc> : public _vol_base<EV, VV, void, VKey, Alloc> {
+class vol_graph<EV, VV, void, VKey, Alloc> : public _vol_graph_base<EV, VV, void, VKey, Alloc> {
 public:
-  using base_type       = _vol_base<EV, VV, void, VKey, Alloc>;
+  using base_type       = _vol_graph_base<EV, VV, void, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = void;
   using allocator_type  = Alloc;
