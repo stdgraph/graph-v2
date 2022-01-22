@@ -11,6 +11,7 @@ using std::cout;
 using std::endl;
 
 using std::graph::vertices;
+using std::graph::edges;
 
 #if 0
 /* template <typename G, typename F>
@@ -90,7 +91,11 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
 TEST_CASE("Germany routes CSV+vol test", "[csv][vol]") {
   init_console();
   routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  auto&&           g = germany_routes.graph();
 
-  for (auto&& u : vertices(germany_routes.graph())) {
+  for (auto&& u : vertices(g)) {
+    for (auto&& uv : edges(g, u)) {
+    }
   }
+
 }
