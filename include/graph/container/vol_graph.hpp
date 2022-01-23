@@ -324,20 +324,7 @@ public: // Construction/Destruction/Assignment
   constexpr _vol_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc)
         : vertices_(alloc) {
 
-    // Nothing to do?
-    if (ranges::begin(erng) == ranges::end(erng))
-      return;
-
-    // Evaluate max vertex key needed
-    size_t          erng_size   = 0;
-    vertex_key_type max_row_idx = 0;
-    for (auto& edge_data : erng) {
-      auto&& [uidx, vidx] = ekey_fnc(edge_data);
-      max_row_idx         = max(max_row_idx, max(uidx, vidx));
-      ++erng_size;
-    }
-
-    load_edges(max_row_idx, erng, ekey_fnc, evalue_fnc, alloc);
+    load_edges(erng, ekey_fnc, evalue_fnc, alloc);
   }
 
   /// Constructor that takes edge ranges to create the csr graph.
@@ -386,6 +373,24 @@ protected:
         vertices_[ukey].edges().emplace_front(edge_type(vkey, evalue_fnc(edge_data)));
       }
     }
+  }
+  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  void load_edges(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc) {
+    // Nothing to do?
+    if (ranges::begin(erng) == ranges::end(erng))
+      return;
+
+    // Evaluate max vertex key needed
+    size_t          erng_size   = 0;
+    vertex_key_type max_row_idx = 0;
+    for (auto& edge_data : erng) {
+      auto&& [uidx, vidx] = ekey_fnc(edge_data);
+      max_row_idx         = max(max_row_idx, max(uidx, vidx));
+      ++erng_size;
+    }
+
+    load_edges(max_row_idx, erng, ekey_fnc, evalue_fnc, alloc);
   }
 
 public: // Properties

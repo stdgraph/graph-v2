@@ -11,6 +11,11 @@
 #include <queue>
 #include <tuple>
 
+#define TEST_OPTION_OUTPUT (1)
+#define TEST_OPTION_GEN (2)
+#define TEST_OPTION_TEST (3)
+#define TEST_OPTION TEST_OPTION_OUTPUT
+
 using std::cout;
 using std::endl;
 
@@ -21,7 +26,7 @@ using std::graph::vertex_edge_range_t;
 using std::graph::vertices;
 using std::graph::edges;
 using std::graph::target_key;
-
+using std::graph::edge_value;
 
 
 /* template <typename G, typename F>
@@ -68,8 +73,8 @@ auto dijkstra(
 
     // for (auto&& [v, w] : g[u]) -- pretty but would only allow one property
 
-    auto transform_incidence_edge = [&g](auto&& uv) { return std::tuple(target(g,uv),uv); };
-    auto vw = std::ranges::transform_view(edges(g,u), transform_incidence_edge);
+    auto transform_incidence_edge = [&g](auto&& uv) { return std::tuple(target(g, uv), uv); };
+    auto vw                       = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
     //auto vw = incidence_edges_view(g, u, target_key); // (can't put it in for stmt below right now)
     for (auto&& [v, uv] : vw) {
       weight_type w = weight(uv);
@@ -88,14 +93,63 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
   routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
 }
 
-TEST_CASE("Germany routes CSV+vol test", "[csv][vol]") {
+TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   init_console();
   routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
-  //using G = routes_vol_graph::graph_type;
-  //germany_routes.output_routes();
+  using G = routes_vol_graph::graph_type;
+  G& g    = germany_routes.graph();
+
+
+  germany_routes.output_routes();
 
   //cout << "\nUsing CPO functions" << endl;
-  //auto&& g = germany_routes.graph();
   //auto frantfurt = germany_routes.frankfurt();
   //REQUIRE(frantfurt != end(germany_routes.cities()));
+
+  SECTION("metadata") {
+    REQUIRE(std::ranges::size(g) == std::ranges::size(germany_routes.cities()));
+    size_t edge_cnt   = 0;
+    double total_dist = 0;
+    for (auto&& u : vertices(g)) {
+      for (auto&& uv : edges(g, u)) {
+        ++edge_cnt; // forward_list doesn't have size()
+        total_dist += edge_value(g, uv);
+      }
+    }
+    REQUIRE(edge_cnt == 11);
+    REQUIRE(total_dist == 2030.0);
+  }
+
+  SECTION("content") {
+#if TEST_OPTION == TEST_OPTION_OUTPUT
+    cout << "\nGermany Routes"
+         << "\n-------------------------------" << endl;
+    for (vertex_key_t<G> ukey = 0; auto&& u : g) {
+      cout << "[" << ukey << " " << germany_routes.city(ukey) << "] " << endl;
+      for (auto&& uv : edges(g, u)) {
+        cout << "  --> [" << target_key(g, uv) << " " << germany_routes.city(target_key(g, uv)) << "] "
+             << edge_value(g, uv) << "km" << endl;
+      }
+      ++ukey;
+    }
+#elif TEST_OPTION == TEST_OPTION_GEN
+    for (vertex_key_t<G> ukey = 0; auto&& u : vertices(g)) {
+      cout << "\n";
+      cout << "u = begin(g) + " << ui << ";\n";
+      cout << "EXPECT_EQ(\"" << u->name << "\", u->name);\n";
+      cout << "EXPECT_EQ(" << size(edges(g, u)) << ", size(edges(g, u)));\n";
+      cout << "uv = begin(g, *u);\n";
+      size_t uvi = 0;
+      for (uv = begin(edges(g, u)); uv != end(edges(g, u)); ++uv, ++uvi) {
+        if (uvi > 0) {
+          cout << "++uv;\n";
+        }
+        cout << "EXPECT_EQ(" << target_vertex_key(g, uv) << ", target_vertex_key(g, uv));\n";
+        cout << "EXPECT_EQ(\"" << target_vertex(g, uv)->name << "\", target_vertex(g, uv)->name);\n";
+        cout << "EXPECT_EQ(" << uv->weight << ", uv->weight);\n";
+      }
+    }
+#else TEST_OPTION == TEST_OPTION_TEST
+#endif
+  }
 }

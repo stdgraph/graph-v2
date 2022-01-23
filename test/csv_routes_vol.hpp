@@ -58,8 +58,8 @@ private: // construction helpers
       assert(to_key < cities().size());
       return dist;
     };
-    const key_type max_city_key = static_cast<key_type>(size(cities()));
-    graph_type     cc(max_city_key, reader, ekey_fnc, evalue_fnc, typename graph_type::allocator_type());
+    const key_type max_city_key = static_cast<key_type>(size(cities())) - 1;
+    graph_type     g(max_city_key, reader, ekey_fnc, evalue_fnc, typename graph_type::allocator_type());
 #if 0
     for (CSVRow& row : reader()) { // Input iterator-ish
       string_view from = row[0].get<string_view>();
@@ -67,7 +67,7 @@ private: // construction helpers
       weight_type dist = row[2].get<weight_type>();
     }
 #endif
-    return cc;
+    return g;
   }
 
 private:         // Member Variables
