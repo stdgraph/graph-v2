@@ -167,7 +167,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
         cout << "EXPECT_EQ(" << uv->weight << ", uv->weight);\n";
       }
     }
-#else TEST_OPTION == TEST_OPTION_TEST
+#elif TEST_OPTION == TEST_OPTION_TEST
 #endif
   }
 }

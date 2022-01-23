@@ -1,7 +1,7 @@
 #pragma once
 #include "csv_routes.hpp"
 #include "graph/container/vol_graph.hpp"
-
+#include <iomanip>
 
 class routes_vol_graph : public routes_base<uint32_t> {
 public:
@@ -67,13 +67,15 @@ private:         // Member Variables
 };
 
 template <typename OStream>
-OStream& operator<<(OStream& os, const routes_vol_graph& g) {
-  for (routes_vol_graph::key_type ukey = 0; auto&& u : std::graph::vertices(g.graph())) {
-    os << '[' << ukey << ' ' << g.city(ukey) << ']' << std::endl;
-    for (auto&& uv : std::graph::edges(g.graph(), u)) {
-      auto vkey = uv.target_key();
-      os << "  --> [" << vkey << ' ' << g.city(vkey) << "] " << std::graph::edge_value(g.graph(), uv) << "km"
-         << std::endl;
+OStream& operator<<(OStream& os, const routes_vol_graph& graph) {
+  using namespace std::graph;
+  auto&& g = graph.graph();
+  for (routes_vol_graph::key_type ukey = 0; auto&& u : vertices(g)) {
+    os << '[' << ukey << ' ' << vertex_value(g, u) << ']' << std::endl;
+    for (auto&& uv : edges(g, u)) {
+      auto   vkey = target_key(g, uv);
+      auto&& v    = target(g, uv);
+      os << "  --> [" << vkey << ' ' << vertex_value(g, v) << "] " << edge_value(g, uv) << "km" << std::endl;
     }
     ++ukey;
   }
