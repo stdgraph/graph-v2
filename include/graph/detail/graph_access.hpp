@@ -40,8 +40,8 @@ namespace access {
   TAG_INVOKE_DEF(vertex_key);
 }
 template <typename G>
-auto vertex_key(G&& g, _fwd::vertex_iterator_t<G> ui) {
-  return access::vertex_key(g, ui);
+auto vertex_key(G&& g, _fwd::vertex_reference_t<G> u) {
+  return access::vertex_key(g, u);
 }
 namespace _fwd {
   template <typename G>
@@ -54,7 +54,7 @@ namespace access {
   TAG_INVOKE_DEF(vertex_value);
 }
 template <typename G>
-auto vertex_key(G&& g, _fwd::vertex_reference_t<G> u) {
+auto vertex_value(G&& g, _fwd::vertex_reference_t<G> u) {
   return access::vertex_value(g, u);
 }
 
@@ -79,6 +79,7 @@ namespace _fwd {
   template <typename G>
   using vertex_edge_range_t = decltype(edges(declval<G&&>(), declval<vertex_reference_t<G>>()));
 } // namespace _fwd
+
 
 //edge_key(g,uv)
 //
@@ -160,6 +161,35 @@ auto source_key(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>>
   return access::source_key(g, uv);
 }
 
+// other_vertex_key
+//
+namespace access {
+  TAG_INVOKE_DEF(other_vertex_key);
+}
+template <typename G>
+auto other_vertex_key(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv, _fwd::vertex_key_t<G> ukey) {
+  return access::other_vertex_key(g, uv, ukey);
+}
+template <typename G>
+auto other_vertex_key(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv, _fwd::vertex_key_t<G> ukey) {
+  return access::other_vertex_key(g, uv, ukey);
+}
+
+// other_vertex
+//
+namespace access {
+  TAG_INVOKE_DEF(other_vertex);
+}
+template <typename G>
+auto other_vertex(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv, _fwd::vertex_reference_t<G> u) {
+  return access::other_vertex(g, uv, u);
+}
+template <typename G>
+auto other_vertex(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv, _fwd::vertex_reference_t<G> u) {
+  return access::other_vertex(g, uv, u);
+}
+
+
 // find_vertex_edge
 // 
 namespace access {
@@ -191,6 +221,16 @@ auto find_edge(G&& g, _fwd::vertex_key_t<G> ukey, _fwd::vertex_key_t<G> vkey) {
   return access::find_edge(g, ukey, vkey);
 }
 
+// contains_edge
+//
+namespace access {
+  TAG_INVOKE_DEF(contains_edge);
+}
+template <typename G>
+auto contains_edge(G&& g, _fwd::vertex_key_t<G> ukey, _fwd::vertex_key_t<G> vkey) {
+  return access::contains_edge(g, ukey, vkey);
+}
+ 
 
 // degree - number of outgoing edges (e.g. neighbors)
 //
@@ -201,6 +241,12 @@ template <typename G>
 auto degree(G&& g, _fwd::vertex_key_t<G> ukey) {
   return access::degree(g, ukey);
 }
+
+
+// other_vertex
+// other_vertex_key
+// contains_edge
+// contains_vertex
 
 } // namespace std::graph
 

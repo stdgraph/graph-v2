@@ -3,7 +3,7 @@
 #include <concepts>
 #include <vector>
 #include <forward_list>
-#include "container_utility.hpp"
+//#include "container_utility.hpp"
 #include "graph/detail/graph_access.hpp"
 
 namespace std::graph::container {
@@ -68,7 +68,7 @@ class _vol_edge : public _vol_edge_base<EV, VV, GV, VKey, Alloc> {
 public:
   using base_type       = _vol_edge_base<EV, VV, GV, VKey, Alloc>;
   using vertex_key_type = VKey;
-  using value_type = EV;
+  using value_type      = EV;
   using graph_type      = vol_graph<EV, VV, GV, VKey, Alloc>;
   using vertex_type     = _vol_vertex<EV, VV, GV, VKey, Alloc>;
   using edge_type       = _vol_edge<EV, VV, GV, VKey, Alloc>;
@@ -171,6 +171,10 @@ private:
   edges_type edges_;
 
 private: // tag_invoke properties
+  friend vertex_key_type tag_invoke(::std::graph::access::vertex_key_fn_t, const graph_type& g, const vertex_type& u) {
+    return static_cast<vertex_key_type>(&u - &g[0]); // works well when everything is contiguous in memory
+  }
+
   friend edges_type& tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) { return u.edges_; }
   friend const edges_type& tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_type& u) {
     return u.edges_;
@@ -178,11 +182,13 @@ private: // tag_invoke properties
 
   edges_type::iterator
   tag_invoke(::std::graph::access::find_vertex_edge_fn_t, graph_type& g, vertex_key_type ukey, vertex_key_type vkey) {
-    return ranges::find(g[ukey].edges_, [&g,&vkey](const edge_type& uv) -> bool { return target_key(g, uv) == vkey; });
+    return ranges::find(g[ukey].edges_, [&g, &vkey](const edge_type& uv) -> bool { return target_key(g, uv) == vkey; });
   }
-  edges_type::const_iterator
-  tag_invoke(::std::graph::access::find_vertex_edge_fn_t, const graph_type& g, vertex_key_type ukey, vertex_key_type vkey) {
-    return ranges::find(g[ukey].edges_, [&g,&vkey](const edge_type& uv) -> bool { return target_key(g, uv) == vkey; });
+  edges_type::const_iterator tag_invoke(::std::graph::access::find_vertex_edge_fn_t,
+                                        const graph_type& g,
+                                        vertex_key_type   ukey,
+                                        vertex_key_type   vkey) {
+    return ranges::find(g[ukey].edges_, [&g, &vkey](const edge_type& uv) -> bool { return target_key(g, uv) == vkey; });
   }
 };
 
@@ -190,12 +196,12 @@ private: // tag_invoke properties
 template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
 class _vol_vertex : public _vol_vertex_base<EV, VV, GV, VKey, Alloc> {
 public:
-  using base_type  = _vol_vertex_base<EV, VV, GV, VKey, Alloc>;
-  using value_type = VV;
-  using graph_type      = vol_graph<EV, VV, GV, VKey, Alloc>;
-  using vertex_type     = _vol_vertex<EV, VV, GV, VKey, Alloc>;
-  using edge_type       = _vol_edge<EV, VV, GV, VKey, Alloc>;
-  using edges_type      = _vol_edges<EV, VV, GV, VKey, Alloc>;
+  using base_type   = _vol_vertex_base<EV, VV, GV, VKey, Alloc>;
+  using value_type  = VV;
+  using graph_type  = vol_graph<EV, VV, GV, VKey, Alloc>;
+  using vertex_type = _vol_vertex<EV, VV, GV, VKey, Alloc>;
+  using edge_type   = _vol_edge<EV, VV, GV, VKey, Alloc>;
+  using edges_type  = _vol_edges<EV, VV, GV, VKey, Alloc>;
 
 public:
   _vol_vertex(const value_type& value, Alloc alloc = Alloc()) : base_type(alloc), value_(value) {}
@@ -234,7 +240,11 @@ template <typename EV, typename GV, typename VKey, typename Alloc>
 class _vol_vertex<EV, void, GV, VKey, Alloc> : public _vol_vertex_base<EV, void, GV, VKey, Alloc> {
 public:
   using base_type  = _vol_vertex_base<EV, void, GV, VKey, Alloc>;
-  using value_type = void;
+  using value_type  = void;
+  using graph_type  = vol_graph<EV, void, GV, VKey, Alloc>;
+  using vertex_type = _vol_vertex<EV, void, GV, VKey, Alloc>;
+  using edge_type   = _vol_edge<EV, void, GV, VKey, Alloc>;
+  using edges_type  = _vol_edges<EV, void, GV, VKey, Alloc>;
 
 public:
   _vol_vertex()                   = default;

@@ -10,6 +10,9 @@
 using std::cout;
 using std::endl;
 
+using std::graph::vertex_t;
+using std::graph::vertex_key_t;
+
 using std::graph::vertices;
 using std::graph::edges;
 
@@ -91,11 +94,19 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
 TEST_CASE("Germany routes CSV+vol test", "[csv][vol]") {
   init_console();
   routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
-  auto&&           g = germany_routes.graph();
+  using G = routes_vol_graph::graph_type;
+  germany_routes.output_routes();
 
-  for (auto&& u : vertices(g)) {
+  cout << "\nUsing CPO functions" << endl;
+  auto&& g = germany_routes.graph();
+  for (vertex_key_t<G> ukey = 0; auto&& u : vertices(g)) {
     for (auto&& uv : edges(g, u)) {
+      auto vkey = uv.target_key();
+      std::cout << germany_routes.cities()[ukey] << "[" << ukey << "] --> " << germany_routes.cities()[vkey] << "["
+                << vkey << "] "
+                << uv.value()
+                << std::endl;
     }
+    ++ukey;
   }
-
 }

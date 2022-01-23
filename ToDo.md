@@ -6,14 +6,17 @@
 - API
   - [ ] Common
   - [ ] concepts and type_traits
-  - [ ] graph types
-  - [ ] vertex types
-  - [ ] edge types
-  - [ ] ranges
-    - [ ] vertex_range
-    - [ ] vertex_edge_range
-    - [ ] vertex_vertex_range
-    - [ ] edge_range
+  - [x] graph types
+  - [x] vertex types
+  - [x] edge types
+  - [ ] Accessor functions
+    - [ ] as CPO
+    - [ ] default implementations (e.g. degree==size)
+  - [x] ranges
+    - [x] vertex_range
+    - [x] vertex_edge_range
+    - [x] vertex_vertex_range
+    - [x] edge_range
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -23,8 +26,10 @@
   - [ ] Range Adaptors
     - [ ] edge_range<graph, vertex_range, vertex_edge_range>
     - [ ] vertex_vertex_range<graph, vertex_range, vertex_edge_range>
+    - [ ] indexed_vertex_range: returns pair<vertex_key,vertex&>
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
+      - [ ] Dijkstra (book)
       - [ ] Dijkstra
       - [ ] Bellman-Ford
     - [ ] Connected Components
@@ -45,7 +50,8 @@
         - [ ] unit tests
           - [ ] Validate structure & weights
       - [ ] Validate constexpr using initializer_list
-    - [ ] vofl (vector of forward_list)
+    - [ ] vol (vector of forward_list)
+      - [x] Implement graph, vector, edge
     - [ ] directed_adjacency_vector
     - [ ] undirected_adjacency_list
 - C\+\+20 and C\+\+23
@@ -76,7 +82,12 @@
     - [ ] What's missing? const types; other?
   - [ ] leading & trailing spaces for quoted values aren't ignored
   - [ ] can it be reused for multi-pass?
-  - [ ] Fork & modify?
+  - [x] Fork & modify? No response to my issue I submitted
+- [ ] vertex_key(g,u) now takes a vertex reference (not iterator)
+  - [ ] how to define vertex_key_t without calling vertex_key()?
+  - [ ] make it obvious it's unavailable for non-contiguous vertices
+  - [ ] create index_vertex_range that returns pair<index,vertex&>
+- [ ] Are the CSR vertex & edge types different? (requirement of incidence and adjacency concepts)
 
 ## Resolved
 ### ToDo Completed
