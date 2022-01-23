@@ -242,11 +242,17 @@ auto degree(G&& g, _fwd::vertex_key_t<G> ukey) {
   return access::degree(g, ukey);
 }
 
+// graph_value
+//
+namespace access {
+  TAG_INVOKE_DEF(graph_value);
+}
+template <typename G>
+auto graph_value(G&& g) {
+  return access::graph_value(g);
+}
 
-// other_vertex
-// other_vertex_key
-// contains_edge
-// contains_vertex
+
 
 } // namespace std::graph
 
