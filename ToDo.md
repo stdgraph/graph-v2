@@ -26,10 +26,11 @@
   - [ ] Range Adaptors
     - [ ] edge_range<graph, vertex_range, vertex_edge_range>
     - [ ] vertex_vertex_range<graph, vertex_range, vertex_edge_range>
-    - [ ] indexed_vertex_range: returns pair<vertex_key,vertex&>
+    - [ ] vertices(g) -> [ukey, u]
+    - [ ] edges(g,u) -> [vkey,uv] (incidence)
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
-      - [ ] Dijkstra (book)
+      - [x] Dijkstra (book, impl from AndrewL)
       - [ ] Dijkstra
       - [ ] Bellman-Ford
     - [ ] Connected Components
@@ -38,24 +39,17 @@
     - [ ] Articulation Points
     - [ ] Transitive Closure
 - Graph Containers (data structures)
-    - [ ] csr_adjacency graph
-      - [x] Define
-      - [ ] Create vertex type
-      - [ ] Create edge type
-      - [ ] Create vertex iterators
-      - [ ] Create vertex_edge iterators
-      - [ ] routes_csv_csr_graph
-        - [ ] Load from CSV file
-        - [ ] output to cout to validate
-        - [ ] unit tests
-          - [ ] Validate structure & weights
-      - [ ] Validate constexpr using initializer_list
-    - [ ] vol (vector of forward_list)
+    - [ ] vol_graph_ (vector of forward_list)
       - [x] Implement graph, vector, edge
+      - [x] Load from CSV file
+    - [ ] csr_graph
+      - [x] Implement graph, vertex, edge
+      - [ ] Load from CSV file
+      - [ ] Validate with vol_graph tests
     - [ ] directed_adjacency_vector
     - [ ] undirected_adjacency_list
 - C\+\+20 and C\+\+23
-  - [ ] connection points (e.g. tag_invoke)
+  - [x] connection points (e.g. tag_invoke)
   - [ ] modules
   - [ ] coroutines (simplify DFS, BFS & TopoSort?)
 - Tools, Libraries & Infrastructure

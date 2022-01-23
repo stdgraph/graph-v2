@@ -109,19 +109,10 @@ OStream& operator<<(OStream& os, const ostream_indenter& osi) {
 }
 
 
-/* template <typename G, typename F>
-concept target_function = // e.g. target_id(uv)
-      std::copy_constructible<F> && std::regular_invocable<F&, std::ranges::range_reference_t<inner_range_t<G>>>;
-template <typename G, typename F>
-concept source_function = // e.g. source_id(uv)
-      target_function<G, F>;*/
-
 template <typename G, typename F>
 concept edge_weight_function = // e.g. weight(uv)
       std::copy_constructible<F> && std::regular_invocable<F&, std::ranges::range_reference_t<vertex_edge_range_t<G>>>;
 
-
-#if 1
 // The index into weight vector stored as the first property
 template <std::graph::incidence_graph G, typename WF>
 requires edge_weight_function<G, WF> &&
@@ -154,10 +145,10 @@ auto dijkstra(
 
     // for (auto&& [v, w] : g[u]) -- pretty but would only allow one property
 
-    auto transform_incidence_edge = [&g](auto&& uv) { return std::tuple(target(g, uv), uv); };
-    auto vw                       = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
     //auto vw = incidence_edges_view(g, u, target_key); // (can't put it in for stmt below right now)
-    for (auto&& [v, uv] : vw) {
+    //for (auto&& [v, uv] : vw) {
+    for (auto&& uv : std::graph::edges(g, g[u])) {
+      auto        v = target_key(g, uv);
       weight_type w = weight(uv);
       if (distance[u] + w < distance[v]) {
         distance[v] = distance[u] + w;
@@ -168,12 +159,24 @@ auto dijkstra(
 
   return distance;
 }
-#endif // 0/1
+
 
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
   init_console();
   routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
 }
+
+TEST_CASE("Germany routes CSV+vol dijkstra", "[csv][vol][germany][dijkstra]") {
+  init_console();
+  routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  using G = routes_vol_graph::graph_type;
+  G& g    = germany_routes.graph();
+
+  auto frankfurt_key = germany_routes.frankfurt_key();
+  auto weight        = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
+  auto result        = dijkstra(g, frankfurt_key, weight);
+}
+
 
 TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   init_console();

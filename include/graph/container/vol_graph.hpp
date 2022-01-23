@@ -3,8 +3,7 @@
 #include <concepts>
 #include <vector>
 #include <forward_list>
-//#include "container_utility.hpp"
-#include "graph/detail/graph_access.hpp"
+#include "graph/graph.hpp"
 
 namespace std::graph::container {
 
@@ -397,9 +396,9 @@ public: // Construction/Destruction/Assignment
     load_edges(max_row_idx, erng, ekey_fnc, evalue_fnc, alloc);
   }
 
-protected:
+public:
   template <typename VRng, typename VValueFnc>
-  void load_vertices(VRng& vrng, const VValueFnc& vvalue_fnc, Alloc alloc) {
+  void load_vertices(VRng& vrng, const VValueFnc& vvalue_fnc, Alloc alloc = Alloc()) {
     vertices_.reserve(ranges::size(vrng));
     for (auto&& u : vrng)
       vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
@@ -407,8 +406,11 @@ protected:
 
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  void load_edges(
-        vertex_key_type max_row_idx, ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc) {
+  void load_edges(vertex_key_type  max_row_idx,
+                  ERng&            erng,
+                  const EKeyFnc&   ekey_fnc,
+                  const EValueFnc& evalue_fnc,
+                  Alloc            alloc = Alloc()) {
     vertices_.resize(static_cast<size_t>(max_row_idx) + 1, vertex_type(alloc));
 
     // add edges
@@ -424,7 +426,7 @@ protected:
   }
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  void load_edges(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc) {
+  void load_edges(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc()) {
     // Nothing to do?
     if (erng.begin() == erng.end())
       return;
