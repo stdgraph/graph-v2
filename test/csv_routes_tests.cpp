@@ -23,6 +23,7 @@ using std::graph::edges;
 using std::graph::target_key;
 
 
+
 /* template <typename G, typename F>
 concept target_function = // e.g. target_id(uv)
       std::copy_constructible<F> && std::regular_invocable<F&, std::ranges::range_reference_t<inner_range_t<G>>>;
@@ -40,7 +41,7 @@ template <std::graph::incidence_graph G, typename WF>
 requires edge_weight_function<G, WF> &&
       std::is_arithmetic_v<std::invoke_result_t<WF, std::ranges::range_reference_t<vertex_edge_range_t<G>>>>
 auto dijkstra(
-      G&& g, vertex_key_t<G> source, WF weight = [](ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
+      G&& g, vertex_key_t<G> source, WF weight = [](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
         return 1;
       }) {
   using vertex_key_type = vertex_key_t<G>;
@@ -90,11 +91,11 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
 TEST_CASE("Germany routes CSV+vol test", "[csv][vol]") {
   init_console();
   routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
-  using G = routes_vol_graph::graph_type;
+  //using G = routes_vol_graph::graph_type;
   //germany_routes.output_routes();
 
   //cout << "\nUsing CPO functions" << endl;
   //auto&& g = germany_routes.graph();
-  auto frantfurt = germany_routes.frankfurt();
-  REQUIRE(frantfurt != end(germany_routes.cities()));
+  //auto frantfurt = germany_routes.frankfurt();
+  //REQUIRE(frantfurt != end(germany_routes.cities()));
 }

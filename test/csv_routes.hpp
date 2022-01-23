@@ -102,7 +102,7 @@ public: // Construction/Destruction/Assignment
   /// </summary>
   /// <param name="csv_file">Path for the input CSV file of cities</param>
   routes_base(csv::string_view csv_file) {
-    auto&& [labels, row_cnt] = unique_vertex_labels(csv_file, 0ull, 1ull);
+    auto&& [labels, row_cnt] = unique_vertex_labels(csv_file, 0UL, 1UL);
     cities_                  = std::move(labels);
     edges_read_              = row_cnt;
   }
