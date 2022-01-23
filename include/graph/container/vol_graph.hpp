@@ -298,6 +298,47 @@ public: // Construction/Destruction/Assignment
   _vol_graph_base& operator=(const _vol_graph_base&) = default;
   _vol_graph_base& operator=(_vol_graph_base&&) = default;
 
+  /// Constructor that takes edge & vertex ranges to create the graph.
+  ///
+  /// @tparam ERng      The edge data range.
+  /// @tparam EKeyFnc   Function object to return edge_key_type of the
+  ///                   ERng::value_type.
+  /// @tparam EValueFnc Function object to return the edge_value_type, or
+  ///                   a type that edge_value_type is constructible
+  ///                   from. If the return type is void or empty_value the
+  ///                   edge_value_type default constructor will be used
+  ///                   to initialize the value.
+  /// @tparam VRng      The vertex data range.
+  /// @tparam VValueFnc Function object to return the vertex_value_type,
+  ///                   or a type that vertex_value_type is constructible
+  ///                   from. If the return type is void or empty_value the
+  ///                   vertex_value_type default constructor will be
+  ///                   used to initialize the value.
+  ///
+  /// @param erng       The container of edge data.
+  /// @param vrng       The container of vertex data.
+  /// @param ekey_fnc   The edge key extractor functor:
+  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
+  /// @param evalue_fnc The edge value extractor functor:
+  ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G>.
+  /// @param vvalue_fnc The vertex value extractor functor:
+  ///                   vvalue_fnc(VRng::value_type) -> vertex_value_t<G>.
+  /// @param alloc      The allocator to use for internal containers for
+  ///                   vertices & edges.
+  ///
+  template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  _vol_graph_base(const ERng&      erng,
+                  const VRng&      vrng,
+                  const EKeyFnc&   ekey_fnc,
+                  const EValueFnc& evalue_fnc,
+                  const VValueFnc& vvalue_fnc,
+                  Alloc            alloc)
+        : vertices_(alloc) {
+    load_vertices(vrng, vvalue_fnc, alloc);
+    load_edges(erng, ekey_fnc, evalue_fnc, alloc);
+  }
+
   /// Constructor that takes edge ranges to create the graph. Edges are scanned to determine the
   /// largest vertex key needed.
   ///
@@ -393,6 +434,13 @@ protected:
     load_edges(max_row_idx, erng, ekey_fnc, evalue_fnc, alloc);
   }
 
+  template <typename VRng, typename VValueFnc>
+  void load_vertices(VRng& vrng, const VValueFnc& vvalue_fnc, Alloc alloc) {
+    vertices_.reserve(ranges::size(vrng));
+    for (auto&& u : vrng)
+      vertices_.emplace_back(vertex_type(vvalue_fnc(u), alloc));
+  }
+
 public: // Properties
   constexpr auto begin() noexcept { return vertices_.begin(); }
   constexpr auto begin() const noexcept { return vertices_.begin(); }
@@ -477,12 +525,12 @@ public:
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   constexpr vol_graph(vertex_key_type  max_vertex_key,
-                      const GV&        g,
+                      const GV&        gv,
                       ERng&            erng,
                       const EKeyFnc&   ekey_fnc,
                       const EValueFnc& evalue_fnc,
                       Alloc            alloc = Alloc())
-        : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc), value_(g) {}
+        : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc), value_(gv) {}
 
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
@@ -491,13 +539,36 @@ public:
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   constexpr vol_graph(vertex_key_type  max_vertex_key,
-                      GV&&             g,
+                      GV&&             gv,
                       ERng&            erng,
                       const EKeyFnc&   ekey_fnc,
                       const EValueFnc& evalue_fnc,
                       Alloc            alloc = Alloc())
-        : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc), value_(move(g)) {}
+        : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc), value_(move(gv)) {}
 
+  template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  vol_graph(const GV&        gv,
+            const ERng&      erng,
+            const VRng&      vrng,
+            const EKeyFnc&   ekey_fnc,
+            const EValueFnc& evalue_fnc,
+            const VValueFnc& vvalue_fnc,
+            Alloc            alloc = Alloc())
+        : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc), value_(gv) {}
+
+  template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  vol_graph(GV&&             gv,
+            const ERng&      erng,
+            const VRng&      vrng,
+            const EKeyFnc&   ekey_fnc,
+            const EValueFnc& evalue_fnc,
+            const VValueFnc& vvalue_fnc,
+            Alloc            alloc = Alloc())
+        : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc), value_(move(gv)) {}
+
+public:
   value_type&       value() { return value_; }
   const value_type& value() const { return value_; }
 
@@ -505,13 +576,8 @@ private:
   value_type value_;
 
 private: // tag_invoke properties
-  friend value_type& tag_invoke(::std::graph::access::graph_value_fn_t, graph_type& g) {
-    return g.value_;
-  }
-  friend const value_type&
-  tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g) {
-    return g.value_;
-  }
+  friend value_type&       tag_invoke(::std::graph::access::graph_value_fn_t, graph_type& g) { return g.value_; }
+  friend const value_type& tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g) { return g.value_; }
 };
 
 // a specialization for vol_graph<...> that doesn't have a graph value_type
@@ -545,6 +611,16 @@ public:
                       const EValueFnc& evalue_fnc,
                       Alloc            alloc = Alloc())
         : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc) {}
+
+  template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  vol_graph(const ERng&      erng,
+            const VRng&      vrng,
+            const EKeyFnc&   ekey_fnc,
+            const EValueFnc& evalue_fnc,
+            const VValueFnc& vvalue_fnc,
+            Alloc            alloc = Alloc())
+        : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc) {}
 };
 
 } // namespace std::graph::container

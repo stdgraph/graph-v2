@@ -41,6 +41,7 @@ concept edge_weight_function = // e.g. weight(uv)
       std::copy_constructible<F> && std::regular_invocable<F&, std::ranges::range_reference_t<vertex_edge_range_t<G>>>;
 
 
+#if 0
 // The index into weight vector stored as the first property
 template <std::graph::incidence_graph G, typename WF>
 requires edge_weight_function<G, WF> &&
@@ -87,6 +88,7 @@ auto dijkstra(
 
   return distance;
 }
+#endif //0
 
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
   init_console();
