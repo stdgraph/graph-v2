@@ -33,7 +33,7 @@ OStream& utf8_out(OStream& os, const char ch) {
   if (ch < 0x7f)
     os << ch;
   else
-    os << '\\' << std::setiosflags(std::ios_base::hex) << ch << std::setiosflags(std::ios_base::dec);
+    os << "\\0x" << std::setiosflags(std::ios_base::hex) << ch << std::setiosflags(std::ios_base::dec);
   return os;
 }
 

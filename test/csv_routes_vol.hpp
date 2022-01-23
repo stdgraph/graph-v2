@@ -48,7 +48,10 @@ private: // construction helpers
     auto vvalue_fnc = [](const std::string& name) { return std::string_view(name); };
 
     const key_type max_city_key = static_cast<key_type>(size(cities())) - 1;
-    graph_type     g(max_city_key, reader, ekey_fnc, evalue_fnc, typename graph_type::allocator_type());
+    //graph_type     g(reader, ekey_fnc, evalue_fnc, typename graph_type::allocator_type());
+    //graph_type     g(max_city_key, reader, ekey_fnc, evalue_fnc, typename graph_type::allocator_type());
+    graph_type g(reader, cities(), ekey_fnc, evalue_fnc, vvalue_fnc);
+
 #if 0
     for (CSVRow& row : reader()) { // Input iterator-ish
       string_view from = row[0].get<string_view>();
