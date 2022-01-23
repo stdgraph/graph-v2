@@ -31,14 +31,13 @@ public
       : // Operations
         // used to visually validate core functionality
   void output_routes() const {
-    auto&& g = graph();
-    for (key_type ukey = 0; ukey < size(graph()); ++ukey) {
-      auto&& u = g[ukey];
-      for (auto&& uv : u.edges()) {
+    for (key_type ukey = 0; auto&& u : std::graph::vertices(graph())) {
+      for (auto&& uv : std::graph::edges(graph(), u)) {
         auto vkey = uv.target_key();
-        std::cout << cities()[ukey] << "[" << ukey << "] --> " << cities()[vkey] << "[" << vkey << "] " << uv.value()
-                  << std::endl;
+        std::cout << city(ukey) << "[" << ukey << "] --> " << city(vkey) << "[" << vkey << "] "
+                  << std::graph::edge_value(graph(), uv) << std::endl;
       }
+      ++ukey;
     }
   }
 

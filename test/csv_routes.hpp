@@ -119,6 +119,8 @@ public: // Properties
   constexpr cities_vec&       cities() { return cities_; }
   constexpr const cities_vec& cities() const { return cities_; }
 
+  constexpr std::string_view city(key_type city_key) const { return cities_[city_key]; }
+
   constexpr cities_vec::iterator find_city(std::string_view city_name) {
     auto it = std::ranges::lower_bound(cities_, city_name);
     if (it != end(cities_) && *it == city_name)

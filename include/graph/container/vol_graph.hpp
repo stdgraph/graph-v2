@@ -94,9 +94,9 @@ private:
   value_type value_ = value_type();
 
 private: // tag_invoke properties
-  friend value_type& tag_invoke(::std::graph::access::edge_value_fn_t, graph_type& g, edge_type& u) { return u.value_; }
-  friend const value_type& tag_invoke(::std::graph::access::edge_value_fn_t, const graph_type& g, const edge_type& u) {
-    return u.value_;
+  friend value_type& tag_invoke(::std::graph::access::edge_value_fn_t, graph_type& g, edge_type& uv) { return uv.value_; }
+  friend const value_type& tag_invoke(::std::graph::access::edge_value_fn_t, const graph_type& g, const edge_type& uv) {
+    return uv.value_;
   }
 };
 
