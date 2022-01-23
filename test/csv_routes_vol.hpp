@@ -2,6 +2,8 @@
 #include "csv_routes.hpp"
 #include "graph/container/vol_graph.hpp"
 #include <iomanip>
+#include <algorithm>
+#include <ranges>
 
 class routes_vol_graph : public routes_base<uint32_t> {
 public:
@@ -70,8 +72,20 @@ template <typename OStream>
 OStream& operator<<(OStream& os, const routes_vol_graph& graph) {
   using namespace std::graph;
   auto&& g = graph.graph();
+
+#if 0
+  // experiment with transform
+  using namespace std::ranges;
+  auto rng = vertices(g) | views::transform([&g](auto&& u) { return std::tuple(u, vertex_value(g, u)); });
+
+  //auto transform_incidence_edge = [&g](auto&& uv) { return std::tuple(target(g, uv), uv); };
   for (routes_vol_graph::key_type ukey = 0; auto&& u : vertices(g)) {
     os << '[' << ukey << ' ' << vertex_value(g, u) << ']' << std::endl;
+    //auto vw = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
+    //auto x = [&g](auto&& uv) { return std::tuple(uv, target(g, uv); };
+
+    //auto rng = edges(g, u) | views::transform([&g](auto&& uv) { return std::tuple(target(g, uv), uv); });
+
     for (auto&& uv : edges(g, u)) {
       auto   vkey = target_key(g, uv);
       auto&& v    = target(g, uv);
@@ -79,5 +93,17 @@ OStream& operator<<(OStream& os, const routes_vol_graph& graph) {
     }
     ++ukey;
   }
+#else
+  for (routes_vol_graph::key_type ukey = 0; auto&& u : vertices(g)) {
+    os << '[' << ukey << ' ' << vertex_value(g, u) << ']' << std::endl;
+    //auto vw = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
+    for (auto&& uv : edges(g, u)) {
+      auto   vkey = target_key(g, uv);
+      auto&& v    = target(g, uv);
+      os << "  --> [" << vkey << ' ' << vertex_value(g, v) << "] " << edge_value(g, uv) << "km" << std::endl;
+    }
+    ++ukey;
+  }
+#endif
   return os;
 }

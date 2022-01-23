@@ -276,7 +276,7 @@ using _vol_vertices = vector<_vol_vertex<EV, VV, GV, VKey, Alloc>, allocator<_vo
 
 
 //--------------------------------------------------------------------------------------------------
-// vol_graph - vector of list
+// vol_graph - vector of [forward] list
 //
 template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
 class _vol_graph_base {
