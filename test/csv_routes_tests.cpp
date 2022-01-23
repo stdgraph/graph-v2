@@ -28,6 +28,33 @@ using std::graph::edges;
 using std::graph::target_key;
 using std::graph::edge_value;
 
+template <typename OStream>
+OStream& utf8_out(OStream& os, const char ch) {
+  if (ch < 0x7f)
+    os << ch;
+  else
+    os << '\\' << std::setiosflags(std::ios_base::hex) << ch << std::setiosflags(std::ios_base::dec);
+  return os;
+}
+
+template <typename OStream>
+OStream& utf8_out(OStream& os, const std::string& s) {
+  for (auto ch : s)
+    os << ch;
+}
+
+template <typename OStream>
+OStream& utf8_out(OStream& os, const std::string_view s) {
+  for (auto ch : s)
+    os << ch;
+}
+
+template <typename OStream>
+OStream& utf8_out(OStream& os, const char* s) {
+  for (const char* ch = s; ch && *ch; ++ch)
+    os << *ch;
+}
+
 
 /* template <typename G, typename F>
 concept target_function = // e.g. target_id(uv)
@@ -41,7 +68,7 @@ concept edge_weight_function = // e.g. weight(uv)
       std::copy_constructible<F> && std::regular_invocable<F&, std::ranges::range_reference_t<vertex_edge_range_t<G>>>;
 
 
-#if 0
+#if 1
 // The index into weight vector stored as the first property
 template <std::graph::incidence_graph G, typename WF>
 requires edge_weight_function<G, WF> &&
@@ -88,7 +115,7 @@ auto dijkstra(
 
   return distance;
 }
-#endif //0
+#endif // 0/1
 
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
   init_console();
@@ -100,9 +127,6 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
   using G = routes_vol_graph::graph_type;
   G& g    = germany_routes.graph();
-
-
-  germany_routes.output_routes();
 
   //cout << "\nUsing CPO functions" << endl;
   //auto frantfurt = germany_routes.frankfurt();
@@ -125,15 +149,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   SECTION("content") {
 #if TEST_OPTION == TEST_OPTION_OUTPUT
     cout << "\nGermany Routes"
-         << "\n-------------------------------" << endl;
-    for (vertex_key_t<G> ukey = 0; auto&& u : g) {
-      cout << "[" << ukey << " " << germany_routes.city(ukey) << "] " << endl;
-      for (auto&& uv : edges(g, u)) {
-        cout << "  --> [" << target_key(g, uv) << " " << germany_routes.city(target_key(g, uv)) << "] "
-             << edge_value(g, uv) << "km" << endl;
-      }
-      ++ukey;
-    }
+         << "\n-------------------------------" << germany_routes << endl;
 #elif TEST_OPTION == TEST_OPTION_GEN
     for (vertex_key_t<G> ukey = 0; auto&& u : vertices(g)) {
       cout << "\n";

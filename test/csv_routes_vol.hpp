@@ -27,21 +27,7 @@ public: // Properties
   constexpr graph_type&       graph() { return g_; }
   constexpr const graph_type& graph() const { return g_; }
 
-public
-      : // Operations
-        // used to visually validate core functionality
-  void output_routes() const {
-    for (key_type ukey = 0; auto&& u : std::graph::vertices(graph())) {
-      for (auto&& uv : std::graph::edges(graph(), u)) {
-        auto vkey = uv.target_key();
-        std::cout << city(ukey) << "[" << ukey << "] --> " << city(vkey) << "[" << vkey << "] "
-                  << std::graph::edge_value(graph(), uv) << std::endl;
-      }
-      ++ukey;
-    }
-  }
-
-
+public:  // Operations
 private: // construction helpers
   graph_type load_routes(csv::string_view csv_file) {
     csv::CSVReader reader(csv_file); // CSV file reader
@@ -58,6 +44,9 @@ private: // construction helpers
       assert(to_key < cities().size());
       return dist;
     };
+
+    auto vvalue_fnc = [](const std::string& name) { return std::string_view(name); };
+
     const key_type max_city_key = static_cast<key_type>(size(cities())) - 1;
     graph_type     g(max_city_key, reader, ekey_fnc, evalue_fnc, typename graph_type::allocator_type());
 #if 0
@@ -73,3 +62,17 @@ private: // construction helpers
 private:         // Member Variables
   graph_type g_; // CSR graph of routes
 };
+
+template <typename OStream>
+OStream& operator<<(OStream& os, const routes_vol_graph& g) {
+  for (routes_vol_graph::key_type ukey = 0; auto&& u : std::graph::vertices(g.graph())) {
+    os << '[' << ukey << ' ' << g.city(ukey) << ']' << std::endl;
+    for (auto&& uv : std::graph::edges(g.graph(), u)) {
+      auto vkey = uv.target_key();
+      os << "  --> [" << vkey << ' ' << g.city(vkey) << "] " << std::graph::edge_value(g.graph(), uv) << "km"
+         << std::endl;
+    }
+    ++ukey;
+  }
+  return os;
+}
