@@ -16,6 +16,7 @@ target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:Clang>:>)
 target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:GNU>:--concepts>)
 target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>)
 target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>)
+target_compile_options(project_options INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MSVC)

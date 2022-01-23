@@ -134,6 +134,9 @@ public: // Properties
     return end(cities_);
   }
 
+  constexpr cities_vec::iterator frankfurt() { return find_city("Frankf\xC3\xBCrt"); }
+  constexpr cities_vec::const_iterator frankfurt() const { return find_city("Frankf\xC3\xBCrt"); }
+
   constexpr key_type find_city_key(std::string_view city_name) const {
     return static_cast<key_type>(find_city(city_name) - begin(cities_));
   }
