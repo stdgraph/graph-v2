@@ -16,7 +16,7 @@ namespace access {
 }
 
 template <typename G>
-auto vertices(G&& g) {
+auto&& vertices(G&& g) {
   return access::vertices(g);
 }
 namespace _fwd {
@@ -30,11 +30,11 @@ namespace _fwd {
   using vertex_vertex_range_t = decltype(vertices(declval<G&&>(), declval<vertex_reference_t<G>>()));
 } // namespace _fwd
 template <typename G>
-auto vertices(G&& g, _fwd::vertex_reference_t<G> u) {
+auto&& vertices(G&& g, _fwd::vertex_reference_t<G> u) {
   return access::vertices(g, u);
 }
 
-//vertex_key(g,u)
+//vertex_key(g,u) - only available when vertices in contiguous memory
 //
 namespace access {
   TAG_INVOKE_DEF(vertex_key);
@@ -54,7 +54,7 @@ namespace access {
   TAG_INVOKE_DEF(vertex_value);
 }
 template <typename G>
-auto vertex_value(G&& g, _fwd::vertex_reference_t<G> u) {
+auto&& vertex_value(G&& g, _fwd::vertex_reference_t<G> u) {
   return access::vertex_value(g, u);
 }
 
@@ -66,11 +66,11 @@ namespace access {
   TAG_INVOKE_DEF(edges);
 }
 template <typename G>
-auto edges(G&& g) {
+auto&& edges(G&& g) {
   return access::edges(g);
 }
 template <typename G>
-auto edges(G&& g, _fwd::vertex_reference_t<G> u) {
+auto&& edges(G&& g, _fwd::vertex_reference_t<G> u) {
   return access::edges(g, u);
 }
 namespace _fwd {
@@ -101,7 +101,7 @@ namespace access {
   TAG_INVOKE_DEF(edge_value);
 }
 template<typename G>
-auto edge_value(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv) {
+auto&& edge_value(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv) {
   return access::edge_value(g, uv);
 }
 
@@ -111,11 +111,11 @@ namespace access {
   TAG_INVOKE_DEF(target_key);
 }
 template <typename G>
-auto target_key(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv) {
+auto target_key(G&& g, const ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv) {
   return access::target_key(g, uv);
 }
 template <typename G>
-auto target_key(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv) {
+auto target_key(G&& g, const ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv) {
   return access::target_key(g, uv);
 }
 
@@ -125,11 +125,11 @@ namespace access {
   TAG_INVOKE_DEF(target);
 }
 template <typename G>
-auto target(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv) {
+auto&& target(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv) {
   return access::target(g, uv);
 }
 template <typename G>
-auto target(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv) {
+auto&& target(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv) {
   return access::target(g, uv);
 }
 
@@ -139,11 +139,11 @@ namespace access {
   TAG_INVOKE_DEF(source);
 }
 template <typename G>
-auto source(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv) {
+auto&& source(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv) {
   return access::source(g, uv);
 }
 template <typename G>
-auto source(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv) {
+auto&& source(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv) {
   return access::source(g, uv);
 }
 
@@ -181,11 +181,11 @@ namespace access {
   TAG_INVOKE_DEF(other_vertex);
 }
 template <typename G>
-auto other_vertex(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv, _fwd::vertex_reference_t<G> u) {
+auto&& other_vertex(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv, _fwd::vertex_reference_t<G> u) {
   return access::other_vertex(g, uv, u);
 }
 template <typename G>
-auto other_vertex(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv, _fwd::vertex_reference_t<G> u) {
+auto&& other_vertex(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv, _fwd::vertex_reference_t<G> u) {
   return access::other_vertex(g, uv, u);
 }
 
@@ -248,7 +248,7 @@ namespace access {
   TAG_INVOKE_DEF(graph_value);
 }
 template <typename G>
-auto graph_value(G&& g) {
+auto&& graph_value(G&& g) {
   return access::graph_value(g);
 }
 
