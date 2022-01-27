@@ -216,10 +216,6 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
     static_assert(std::is_const_v<G2>);
 
     static_assert(std::is_const_v<G2>);
-    //for (auto&& vw : std::graph::vertices_range_view(g2)) {
-    //}
-    //for (auto&& vw : std::graph::vertices_view(g)) {
-    //}
 
     std::graph::const_vertices_view_iterator<G> i0;
     std::graph::const_vertices_view_iterator<G> i1(g);
@@ -234,6 +230,25 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
       REQUIRE(ukey == 1);
       auto i1b = i1;
       REQUIRE(i1b == i1);
+    }
+
+    std::graph::const_vertices_view_iterator<G> i2(g2);
+    {
+      auto&& [ukey, u] = *i2;
+      static_assert(is_const_v<decltype(ukey)>);
+      static_assert(is_const_v<remove_reference_t<decltype(u)>>);
+      REQUIRE(ukey == 0);
+    }
+    {
+      auto&& [ukey, u] = *++i2;
+      REQUIRE(ukey == 1);
+      auto i2b = i2;
+      REQUIRE(i2b == i2);
+    }
+
+    //for (auto&& vw : std::graph::vertices_range_view(g2)) {
+    //}
+    for (auto&& vw : std::graph::vertices_view(g2)) {
     }
   }
 

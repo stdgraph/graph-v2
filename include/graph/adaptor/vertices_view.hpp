@@ -28,7 +28,8 @@ protected:
   using shadow_value_type = pair<vertex_key_type, vertex_pointer_type>;
 
 public:
-  const_vertices_view_iterator(graph_type& g) : iter_(ranges::begin(vertices(g))) {}
+  const_vertices_view_iterator(const graph_type& g) : iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
+  const_vertices_view_iterator(vertex_iterator_type iter) : iter_(iter) {}
 
   constexpr const_vertices_view_iterator()                                    = default;
   constexpr const_vertices_view_iterator(const const_vertices_view_iterator&) = default;
@@ -50,6 +51,11 @@ public:
     // leave value_.second (vertex) as-is to avoid dereferencing iter_ when it's at end()
     return *this;
   }
+  constexpr const_vertices_view_iterator operator++(int) const {
+    const_vertices_view_iterator tmp(*this);
+    ++*this;
+    return tmp;
+  }
 
   constexpr bool operator==(const const_vertices_view_iterator& rhs) const { return iter_ == rhs.iter_; }
   //constexpr bool operator==(const vertices_view_iterator& rhs) const { return iter_ == rhs; }
@@ -57,12 +63,21 @@ public:
 protected:
   mutable shadow_value_type value_ = shadow_value_type(vertex_key_type(), nullptr);
   vertex_iterator_type      iter_;
+
+  friend bool operator==(const vertex_iterator_type& lhs, const const_vertices_view_iterator& rhs) {
+    return lhs == rhs.iter_;
+  }
 };
 
 template <typename G>
 auto vertices_view(const G& g) {
-  using SR = ranges::subrange<vertex_iterator_t<const G>>;
-  return SR(ranges::begin(vertices(g)), ranges::end(vertices(g)));
+  using iter_type     = const_vertices_view_iterator<const G>;
+  using sentinal_type = typename iter_type::vertex_iterator_type;
+  using SR            = ranges::subrange<iter_type, sentinal_type>;
+
+  auto first = iter_type(ranges::begin(vertices(const_cast<G&>(g))));
+  auto last  = sentinal_type(ranges::end(vertices(const_cast<G&>(g))));
+  return SR(first, last);
 }
 
 
