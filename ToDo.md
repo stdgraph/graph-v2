@@ -31,6 +31,8 @@
     - [ ] Articulation Points
     - [ ] Transitive Closure
 - Graph Containers (data structures)
+    - [ ] vol_graph
+      - [ ] Add \<bool sourced\> template parameter to include source_key
     - [ ] csr_graph
       - [ ] Implement graph, vertex, edge
       - [ ] Load from CSV file
@@ -75,6 +77,14 @@
 - [ ] Are the CSR vertex & edge types different? (requirement of incidence and adjacency concepts)
 - [ ] What is the best dynamic graph to propose for the std? vol, vov?
 - [ ] Can an edgelist be trivially created by a user? (e.g. vector<pair<target_key,weight>>)
+- [ ] If we have an access namespace, do we need a container namespace?
+- [ ] Best way to extend vol_graph to support different container types?
+  - [ ] template-template parameters?
+  - [ ] container template arguments like stack/queue?
+  - [ ] template specializations? (extension of current implementation)
+- [ ] SG19 Input
+  - [ ] Core data structures? static graph(CSR), dynamic graph (vol variant), edgelist graph
+  - [ ] vertex_key or vertex_id?
 
 ## Resolved
 ### ToDo Completed
