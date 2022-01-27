@@ -2,6 +2,8 @@
 #include "csv_routes_csr.hpp"
 #include "csv_routes_vol.hpp"
 #include "graph/graph.hpp"
+//#include "graph/adaptor/vertex_range_adaptor.hpp"
+#include "graph/adaptor/vertices_view.hpp"
 #include <cassert>
 #ifdef _MSC_VER
 #  include "Windows.h"
@@ -18,6 +20,9 @@
 
 using std::cout;
 using std::endl;
+
+using std::remove_reference_t;
+using std::is_const_v;
 
 using std::graph::vertex_t;
 using std::graph::vertex_key_t;
@@ -116,8 +121,8 @@ concept edge_weight_function = // e.g. weight(uv)
 // The index into weight vector stored as the first property
 template <std::graph::incidence_graph G, typename WF>
 requires edge_weight_function<G, WF> &&
-      std::is_arithmetic_v<std::invoke_result_t<WF, std::ranges::range_reference_t<vertex_edge_range_t<G>>>>
-          && std::ranges::random_access_range<std::graph::vertex_range_t<G>>
+      std::is_arithmetic_v<std::invoke_result_t<WF, std::ranges::range_reference_t<vertex_edge_range_t<G>>>> &&
+      std::ranges::random_access_range<std::graph::vertex_range_t<G>>
 auto dijkstra(
       G&& g, vertex_key_t<G> source, WF weight = [](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
         return 1;
@@ -202,6 +207,34 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
     }
     REQUIRE(edge_cnt == 11);
     REQUIRE(total_dist == 2030.0);
+  }
+
+  SECTION("vertex_view") {
+    using G2 = const G;
+    G2& g2   = g;
+    static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
+    static_assert(std::is_const_v<G2>);
+
+    static_assert(std::is_const_v<G2>);
+    //for (auto&& vw : std::graph::vertices_range_view(g2)) {
+    //}
+    //for (auto&& vw : std::graph::vertices_view(g)) {
+    //}
+
+    std::graph::const_vertices_view_iterator<G> i0;
+    std::graph::const_vertices_view_iterator<G> i1(g);
+    {
+      auto&& [ukey, u] = *i1;
+      static_assert(is_const_v<decltype(ukey)>);
+      static_assert(is_const_v<remove_reference_t<decltype(u)>>);
+      REQUIRE(ukey == 0);
+    }
+    {
+      auto&& [ukey, u] = *++i1;
+      REQUIRE(ukey == 1);
+      auto i1b = i1;
+      REQUIRE(i1b == i1);
+    }
   }
 
   SECTION("content") {
