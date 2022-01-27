@@ -273,10 +273,17 @@ private:
 template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
 using _vol_vertices = vector<_vol_vertex<EV, VV, GV, VKey, Alloc>, allocator<_vol_vertex<EV, VV, GV, VKey, Alloc>>>;
 
-
 //--------------------------------------------------------------------------------------------------
-// vol_graph - vector of [forward] list
-//
+/// vol_graph - vector of [forward] list
+///
+/// A graph that supports the minimal functionality required for the algorithms, where vertices are
+/// stored in a vector and edges are stored in a forward_list (which doesn't have a size). The 
+/// graph, vertex and edge types can optionally store a user-defined function; no space is reserved
+/// if a property isn't used.
+/// 
+/// A possible change to test the lower bounds of requirements is to use a deque to store the
+/// vertices instead of a vector.
+///
 template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
 class _vol_graph_base {
 public: // types
@@ -579,7 +586,7 @@ private:
 
 private: // tag_invoke properties
   friend value_type&       tag_invoke(::std::graph::access::graph_value_fn_t, graph_type& g) { return g.value_; }
-  friend const value_type& tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g) { return g.value_; }
+  friend const value_type& tag_invoke(::std::graph::access::graph_value_fn_t, const graph_type& g) { return g.value_; }
 };
 
 // a specialization for vol_graph<...> that doesn't have a graph value_type

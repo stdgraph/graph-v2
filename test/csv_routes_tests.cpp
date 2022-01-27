@@ -117,6 +117,7 @@ concept edge_weight_function = // e.g. weight(uv)
 template <std::graph::incidence_graph G, typename WF>
 requires edge_weight_function<G, WF> &&
       std::is_arithmetic_v<std::invoke_result_t<WF, std::ranges::range_reference_t<vertex_edge_range_t<G>>>>
+          && std::ranges::random_access_range<std::graph::vertex_range_t<G>>
 auto dijkstra(
       G&& g, vertex_key_t<G> source, WF weight = [](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
         return 1;
@@ -160,7 +161,6 @@ auto dijkstra(
   return distance;
 }
 
-
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
   init_console();
   routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -184,6 +184,8 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   using G = routes_vol_graph::graph_type;
   G& g    = germany_routes.graph();
 
+  //using inv_vec = std::vector<int>;
+  //using sr = std::ranges::subrange<inv_vec::iterator>;
   //cout << "\nUsing CPO functions" << endl;
   //auto frantfurt = germany_routes.frankfurt();
   //REQUIRE(frantfurt != end(germany_routes.cities()));

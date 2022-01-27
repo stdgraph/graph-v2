@@ -96,11 +96,11 @@ auto edge_key(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> u
 }
 
 //edge_value(g,uv)
-// 
+//
 namespace access {
   TAG_INVOKE_DEF(edge_value);
 }
-template<typename G>
+template <typename G>
 auto&& edge_value(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G>> uv) {
   return access::edge_value(g, uv);
 }
@@ -120,7 +120,7 @@ auto target_key(G&& g, const ranges::range_reference_t<_fwd::vertex_vertex_range
 }
 
 //target(g,uv)
-// 
+//
 namespace access {
   TAG_INVOKE_DEF(target);
 }
@@ -185,13 +185,14 @@ auto&& other_vertex(G&& g, ranges::range_reference_t<_fwd::vertex_edge_range_t<G
   return access::other_vertex(g, uv, u);
 }
 template <typename G>
-auto&& other_vertex(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv, _fwd::vertex_reference_t<G> u) {
+auto&&
+other_vertex(G&& g, ranges::range_reference_t<_fwd::vertex_vertex_range_t<G>> uv, _fwd::vertex_reference_t<G> u) {
   return access::other_vertex(g, uv, u);
 }
 
 
 // find_vertex_edge
-// 
+//
 namespace access {
   TAG_INVOKE_DEF(find_vertex_edge);
 }
@@ -230,16 +231,31 @@ template <typename G>
 auto contains_edge(G&& g, _fwd::vertex_key_t<G> ukey, _fwd::vertex_key_t<G> vkey) {
   return access::contains_edge(g, ukey, vkey);
 }
- 
+
 
 // degree - number of outgoing edges (e.g. neighbors)
 //
 namespace access {
   TAG_INVOKE_DEF(degree);
-}
+
+  template <typename G>
+  concept _has_degree_adl = requires(G&& g, _fwd::vertex_key_t<G> ukey) {
+    {degree(g, ukey)};
+  };
+
+  template <typename G>
+  concept _has_edges_size_adl = requires(G&& g, _fwd::vertex_reference_t<G> u) {
+    {ranges::size(edges(g, u))};
+  };
+} // namespace access
 template <typename G>
+requires access::_has_degree_adl<G> || access::_has_edges_size_adl<G>
 auto degree(G&& g, _fwd::vertex_key_t<G> ukey) {
-  return access::degree(g, ukey);
+  if constexpr (access::_has_degree_adl<G>)
+    return access::degree(g, ukey);
+  else if constexpr (access::_has_edges_size_adl<G>) {
+    return ranges::size(edges(g, *(ranges::begin(vertices(g)) + ukey)));
+  }
 }
 
 // graph_value
@@ -251,7 +267,6 @@ template <typename G>
 auto&& graph_value(G&& g) {
   return access::graph_value(g);
 }
-
 
 
 } // namespace std::graph

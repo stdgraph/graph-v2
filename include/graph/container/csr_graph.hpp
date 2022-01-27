@@ -234,9 +234,9 @@ class csr_graph {
   using index_vector_type = std::vector<KeyT, index_allocator_type>;
   using v_vector_type     = std::vector<EV, v_allocator_type>;
 
-  index_vector_type row_index_; // row_index into col_index_
-  index_vector_type col_index_; //
-  v_vector_type     v_;
+  index_vector_type row_index_; // index into col_index_ and v_
+  index_vector_type col_index_; // col_index_[n] holds the column index for v_[n]
+  v_vector_type     v_;         // edge values for non-zero entries
 
   using csr_vertex_range_type       = index_vector_type;
   using const_csr_vertex_range_type = const index_vector_type;
@@ -258,10 +258,10 @@ public: // Types
   using iterator       = csr_vertex_iterator<EV, KeyT, Alloc>;
 
 public: // Construction/Destruction
-  constexpr csr_graph()                     = default;
+  constexpr csr_graph()                 = default;
   constexpr csr_graph(const csr_graph&) = default;
   constexpr csr_graph(csr_graph&&)      = default;
-  constexpr ~csr_graph()                    = default;
+  constexpr ~csr_graph()                = default;
 
   constexpr csr_graph& operator=(const csr_graph&) = default;
   constexpr csr_graph& operator=(csr_graph&&) = default;
@@ -310,11 +310,11 @@ public: // Construction/Destruction
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   constexpr csr_graph(vertex_key_type  max_vertex_key,
-                          size_t           max_edges,
-                          ERng&            erng,
-                          const EKeyFnc&   ekey_fnc,
-                          const EValueFnc& evalue_fnc,
-                          Alloc            alloc = Alloc())
+                      size_t           max_edges,
+                      ERng&            erng,
+                      const EKeyFnc&   ekey_fnc,
+                      const EValueFnc& evalue_fnc,
+                      Alloc            alloc = Alloc())
         : row_index_(alloc), col_index_(alloc), v_(alloc) {
 
     load_edges(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc);
@@ -329,7 +329,7 @@ public: // Construction/Destruction
   /// @param alloc Allocator.
   ///
   constexpr csr_graph(const initializer_list<tuple<vertex_key_type, vertex_key_type, edge_value_type>>& ilist,
-                          const Alloc& alloc = Alloc())
+                      const Alloc&                                                                      alloc = Alloc())
         : csr_graph(
                 ilist,
                 [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) {

@@ -5,29 +5,21 @@
 ### ToDo 
 - API
   - [ ] Common
-  - [ ] concepts and type_traits
-  - [x] graph types
-  - [x] vertex types
-  - [x] edge types
+  - [ ] Concepts and type_traits
   - [ ] Accessor functions
-    - [ ] as CPO
-    - [ ] default implementations (e.g. degree==size)
-  - [x] ranges
-    - [x] vertex_range
-    - [x] vertex_edge_range
-    - [x] vertex_vertex_range
-    - [x] edge_range
+    - [x] as CPO
+    - [ ] default implementations (e.g. degree==size) (need something besides forward_list for edges to test)
 - Algorithms
   - [ ] Common
   - [ ] Ranges
     - [ ] BFS
     - [ ] DFS
     - [ ] Toplogical Sort
-  - [ ] Range Adaptors
+  - [ ] Range Adaptors (Views)
     - [ ] edge_range<graph, vertex_range, vertex_edge_range>
     - [ ] vertex_vertex_range<graph, vertex_range, vertex_edge_range>
-    - [ ] vertices(g) -> [ukey, u]
-    - [ ] edges(g,u) -> [vkey,uv] (incidence)
+    - [ ] **for([ukey, u] : vertices(g))**
+    - [ ] **for([vkey,uv] : edges(g,u))** (incidence)
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra (book, impl from AndrewL)
@@ -39,28 +31,31 @@
     - [ ] Articulation Points
     - [ ] Transitive Closure
 - Graph Containers (data structures)
-    - [ ] vol_graph_ (vector of forward_list)
-      - [x] Implement graph, vector, edge
-      - [x] Load from CSV file
     - [ ] csr_graph
-      - [x] Implement graph, vertex, edge
+      - [ ] Implement graph, vertex, edge
       - [ ] Load from CSV file
       - [ ] Validate with vol_graph tests
+    - [ ] edge_list_graph
     - [ ] directed_adjacency_vector
     - [ ] undirected_adjacency_list
-- C\+\+20 and C\+\+23
-  - [x] connection points (e.g. tag_invoke)
-  - [ ] modules
-  - [ ] coroutines (simplify DFS, BFS & TopoSort?)
+    - [ ] graph with map-based vertices (requires different algorithm impl)
+- [ ] Testing Patterns
+  - [x] Validate content
+  - [ ] Validate graph API
+  - [ ] Validate algorithms
+  - [ ] Apply to multiple data structures
 - Tools, Libraries & Infrastructure
   - [ ] Create mtx parser (from nwgraph)
-  - [ ] Constexpr unit tests (initial tests to verify pattern)
+  - [ ] **Constexpr unit tests (initial tests to verify pattern)**
   - [ ] Generate doxygen output
   - [ ] Validate address sanitizer build
   - [ ] Support Clang (waiting for full concepts support)
 - Feature & performance comparison
   - [ ] boost::graph
   - [ ] NWGraph
+- C\+\+20 and C\+\+23
+  - [ ] modules
+  - [ ] coroutines (simplify DFS, BFS & TopoSort?)
 - Documentation
   - [ ] REAME.md
     - [ ] Add general description
@@ -69,26 +64,36 @@
 - Feedback
 
 ### Issues
-- [ ] Can't run tests in VS+WSL2 (they will run in VSCode)
-  - [ ] Submit a defect?
+- [ ] Can't run tests in VS+WSL2 (they will run in VSCode, but is slow)
+  - [ ] Submit a defect to MS?
 - [ ] csv_parser
   - [ ] CSVReader doesn't conform to the C++20 input_range concept; can't define load functions properly
     - [ ] What's missing? const types; other?
   - [ ] leading & trailing spaces for quoted values aren't ignored
   - [ ] can it be reused for multi-pass?
-  - [x] Fork & modify? No response to my issue I submitted
-- [ ] vertex_key(g,u) now takes a vertex reference (not iterator)
-  - [ ] how to define vertex_key_t without calling vertex_key()?
-  - [ ] make it obvious it's unavailable for non-contiguous vertices
-  - [ ] create index_vertex_range that returns pair<index,vertex&>
+  - [x] Fork: No response to issues submitted
 - [ ] Are the CSR vertex & edge types different? (requirement of incidence and adjacency concepts)
+- [ ] What is the best dynamic graph to propose for the std? vol, vov?
+- [ ] Can an edgelist be trivially created by a user? (e.g. vector<pair<target_key,weight>>)
 
 ## Resolved
 ### ToDo Completed
 - API
+  - [x] graph types
+  - [x] vertex types
+  - [x] edge types
+  - [x] ranges
+    - [x] vertex_range
+    - [x] vertex_edge_range
+    - [x] vertex_vertex_range
+    - [x] edge_range
 - Algorithms
 - Graph Containers (data structures)
+    - [x] vol_graph_ (vector of forward_list)
+      - [x] Implement graph, vector, edge
+      - [x] Load from CSV file
 - C\+\+20 and C\+\+23
+  - [x] connection points (e.g. tag_invoke)
 - Tools, Libraries & Infrastructure
   - [x] Use CMake Presets; must work with both VS & VSCode
   - [x] Use conan for libraries when possible: catch2, fmt, spdlog, range-v3
@@ -97,3 +102,7 @@
 - Feedback
 
 ### Issues Resolved
+- [x] vertex_key(g,u) now takes a vertex reference (not iterator)
+  - [x] how to define vertex_key_t without calling vertex_key()? 
+  - [x] make it obvious it's unavailable for non-contiguous vertices
+  - [x] Answer: for([ukey,u] : vertices(g))
