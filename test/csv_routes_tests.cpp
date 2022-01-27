@@ -209,7 +209,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
     REQUIRE(total_dist == 2030.0);
   }
 
-  SECTION("vertex_view") {
+  SECTION("const_vertices_view") {
     using G2 = const G;
     G2& g2   = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
@@ -246,10 +246,55 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
       REQUIRE(i2b == i2);
     }
 
-    //for (auto&& vw : std::graph::vertices_range_view(g2)) {
-    //}
-    for (auto&& vw : std::graph::vertices_view(g2)) {
+    size_t cnt = 0;
+    for (auto&& [ukey, u] : std::graph::vertices_view(g2)) {
+      ++cnt;
     }
+    REQUIRE(cnt == size(vertices(g)));
+  }
+
+  SECTION("non_const_vertices_view") {
+    static_assert(!std::is_const_v<std::remove_reference_t<decltype(g)>>);
+    static_assert(!std::is_const_v<G>);
+
+    std::graph::vertices_view_iterator<G> i0;
+    std::graph::vertices_view_iterator<G> i1(g);
+    {
+      auto&& [ukey, u] = *i1;
+      static_assert(is_const_v<decltype(ukey)>);
+      static_assert(!is_const_v<remove_reference_t<decltype(u)>>);
+      REQUIRE(ukey == 0);
+    }
+    {
+      auto&& [ukey, u] = *++i1;
+      REQUIRE(ukey == 1);
+      auto i1b = i1;
+      REQUIRE(i1b == i1);
+    }
+
+    std::graph::vertices_view_iterator<G> i2(g);
+    {
+      auto&& [ukey, u] = *i2;
+      static_assert(is_const_v<decltype(ukey)>);
+      static_assert(!is_const_v<remove_reference_t<decltype(u)>>);
+      REQUIRE(ukey == 0);
+    }
+    {
+      auto&& [ukey, u] = *++i2;
+      REQUIRE(ukey == 1);
+      auto i2b = i2;
+      REQUIRE(i2b == i2);
+    }
+
+    size_t cnt = 0;
+    for (auto&& [ukey, u] : std::graph::vertices_view(g)) {
+      ++cnt;
+    }
+    REQUIRE(cnt == size(vertices(g)));
+
+    std::graph::const_vertices_view_iterator<const G> j0;
+    //j0 = i0;
+    //i0 == j0;
   }
 
   SECTION("content") {
