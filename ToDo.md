@@ -33,7 +33,6 @@
     - [ ] Transitive Closure
 - Graph Containers (data structures)
     - [ ] vol_graph
-      - [ ] Add \<bool sourced\> template parameter to include source_key
     - [ ] **csr_graph**
       - [ ] Implement graph, vertex, edge
       - [ ] Load from CSV file
@@ -105,6 +104,7 @@
     - [x] vol_graph_ (vector of forward_list)
       - [x] Implement graph, vector, edge
       - [x] Load from CSV file
+      - [x] Add \<bool sourced\> template parameter to include source_key
 - C\+\+20 and C\+\+23
   - [x] connection points (e.g. tag_invoke)
 - Tools, Libraries & Infrastructure

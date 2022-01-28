@@ -141,29 +141,31 @@ public:
   using edge_type   = vol_edge_value<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public:
-  vol_edge_value(const value_type& value) : value_(value) {}
-  vol_edge_value(value_type&& value) : value_(move(value)) {}
+  constexpr vol_edge_value(const value_type& value) : value_(value) {}
+  constexpr vol_edge_value(value_type&& value) : value_(move(value)) {}
 
-  vol_edge_value()                      = default;
-  vol_edge_value(const vol_edge_value&) = default;
-  vol_edge_value(vol_edge_value&&)      = default;
-  ~vol_edge_value()                     = default;
+  constexpr vol_edge_value()                      = default;
+  constexpr vol_edge_value(const vol_edge_value&) = default;
+  constexpr vol_edge_value(vol_edge_value&&)      = default;
+  constexpr ~vol_edge_value()                     = default;
 
-  vol_edge_value& operator=(const vol_edge_value&) = default;
-  vol_edge_value& operator=(vol_edge_value&&) = default;
+  constexpr vol_edge_value& operator=(const vol_edge_value&) = default;
+  constexpr vol_edge_value& operator=(vol_edge_value&&) = default;
 
 public:
-  value_type&       value() { return value_; }
-  const value_type& value() const { return value_; }
+  constexpr value_type&       value() noexcept { return value_; }
+  constexpr const value_type& value() const noexcept { return value_; }
 
 private:
   value_type value_ = value_type();
 
 private: // tag_invoke properties
-  friend value_type& tag_invoke(::std::graph::access::edge_value_fn_t, graph_type& g, edge_type& uv) {
+  friend constexpr value_type&
+  tag_invoke(::std::graph::access::edge_value_fn_t, graph_type& g, edge_type& uv) noexcept {
     return uv.value_;
   }
-  friend const value_type& tag_invoke(::std::graph::access::edge_value_fn_t, const graph_type& g, const edge_type& uv) {
+  friend constexpr const value_type&
+  tag_invoke(::std::graph::access::edge_value_fn_t, const graph_type& g, const edge_type& uv) noexcept {
     return uv.value_;
   }
 };
@@ -192,20 +194,20 @@ public:
   using edge_type       = vol_edge<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public:
-  vol_edge(vertex_key_type target_key, vertex_key_type source_key)
+  constexpr vol_edge(vertex_key_type target_key, vertex_key_type source_key)
         : base_target_type(target_key), base_source_type(source_key) {}
-  vol_edge(vertex_key_type target_key, vertex_key_type source_key, const value_type& val)
+  constexpr vol_edge(vertex_key_type target_key, vertex_key_type source_key, const value_type& val)
         : base_target_type(target_key), base_source_type(source_key), base_value_type(val) {}
-  vol_edge(vertex_key_type target_key, vertex_key_type source_key, value_type&& val)
+  constexpr vol_edge(vertex_key_type target_key, vertex_key_type source_key, value_type&& val)
         : base_target_type(target_key), base_source_type(source_key), base_value_type(move(val)) {}
 
-  vol_edge()                = default;
-  vol_edge(const vol_edge&) = default;
-  vol_edge(vol_edge&&)      = default;
-  ~vol_edge()               = default;
+  constexpr vol_edge()                = default;
+  constexpr vol_edge(const vol_edge&) = default;
+  constexpr vol_edge(vol_edge&&)      = default;
+  constexpr ~vol_edge()               = default;
 
-  vol_edge& operator=(const vol_edge&) = default;
-  vol_edge& operator=(vol_edge&&) = default;
+  constexpr vol_edge& operator=(const vol_edge&) = default;
+  constexpr vol_edge& operator=(vol_edge&&) = default;
 };
 
 template <typename VV, typename GV, typename VKey, typename Alloc>
@@ -225,16 +227,16 @@ public:
   using edge_type       = vol_edge<void, VV, GV, true, VKey, Alloc>;
 
 public:
-  vol_edge(vertex_key_type target_key, vertex_key_type source_key)
+  constexpr vol_edge(vertex_key_type target_key, vertex_key_type source_key)
         : base_target_type(target_key), base_source_type(source_key) {}
 
-  vol_edge()                = default;
-  vol_edge(const vol_edge&) = default;
-  vol_edge(vol_edge&&)      = default;
-  ~vol_edge()               = default;
+  constexpr vol_edge()                = default;
+  constexpr vol_edge(const vol_edge&) = default;
+  constexpr vol_edge(vol_edge&&)      = default;
+  constexpr ~vol_edge()               = default;
 
-  vol_edge& operator=(const vol_edge&) = default;
-  vol_edge& operator=(vol_edge&&) = default;
+  constexpr vol_edge& operator=(const vol_edge&) = default;
+  constexpr vol_edge& operator=(vol_edge&&) = default;
 };
 
 
@@ -255,17 +257,19 @@ public:
   using edge_type       = vol_edge<EV, VV, GV, false, VKey, Alloc>;
 
 public:
-  vol_edge(vertex_key_type target_key) : base_target_type(target_key) {}
-  vol_edge(vertex_key_type target_key, const value_type& val) : base_target_type(target_key), base_value_type(val) {}
-  vol_edge(vertex_key_type target_key, value_type&& val) : base_target_type(target_key), base_value_type(move(val)) {}
+  constexpr vol_edge(vertex_key_type target_key) : base_target_type(target_key) {}
+  constexpr vol_edge(vertex_key_type target_key, const value_type& val)
+        : base_target_type(target_key), base_value_type(val) {}
+  constexpr vol_edge(vertex_key_type target_key, value_type&& val)
+        : base_target_type(target_key), base_value_type(move(val)) {}
 
-  vol_edge()                = default;
-  vol_edge(const vol_edge&) = default;
-  vol_edge(vol_edge&&)      = default;
-  ~vol_edge()               = default;
+  constexpr vol_edge()                = default;
+  constexpr vol_edge(const vol_edge&) = default;
+  constexpr vol_edge(vol_edge&&)      = default;
+  constexpr ~vol_edge()               = default;
 
-  vol_edge& operator=(const vol_edge&) = default;
-  vol_edge& operator=(vol_edge&&) = default;
+  constexpr vol_edge& operator=(const vol_edge&) = default;
+  constexpr vol_edge& operator=(vol_edge&&) = default;
 };
 
 template <typename VV, typename GV, typename VKey, typename Alloc>
@@ -282,22 +286,22 @@ public:
   using edge_type        = vol_edge<void, VV, GV, false, VKey, Alloc>;
 
 public:
-  vol_edge(vertex_key_type target_key) : base_target_type(target_key) {}
+  constexpr vol_edge(vertex_key_type target_key) : base_target_type(target_key) {}
 
-  vol_edge()                = default;
-  vol_edge(const vol_edge&) = default;
-  vol_edge(vol_edge&&)      = default;
-  ~vol_edge()               = default;
+  constexpr vol_edge()                = default;
+  constexpr vol_edge(const vol_edge&) = default;
+  constexpr vol_edge(vol_edge&&)      = default;
+  constexpr ~vol_edge()               = default;
 
-  vol_edge& operator=(const vol_edge&) = default;
-  vol_edge& operator=(vol_edge&&) = default;
+  constexpr vol_edge& operator=(const vol_edge&) = default;
+  constexpr vol_edge& operator=(vol_edge&&) = default;
 };
 
 //--------------------------------------------------------------------------------------------------
 // vol_vertex
 //
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
-class _vol_vertex_base {
+class vol_vertex_base {
 public:
   using allocator_type  = Alloc;
   using vertex_key_type = VKey;
@@ -308,58 +312,62 @@ public:
   using edges_type      = vol_edges<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public:
-  _vol_vertex_base()                        = default;
-  _vol_vertex_base(const _vol_vertex_base&) = default;
-  _vol_vertex_base(_vol_vertex_base&&)      = default;
-  ~_vol_vertex_base()                       = default;
+  constexpr vol_vertex_base()                        = default;
+  constexpr vol_vertex_base(const vol_vertex_base&) = default;
+  constexpr vol_vertex_base(vol_vertex_base&&)      = default;
+  constexpr ~vol_vertex_base()                       = default;
 
-  _vol_vertex_base& operator=(const _vol_vertex_base&) = default;
-  _vol_vertex_base& operator=(_vol_vertex_base&&) = default;
+  constexpr vol_vertex_base& operator=(const vol_vertex_base&) = default;
+  constexpr vol_vertex_base& operator=(vol_vertex_base&&) = default;
 
-  _vol_vertex_base(Alloc alloc) : edges_(alloc) {}
+  constexpr vol_vertex_base(Alloc alloc) : edges_(alloc) {}
 
 public:
-  edges_type&       edges() noexcept { return edges_; }
-  const edges_type& edges() const noexcept { return edges_; }
+  constexpr edges_type&       edges() noexcept { return edges_; }
+  constexpr const edges_type& edges() const noexcept { return edges_; }
 
-  auto begin() noexcept { return edges_.begin(); }
-  auto begin() const noexcept { return edges_.begin(); }
-  auto cbegin() const noexcept { return edges_.begin(); }
+  constexpr auto begin() noexcept { return edges_.begin(); }
+  constexpr auto begin() const noexcept { return edges_.begin(); }
+  constexpr auto cbegin() const noexcept { return edges_.begin(); }
 
-  auto end() noexcept { return edges_.end(); }
-  auto end() const noexcept { return edges_.end(); }
-  auto cend() const noexcept { return edges_.end(); }
+  constexpr auto end() noexcept { return edges_.end(); }
+  constexpr auto end() const noexcept { return edges_.end(); }
+  constexpr auto cend() const noexcept { return edges_.end(); }
 
 private:
   edges_type edges_;
 
 private: // tag_invoke properties
-  friend vertex_key_type tag_invoke(::std::graph::access::vertex_key_fn_t, const graph_type& g, const vertex_type& u) {
+  friend constexpr vertex_key_type
+  tag_invoke(::std::graph::access::vertex_key_fn_t, const graph_type& g, const vertex_type& u) {
     return static_cast<vertex_key_type>(&u - &g[0]); // works well when everything is contiguous in memory
   }
 
-  friend edges_type& tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) { return u.edges_; }
-  friend const edges_type& tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_type& u) {
+  friend constexpr edges_type& tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {
+    return u.edges_;
+  }
+  friend constexpr const edges_type&
+  tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_type& u) {
     return u.edges_;
   }
 
-  edges_type::iterator
+  friend constexpr edges_type::iterator
   tag_invoke(::std::graph::access::find_vertex_edge_fn_t, graph_type& g, vertex_key_type ukey, vertex_key_type vkey) {
     return ranges::find(g[ukey].edges_, [&g, &vkey](const edge_type& uv) -> bool { return target_key(g, uv) == vkey; });
   }
-  edges_type::const_iterator tag_invoke(::std::graph::access::find_vertex_edge_fn_t,
-                                        const graph_type& g,
-                                        vertex_key_type   ukey,
-                                        vertex_key_type   vkey) {
+  friend constexpr edges_type::const_iterator tag_invoke(::std::graph::access::find_vertex_edge_fn_t,
+                                                         const graph_type& g,
+                                                         vertex_key_type   ukey,
+                                                         vertex_key_type   vkey) {
     return ranges::find(g[ukey].edges_, [&g, &vkey](const edge_type& uv) -> bool { return target_key(g, uv) == vkey; });
   }
 };
 
 
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
-class vol_vertex : public _vol_vertex_base<EV, VV, GV, Sourced, VKey, Alloc> {
+class vol_vertex : public vol_vertex_base<EV, VV, GV, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_vertex_base<EV, VV, GV, Sourced, VKey, Alloc>;
+  using base_type       = vol_vertex_base<EV, VV, GV, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = VV;
   using graph_type      = vol_graph<EV, VV, GV, Sourced, VKey, Alloc>;
@@ -368,32 +376,32 @@ public:
   using edges_type      = vol_edges<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public:
-  vol_vertex(const value_type& value, Alloc alloc = Alloc()) : base_type(alloc), value_(value) {}
-  vol_vertex(value_type&& value, Alloc alloc = Alloc()) : base_type(alloc), value_(move(value)) {}
-  vol_vertex(Alloc alloc) : base_type(alloc) {}
+  constexpr vol_vertex(const value_type& value, Alloc alloc = Alloc()) : base_type(alloc), value_(value) {}
+  constexpr vol_vertex(value_type&& value, Alloc alloc = Alloc()) : base_type(alloc), value_(move(value)) {}
+  constexpr vol_vertex(Alloc alloc) : base_type(alloc) {}
 
-  vol_vertex()                  = default;
-  vol_vertex(const vol_vertex&) = default;
-  vol_vertex(vol_vertex&&)      = default;
-  ~vol_vertex()                 = default;
+  constexpr vol_vertex()                  = default;
+  constexpr vol_vertex(const vol_vertex&) = default;
+  constexpr vol_vertex(vol_vertex&&)      = default;
+  constexpr ~vol_vertex()                 = default;
 
-  vol_vertex& operator=(const vol_vertex&) = default;
-  vol_vertex& operator=(vol_vertex&&) = default;
+  constexpr vol_vertex& operator=(const vol_vertex&) = default;
+  constexpr vol_vertex& operator=(vol_vertex&&) = default;
 
 public:
   using base_type::edges;
 
-  value_type&       value() noexcept { return value_; }
-  const value_type& value() const noexcept { return value_; }
+  constexpr value_type&       value() noexcept { return value_; }
+  constexpr const value_type& value() const noexcept { return value_; }
 
 private:
   value_type value_ = value_type();
 
 private: // tag_invoke properties
-  friend value_type& tag_invoke(::std::graph::access::vertex_value_fn_t, graph_type& g, vertex_type& u) {
+  friend constexpr value_type& tag_invoke(::std::graph::access::vertex_value_fn_t, graph_type& g, vertex_type& u) {
     return u.value_;
   }
-  friend const value_type&
+  friend constexpr const value_type&
   tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
     return u.value_;
   }
@@ -401,9 +409,9 @@ private: // tag_invoke properties
 
 
 template <typename EV, typename GV, bool Sourced, typename VKey, typename Alloc>
-class vol_vertex<EV, void, GV, Sourced, VKey, Alloc> : public _vol_vertex_base<EV, void, GV, Sourced, VKey, Alloc> {
+class vol_vertex<EV, void, GV, Sourced, VKey, Alloc> : public vol_vertex_base<EV, void, GV, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_vertex_base<EV, void, GV, Sourced, VKey, Alloc>;
+  using base_type       = vol_vertex_base<EV, void, GV, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = void;
   using graph_type      = vol_graph<EV, void, GV, Sourced, VKey, Alloc>;
@@ -412,20 +420,15 @@ public:
   using edges_type      = vol_edges<EV, void, GV, Sourced, VKey, Alloc>;
 
 public:
-  vol_vertex()                  = default;
-  vol_vertex(const vol_vertex&) = default;
-  vol_vertex(vol_vertex&&)      = default;
-  ~vol_vertex()                 = default;
+  constexpr vol_vertex()                  = default;
+  constexpr vol_vertex(const vol_vertex&) = default;
+  constexpr vol_vertex(vol_vertex&&)      = default;
+  constexpr ~vol_vertex()                 = default;
 
-  vol_vertex& operator=(const vol_vertex&) = default;
-  vol_vertex& operator=(vol_vertex&&) = default;
+  constexpr vol_vertex& operator=(const vol_vertex&) = default;
+  constexpr vol_vertex& operator=(vol_vertex&&) = default;
 
-  vol_vertex(Alloc alloc) : base_type(alloc) {}
-
-public:
-  using base_type::edges;
-
-private:
+  constexpr vol_vertex(Alloc alloc) : base_type(alloc) {}
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -440,7 +443,7 @@ private:
 /// vertices instead of a vector.
 ///
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
-class _vol_graph_base {
+class vol_graph_base {
 public: // types
   using vertex_key_type = VKey;
   using vertex_type     = vol_vertex<EV, VV, GV, Sourced, VKey, Alloc>;
@@ -451,13 +454,13 @@ public: // types
   using edge_type  = vol_edge<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public: // Construction/Destruction/Assignment
-  _vol_graph_base()                       = default;
-  _vol_graph_base(const _vol_graph_base&) = default;
-  _vol_graph_base(_vol_graph_base&&)      = default;
-  ~_vol_graph_base()                      = default;
+  constexpr vol_graph_base()                       = default;
+  constexpr vol_graph_base(const vol_graph_base&) = default;
+  constexpr vol_graph_base(vol_graph_base&&)      = default;
+  constexpr ~vol_graph_base()                      = default;
 
-  _vol_graph_base& operator=(const _vol_graph_base&) = default;
-  _vol_graph_base& operator=(_vol_graph_base&&) = default;
+  constexpr vol_graph_base& operator=(const vol_graph_base&) = default;
+  constexpr vol_graph_base& operator=(vol_graph_base&&) = default;
 
   /// Constructor that takes edge & vertex ranges to create the graph.
   ///
@@ -489,7 +492,7 @@ public: // Construction/Destruction/Assignment
   ///
   template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
-  _vol_graph_base(ERng&            erng,
+  vol_graph_base(ERng&            erng,
                   VRng&            vrng,
                   const EKeyFnc&   ekey_fnc,
                   const EValueFnc& evalue_fnc,
@@ -523,7 +526,7 @@ public: // Construction/Destruction/Assignment
   ///
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  _vol_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc) : vertices_(alloc) {
+  vol_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc) : vertices_(alloc) {
 
     load_edges(erng, ekey_fnc, evalue_fnc, alloc);
   }
@@ -551,7 +554,7 @@ public: // Construction/Destruction/Assignment
   ///
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  _vol_graph_base(
+  vol_graph_base(
         vertex_key_type max_row_idx, ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc)
         : vertices_(alloc) {
 
@@ -627,13 +630,15 @@ private: // Member Variables
   vertices_type vertices_;
 
 private: // tag_invoke properties
-  friend vertices_type& tag_invoke(::std::graph::access::vertices_fn_t, _vol_graph_base& g) { return g.vertices_; }
-  friend const vertices_type& tag_invoke(::std::graph::access::vertices_fn_t, const _vol_graph_base& g) {
+  friend constexpr vertices_type& tag_invoke(::std::graph::access::vertices_fn_t, vol_graph_base& g) {
+    return g.vertices_;
+  }
+  friend constexpr const vertices_type& tag_invoke(::std::graph::access::vertices_fn_t, const vol_graph_base& g) {
     return g.vertices_;
   }
 
   friend vertex_key_type
-  tag_invoke(::std::graph::access::vertex_key_fn_t, const _vol_graph_base& g, vertices_type::const_iterator ui) {
+  tag_invoke(::std::graph::access::vertex_key_fn_t, const vol_graph_base& g, vertices_type::const_iterator ui) {
     return ui - g.vertices_.begin();
   }
 };
@@ -652,9 +657,9 @@ private: // tag_invoke properties
 /// @tparam Alloc The allocator used for storing the vertices and edges.
 ///
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
-class vol_graph : public _vol_graph_base<EV, VV, GV, Sourced, VKey, Alloc> {
+class vol_graph : public vol_graph_base<EV, VV, GV, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_graph_base<EV, VV, GV, Sourced, VKey, Alloc>;
+  using base_type       = vol_graph_base<EV, VV, GV, Sourced, VKey, Alloc>;
   using graph_type      = vol_graph<EV, VV, GV, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = GV;
@@ -733,22 +738,24 @@ public:
         : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc), value_(move(gv)) {}
 
 public:
-  value_type&       value() { return value_; }
-  const value_type& value() const { return value_; }
+  constexpr value_type&       value() { return value_; }
+  constexpr const value_type& value() const { return value_; }
 
 private:
   value_type value_;
 
 private: // tag_invoke properties
-  friend value_type&       tag_invoke(::std::graph::access::graph_value_fn_t, graph_type& g) { return g.value_; }
-  friend const value_type& tag_invoke(::std::graph::access::graph_value_fn_t, const graph_type& g) { return g.value_; }
+  friend constexpr value_type& tag_invoke(::std::graph::access::graph_value_fn_t, graph_type& g) { return g.value_; }
+  friend constexpr const value_type& tag_invoke(::std::graph::access::graph_value_fn_t, const graph_type& g) {
+    return g.value_;
+  }
 };
 
 // a specialization for vol_graph<...> that doesn't have a graph value_type
 template <typename EV, typename VV, bool Sourced, typename VKey, typename Alloc>
-class vol_graph<EV, VV, void, Sourced, VKey, Alloc> : public _vol_graph_base<EV, VV, void, Sourced, VKey, Alloc> {
+class vol_graph<EV, VV, void, Sourced, VKey, Alloc> : public vol_graph_base<EV, VV, void, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_graph_base<EV, VV, void, Sourced, VKey, Alloc>;
+  using base_type       = vol_graph_base<EV, VV, void, Sourced, VKey, Alloc>;
   using graph_type      = vol_graph<EV, VV, void, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = void;
