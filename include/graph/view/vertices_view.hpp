@@ -26,7 +26,6 @@ constexpr auto vertices_view(const G& g) {
   return SR(first, last);
 }
 
-
 template <typename G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto vertices_view(G& g) {
@@ -37,6 +36,31 @@ constexpr auto vertices_view(G& g) {
   auto first = iter_type(ranges::begin(vertices(g)));
   auto last  = sentinal_type(ranges::end(vertices(g)));
   return SR(first, last);
+}
+
+
+template <typename G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertices_view(const G&                   g,
+                             vertex_iterator_t<const G> first,
+                             vertex_iterator_t<const G> last,
+                             vertex_key_t<G>            start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)))) {
+  using iter_type     = const_vertices_view_iterator<const G>;
+  using sentinal_type = typename iter_type::vertex_iterator_type;
+  using SR            = ranges::subrange<iter_type, sentinal_type>;
+  return SR(iter_type(first, start_at), last);
+}
+
+template <typename G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertices_view(G&                   g,
+                             vertex_iterator_t<G> first,
+                             vertex_iterator_t<G> last,
+                             vertex_key_t<G>      start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)))) {
+  using iter_type     = const_vertices_view_iterator<G>;
+  using sentinal_type = typename iter_type::vertex_iterator_type;
+  using SR            = ranges::subrange<iter_type, sentinal_type>;
+  return SR(iter_type(first, start_at), last);
 }
 
 
@@ -65,7 +89,8 @@ protected:
 
 public:
   const_vertices_view_iterator(const graph_type& g) : iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
-  const_vertices_view_iterator(vertex_iterator_type iter) : iter_(iter) {}
+  const_vertices_view_iterator(vertex_iterator_type iter, vertex_key_type start_at = 0)
+        : iter_(iter), value_(start_at, nullptr) {}
 
   constexpr const_vertices_view_iterator()                                    = default;
   constexpr const_vertices_view_iterator(const const_vertices_view_iterator&) = default;
@@ -132,7 +157,7 @@ protected:
 
 public:
   vertices_view_iterator(graph_type& g) : base_type(g) {}
-  vertices_view_iterator(vertex_iterator_type iter) : base_type(iter) {}
+  vertices_view_iterator(vertex_iterator_type iter, vertex_key_type start_at = 0) : base_type(iter, start_at) {}
 
   constexpr vertices_view_iterator()                              = default;
   constexpr vertices_view_iterator(const vertices_view_iterator&) = default;

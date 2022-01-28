@@ -113,9 +113,11 @@ constexpr auto push_or_insert(C& container) {
     return [&container](C::value_type&& value) { container.emplace(move(value)); };
   else if constexpr (has_insert<C>) {
     return [&container](const C::value_type& value) { container.insert(value); };
-  } else  {
-    //static_assert(false,
-    //              "The container doesn't have emplace_back, push_back, emplace_front, push_front, emplace or insert");
+  } else {
+#ifdef _MSC_VER
+    static_assert(false,
+                  "The container doesn't have emplace_back, push_back, emplace_front, push_front, emplace or insert");
+#endif
   }
 }
 
@@ -664,7 +666,7 @@ public:
     auto&& add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng)
       add_vertex(vertex_type(std::move(vvalue_fnc(u)), alloc));
-      //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
+    //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
   }
 
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
