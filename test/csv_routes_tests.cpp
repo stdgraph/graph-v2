@@ -4,6 +4,7 @@
 #include "graph/graph.hpp"
 #include "graph/algorithm/dijkstra_book.hpp"
 #include "graph/view/vertices_view.hpp"
+#include "graph/view/incidence_edge_view.hpp"
 #include <cassert>
 #ifdef _MSC_VER
 #  include "Windows.h"

@@ -45,6 +45,8 @@
   - [x] Validate content
   - [ ] Validate graph API
   - [ ] Validate algorithms
+  - [ ] Validate const
+  - [ ] Validate constexpr
   - [ ] Apply to multiple data structures
 - Tools, Libraries & Infrastructure
   - [ ] Create mtx parser (from nwgraph)
