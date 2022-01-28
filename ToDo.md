@@ -19,7 +19,8 @@
     - [ ] edge_range<graph, vertex_range, vertex_edge_range>
     - [ ] vertex_vertex_range<graph, vertex_range, vertex_edge_range>
     - [x] for([ukey, u] : vertices_view(g))
-    - [ ] **for([vkey,uv] : edges_view(g,u))** (incidence)
+    - [x] for([vkey,uv] : edges_view(g,u)) (incidence)
+    - [ ] define views as CPOs
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra (book, impl from AndrewL)
@@ -33,7 +34,7 @@
 - Graph Containers (data structures)
     - [ ] vol_graph
       - [ ] Add \<bool sourced\> template parameter to include source_key
-    - [ ] csr_graph
+    - [ ] **csr_graph**
       - [ ] Implement graph, vertex, edge
       - [ ] Load from CSV file
       - [ ] Validate with vol_graph tests

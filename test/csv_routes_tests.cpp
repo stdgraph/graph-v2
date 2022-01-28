@@ -155,14 +155,10 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   }
 
   SECTION("const_vertices_view") {
-    using G2 = const G;
-    G2& g2   = g;
+    const G& g2   = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
-    static_assert(std::is_const_v<G2>);
 
-    static_assert(std::is_const_v<G2>);
-
-    std::graph::const_vertices_view_iterator<G> i0;
+    std::graph::const_vertices_view_iterator<G> i0; // default construction
     std::graph::const_vertices_view_iterator<G> i1(g);
     {
       auto&& [ukey, u] = *i1;
@@ -202,7 +198,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
     static_assert(!std::is_const_v<std::remove_reference_t<decltype(g)>>);
     static_assert(!std::is_const_v<G>);
 
-    std::graph::vertices_view_iterator<G> i0;
+    std::graph::vertices_view_iterator<G> i0; // default construction
     std::graph::vertices_view_iterator<G> i1(g);
     {
       auto&& [ukey, u] = *i1;
@@ -240,6 +236,62 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
     std::graph::const_vertices_view_iterator<const G> j0;
     //j0 = i0;
     //i0 == j0;
+  }
+
+  SECTION("const_incidence_edge_view") {
+    const G& g2   = g;
+
+    std::graph::const_vertex_edge_view_iterator<G> i0; // default construction
+
+    auto  frankfurt_key = germany_routes.frankfurt_key();
+    auto& u             = g2[frankfurt_key];
+
+    std::graph::const_vertex_edge_view_iterator<G> i1(g2, u);
+    {
+      auto&& [vkey, uv] = *i1;
+      static_assert(is_const_v<decltype(vkey)>);
+      static_assert(is_const_v<remove_reference_t<decltype(uv)>>);
+      REQUIRE(vkey == 4);
+    }
+    {
+      auto&& [vkey, uv] = *++i1;
+      REQUIRE(vkey == 9);
+      auto i1b = i1;
+      REQUIRE(i1b == i1);
+    }
+
+    size_t cnt = 0;
+    for (auto&& [vkey, uv] : std::graph::edges_view(g,u)) {
+      ++cnt;
+    }
+    REQUIRE(cnt == 3);
+  }
+
+  SECTION("incidence_edge_view") {
+    std::graph::vertex_edge_view_iterator<G> i0; // default construction
+
+    auto  frankfurt_key = germany_routes.frankfurt_key();
+    auto& u             = g[frankfurt_key];
+
+    std::graph::const_vertex_edge_view_iterator<G> i1(g, u);
+    {
+      auto&& [vkey, uv] = *i1;
+      static_assert(is_const_v<decltype(vkey)>);
+      static_assert(is_const_v<remove_reference_t<decltype(uv)>>);
+      REQUIRE(vkey == 4);
+    }
+    {
+      auto&& [vkey, uv] = *++i1;
+      REQUIRE(vkey == 9);
+      auto i1b = i1;
+      REQUIRE(i1b == i1);
+    }
+
+    size_t cnt = 0;
+    for (auto&& [vkey, uv] : std::graph::edges_view(g, u)) {
+      ++cnt;
+    }
+    REQUIRE(cnt == 3);
   }
 
   SECTION("content") {
