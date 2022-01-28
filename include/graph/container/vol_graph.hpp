@@ -7,15 +7,16 @@
 
 namespace std::graph::container {
 
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
 class vol_edge;
 
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
 class vol_vertex;
 
 template <typename EV    = void,
           typename VV    = void,
           typename GV    = void,
+          bool Sourced   = false,
           typename VKey  = uint32_t,
           typename Alloc = allocator<char>>
 class vol_graph;
@@ -23,24 +24,26 @@ class vol_graph;
 // vol_vertices and vol_edges can be specialized to use different containers
 
 // vol_vertices
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
-using vol_vertices = vector<vol_vertex<EV, VV, GV, VKey, Alloc>, allocator<vol_vertex<EV, VV, GV, VKey, Alloc>>>;
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
+using vol_vertices =
+      vector<vol_vertex<EV, VV, GV, Sourced, VKey, Alloc>, allocator<vol_vertex<EV, VV, GV, Sourced, VKey, Alloc>>>;
 
 // vol_edges
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
-using vol_edges = forward_list<vol_edge<EV, VV, GV, VKey, Alloc>, allocator<vol_edge<EV, VV, GV, VKey, Alloc>>>;
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
+using vol_edges =
+      forward_list<vol_edge<EV, VV, GV, Sourced, VKey, Alloc>, allocator<vol_edge<EV, VV, GV, Sourced, VKey, Alloc>>>;
 
 //--------------------------------------------------------------------------------------------------
 // vol_edge
 //
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
 class _vol_edge_base {
 public:
   using vertex_key_type = VKey;
   using value_type      = EV;
-  using graph_type      = vol_graph<EV, VV, GV, VKey, Alloc>;
-  using vertex_type     = vol_vertex<EV, VV, GV, VKey, Alloc>;
-  using edge_type       = vol_edge<EV, VV, GV, VKey, Alloc>;
+  using graph_type      = vol_graph<EV, VV, GV, Sourced, VKey, Alloc>;
+  using vertex_type     = vol_vertex<EV, VV, GV, Sourced, VKey, Alloc>;
+  using edge_type       = vol_edge<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public:
   _vol_edge_base(vertex_key_type target_key) : target_key_(target_key) {}
@@ -72,25 +75,25 @@ private: // tag_invoke properties
   }
 };
 
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
-class vol_edge : public _vol_edge_base<EV, VV, GV, VKey, Alloc> {
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
+class vol_edge : public _vol_edge_base<EV, VV, GV, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_edge_base<EV, VV, GV, VKey, Alloc>;
+  using base_type       = _vol_edge_base<EV, VV, GV, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = EV;
-  using graph_type      = vol_graph<EV, VV, GV, VKey, Alloc>;
-  using vertex_type     = vol_vertex<EV, VV, GV, VKey, Alloc>;
-  using edge_type       = vol_edge<EV, VV, GV, VKey, Alloc>;
+  using graph_type      = vol_graph<EV, VV, GV, Sourced, VKey, Alloc>;
+  using vertex_type     = vol_vertex<EV, VV, GV, Sourced, VKey, Alloc>;
+  using edge_type       = vol_edge<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public:
   vol_edge(vertex_key_type target_key) : base_type(target_key) {}
   vol_edge(vertex_key_type target_key, const value_type& value) : base_type(target_key), value_(value) {}
   vol_edge(vertex_key_type target_key, value_type&& value) : base_type(target_key), value_(move(value)) {}
 
-  vol_edge()                 = default;
+  vol_edge()                = default;
   vol_edge(const vol_edge&) = default;
   vol_edge(vol_edge&&)      = default;
-  ~vol_edge()                = default;
+  ~vol_edge()               = default;
 
   vol_edge& operator=(const vol_edge&) = default;
   vol_edge& operator=(vol_edge&&) = default;
@@ -111,23 +114,23 @@ private: // tag_invoke properties
   }
 };
 
-template <typename VV, typename GV, typename VKey, typename Alloc>
-class vol_edge<void, VV, GV, VKey, Alloc> : public _vol_edge_base<void, VV, GV, VKey, Alloc> {
+template <typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
+class vol_edge<void, VV, GV, Sourced, VKey, Alloc> : public _vol_edge_base<void, VV, GV, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_edge_base<void, VV, GV, VKey, Alloc>;
+  using base_type       = _vol_edge_base<void, VV, GV, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = void;
-  using graph_type      = vol_graph<void, VV, GV, VKey, Alloc>;
-  using vertex_type     = vol_vertex<void, VV, GV, VKey, Alloc>;
-  using edge_type       = vol_edge<void, VV, GV, VKey, Alloc>;
+  using graph_type      = vol_graph<void, VV, GV, Sourced, VKey, Alloc>;
+  using vertex_type     = vol_vertex<void, VV, GV, Sourced, VKey, Alloc>;
+  using edge_type       = vol_edge<void, VV, GV, Sourced, VKey, Alloc>;
 
 public:
   vol_edge(vertex_key_type target_key) : base_type(target_key) {}
 
-  vol_edge()                 = default;
+  vol_edge()                = default;
   vol_edge(const vol_edge&) = default;
   vol_edge(vol_edge&&)      = default;
-  ~vol_edge()                = default;
+  ~vol_edge()               = default;
 
   vol_edge& operator=(const vol_edge&) = default;
   vol_edge& operator=(vol_edge&&) = default;
@@ -139,16 +142,16 @@ private:
 //--------------------------------------------------------------------------------------------------
 // vol_vertex
 //
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
 class _vol_vertex_base {
 public:
   using allocator_type  = Alloc;
   using vertex_key_type = VKey;
   using value_type      = VV;
-  using graph_type      = vol_graph<EV, VV, GV, VKey, Alloc>;
-  using vertex_type     = vol_vertex<EV, VV, GV, VKey, Alloc>;
-  using edge_type       = vol_edge<EV, VV, GV, VKey, Alloc>;
-  using edges_type      = vol_edges<EV, VV, GV, VKey, Alloc>;
+  using graph_type      = vol_graph<EV, VV, GV, Sourced, VKey, Alloc>;
+  using vertex_type     = vol_vertex<EV, VV, GV, Sourced, VKey, Alloc>;
+  using edge_type       = vol_edge<EV, VV, GV, Sourced, VKey, Alloc>;
+  using edges_type      = vol_edges<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public:
   _vol_vertex_base()                        = default;
@@ -199,26 +202,26 @@ private: // tag_invoke properties
 };
 
 
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
-class vol_vertex : public _vol_vertex_base<EV, VV, GV, VKey, Alloc> {
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
+class vol_vertex : public _vol_vertex_base<EV, VV, GV, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_vertex_base<EV, VV, GV, VKey, Alloc>;
+  using base_type       = _vol_vertex_base<EV, VV, GV, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = VV;
-  using graph_type      = vol_graph<EV, VV, GV, VKey, Alloc>;
-  using vertex_type     = vol_vertex<EV, VV, GV, VKey, Alloc>;
-  using edge_type       = vol_edge<EV, VV, GV, VKey, Alloc>;
-  using edges_type      = vol_edges<EV, VV, GV, VKey, Alloc>;
+  using graph_type      = vol_graph<EV, VV, GV, Sourced, VKey, Alloc>;
+  using vertex_type     = vol_vertex<EV, VV, GV, Sourced, VKey, Alloc>;
+  using edge_type       = vol_edge<EV, VV, GV, Sourced, VKey, Alloc>;
+  using edges_type      = vol_edges<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public:
   vol_vertex(const value_type& value, Alloc alloc = Alloc()) : base_type(alloc), value_(value) {}
   vol_vertex(value_type&& value, Alloc alloc = Alloc()) : base_type(alloc), value_(move(value)) {}
   vol_vertex(Alloc alloc) : base_type(alloc) {}
 
-  vol_vertex()                   = default;
+  vol_vertex()                  = default;
   vol_vertex(const vol_vertex&) = default;
   vol_vertex(vol_vertex&&)      = default;
-  ~vol_vertex()                  = default;
+  ~vol_vertex()                 = default;
 
   vol_vertex& operator=(const vol_vertex&) = default;
   vol_vertex& operator=(vol_vertex&&) = default;
@@ -243,22 +246,22 @@ private: // tag_invoke properties
 };
 
 
-template <typename EV, typename GV, typename VKey, typename Alloc>
-class vol_vertex<EV, void, GV, VKey, Alloc> : public _vol_vertex_base<EV, void, GV, VKey, Alloc> {
+template <typename EV, typename GV, bool Sourced, typename VKey, typename Alloc>
+class vol_vertex<EV, void, GV, Sourced, VKey, Alloc> : public _vol_vertex_base<EV, void, GV, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_vertex_base<EV, void, GV, VKey, Alloc>;
+  using base_type       = _vol_vertex_base<EV, void, GV, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = void;
-  using graph_type      = vol_graph<EV, void, GV, VKey, Alloc>;
-  using vertex_type     = vol_vertex<EV, void, GV, VKey, Alloc>;
-  using edge_type       = vol_edge<EV, void, GV, VKey, Alloc>;
-  using edges_type      = vol_edges<EV, void, GV, VKey, Alloc>;
+  using graph_type      = vol_graph<EV, void, GV, Sourced, VKey, Alloc>;
+  using vertex_type     = vol_vertex<EV, void, GV, Sourced, VKey, Alloc>;
+  using edge_type       = vol_edge<EV, void, GV, Sourced, VKey, Alloc>;
+  using edges_type      = vol_edges<EV, void, GV, Sourced, VKey, Alloc>;
 
 public:
-  vol_vertex()                   = default;
+  vol_vertex()                  = default;
   vol_vertex(const vol_vertex&) = default;
   vol_vertex(vol_vertex&&)      = default;
-  ~vol_vertex()                  = default;
+  ~vol_vertex()                 = default;
 
   vol_vertex& operator=(const vol_vertex&) = default;
   vol_vertex& operator=(vol_vertex&&) = default;
@@ -275,23 +278,23 @@ private:
 /// vol_graph - vector of [forward] list
 ///
 /// A graph that supports the minimal functionality required for the algorithms, where vertices are
-/// stored in a vector and edges are stored in a forward_list (which doesn't have a size). The 
+/// stored in a vector and edges are stored in a forward_list (which doesn't have a size). The
 /// graph, vertex and edge types can optionally store a user-defined function; no space is reserved
 /// if a property isn't used.
-/// 
+///
 /// A possible change to test the lower bounds of requirements is to use a deque to store the
 /// vertices instead of a vector.
 ///
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
 class _vol_graph_base {
 public: // types
   using vertex_key_type = VKey;
-  using vertex_type     = vol_vertex<EV, VV, GV, VKey, Alloc>;
-  using vertices_type   = vol_vertices<EV, VV, GV, VKey, Alloc>;
+  using vertex_type     = vol_vertex<EV, VV, GV, Sourced, VKey, Alloc>;
+  using vertices_type   = vol_vertices<EV, VV, GV, Sourced, VKey, Alloc>;
   using size_type       = vertices_type::size_type;
 
-  using graph_type = vol_graph<EV, VV, GV, VKey, Alloc>;
-  using edge_type  = vol_edge<EV, VV, GV, VKey, Alloc>;
+  using graph_type = vol_graph<EV, VV, GV, Sourced, VKey, Alloc>;
+  using edge_type  = vol_edge<EV, VV, GV, Sourced, VKey, Alloc>;
 
 public: // Construction/Destruction/Assignment
   _vol_graph_base()                       = default;
@@ -494,11 +497,11 @@ private: // tag_invoke properties
 /// @tparam VKey  [default=uint32_t] The type used for the vertex key.
 /// @tparam Alloc The allocator used for storing the vertices and edges.
 ///
-template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
-class vol_graph : public _vol_graph_base<EV, VV, GV, VKey, Alloc> {
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
+class vol_graph : public _vol_graph_base<EV, VV, GV, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_graph_base<EV, VV, GV, VKey, Alloc>;
-  using graph_type      = vol_graph<EV, VV, GV, VKey, Alloc>;
+  using base_type       = _vol_graph_base<EV, VV, GV, Sourced, VKey, Alloc>;
+  using graph_type      = vol_graph<EV, VV, GV, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = GV;
   using allocator_type  = Alloc;
@@ -588,11 +591,11 @@ private: // tag_invoke properties
 };
 
 // a specialization for vol_graph<...> that doesn't have a graph value_type
-template <typename EV, typename VV, typename VKey, typename Alloc>
-class vol_graph<EV, VV, void, VKey, Alloc> : public _vol_graph_base<EV, VV, void, VKey, Alloc> {
+template <typename EV, typename VV, bool Sourced, typename VKey, typename Alloc>
+class vol_graph<EV, VV, void, Sourced, VKey, Alloc> : public _vol_graph_base<EV, VV, void, Sourced, VKey, Alloc> {
 public:
-  using base_type       = _vol_graph_base<EV, VV, void, VKey, Alloc>;
-  using graph_type      = vol_graph<EV, VV, void, VKey, Alloc>;
+  using base_type       = _vol_graph_base<EV, VV, void, Sourced, VKey, Alloc>;
+  using graph_type      = vol_graph<EV, VV, void, Sourced, VKey, Alloc>;
   using vertex_key_type = VKey;
   using value_type      = void;
   using allocator_type  = Alloc;
