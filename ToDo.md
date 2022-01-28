@@ -17,7 +17,7 @@
     - [ ] Toplogical Sort
   - [ ] Range Adaptors & Views
     - [ ] edge_range<graph, vertex_range, vertex_edge_range>
-    - [ ] vertex_vertex_range<graph, vertex_range, vertex_edge_range>
+    - [x] for([vkey, v] : vertices_view(g,u): vertex_vertex_range<graph, vertex_range, vertex_edge_range>
     - [x] for([ukey, u] : vertices_view(g))
     - [x] for([vkey,uv] : edges_view(g,u)) (incidence)
     - [ ] define views as CPOs
@@ -38,6 +38,7 @@
       - [ ] Load from CSV file
       - [ ] Validate with vol_graph tests
     - [ ] edge_list_graph
+    - [ ] dynamic_graph: vol template params for vertex & edge containers (like stack/queue)
     - [ ] directed_adjacency_vector
     - [ ] undirected_adjacency_list
     - [ ] graph with map-based vertices (requires different algorithm impl)

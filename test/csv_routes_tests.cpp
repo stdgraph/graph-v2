@@ -5,6 +5,7 @@
 #include "graph/algorithm/dijkstra_book.hpp"
 #include "graph/view/vertices_view.hpp"
 #include "graph/view/incidence_edge_view.hpp"
+#include "graph/view/adjacency_edge_view.hpp"
 #include <cassert>
 #ifdef _MSC_VER
 #  include "Windows.h"
@@ -18,6 +19,7 @@
 using std::cout;
 using std::endl;
 
+using std::ranges::forward_range;
 using std::remove_reference_t;
 using std::is_const_v;
 
@@ -187,6 +189,8 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
       REQUIRE(i2b == i2);
     }
 
+    using view_t = decltype(std::graph::vertices_view(g2));
+    static_assert(forward_range<view_t>);
     size_t cnt = 0;
     for (auto&& [ukey, u] : std::graph::vertices_view(g2)) {
       ++cnt;
@@ -273,11 +277,11 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
     auto  frankfurt_key = germany_routes.frankfurt_key();
     auto& u             = g[frankfurt_key];
 
-    std::graph::const_vertex_edge_view_iterator<G> i1(g, u);
+    std::graph::vertex_edge_view_iterator<G> i1(g, u);
     {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
-      static_assert(is_const_v<remove_reference_t<decltype(uv)>>);
+      static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
       REQUIRE(vkey == 4);
     }
     {
@@ -289,6 +293,62 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
 
     size_t cnt = 0;
     for (auto&& [vkey, uv] : std::graph::edges_view(g, u)) {
+      ++cnt;
+    }
+    REQUIRE(cnt == 3);
+  }
+
+  SECTION("const_adjacency_edge_view") {
+    const G& g2 = g;
+
+    std::graph::const_vertex_vertex_view_iterator<G> i0; // default construction
+
+    auto  frankfurt_key = germany_routes.frankfurt_key();
+    auto& u             = g2[frankfurt_key];
+
+    std::graph::const_vertex_vertex_view_iterator<G> i1(g2, u);
+    {
+      auto&& [vkey, v] = *i1;
+      static_assert(is_const_v<decltype(vkey)>);
+      static_assert(is_const_v<remove_reference_t<decltype(v)>>);
+      REQUIRE(vkey == 4);
+    }
+    {
+      auto&& [vkey, v] = *++i1;
+      REQUIRE(vkey == 9);
+      auto i1b = i1;
+      REQUIRE(i1b == i1);
+    }
+
+    size_t cnt = 0;
+    for (auto&& [vkey, v] : std::graph::edges_view(g, u)) {
+      ++cnt;
+    }
+    REQUIRE(cnt == 3);
+  }
+
+  SECTION("adjacency_edge_view") {
+    std::graph::vertex_vertex_view_iterator<G> i0; // default construction
+
+    auto  frankfurt_key = germany_routes.frankfurt_key();
+    auto& u             = g[frankfurt_key];
+
+    std::graph::vertex_vertex_view_iterator<G> i1(g, u);
+    {
+      auto&& [vkey, uv] = *i1;
+      static_assert(is_const_v<decltype(vkey)>);
+      static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
+      REQUIRE(vkey == 4);
+    }
+    {
+      auto&& [vkey, v] = *++i1;
+      REQUIRE(vkey == 9);
+      auto i1b = i1;
+      REQUIRE(i1b == i1);
+    }
+
+    size_t cnt = 0;
+    for (auto&& [vkey, v] : std::graph::edges_view(g, u)) {
       ++cnt;
     }
     REQUIRE(cnt == 3);

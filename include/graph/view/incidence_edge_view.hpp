@@ -6,9 +6,6 @@
 //
 // enable: for([vkey, uv] : edges_view(g,u)
 //
-// range returned is an input_range, which is a requirement of subrange.
-// forward_range would also be reasonable if subrange allowed it.
-//
 namespace std::graph {
 
 template <typename G>
@@ -56,7 +53,7 @@ public:
   using edge_iterator = ranges::iterator_t<edge_range>;
   using edge_type     = ranges::range_value_t<edge_range>;
 
-  using iterator_category = input_iterator_tag; // input_iterator to allow sentinal
+  using iterator_category = forward_iterator_tag;
   using value_type        = pair<const vertex_key_type, const edge_type&>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = const value_type*;
@@ -126,7 +123,7 @@ public:
   using edge_iterator = ranges::iterator_t<edge_range>;
   using edge_type     = ranges::range_value_t<edge_range>;
 
-  using iterator_category = input_iterator_tag; // input_iterator to allow sentinal
+  using iterator_category = forward_iterator_tag;
   using value_type        = pair<const vertex_key_type, edge_type&>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = value_type*;

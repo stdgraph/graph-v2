@@ -7,6 +7,10 @@
 
 namespace std::graph::container {
 
+//--------------------------------------------------------------------------------------------------
+// vol_graph forward references
+//
+
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
 class vol_edge;
 

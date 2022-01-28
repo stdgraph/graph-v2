@@ -6,9 +6,6 @@
 //
 // enable: for([ukey, u] : vertices_view(g)
 //
-// range returned is an input_range, which is a requirement of subrange.
-// forward_range would also be reasonable if subrange allowed it.
-//
 namespace std::graph {
 
 template <typename G>
@@ -54,7 +51,7 @@ public:
   using vertex_reference_type = vertex_type&; // for internal use
   using vertex_pointer_type   = vertex_type*;
 
-  using iterator_category = input_iterator_tag; // input_iterator to allow sentinal
+  using iterator_category = forward_iterator_tag;
   using value_type        = pair<const vertex_key_type, const vertex_type&>;
   using difference_type   = ranges::range_difference_t<vertex_range_type>;
   using pointer           = const value_type*;
@@ -120,7 +117,7 @@ public:
   using vertex_reference_type = vertex_type&; // for internal use
   using vertex_pointer_type   = vertex_type*;
 
-  using iterator_category = input_iterator_tag; // input_iterator to allow sentinal
+  using iterator_category = forward_iterator_tag;
   using value_type        = pair<const vertex_key_type, vertex_type&>;
   using difference_type   = ranges::range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
