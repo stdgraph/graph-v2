@@ -15,11 +15,11 @@
     - [ ] BFS
     - [ ] DFS
     - [ ] Toplogical Sort
-  - [ ] Range Adaptors (Views)
+  - [ ] Range Adaptors & Views
     - [ ] edge_range<graph, vertex_range, vertex_edge_range>
     - [ ] vertex_vertex_range<graph, vertex_range, vertex_edge_range>
-    - [ ] **for([ukey, u] : vertices(g))**
-    - [ ] **for([vkey,uv] : edges(g,u))** (incidence)
+    - [x] for([ukey, u] : vertices_view(g))
+    - [ ] **for([vkey,uv] : edges_view(g,u))** (incidence)
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra (book, impl from AndrewL)

@@ -3,7 +3,7 @@
 #include "csv_routes_vol.hpp"
 #include "graph/graph.hpp"
 //#include "graph/adaptor/vertex_range_adaptor.hpp"
-#include "graph/adaptor/vertices_view.hpp"
+#include "graph/view/vertices_view.hpp"
 #include <cassert>
 #ifdef _MSC_VER
 #  include "Windows.h"

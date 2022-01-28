@@ -3,10 +3,45 @@
 
 //
 // vertices_view(g):
-// 
+//
 // enable: for([ukey, u] : vertices_view(g)
 //
+// range returned is an input_range, which is a requirement of subrange.
+// forward_range would also be reasonable if subrange allowed it.
+//
 namespace std::graph {
+
+template <typename G>
+class const_vertices_view_iterator;
+template <typename G>
+class vertices_view_iterator;
+
+
+template <typename G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertices_view(const G& g) {
+  using iter_type     = const_vertices_view_iterator<const G>;
+  using sentinal_type = typename iter_type::vertex_iterator_type;
+  using SR            = ranges::subrange<iter_type, sentinal_type>;
+
+  auto first = iter_type(ranges::begin(vertices(const_cast<G&>(g))));
+  auto last  = sentinal_type(ranges::end(vertices(const_cast<G&>(g))));
+  return SR(first, last);
+}
+
+
+template <typename G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertices_view(G& g) {
+  using iter_type     = vertices_view_iterator<G>;
+  using sentinal_type = typename iter_type::vertex_iterator_type;
+  using SR            = ranges::subrange<iter_type, sentinal_type>;
+
+  auto first = iter_type(ranges::begin(vertices(g)));
+  auto last  = sentinal_type(ranges::end(vertices(g)));
+  return SR(first, last);
+}
+
 
 template <typename G>
 class const_vertices_view_iterator {
@@ -28,6 +63,7 @@ public:
   using const_reference   = const value_type&;
 
 protected:
+  // avoid difficulty in undefined vertex reference value in value_type
   using shadow_value_type = pair<vertex_key_type, vertex_pointer_type>;
 
 public:
@@ -135,28 +171,5 @@ protected:
     return lhs == rhs.iter_;
   }
 };
-
-template <typename G>
-auto vertices_view(const G& g) {
-  using iter_type     = const_vertices_view_iterator<const G>;
-  using sentinal_type = typename iter_type::vertex_iterator_type;
-  using SR            = ranges::subrange<iter_type, sentinal_type>;
-
-  auto first = iter_type(ranges::begin(vertices(const_cast<G&>(g))));
-  auto last  = sentinal_type(ranges::end(vertices(const_cast<G&>(g))));
-  return SR(first, last);
-}
-
-
-template <typename G>
-auto vertices_view(G& g) {
-  using iter_type     = vertices_view_iterator<G>;
-  using sentinal_type = typename iter_type::vertex_iterator_type;
-  using SR            = ranges::subrange<iter_type, sentinal_type>;
-
-  auto first = iter_type(ranges::begin(vertices(g)));
-  auto last  = sentinal_type(ranges::end(vertices(g)));
-  return SR(first, last);
-}
 
 } // namespace std::graph
