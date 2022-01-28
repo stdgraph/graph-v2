@@ -73,27 +73,27 @@ struct vov_graph_traits {
 //
 
 template <typename C>
-concept has_emplace_back = requires(C& container, C::value_type&& value) {
+concept has_emplace_back = requires(C& container, typename C::value_type&& value) {
   {container.emplace_back(move(value))};
 };
 template <typename C>
-concept has_push_back = requires(C& container, const C::value_type& value) {
+concept has_push_back = requires(C& container, const typename C::value_type& value) {
   {container.push_back(value)};
 };
 template <typename C>
-concept has_emplace_front = requires(C& container, C::value_type&& value) {
+concept has_emplace_front = requires(C& container, typename C::value_type&& value) {
   {container.emplace_front(move(value))};
 };
 template <typename C>
-concept has_push_front = requires(C& container, const C::value_type& value) {
+concept has_push_front = requires(C& container, const typename C::value_type& value) {
   {container.push_front(value)};
 };
 template <typename C>
-concept has_emplace = requires(C& container, C::value_type&& value) {
+concept has_emplace = requires(C& container, typename C::value_type&& value) {
   {container.emplace(move(value))};
 };
 template <typename C>
-concept has_insert = requires(C& container, const C::value_type& value) {
+concept has_insert = requires(C& container, const typename C::value_type& value) {
   {container.insert(value)};
 };
 
@@ -113,9 +113,9 @@ constexpr auto push_or_insert(C& container) {
     return [&container](C::value_type&& value) { container.emplace(move(value)); };
   else if constexpr (has_insert<C>) {
     return [&container](const C::value_type& value) { container.insert(value); };
-  } else {
-    static_assert(false,
-                  "The container doesn't have emplace_back, push_back, emplace_front, push_front, emplace or insert");
+  } else  {
+    //static_assert(false,
+    //              "The container doesn't have emplace_back, push_back, emplace_front, push_front, emplace or insert");
   }
 }
 
@@ -664,6 +664,7 @@ public:
     auto&& add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng)
       add_vertex(vertex_type(std::move(vvalue_fnc(u)), alloc));
+      //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
   }
 
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
@@ -682,8 +683,10 @@ public:
       auto&& add_edge = push_or_insert(vertices_[ukey].edges());
       if constexpr (is_same_v<EV, void>) {
         add_edge(edge_type(vkey));
+        //vertices_[ukey].edges().push_front(edge_type(vkey));
       } else {
         add_edge(edge_type(vkey, evalue_fnc(edge_data)));
+        //vertices_[ukey].edges().push_front(edge_type(vkey, evalue_fnc(edge_data)));
       }
     }
   }
