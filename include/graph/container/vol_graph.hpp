@@ -84,6 +84,50 @@ class vol_edge_target<void, VV, GV, Sourced, VKey, Alloc> {};
 //--------------------------------------------------------------------------------------------------
 // vol_edge_source
 //
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
+class vol_edge_source {
+public:
+  using vertex_key_type = VKey;
+  using value_type      = EV;
+  using graph_type      = vol_graph<EV, VV, GV, false, VKey, Alloc>;
+  using vertex_type     = vol_vertex<EV, VV, GV, false, VKey, Alloc>;
+  using edge_type       = vol_edge<EV, VV, GV, false, VKey, Alloc>;
+
+public:
+  constexpr vol_edge_source(vertex_key_type source_key) : source_key_(source_key) {}
+
+  constexpr vol_edge_source()                       = default;
+  constexpr vol_edge_source(const vol_edge_source&) = default;
+  constexpr vol_edge_source(vol_edge_source&&)      = default;
+  constexpr ~vol_edge_source()                      = default;
+
+  constexpr vol_edge_source& operator=(const vol_edge_source&) = default;
+  constexpr vol_edge_source& operator=(vol_edge_source&&) = default;
+
+public:
+  //constexpr vertex_key_type source_key() const { return source_key_; }
+  //constexpr vertex_key_type source_key() const { return source_key_; }
+
+private:
+  vertex_key_type source_key_ = vertex_key_type();
+
+private:
+  // source_key(g,uv), source(g)
+  friend constexpr vertex_key_type
+  tag_invoke(::std::graph::access::source_key_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+    return uv.source_key_;
+  }
+  friend constexpr vertex_type& tag_invoke(::std::graph::access::source_fn_t, graph_type& g, edge_type& uv) noexcept {
+    return begin(vertices(g))[uv.source_key_];
+  }
+  friend constexpr const vertex_type&
+  tag_invoke(::std::graph::access::source_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+    return begin(vertices(g))[uv.source_key_];
+  }
+};
+
+template <typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
+class vol_edge_source<void, VV, GV, Sourced, VKey, Alloc> {};
 
 //--------------------------------------------------------------------------------------------------
 // vol_edge_value
@@ -134,9 +178,11 @@ class vol_edge_value<void, VV, GV, Sourced, VKey, Alloc> {};
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
 class vol_edge
       : public vol_edge_target<EV, VV, GV, Sourced, VKey, Alloc>
+      , public vol_edge_source<EV, VV, GV, Sourced, VKey, Alloc>
       , public vol_edge_value<EV, VV, GV, Sourced, VKey, Alloc> {
 public:
   using base_target_type = vol_edge_target<EV, VV, GV, Sourced, VKey, Alloc>;
+  using base_source_type = vol_edge_source<EV, VV, GV, Sourced, VKey, Alloc>;
   using base_value_type  = vol_edge_value<EV, VV, GV, Sourced, VKey, Alloc>;
 
   using vertex_key_type = VKey;
@@ -144,6 +190,69 @@ public:
   using graph_type      = vol_graph<EV, VV, GV, Sourced, VKey, Alloc>;
   using vertex_type     = vol_vertex<EV, VV, GV, Sourced, VKey, Alloc>;
   using edge_type       = vol_edge<EV, VV, GV, Sourced, VKey, Alloc>;
+
+public:
+  vol_edge(vertex_key_type target_key, vertex_key_type source_key)
+        : base_target_type(target_key), base_source_type(source_key) {}
+  vol_edge(vertex_key_type target_key, vertex_key_type source_key, const value_type& val)
+        : base_target_type(target_key), base_source_type(source_key), base_value_type(val) {}
+  vol_edge(vertex_key_type target_key, vertex_key_type source_key, value_type&& val)
+        : base_target_type(target_key), base_source_type(source_key), base_value_type(move(val)) {}
+
+  vol_edge()                = default;
+  vol_edge(const vol_edge&) = default;
+  vol_edge(vol_edge&&)      = default;
+  ~vol_edge()               = default;
+
+  vol_edge& operator=(const vol_edge&) = default;
+  vol_edge& operator=(vol_edge&&) = default;
+};
+
+template <typename VV, typename GV, typename VKey, typename Alloc>
+class vol_edge<void, VV, GV, true, VKey, Alloc>
+      : public vol_edge_target<void, VV, GV, true, VKey, Alloc>
+      , public vol_edge_source<void, VV, GV, true, VKey, Alloc>
+      , public vol_edge_value<void, VV, GV, true, VKey, Alloc> {
+public:
+  using base_target_type = vol_edge_target<void, VV, GV, true, VKey, Alloc>;
+  using base_source_type = vol_edge_source<void, VV, GV, true, VKey, Alloc>;
+  using base_value_type  = vol_edge_value<void, VV, GV, true, VKey, Alloc>;
+
+  using vertex_key_type = VKey;
+  using value_type      = void;
+  using graph_type      = vol_graph<void, VV, GV, true, VKey, Alloc>;
+  using vertex_type     = vol_vertex<void, VV, GV, true, VKey, Alloc>;
+  using edge_type       = vol_edge<void, VV, GV, true, VKey, Alloc>;
+
+public:
+  vol_edge(vertex_key_type target_key, vertex_key_type source_key)
+        : base_target_type(target_key), base_source_type(source_key) {}
+
+  vol_edge()                = default;
+  vol_edge(const vol_edge&) = default;
+  vol_edge(vol_edge&&)      = default;
+  ~vol_edge()               = default;
+
+  vol_edge& operator=(const vol_edge&) = default;
+  vol_edge& operator=(vol_edge&&) = default;
+};
+
+
+template <typename EV, typename VV, typename GV, typename VKey, typename Alloc>
+class vol_edge<EV, VV, GV, false, VKey, Alloc>
+      : public vol_edge_target<EV, VV, GV, false, VKey, Alloc>
+      , public vol_edge_source<EV, VV, GV, false, VKey, Alloc>
+      , public vol_edge_value<EV, VV, GV, false, VKey, Alloc> {
+public:
+  using base_target_type = vol_edge_target<EV, VV, GV, false, VKey, Alloc>;
+  using base_source_type = vol_edge_source<EV, VV, GV, false, VKey, Alloc>;
+  using base_value_type  = vol_edge_value<EV, VV, GV, false, VKey, Alloc>;
+
+  using vertex_key_type = VKey;
+  using value_type      = EV;
+  using graph_type      = vol_graph<EV, VV, GV, false, VKey, Alloc>;
+  using vertex_type     = vol_vertex<EV, VV, GV, false, VKey, Alloc>;
+  using edge_type       = vol_edge<EV, VV, GV, false, VKey, Alloc>;
 
 public:
   vol_edge(vertex_key_type target_key) : base_target_type(target_key) {}
@@ -157,21 +266,20 @@ public:
 
   vol_edge& operator=(const vol_edge&) = default;
   vol_edge& operator=(vol_edge&&) = default;
-
-  //using base_value_type::value;
 };
 
-template <typename VV, typename GV, bool Sourced, typename VKey, typename Alloc>
-class vol_edge<void, VV, GV, Sourced, VKey, Alloc>
-      : public vol_edge_target<void, VV, GV, Sourced, VKey, Alloc>
-      , public vol_edge_value<void, VV, GV, Sourced, VKey, Alloc> {
+template <typename VV, typename GV, typename VKey, typename Alloc>
+class vol_edge<void, VV, GV, false, VKey, Alloc>
+      : public vol_edge_target<void, VV, GV, false, VKey, Alloc>
+      , public vol_edge_source<void, VV, GV, false, VKey, Alloc>
+      , public vol_edge_value<void, VV, GV, false, VKey, Alloc> {
 public:
-  using base_target_type = vol_edge_target<void, VV, GV, Sourced, VKey, Alloc>;
+  using base_target_type = vol_edge_target<void, VV, GV, false, VKey, Alloc>;
   using vertex_key_type  = VKey;
   using value_type       = void;
-  using graph_type       = vol_graph<void, VV, GV, Sourced, VKey, Alloc>;
-  using vertex_type      = vol_vertex<void, VV, GV, Sourced, VKey, Alloc>;
-  using edge_type        = vol_edge<void, VV, GV, Sourced, VKey, Alloc>;
+  using graph_type       = vol_graph<void, VV, GV, false, VKey, Alloc>;
+  using vertex_type      = vol_vertex<void, VV, GV, false, VKey, Alloc>;
+  using edge_type        = vol_edge<void, VV, GV, false, VKey, Alloc>;
 
 public:
   vol_edge(vertex_key_type target_key) : base_target_type(target_key) {}
