@@ -191,3 +191,43 @@ OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
 #endif
   return os;
 }
+
+
+void utf8_append(std::string& out, const char ch);
+std::string quoted_utf8(const std::string& s);
+std::string quoted_utf8(const std::string_view& s);
+std::string quoted_utf8(const char* s);
+
+class ostream_indenter {
+public:
+  ostream_indenter(int level) : level_(level) {}
+  ostream_indenter()                        = default;
+  ostream_indenter(const ostream_indenter&) = default;
+  ~ostream_indenter()                       = default;
+
+  ostream_indenter& operator=(const ostream_indenter&) = default;
+
+  int level() const { return level_; }
+
+  ostream_indenter& operator++() {
+    ++level_;
+    return *this;
+  }
+  ostream_indenter operator++(int) {
+    ostream_indenter tmp(*this);
+    ++*this;
+    return tmp;
+  }
+  ostream_indenter& operator--() {
+    --level_;
+    return *this;
+  }
+  ostream_indenter operator--(int) {
+    ostream_indenter tmp(*this);
+    --*this;
+    return tmp;
+  }
+
+private:
+  int level_ = 0;
+};

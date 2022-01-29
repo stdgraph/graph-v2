@@ -6,6 +6,7 @@
 #include "graph/view/incidence_edge_view.hpp"
 #include "graph/view/adjacency_edge_view.hpp"
 #include "graph/container/dynamic_graph.hpp"
+#include <deque>
 #include <cassert>
 #ifdef _MSC_VER
 #  include "Windows.h"
@@ -35,6 +36,22 @@ using std::graph::target_key;
 using std::graph::target;
 using std::graph::edge_value;
 
+template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
+struct dov_graph_traits {
+  using edge_value_type                      = EV;
+  using vertex_value_type                    = VV;
+  using graph_value_type                     = GV;
+  using vertex_key_type                      = VKey;
+  constexpr inline const static bool sourced = Sourced;
+
+  using edge_type   = std::graph::container::dynamic_edge<EV, VV, GV, Sourced, VKey, dov_graph_traits>;
+  using vertex_type = std::graph::container::dynamic_vertex<EV, VV, GV, Sourced, VKey, dov_graph_traits>;
+  using graph_type  = std::graph::container::dynamic_graph<EV, VV, GV, Sourced, VKey, dov_graph_traits>;
+
+  using vertices_type = std::deque<vertex_type>;
+  using edges_type    = std::vector<edge_type>;
+};
+
 
 using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
@@ -44,18 +61,20 @@ using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<
 //  routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
 //}
 
-template<typename G>
+template <typename G>
 constexpr auto find_frankfurt_key(const G& g) {
   return find_city_key(g, "Frankf\xC3\xBCrt");
 }
 
-template<typename G>
-auto find_frankfurt(G&& g) { return find_city(g, "Frankf\xC3\xBCrt"); }
+template <typename G>
+auto find_frankfurt(G&& g) {
+  return find_city(g, "Frankf\xC3\xBCrt");
+}
 
 
-TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vofl][germany][dijkstra][book]") {
+TEST_CASE("Germany routes CSV+dov dijkstra_book", "[csv][dov][germany][dijkstra][book]") {
   init_console();
-  using G = routes_volf_graph_type;
+  using G  = routes_volf_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   auto frankfurt     = find_frankfurt(g);
@@ -65,7 +84,7 @@ TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vofl][germany][dijkstra
 }
 
 
-TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
+TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
   init_console();
   using G  = routes_volf_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -184,7 +203,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
 
     std::graph::const_vertex_edge_view_iterator<G> i0; // default construction
 
-    auto& u             = g2[frankfurt_key];
+    auto& u = g2[frankfurt_key];
 
     std::graph::const_vertex_edge_view_iterator<G> i1(g2, u);
     {
@@ -210,7 +229,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
   SECTION("incidence_edge_view") {
     std::graph::vertex_edge_view_iterator<G> i0; // default construction
 
-    auto& u             = g[frankfurt_key];
+    auto& u = g[frankfurt_key];
 
     std::graph::vertex_edge_view_iterator<G> i1(g, u);
     {
@@ -238,7 +257,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
 
     std::graph::const_vertex_vertex_view_iterator<G> i0; // default construction
 
-    auto& u             = g2[frankfurt_key];
+    auto& u = g2[frankfurt_key];
 
     std::graph::const_vertex_vertex_view_iterator<G> i1(g2, u);
     {
@@ -264,7 +283,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
   SECTION("adjacency_edge_view") {
     std::graph::vertex_vertex_view_iterator<G> i0; // default construction
 
-    auto& u             = g[frankfurt_key];
+    auto& u = g[frankfurt_key];
 
     std::graph::vertex_vertex_view_iterator<G> i1(g, u);
     {
@@ -289,8 +308,9 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
 
   SECTION("content") {
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-    cout << "\nGermany Routes"
-         << "\n-------------------------------" << routes_graph(g) << endl;
+    cout << "\nGermany Routes using deque+vector"
+         << "\n---------------------------------" << endl
+         << routes_graph(g) << endl;
 #elif TEST_OPTION == TEST_OPTION_GEN
     ostream_indenter indent;
     cout << endl << indent << "auto ui = begin(vertices(g));" << endl;
