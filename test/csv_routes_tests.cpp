@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
-#include "csv_routes_csr.hpp"
-#include "csv_routes_vol.hpp"
+#include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/algorithm/dijkstra_book.hpp"
 #include "graph/view/vertices_view.hpp"
@@ -117,10 +116,10 @@ using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 using routes_vol_graph         = routes_graph<routes_volf_graph_type>;
 
-TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
-  init_console();
-  routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
-}
+//TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
+//  init_console();
+//  routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
+//}
 
 TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vol][germany][dijkstra][book]") {
   init_console();
