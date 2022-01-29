@@ -262,10 +262,32 @@ OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
 }
 
 template <typename G>
+std::optional<std::graph::vertex_reference_t<G>> find_city(G&& g, std::string_view city_name) {
+  auto vertex_to_name = [&g](std::graph::vertex_reference_t<G> u) { return std::graph::vertex_value_t<G>(g, u); };
+  auto it             = std::ranges::lower_bound(vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
+  if (it != end(vertices(g)) && vertex_value(g, *it) != city_name)
+    it = end(vertices(g));
+  if (it != end(vertices(g)))
+    return std::optional<std::graph::vertex_reference_t<G>>(*it);
+  return std::optional<std::graph::vertex_reference_t<G>>();
+}
+
+template <typename G>
+std::graph::vertex_key_t<G> find_city_key(G&& g, std::string_view city_name) {
+  auto vertex_to_name = [&g](std::graph::vertex_reference_t<G> u) { return std::graph::vertex_value<G>(g, u); };
+  auto it = std::ranges::lower_bound(std::graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
+  if (it != end(std::graph::vertices(g)) && std::graph::vertex_value(g, *it) != city_name)
+    it = end(std::graph::vertices(g));
+  return static_cast<std::graph::vertex_key_t<G>>(it -
+                                                  begin(std::graph::vertices(g))); // == size(vertices(g)) if not found
+}
+
+template <typename G>
 auto load_graph(csv::string_view csv_file) {
   using namespace std::graph;
 
   using graph_type       = G;
+  using vertex_type      = std::remove_reference_t<vertex_t<G>>;
   using vertex_key_type  = vertex_key_t<graph_type>;
   using vertex_reference = vertex_reference_t<graph_type>;
   using name_type        = vertex_value_t<graph_type>;
@@ -279,30 +301,20 @@ auto load_graph(csv::string_view csv_file) {
   graph_type g;
 
   // Load vertices
-  auto&& city_name_getter = [](auto& name) { return name; };
+  auto&& city_name_getter = [](auto&& name) { return std::move(name); };
   g.load_vertices(city_names, city_name_getter);
 
   //
   auto vertex_to_name = [&g](vertex_reference u) { return vertex_value(g, u); }; // projection
 
-  // find the vertex for the given city. The vertices are ordered by the city_name,
-  // as they were loaded from the city_names vector.
-  auto find_city_key = [&g, &vertex_to_name](const csv::string_view& city_name) {
-    auto it = std::ranges::lower_bound(vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
-    if (it != end(vertices(g)) && vertex_value(g, *it) != city_name)
-      it = end(vertices(g));
-    assert(it != end(vertices(g))); // city not found? unexpected
-    return static_cast<vertex_key_type>(it - begin(vertices(g)));
-  };
-
-  auto ekey_fnc = [&g, &find_city_key](const csv::CSVRow& row) {
-    auto from_key = find_city_key(row[0].get_sv());
-    auto to_key   = find_city_key(row[1].get_sv());
+  auto ekey_fnc = [&g](const csv::CSVRow& row) {
+    auto from_key = find_city_key(g, row[0].get_sv());
+    auto to_key   = find_city_key(g, row[1].get_sv());
     assert(from_key < size(vertices(g)) && to_key < size(vertices(g)));
     return std::pair{from_key, to_key};
   };
-  auto evalue_fnc = [&g, &find_city_key](const csv::CSVRow& row) {
-    auto to_key = find_city_key(row[1].get<std::string_view>());
+  auto evalue_fnc = [&g](const csv::CSVRow& row) {
+    auto to_key = find_city_key(g, row[1].get<std::string_view>());
     auto dist   = row[2].get<double>();
     assert(to_key < size(vertices(g)));
     return dist;
