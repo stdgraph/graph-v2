@@ -112,6 +112,25 @@ OStream& operator<<(OStream& os, const ostream_indenter& osi) {
   return os;
 }
 
+TEST_CASE("Germany routes free func test", "[csv][vol][germany][freefnc]") {
+  using routes_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
+  using routes_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_graph_traits>;
+
+  auto g = load_graph<routes_graph_type>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  size_t edge_cnt   = 0;
+  double total_dist = 0;
+  for (auto&& u : vertices(g)) {
+    for (auto&& uv : edges(g, u)) {
+      ++edge_cnt; // forward_list doesn't have size()
+      total_dist += edge_value(g, uv);
+    }
+  }
+  REQUIRE(std::ranges::size(vertices(g)) == 10);
+  REQUIRE(edge_cnt == 11);
+  REQUIRE(total_dist == 2030.0);
+}
+
+
 using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string_view>;
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 using routes_vol_graph         = routes_graph<routes_volf_graph_type>;
@@ -146,6 +165,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   //REQUIRE(frantfurt != end(germany_routes.cities()));
 
   SECTION("metadata") {
+    REQUIRE(10 == std::ranges::size(vertices(g)));
     REQUIRE(std::ranges::size(g) == std::ranges::size(germany_routes.cities()));
     size_t edge_cnt   = 0;
     double total_dist = 0;

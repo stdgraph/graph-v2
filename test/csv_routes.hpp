@@ -18,7 +18,6 @@
 #endif
 
 #include "single_include/csv.hpp"
-#include "graph/graph.hpp"
 
 #ifdef _MSC_VER
 #  pragma warning(pop)
@@ -26,6 +25,7 @@
 #  pragma GCC diagnostic pop
 #endif
 
+#include "graph/graph.hpp"
 #include <set>
 #include <algorithm>
 #include <string_view>
@@ -167,10 +167,7 @@ public:
 public: // Construction/Destruction/Assignment
   routes_graph(csv::string_view csv_file) : base_type(csv_file), g_(load_routes(csv_file)) {}
 
-  routes_graph() {
-    static_assert(std::is_same_v<name_view, std::string_view>);
-    static_assert(std::is_arithmetic_v<weight_type>);
-  }
+  routes_graph()                    = default;
   routes_graph(const routes_graph&) = default;
   routes_graph(routes_graph&&)      = default;
   ~routes_graph()                   = default;
@@ -264,41 +261,29 @@ OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
   return os;
 }
 
-#ifdef FUTURE
-// This is an attempt to consolidate routes_vol_graph & routes_base<uint32_t> into a single function.
-// The intent was to move the city_names strings into the vertex nodes as the vertices were added,
-// and then to have the edges use those. It's close-ish, but the code to move the names is having an
-// issue.
-
-TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany][freefnc]") {
-  auto g = load_vol_graph<uint32_t>(TEST_DATA_ROOT_DIR "germany_routes.csv");
-}
-
-template <typename VKey>
-auto load_vol_graph(csv::string_view csv_file) {
-  using key_type    = VKey;
-  using name_type   = std::string;
-  using weight_type = double;
-  using graph_type  = std::graph::container::vol_graph<weight_type, name_type, void, key_type>;
-
+template <typename G>
+auto load_graph(csv::string_view csv_file) {
   using namespace std::graph;
+
+  using graph_type       = G;
+  using vertex_key_type  = vertex_key_t<graph_type>;
+  using vertex_reference = vertex_reference_t<graph_type>;
+  using name_type        = vertex_value_t<graph_type>;
+  using weight_type      = edge_value_t<graph_type, vertex_edge_range_t<graph_type>>;
+  //static_assert(std::is_same_v<name_type, std::string>);
+  //static_assert(std::is_arithmetic_v<weight_type>);
+
+  // Scan the CSV to get the unique city names (cols 0 & 1)
+  auto&& [city_names, csv_row_cnt] = unique_vertex_labels(csv_file, 0UL, 1UL);
 
   graph_type g;
 
-  // Scan the CSV to get the unique city names (cols 0 & 1)
-  auto&& [city_names, row_cnt] = unique_vertex_labels(csv_file, 0UL, 1UL);
+  // Load vertices
+  auto&& city_name_getter = [](auto& name) { return name; };
+  g.load_vertices(city_names, city_name_getter);
 
-  // Load the vertices
-  std::allocator<char> alloc;
-  auto&&               vvalue_fnc = [](std::string&& name) {
-    return std::move(name);
-  }; // moves city names into the vertices of the graph
-  g.load_vertices(city_names, vvalue_fnc, alloc);
-
-  auto vertex_to_name = [&g](std::graph::vertex_reference_t<graph_type> u) {
-    const std::string& name = vertex_value(g, u);
-    return std::string_view(name);
-  }; // projection
+  //
+  auto vertex_to_name = [&g](vertex_reference u) { return vertex_value(g, u); }; // projection
 
   // find the vertex for the given city. The vertices are ordered by the city_name,
   // as they were loaded from the city_names vector.
@@ -306,8 +291,8 @@ auto load_vol_graph(csv::string_view csv_file) {
     auto it = std::ranges::lower_bound(vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
     if (it != end(vertices(g)) && vertex_value(g, *it) != city_name)
       it = end(vertices(g));
-    assert(it != end(vertices(g))); // unexpected
-    return static_cast<key_type>(it - begin(vertices(g)));
+    assert(it != end(vertices(g))); // city not found? unexpected
+    return static_cast<vertex_key_type>(it - begin(vertices(g)));
   };
 
   auto ekey_fnc = [&g, &find_city_key](const csv::CSVRow& row) {
@@ -323,10 +308,9 @@ auto load_vol_graph(csv::string_view csv_file) {
     return dist;
   };
 
-  const key_type max_city_key = static_cast<key_type>(size(city_names)) - 1;
-  csv::CSVReader reader(csv_file); // CSV file reader
-  g.load_edges(max_city_key, reader, ekey_fnc, evalue_fnc, alloc);
+  const vertex_key_type max_city_key = static_cast<vertex_key_type>(size(city_names)) - 1;
+  csv::CSVReader        reader(csv_file); // CSV file reader
+  g.load_edges(max_city_key, reader, ekey_fnc, evalue_fnc);
 
   return g;
 }
-#endif // FUTURE
