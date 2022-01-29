@@ -694,8 +694,8 @@ public:
     vertices_.reserve(ranges::size(vrng));
     auto add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng)
-      //add_vertex(vertex_type(std::move(vvalue_fnc(u)), alloc));
-      vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
+      add_vertex(vertex_type(std::move(vvalue_fnc(u)), alloc));
+      //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
   }
 
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
@@ -705,12 +705,18 @@ public:
                   const EKeyFnc&      ekey_fnc,
                   const EValueFnc&    evalue_fnc,
                   edge_allocator_type alloc = edge_allocator_type()) {
-    vertices_.resize(static_cast<size_t>(max_row_idx) + 1, vertex_type(alloc));
+    if (vertices_.size() < static_cast<size_t>(max_row_idx) + 1)
+        vertices_.resize(static_cast<size_t>(max_row_idx) + 1, vertex_type(alloc));
 
     // add edges
     for (auto& edge_data : erng) {
       auto&& [ukey, vkey] = ekey_fnc(edge_data);
       assert(static_cast<size_t>(ukey) < vertices_.size() && static_cast<size_t>(vkey) < vertices_.size());
+      if (static_cast<size_t>(ukey) >= vertices_.size())
+        throw runtime_error("source key exceeds the number of vertices in load_edges");
+      if (static_cast<size_t>(vkey) >= vertices_.size())
+        throw runtime_error("target key exceeds the number of vertices in load_edges");
+
       auto&& add_edge = push_or_insert(vertices_[ukey].edges());
       if constexpr (is_same_v<EV, void>) {
         add_edge(edge_type(vkey));

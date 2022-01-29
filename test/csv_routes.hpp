@@ -118,20 +118,20 @@ auto load_graph(csv::string_view csv_file) {
 
   graph_type g;
 
-  // Load vertices
+  // Load vertices, moving city name to vertex for ownership
   auto city_name_getter = [](auto&& name) -> std::string&& { return std::move(name); };
   g.load_vertices(city_names, city_name_getter);
 
-  //
+  // load edges
   auto vertex_to_name = [&g](vertex_reference u) { return vertex_value(g, u); }; // projection
 
-  auto ekey_fnc = [&g](const csv::CSVRow& row) {
+  auto ekey_fnc = [&g](const csv::CSVRow& row) { // get edge key
     auto from_key = find_city_key(g, row[0].get_sv());
     auto to_key   = find_city_key(g, row[1].get_sv());
     assert(from_key < size(vertices(g)) && to_key < size(vertices(g)));
     return std::pair{from_key, to_key};
   };
-  auto evalue_fnc = [&g](const csv::CSVRow& row) {
+  auto evalue_fnc = [&g](const csv::CSVRow& row) { // get edge weight
     auto to_key = find_city_key(g, row[1].get<std::string_view>());
     auto dist   = row[2].get<double>();
     assert(to_key < size(vertices(g)));
