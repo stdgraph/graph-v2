@@ -13,13 +13,13 @@ namespace std::graph::container {
 //
 
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
+template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VKey = uint32_t>
 struct vofl_graph_traits;
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
+template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VKey = uint32_t>
 struct vol_graph_traits;
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
+template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VKey = uint32_t>
 struct vov_graph_traits;
 
 
@@ -37,9 +37,14 @@ template <typename EV     = void,
           typename Traits = vofl_graph_traits<EV, VV, GV, Sourced, VKey>>
 class dynamic_graph;
 
-
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
 struct vofl_graph_traits {
+  using edge_value_type                      = EV;
+  using vertex_value_type                    = VV;
+  using graph_value_type                     = GV;
+  using vertex_key_type                      = VKey;
+  constexpr inline const static bool sourced = Sourced;
+
   using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VKey, vofl_graph_traits>;
   using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VKey, vofl_graph_traits>;
   using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VKey, vofl_graph_traits>;
@@ -50,6 +55,12 @@ struct vofl_graph_traits {
 
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
 struct vol_graph_traits {
+  using edge_value_type                      = EV;
+  using vertex_value_type                    = VV;
+  using graph_value_type                     = GV;
+  using vertex_key_type                      = VKey;
+  constexpr inline const static bool sourced = Sourced;
+
   using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VKey, vol_graph_traits>;
   using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VKey, vol_graph_traits>;
   using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VKey, vol_graph_traits>;
@@ -60,6 +71,12 @@ struct vol_graph_traits {
 
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
 struct vov_graph_traits {
+  using edge_value_type                      = EV;
+  using vertex_value_type                    = VV;
+  using graph_value_type                     = GV;
+  using vertex_key_type                      = VKey;
+  constexpr inline const static bool sourced = Sourced;
+
   using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VKey, vov_graph_traits>;
   using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VKey, vov_graph_traits>;
   using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VKey, vov_graph_traits>;
@@ -67,6 +84,14 @@ struct vov_graph_traits {
   using vertices_type = vector<vertex_type>;
   using edges_type    = vector<edge_type>;
 };
+
+template <typename Traits>
+using dynamic_adjacency_graph = dynamic_graph<typename Traits::edge_value_type,
+                                              typename Traits::vertex_value_type,
+                                              typename Traits::graph_value_type,
+                                              Traits::sourced,
+                                              typename Traits::vertex_key_type,
+                                              Traits>;
 
 //--------------------------------------------------------------------------------------------------
 // utility functions

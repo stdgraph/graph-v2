@@ -41,10 +41,29 @@ constexpr auto vertices_view(G& g) {
 
 template <typename G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertices_view(const G&                   g,
-                             vertex_iterator_t<const G> first,
-                             vertex_iterator_t<const G> last,
-                             vertex_key_t<G>            start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)))) {
+constexpr auto vertices_view(const G& g, vertex_iterator_t<const G> first, vertex_iterator_t<const G> last) {
+  using iter_type          = const_vertices_view_iterator<const G>;
+  using sentinal_type      = typename iter_type::vertex_iterator_type;
+  using SR                 = ranges::subrange<iter_type, sentinal_type>;
+  vertex_key_t<G> start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)));
+  return SR(iter_type(first, start_at), last);
+}
+
+template <typename G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertices_view(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
+  using iter_type          = const_vertices_view_iterator<G>;
+  using sentinal_type      = typename iter_type::vertex_iterator_type;
+  using SR                 = ranges::subrange<iter_type, sentinal_type>;
+  vertex_key_t<G> start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)));
+  return SR(iter_type(first, start_at), last);
+}
+
+
+template <typename G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto
+vertices_view(const G& g, vertex_iterator_t<const G> first, vertex_iterator_t<const G> last, vertex_key_t<G> start_at) {
   using iter_type     = const_vertices_view_iterator<const G>;
   using sentinal_type = typename iter_type::vertex_iterator_type;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
@@ -53,10 +72,7 @@ constexpr auto vertices_view(const G&                   g,
 
 template <typename G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertices_view(G&                   g,
-                             vertex_iterator_t<G> first,
-                             vertex_iterator_t<G> last,
-                             vertex_key_t<G>      start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)))) {
+constexpr auto vertices_view(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, vertex_key_t<G> start_at) {
   using iter_type     = const_vertices_view_iterator<G>;
   using sentinal_type = typename iter_type::vertex_iterator_type;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
@@ -90,7 +106,7 @@ protected:
 public:
   const_vertices_view_iterator(const graph_type& g) : iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
   const_vertices_view_iterator(vertex_iterator_type iter, vertex_key_type start_at = 0)
-        : iter_(iter), value_(start_at, nullptr) {}
+        : value_(start_at, nullptr), iter_(iter) {}
 
   constexpr const_vertices_view_iterator()                                    = default;
   constexpr const_vertices_view_iterator(const const_vertices_view_iterator&) = default;

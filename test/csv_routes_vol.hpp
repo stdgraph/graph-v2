@@ -11,7 +11,8 @@ public:
   using name_view                      = std::string_view;
   using weight_type                    = double;
 
-  using graph_type = std::graph::container::dynamic_graph<weight_type, name_view, void, sourced, key_type>;
+  using graph_traits = std::graph::container::vofl_graph_traits<weight_type, name_view, void, sourced, key_type>;
+  using graph_type   = std::graph::container::dynamic_adjacency_graph<graph_traits>;
 
 public: // Construction/Destruction/Assignment
   routes_vol_graph(csv::string_view csv_file) : base_type(csv_file), g_(load_routes(csv_file)) {}
