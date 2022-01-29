@@ -26,6 +26,7 @@
 #endif
 
 #include "graph/graph.hpp"
+#include "graph/view/vertices_view.hpp"
 #include <set>
 #include <algorithm>
 #include <string_view>
@@ -178,7 +179,7 @@ OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
     ++ukey;
   }
 #else
-  for (vertex_key_t<G> ukey = 0; auto&& u : vertices(g)) {
+  for (auto&& [ukey, u] : vertices_view(g)) {
     os << '[' << ukey << ' ' << vertex_value(g, u) << ']' << std::endl;
     //auto vw = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
     for (auto&& uv : edges(g, u)) {
@@ -186,7 +187,6 @@ OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
       auto&& v    = target(g, uv);
       os << "  --> [" << vkey << ' ' << vertex_value(g, v) << "] " << edge_value(g, uv) << "km" << std::endl;
     }
-    ++ukey;
   }
 #endif
   return os;
