@@ -3,31 +3,36 @@
 #include "graph/container/dynamic_graph.hpp"
 #include <iomanip>
 
-class routes_vol_graph : public routes_base<uint32_t> {
+template <typename G>
+class routes_graph : public routes_base<std::graph::vertex_key_t<G>> {
 public:
-  using base_type                      = routes_base<uint32_t>;
-  using key_type                       = base_type::key_type;
-  constexpr inline static bool sourced = false;
-  using name_view                      = std::string_view;
-  using weight_type                    = double;
-
-  using graph_traits = std::graph::container::vofl_graph_traits<weight_type, name_view, void, sourced, key_type>;
-  using graph_type   = std::graph::container::dynamic_adjacency_graph<graph_traits>;
+  using graph_type  = G;
+  using key_type    = std::graph::vertex_key_t<G>;
+  using name_view   = std::graph::vertex_value_t<G>;
+  using weight_type = std::graph::edge_value_t<G, std::graph::vertex_edge_range_t<G>>;
+  using base_type   = routes_base<key_type>;
+  //constexpr inline static bool sourced = sourced_incidence_graph<G>;
 
 public: // Construction/Destruction/Assignment
-  routes_vol_graph(csv::string_view csv_file) : base_type(csv_file), g_(load_routes(csv_file)) {}
+  routes_graph(csv::string_view csv_file) : base_type(csv_file), g_(load_routes(csv_file)) {}
 
-  routes_vol_graph()                        = default;
-  routes_vol_graph(const routes_vol_graph&) = default;
-  routes_vol_graph(routes_vol_graph&&)      = default;
-  ~routes_vol_graph()                       = default;
+  routes_graph() {
+    static_assert(std::is_same_v<name_view, std::string_view>);
+    static_assert(std::is_arithmetic_v<weight_type>);
+  }
+  routes_graph(const routes_graph&) = default;
+  routes_graph(routes_graph&&)      = default;
+  ~routes_graph()                   = default;
 
-  routes_vol_graph& operator=(const routes_vol_graph&) = default;
-  routes_vol_graph& operator=(routes_vol_graph&&) = default;
+  routes_graph& operator=(const routes_graph&) = default;
+  routes_graph& operator=(routes_graph&&) = default;
 
 public: // Properties
   constexpr graph_type&       graph() { return g_; }
   constexpr const graph_type& graph() const { return g_; }
+
+  using base_type::cities;
+  using base_type::find_city_key;
 
 public:  // Operations
 private: // construction helpers
@@ -68,8 +73,8 @@ private:         // Member Variables
   graph_type g_; // CSR graph of routes
 };
 
-template <typename OStream>
-OStream& operator<<(OStream& os, const routes_vol_graph& graph) {
+template <typename OStream, typename G>
+OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
   using namespace std::graph;
   auto&& g = graph.graph();
 
@@ -94,7 +99,7 @@ OStream& operator<<(OStream& os, const routes_vol_graph& graph) {
     ++ukey;
   }
 #else
-  for (routes_vol_graph::key_type ukey = 0; auto&& u : vertices(g)) {
+  for (typename routes_graph<G>::key_type ukey = 0; auto&& u : vertices(g)) {
     os << '[' << ukey << ' ' << vertex_value(g, u) << ']' << std::endl;
     //auto vw = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
     for (auto&& uv : edges(g, u)) {

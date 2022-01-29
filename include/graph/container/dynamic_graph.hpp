@@ -569,8 +569,9 @@ public: // types
   using allocator_type  = typename vertices_type::allocator_type;
   using size_type       = vertices_type::size_type;
 
-  using graph_type = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
-  using edge_type  = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
+  using graph_type   = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
+  using graph_traits = Traits;
+  using edge_type    = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
 
 public: // Construction/Destruction/Assignment
   constexpr dynamic_graph_base()                          = default;
@@ -792,6 +793,7 @@ class dynamic_graph : public dynamic_graph_base<EV, VV, GV, Sourced, VKey, Trait
 public:
   using base_type       = dynamic_graph_base<EV, VV, GV, Sourced, VKey, Traits>;
   using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
+  using graph_traits    = Traits;
   using vertex_key_type = VKey;
   using value_type      = GV;
   using allocator_type  = typename Traits::vertices_type::allocator_type;
@@ -900,6 +902,7 @@ class dynamic_graph<EV, VV, void, Sourced, VKey, Traits>
 public:
   using base_type       = dynamic_graph_base<EV, VV, void, Sourced, VKey, Traits>;
   using graph_type      = dynamic_graph<EV, VV, void, Sourced, VKey, Traits>;
+  using graph_traits    = Traits;
   using vertex_key_type = VKey;
   using value_type      = void;
   using allocator_type  = typename Traits::vertices_type::allocator_type;

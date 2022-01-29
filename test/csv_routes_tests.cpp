@@ -12,10 +12,10 @@
 #  include "Windows.h"
 #endif
 
-#define TEST_OPTION_OUTPUT (1)
-#define TEST_OPTION_GEN (2)
-#define TEST_OPTION_TEST (3)
-#define TEST_OPTION TEST_OPTION_TEST
+#define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
+#define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file
+#define TEST_OPTION_TEST (3)   // run unit tests
+#define TEST_OPTION TEST_OPTION_OUTPUT
 
 using std::cout;
 using std::endl;
@@ -113,6 +113,9 @@ OStream& operator<<(OStream& os, const ostream_indenter& osi) {
   return os;
 }
 
+using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string_view>;
+using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
+using routes_vol_graph         = routes_graph<routes_volf_graph_type>;
 
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
   init_console();
@@ -158,7 +161,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   }
 
   SECTION("const_vertices_view") {
-    const G& g2   = g;
+    const G& g2 = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
 
     std::graph::const_vertices_view_iterator<G> i0; // default construction
@@ -244,7 +247,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   }
 
   SECTION("const_incidence_edge_view") {
-    const G& g2   = g;
+    const G& g2 = g;
 
     std::graph::const_vertex_edge_view_iterator<G> i0; // default construction
 
@@ -266,7 +269,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [vkey, uv] : std::graph::edges_view(g,u)) {
+    for (auto&& [vkey, uv] : std::graph::edges_view(g, u)) {
       ++cnt;
     }
     REQUIRE(cnt == 3);
