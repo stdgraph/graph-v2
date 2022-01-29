@@ -112,41 +112,30 @@ OStream& operator<<(OStream& os, const ostream_indenter& osi) {
   return os;
 }
 
-TEST_CASE("Germany routes free func test", "[csv][vol][germany][freefnc]") {
-  using routes_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
-  using routes_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_graph_traits>;
-
-  auto g = load_graph<routes_graph_type>(TEST_DATA_ROOT_DIR "germany_routes.csv");
-  size_t edge_cnt   = 0;
-  double total_dist = 0;
-  for (auto&& u : vertices(g)) {
-    for (auto&& uv : edges(g, u)) {
-      ++edge_cnt; // forward_list doesn't have size()
-      total_dist += edge_value(g, uv);
-    }
-  }
-  REQUIRE(std::ranges::size(vertices(g)) == 10);
-  REQUIRE(edge_cnt == 11);
-  REQUIRE(total_dist == 2030.0);
-}
-
-
-using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string_view>;
+using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
-using routes_vol_graph         = routes_graph<routes_volf_graph_type>;
 
 //TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
 //  init_console();
 //  routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
 //}
 
+template<typename G>
+constexpr auto find_frankfurt_key(const G& g) {
+  return find_city_key(g, "Frankf\xC3\xBCrt");
+}
+
+template<typename G>
+auto find_frankfurt(G&& g) { return find_city(g, "Frankf\xC3\xBCrt"); }
+
+
 TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vol][germany][dijkstra][book]") {
   init_console();
-  routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
-  using G = routes_vol_graph::graph_type;
-  G& g    = germany_routes.graph();
+  using G = routes_volf_graph_type;
+  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
-  auto frankfurt_key = germany_routes.frankfurt_key();
+  auto frankfurt     = find_frankfurt(g);
+  auto frankfurt_key = find_frankfurt_key(g);
   auto weight        = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
   auto result        = std::graph::dijkstra_book(g, frankfurt_key, weight);
 }
@@ -154,9 +143,11 @@ TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vol][germany][dijkstra]
 
 TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   init_console();
-  routes_vol_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
-  using G = routes_vol_graph::graph_type;
-  G& g    = germany_routes.graph();
+  using G  = routes_volf_graph_type;
+  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+
+  auto frankfurt     = find_frankfurt(g);
+  auto frankfurt_key = find_frankfurt_key(g);
 
   //using inv_vec = std::vector<int>;
   //using sr = std::ranges::subrange<inv_vec::iterator>;
@@ -166,7 +157,6 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
 
   SECTION("metadata") {
     REQUIRE(10 == std::ranges::size(vertices(g)));
-    REQUIRE(std::ranges::size(g) == std::ranges::size(germany_routes.cities()));
     size_t edge_cnt   = 0;
     double total_dist = 0;
     for (auto&& u : vertices(g)) {
@@ -270,7 +260,6 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
 
     std::graph::const_vertex_edge_view_iterator<G> i0; // default construction
 
-    auto  frankfurt_key = germany_routes.frankfurt_key();
     auto& u             = g2[frankfurt_key];
 
     std::graph::const_vertex_edge_view_iterator<G> i1(g2, u);
@@ -297,7 +286,6 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   SECTION("incidence_edge_view") {
     std::graph::vertex_edge_view_iterator<G> i0; // default construction
 
-    auto  frankfurt_key = germany_routes.frankfurt_key();
     auto& u             = g[frankfurt_key];
 
     std::graph::vertex_edge_view_iterator<G> i1(g, u);
@@ -326,7 +314,6 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
 
     std::graph::const_vertex_vertex_view_iterator<G> i0; // default construction
 
-    auto  frankfurt_key = germany_routes.frankfurt_key();
     auto& u             = g2[frankfurt_key];
 
     std::graph::const_vertex_vertex_view_iterator<G> i1(g2, u);
@@ -353,7 +340,6 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   SECTION("adjacency_edge_view") {
     std::graph::vertex_vertex_view_iterator<G> i0; // default construction
 
-    auto  frankfurt_key = germany_routes.frankfurt_key();
     auto& u             = g[frankfurt_key];
 
     std::graph::vertex_vertex_view_iterator<G> i1(g, u);
@@ -380,7 +366,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vol][germany]") {
   SECTION("content") {
 #if TEST_OPTION == TEST_OPTION_OUTPUT
     cout << "\nGermany Routes"
-         << "\n-------------------------------" << germany_routes << endl;
+         << "\n-------------------------------" << routes_graph(g) << endl;
 #elif TEST_OPTION == TEST_OPTION_GEN
     ostream_indenter indent;
     cout << endl << indent << "auto ui = begin(vertices(g));" << endl;

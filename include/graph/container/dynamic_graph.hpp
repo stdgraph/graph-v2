@@ -563,15 +563,18 @@ public:
 template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
 class dynamic_graph_base {
 public: // types
-  using vertex_key_type = VKey;
-  using vertex_type     = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
-  using vertices_type   = typename Traits::vertices_type;
-  using allocator_type  = typename vertices_type::allocator_type;
-  using size_type       = vertices_type::size_type;
-
   using graph_type   = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
   using graph_traits = Traits;
-  using edge_type    = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
+
+  using vertex_key_type       = VKey;
+  using vertex_type           = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
+  using vertices_type         = typename Traits::vertices_type;
+  using vertex_allocator_type = typename vertices_type::allocator_type;
+  using size_type             = vertices_type::size_type;
+
+  using edges_type          = typename Traits::edges_type;
+  using edge_allocator_type = typename edges_type::allocator_type;
+  using edge_type           = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
 
 public: // Construction/Destruction/Assignment
   constexpr dynamic_graph_base()                          = default;
@@ -612,12 +615,12 @@ public: // Construction/Destruction/Assignment
   ///
   template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
-  dynamic_graph_base(ERng&            erng,
-                     VRng&            vrng,
-                     const EKeyFnc&   ekey_fnc,
-                     const EValueFnc& evalue_fnc,
-                     const VValueFnc& vvalue_fnc,
-                     allocator_type   alloc)
+  dynamic_graph_base(ERng&                 erng,
+                     VRng&                 vrng,
+                     const EKeyFnc&        ekey_fnc,
+                     const EValueFnc&      evalue_fnc,
+                     const VValueFnc&      vvalue_fnc,
+                     vertex_allocator_type alloc)
         : vertices_(alloc) {
     load_vertices(vrng, vvalue_fnc, alloc);
     load_edges(static_cast<vertex_key_type>(vertices_.size() - 1), erng, ekey_fnc, evalue_fnc, alloc);
@@ -646,7 +649,7 @@ public: // Construction/Destruction/Assignment
   ///
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, allocator_type alloc)
+  dynamic_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, vertex_allocator_type alloc)
         : vertices_(alloc) {
 
     load_edges(erng, ekey_fnc, evalue_fnc, alloc);
@@ -675,11 +678,11 @@ public: // Construction/Destruction/Assignment
   ///
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph_base(vertex_key_type  max_row_idx,
-                     ERng&            erng,
-                     const EKeyFnc&   ekey_fnc,
-                     const EValueFnc& evalue_fnc,
-                     allocator_type   alloc)
+  dynamic_graph_base(vertex_key_type       max_row_idx,
+                     ERng&                 erng,
+                     const EKeyFnc&        ekey_fnc,
+                     const EValueFnc&      evalue_fnc,
+                     vertex_allocator_type alloc)
         : vertices_(alloc) {
 
     load_edges(max_row_idx, erng, ekey_fnc, evalue_fnc, alloc);
@@ -687,21 +690,21 @@ public: // Construction/Destruction/Assignment
 
 public:
   template <typename VRng, typename VValueFnc>
-  void load_vertices(VRng& vrng, const VValueFnc& vvalue_fnc, allocator_type alloc = allocator_type()) {
+  void load_vertices(VRng& vrng, VValueFnc& vvalue_fnc, vertex_allocator_type alloc = vertex_allocator_type()) {
     vertices_.reserve(ranges::size(vrng));
-    auto&& add_vertex = push_or_insert(vertices_);
+    auto add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng)
-      add_vertex(vertex_type(std::move(vvalue_fnc(u)), alloc));
-    //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
+      //add_vertex(vertex_type(std::move(vvalue_fnc(u)), alloc));
+      vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
   }
 
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  void load_edges(vertex_key_type  max_row_idx,
-                  ERng&            erng,
-                  const EKeyFnc&   ekey_fnc,
-                  const EValueFnc& evalue_fnc,
-                  allocator_type   alloc = allocator_type()) {
+  void load_edges(vertex_key_type     max_row_idx,
+                  ERng&               erng,
+                  const EKeyFnc&      ekey_fnc,
+                  const EValueFnc&    evalue_fnc,
+                  edge_allocator_type alloc = edge_allocator_type()) {
     vertices_.resize(static_cast<size_t>(max_row_idx) + 1, vertex_type(alloc));
 
     // add edges
@@ -720,10 +723,10 @@ public:
   }
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  void load_edges(ERng&            erng,
-                  const EKeyFnc&   ekey_fnc,
-                  const EValueFnc& evalue_fnc,
-                  allocator_type   alloc = allocator_type()) {
+  void load_edges(ERng&               erng,
+                  const EKeyFnc&      ekey_fnc,
+                  const EValueFnc&    evalue_fnc,
+                  edge_allocator_type alloc = edge_allocator_type()) {
     // Nothing to do?
     if (erng.begin() == erng.end())
       return;
