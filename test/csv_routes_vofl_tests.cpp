@@ -289,8 +289,9 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
 
   SECTION("content") {
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-    cout << "\nGermany Routes"
-         << "\n-------------------------------" << routes_graph(g) << endl;
+    cout << "\nGermany Routes using vector+forward_list"
+         << "\n----------------------------------------" << endl 
+         << routes_graph(g) << endl;
 #elif TEST_OPTION == TEST_OPTION_GEN
     ostream_indenter indent;
     cout << endl << indent << "auto ui = begin(vertices(g));" << endl;

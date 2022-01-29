@@ -15,7 +15,7 @@
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
 #define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file
 #define TEST_OPTION_TEST (3)   // run unit tests
-#define TEST_OPTION TEST_OPTION_OUTPUT
+#define TEST_OPTION TEST_OPTION_TEST
 
 using std::cout;
 using std::endl;
