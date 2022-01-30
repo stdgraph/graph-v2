@@ -38,7 +38,7 @@ template <typename G, typename ER>
 using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_t<G, ER>>()));
 
 //
-// concepts
+// graph concepts
 //
 template <typename G>
 concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized_range<vertex_range_t<G>> &&
@@ -52,6 +52,7 @@ concept edge_range = ranges::forward_range<ER> && requires(G&& g, ranges::range_
   target_key(g, uv);
   target(g, uv);
 };
+
 template <typename G, typename ER>
 concept sourced_edge_range =
       requires(G&& g, ranges::range_reference_t<ER> uv, vertex_key_t<G> ukey, vertex_reference_t<G> u) {
@@ -76,6 +77,74 @@ concept adjacencey_graph = ranges::range<vertex_range_t<G>> && ranges::range<ver
 template <typename G>
 concept sourced_adjacencey_graph = adjacencey_graph<G> && sourced_edge_range<G, vertex_vertex_range_t<G>>;
 
+template <typename G>
+concept adjacency_matrix = false; // tag algorithms that can take advantage of matrix layout
+
+#  if 0
+// use other_key & other_vertex existence to identify a graph as unordered?
+// overridable per graph to direct algorithm
+template <typename G, typename ER>
+using is_ordered = false_type;
+template <typename G, typename ER>
+inline constexpr bool is_ordered_v = is_ordered<G, ER>::value;
+
+template <typename G, typename ER>
+using is_unordered = false_type;
+template <typename G, typename ER>
+inline constexpr bool is_unordered_v = is_unordered<G, ER>::value;
+
+template <typename G, typename ER>
+using is_undefined_order = bool_constant<!is_ordered_v<G, ER> && !is_unordered_v<G, ER>>;
+template <typename G, typename ER>
+inline constexpr bool is_undefined_order_v = is_undefined_order_v<G, ER>;
+#  endif
+
+//
+// property concepts
+//
+template <typename G>
+concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
+  {degree(g, u)};
+};
+
+template <typename G>
+concept has_graph_value = semiregular<graph_value_t<G>>;
+
+template <typename G>
+concept has_vertex_value = semiregular<vertex_value_t<G>>;
+
+template <typename G, typename EI>
+concept has_edge_value = semiregular<edge_value_t<G, EI>>;
+
+//
+// find/contains concepts
+//
+template <typename G>
+concept has_find_vertex = requires(G&& g, vertex_key_t<G> ukey) {
+  { find_vertex(g, ukey) } -> forward_iterator;
+};
+
+template <typename G>
+concept has_find_vertex_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey, vertex_reference_t<G> u) {
+  { find_vertex_edge(g, u, vkey) } -> forward_iterator;
+  { find_vertex_edge(g, ukey, vkey) } -> forward_iterator;
+};
+
+template <typename G>
+concept has_find_vertex_vertex = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey, vertex_reference_t<G> u) {
+  { find_vertex_vertex(g, u, vkey) } -> forward_iterator;
+  { find_vertex_vertex(g, ukey, vkey) } -> forward_iterator;
+};
+
+template <typename G>
+concept has_find_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
+  {find_edge(g, ukey, vkey)} -> forward_iterator;
+};
+
+template <typename G>
+concept has_contains_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
+  { contains_edge(g, ukey, vkey) } -> convertible_to<bool>;
+};
 
 } // namespace std::graph
 
