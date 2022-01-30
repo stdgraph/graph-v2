@@ -8,7 +8,8 @@
   - [ ] Concepts and type_traits
   - [ ] Accessor functions
     - [x] as CPO
-    - [ ] default implementations (e.g. degree==size) (need something besides forward_list for edges to test)
+    - [x] default implementations (e.g. degree==size)
+    - [ ] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -45,6 +46,9 @@
 - [ ] Testing Patterns
   - [x] Validate content
   - [ ] Validate graph API
+    - [ ] All functions work (with/without defaults)
+    - [ ] Minimal functions functional (sourced/unsourced): vertices(g), edges(g,u), target_key(g,uv), source_key(g,uv)
+    - [ ] Default values same as dynamic graph values
   - [ ] Validate algorithms
   - [ ] Validate const
   - [ ] Validate constexpr
