@@ -791,7 +791,7 @@ private: // tag_invoke properties
 
   friend vertex_key_type
   tag_invoke(::std::graph::access::vertex_key_fn_t, const dynamic_graph_base& g, vertices_type::const_iterator ui) {
-    return ui - g.vertices_.begin();
+    return static_cast<vertex_key_type>(ui - g.vertices_.begin());
   }
 };
 
