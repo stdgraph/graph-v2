@@ -15,7 +15,7 @@
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
 #define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file
 #define TEST_OPTION_TEST (3)   // run unit tests
-#define TEST_OPTION TEST_OPTION_TEST
+#define TEST_OPTION TEST_OPTION_OUTPUT
 
 using std::cout;
 using std::endl;
@@ -35,8 +35,9 @@ using std::graph::vertex_value;
 using std::graph::target_key;
 using std::graph::target;
 using std::graph::edge_value;
+using std::graph::degree;
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
+template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VKey = uint32_t>
 struct dov_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
@@ -53,8 +54,8 @@ struct dov_graph_traits {
 };
 
 
-using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
-using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
+using routes_dov_graph_traits = dov_graph_traits<double, std::string>;
+using routes_dov_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_dov_graph_traits>;
 
 //TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
 //  init_console();
@@ -72,21 +73,21 @@ auto find_frankfurt(G&& g) {
 }
 
 
-TEST_CASE("Germany routes CSV+dov dijkstra_book", "[csv][dov][germany][dijkstra][book]") {
-  init_console();
-  using G  = routes_volf_graph_type;
-  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
-
-  auto frankfurt     = find_frankfurt(g);
-  auto frankfurt_key = find_frankfurt_key(g);
-  auto weight        = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
-  auto result        = std::graph::dijkstra_book(g, frankfurt_key, weight);
-}
+//TEST_CASE("Germany routes CSV+dov dijkstra_book", "[csv][dov][germany][dijkstra][book]") {
+//  init_console();
+//  using G  = routes_dov_graph_type;
+//  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+//
+//  auto frankfurt     = find_frankfurt(g);
+//  auto frankfurt_key = find_frankfurt_key(g);
+//  auto weight        = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
+//  auto result        = std::graph::dijkstra_book(g, frankfurt_key, weight);
+//}
 
 
 TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
   init_console();
-  using G  = routes_volf_graph_type;
+  using G  = routes_dov_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   auto frankfurt     = find_frankfurt(g);
@@ -100,15 +101,26 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
 
   SECTION("metadata") {
     REQUIRE(10 == std::ranges::size(vertices(g)));
-    size_t edge_cnt   = 0;
-    double total_dist = 0;
+    size_t total_edge_cnt = 0;
+    double total_dist     = 0;
     for (auto&& u : vertices(g)) {
+      size_t edge_cnt = 0;
       for (auto&& uv : edges(g, u)) {
         ++edge_cnt; // forward_list doesn't have size()
         total_dist += edge_value(g, uv);
       }
+      total_edge_cnt += edge_cnt;
+#if 0
+      auto&& ee = (edges(g, u));
+      int    x  = 0;
+#else
+      static_assert(std::ranges::sized_range<vertex_edge_range_t<G>>); // begin(r), end(r), size(r)?
+      if constexpr (std::ranges::sized_range<vertex_edge_range_t<G>>) {
+        REQUIRE(edge_cnt == std::graph::degree(g, u));
+      }
+#endif
     }
-    REQUIRE(edge_cnt == 11);
+    REQUIRE(total_edge_cnt == 11);
     REQUIRE(total_dist == 2030.0);
   }
 
@@ -210,7 +222,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 4);
+      REQUIRE(vkey == 5);
     }
     {
       auto&& [vkey, uv] = *++i1;
@@ -236,7 +248,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 4);
+      REQUIRE(vkey == 5);
     }
     {
       auto&& [vkey, uv] = *++i1;
@@ -264,7 +276,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
       auto&& [vkey, v] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(is_const_v<remove_reference_t<decltype(v)>>);
-      REQUIRE(vkey == 4);
+      REQUIRE(vkey == 5);
     }
     {
       auto&& [vkey, v] = *++i1;
@@ -290,7 +302,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 4);
+      REQUIRE(vkey == 5);
     }
     {
       auto&& [vkey, v] = *++i1;

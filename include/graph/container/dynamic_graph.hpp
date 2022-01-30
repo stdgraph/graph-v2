@@ -12,7 +12,6 @@ namespace std::graph::container {
 // dynamic_graph forward references
 //
 
-
 template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VKey = uint32_t>
 struct vofl_graph_traits;
 
@@ -96,6 +95,15 @@ using dynamic_adjacency_graph = dynamic_graph<typename Traits::edge_value_type,
 //--------------------------------------------------------------------------------------------------
 // utility functions
 //
+
+template <typename C>
+concept reservable = requires(C& container, typename C::size_type n) {
+  {container.reserve(n)};
+};
+template <typename C>
+concept resizable = requires(C& container, typename C::size_type n) {
+  {container.resize(n)};
+};
 
 template <typename C>
 concept has_emplace_back = requires(C& container, typename C::value_type&& value) {
@@ -691,11 +699,12 @@ public: // Construction/Destruction/Assignment
 public:
   template <typename VRng, typename VValueFnc>
   void load_vertices(VRng& vrng, VValueFnc& vvalue_fnc, vertex_allocator_type alloc = vertex_allocator_type()) {
-    vertices_.reserve(ranges::size(vrng));
+    if constexpr (reservable<vertices_type>)
+      vertices_.reserve(ranges::size(vrng));
     auto add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng)
       add_vertex(vertex_type(std::move(vvalue_fnc(u)), alloc));
-      //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
+    //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
   }
 
   template <typename ERng, typename EKeyFnc, typename EValueFnc>
@@ -705,8 +714,10 @@ public:
                   const EKeyFnc&      ekey_fnc,
                   const EValueFnc&    evalue_fnc,
                   edge_allocator_type alloc = edge_allocator_type()) {
-    if (vertices_.size() < static_cast<size_t>(max_row_idx) + 1)
+    if constexpr (resizable<vertices_type>) {
+      if (vertices_.size() < static_cast<size_t>(max_row_idx) + 1)
         vertices_.resize(static_cast<size_t>(max_row_idx) + 1, vertex_type(alloc));
+    }
 
     // add edges
     for (auto& edge_data : erng) {
