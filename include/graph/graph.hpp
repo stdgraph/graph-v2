@@ -149,6 +149,8 @@ concept has_contains_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G
 };
 
 namespace view {
+  // experimental
+
   //
   // vertex
   //
@@ -214,7 +216,7 @@ namespace view {
   //
   // edgelist_edge
   //
-  template<typename VKey, typename E, typename EV>
+  template <typename VKey, typename E, typename EV>
   struct edgelist_edge {
     VKey source_key;
     VKey target_key;
@@ -227,7 +229,7 @@ namespace view {
     VKey target_key;
     E&   edge;
   };
-} // namespace experimental
+} // namespace view
 
 } // namespace std::graph
 

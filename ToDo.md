@@ -101,10 +101,18 @@
 - [ ] Can we drop the vertex_verge_range in favor of just having vertices_view(g,u) [adjacency view]?
 
 ### Presentation
-- [ ] Demonstrate Dijkstra's code (Andrew's style)
-  - [ ] Functions with reference parameters
-  - [ ] view: edges_view(g,u)
-  - [ ] Reference parameter exception: vertex_key(g,ui)
+- [ ] Step back and start fresh
+  - [ ] prototype impl gathering cruft
+  - [ ] some abilities not available: loading data from CSV, constexpr testing
+  - [ ] struggling with proper interface
+  - [ ] data structures ???
+  - [ ] learning C++20: ranges, concepts, CPO, ...
+- [ ] Andrew's feedback
+  - [ ] awkward syntax: iterator --> reference parameter (before & after)
+    - [ ] Reference parameter exception: vertex_key(g,ui)
+  - [ ] separate source_key/source from target_key/target
+  - [ ] Demonstrate Dijkstra's code (design w/ Andrew)
+    - [ ] view: edges_view(g,u)
 - [ ] Observation: 2 core data structures
   - [ ] edge list
   - [ ] incidence graph with different views

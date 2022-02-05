@@ -3,7 +3,6 @@
 #include "graph/graph.hpp"
 #include "graph/view/incidence_edge_view.hpp"
 #include <queue>
-#include <tuple>
 
 namespace std::graph {
 
@@ -35,8 +34,8 @@ auto dijkstra_book(
     weight_type weight     = weight_type();
   };
 
-  std::priority_queue<weighted_vertex, vector<weighted_vertex>,
-                      decltype([](const weighted_vertex& a, const weighted_vertex& b) { return a.weight > b.weight; })>
+  priority_queue<weighted_vertex, vector<weighted_vertex>,
+                 decltype([](const weighted_vertex& a, const weighted_vertex& b) { return a.weight > b.weight; })>
         Q;
 
   Q.push({source, distance[source]});
