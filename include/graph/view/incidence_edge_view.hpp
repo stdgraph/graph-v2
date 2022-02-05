@@ -49,6 +49,90 @@ requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(G& g, vertex_key_t<G> ukey) { return edges_view(g, *find_vertex(g, ukey)); }
 
 
+template <typename G, typename Projection>
+class vertex_edge_view_iterator_base {
+public:
+  using graph_type      = remove_cvref_t<G>;
+  using vertex_type     = vertex_t<graph_type>;
+  using vertex_key_type = vertex_key_t<graph_type>;
+
+  using edge_range    = vertex_edge_range_t<graph_type>;
+  using edge_iterator = ranges::iterator_t<edge_range>;
+  using edge_type     = ranges::range_value_t<edge_range>;
+
+  using projection_fn   = Projection;
+  using projection_type = decltype(Projection(declval<edge_type>()));
+
+  using value_type = targeted_edge<const vertex_key_type, const edge_type&, projection_type>;
+
+protected:
+  using shadow_value_type = targeted_edge<vertex_key_type, edge_type*, projection_type>;
+
+protected:
+  vertex_edge_view_iterator_base(const graph_type& g, edge_iterator iter, const projection_fn& projection)
+        : g_(&const_cast<graph_type&>(g)), iter_(iter), projection_(projection) {}
+  vertex_edge_view_iterator_base(const graph_type& g, const vertex_type& u, const projection_fn& projection)
+        : vertex_edge_view_iterator_base(
+                g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u))), projection) {}
+
+  vertex_edge_view_iterator_base()                                      = default;
+  vertex_edge_view_iterator_base(const vertex_edge_view_iterator_base&) = default;
+  vertex_edge_view_iterator_base(vertex_edge_view_iterator_base&&)      = default;
+  ~vertex_edge_view_iterator_base()                                     = default;
+
+  vertex_edge_view_iterator_base& operator=(const vertex_edge_view_iterator_base&) = default;
+  vertex_edge_view_iterator_base& operator=(vertex_edge_view_iterator_base&&) = default;
+
+  void set_value() { value_ = shadow_value_type{target_key(*g_, *iter_), &*iter_, projection_(*iter_)}; }
+
+protected:
+  mutable shadow_value_type value_ = shadow_value_type(vertex_key_type(), nullptr, projection_type());
+  graph_type*               g_     = nullptr;
+  edge_iterator             iter_;
+  projection_fn             projection_;
+};
+
+template <typename G>
+class vertex_edge_view_iterator_base<G, void> {
+public:
+  using graph_type      = remove_cvref_t<G>;
+  using vertex_type     = vertex_t<graph_type>;
+  using vertex_key_type = vertex_key_t<graph_type>;
+
+  using edge_range    = vertex_edge_range_t<graph_type>;
+  using edge_iterator = ranges::iterator_t<edge_range>;
+  using edge_type     = ranges::range_value_t<edge_range>;
+
+  using projection_type = void;
+
+  using value_type = targeted_edge<const vertex_key_type, const edge_type&, projection_type>;
+
+protected:
+  using shadow_value_type = targeted_edge<vertex_key_type, edge_type*, void>;
+
+protected:
+  vertex_edge_view_iterator_base(const graph_type& g, edge_iterator iter)
+        : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
+  vertex_edge_view_iterator_base(const graph_type& g, const vertex_type& u)
+        : const_vertex_edge_view_iterator(
+                g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
+
+  vertex_edge_view_iterator_base()                                      = default;
+  vertex_edge_view_iterator_base(const vertex_edge_view_iterator_base&) = default;
+  vertex_edge_view_iterator_base(vertex_edge_view_iterator_base&&)      = default;
+  ~vertex_edge_view_iterator_base()                                     = default;
+
+  vertex_edge_view_iterator_base& operator=(const vertex_edge_view_iterator_base&) = default;
+  vertex_edge_view_iterator_base& operator=(vertex_edge_view_iterator_base&&) = default;
+
+  void set_value() { value_ = shadow_value_type{target_key(*g_, *iter_), &*iter_}; }
+
+protected:
+  mutable shadow_value_type value_ = shadow_value_type(vertex_key_type(), nullptr);
+  graph_type*               g_     = nullptr;
+  edge_iterator             iter_;
+};
+
 template <typename G>
 class const_vertex_edge_view_iterator {
 public:
@@ -62,7 +146,7 @@ public:
   using edge_type     = ranges::range_value_t<edge_range>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = pair<const vertex_key_type, const edge_type&>;
+  using value_type        = targeted_edge<const vertex_key_type, const edge_type&, void>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = const value_type*;
   using const_pointer     = const value_type*;
@@ -132,7 +216,7 @@ public:
   using edge_type     = ranges::range_value_t<edge_range>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = pair<const vertex_key_type, edge_type&>;
+  using value_type        = targeted_edge<const vertex_key_type, edge_type&, void>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = value_type*;

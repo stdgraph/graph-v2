@@ -169,16 +169,16 @@ namespace view {
   //
   // targeted_edge
   //
-  template <typename VKey, typename V, typename E, typename EV>
+  template <typename VKey, typename E, typename EV>
   struct targeted_edge {
     VKey target_key;
-    E&   edge;
-    EV&  value;
+    E    edge;
+    EV   value;
   };
-  template <typename VKey, typename V, typename E>
-  struct targeted_edge<VKey, V, E, void> {
+  template <typename VKey, typename E>
+  struct targeted_edge<VKey, E, void> {
     VKey target_key;
-    E&   edge;
+    E    edge;
   };
 
   //
