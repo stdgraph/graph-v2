@@ -27,15 +27,15 @@ namespace std::graph {
 // uvi       - edge_iterator (use std::optional?)
 
 // edge value types
-template <typename G, typename ER>
-using edge_t = typename ranges::range_value_t<ER>;
-template <typename G, typename ER>
-using edge_reference_t = typename ranges::range_reference_t<ER>;
+template <typename G>
+using edge_t = typename ranges::range_value_t<vertex_edge_range_t<G>>;
+template <typename G>
+using edge_reference_t = typename ranges::range_reference_t<vertex_edge_range_t<G>>;
 template <typename G, typename ER>
 using edge_key_t = decltype(edge_key(declval<G&&>(),
-                                     declval<edge_reference_t<G, ER>>())); // e.g. pair<vertex_key_t<G>,vertex_key_t<G>>
-template <typename G, typename ER>
-using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_t<G, ER>>()));
+                                     declval<edge_reference_t<G>>())); // e.g. pair<vertex_key_t<G>,vertex_key_t<G>>
+template <typename G>
+using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_t<G>>()));
 
 //
 // graph concepts
