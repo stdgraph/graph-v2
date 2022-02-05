@@ -2,7 +2,7 @@
 #include "graph/graph.hpp"
 
 //
-// vertices_view(g,u):
+// vertices_view(g,u) -> pair<VKey,vertex_t<G>>:
 //
 // enable: for([vkey, v] : vertices_view(g,u)
 //

@@ -5,23 +5,29 @@
 ### ToDo 
 - API
   - [ ] Common
+  - [ ] Ranges
+    - [x] Deprecate vertex_vertex_range_t (and related types and functions) in favor of adjacency_edge_view
+    - [x] Deprecate edge_range_t (and related types and functions) in favor of edge_view
   - [ ] Concepts and type_traits
   - [ ] Accessor functions
     - [x] as CPO
     - [x] default implementations (e.g. degree==size)
-    - [ ] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
+    - [x] [deprecated] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
 - Algorithms
   - [ ] Common
   - [ ] Ranges
     - [ ] BFS
     - [ ] DFS
     - [ ] Toplogical Sort
-  - [ ] Range Adaptors & Views
-    - [ ] edge_range<graph, vertex_range, vertex_edge_range>
+  - [ ] Graph Views
+    - [ ] **edge_range<graph, vertex_range, vertex_edge_range>**
     - [x] for([vkey, v] : vertices_view(g,u): vertex_vertex_range<graph, vertex_range, vertex_edge_range>
     - [x] for([ukey, u] : vertices_view(g))
     - [x] for([vkey,uv] : edges_view(g,u)) (incidence)
     - [ ] define views as CPOs
+    - [x] Add view types in std::graph::view
+      - [ ] Use the types in the view functions
+      - [ ] Add optional value function object parameters to the functions
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra (book, impl from AndrewL)
@@ -92,6 +98,39 @@
 - [ ] SG19 Input
   - [ ] Core data structures? static graph(CSR), dynamic graph (vol variant), edgelist graph
   - [ ] vertex_key or vertex_id?
+- [ ] Can we drop the vertex_verge_range in favor of just having vertices_view(g,u) [adjacency view]?
+
+### Presentation
+- [ ] Demonstrate Dijkstra's code (Andrew's style)
+  - [ ] Functions with reference parameters
+  - [ ] view: edges_view(g,u)
+  - [ ] Reference parameter exception: vertex_key(g,ui)
+- [ ] Observation: 2 core data structures
+  - [ ] edge list
+  - [ ] incidence graph with different views
+      - [ ] vertices_view(g)
+      - [ ] edges_view(g,u) - incidence edges on a vertex
+      - [ ] vertices_view(g,u) - adjacency/neighbors of a vertex
+      - [ ] edges_view(g) - edgelist in graph
+- [ ] Graph API
+  - [ ] ranges
+    - [ ] incidence graph (2 ranges)
+    - [ ] edge list (1 range)
+    - [ ] removed: vertex_vertex_range_t<G> & edge_range_t<G> (+ related types & fncs) in favor of views
+      - [ ] assumption: specialized adjacency or edge list views won't be better on native graph
+  - [ ] functions:
+    - [ ] required: vertices(g), edges(g,u), target_key(g,uv), 
+    - [ ] optional: edge_value(g,uv), vertex_value(g,u), graph_value(g), vertex_key(g,ui), source_key(g,uv), contains_edge(g,ukey,vkey)
+    - [ ] other: degree(g,u), target(g,uv), source(g,uv), edge_key(g,uv), other_key(g,uv,xkey), other_vertex(g,uv,x), 
+                 find_vertex(g,ukey), find_vertex_edge(g,u,vkey), find_vertex_edge(g,ukey,vkey)
+    - [ ] removed: find_vertex_vertex(g,u,vkey), find_vertex_vertex(g,ukey,vkey), find_edge(g,ukey,vkey)
+- [ ] Data structures
+  - [ ] replace directed_adjacency_vector with csr_graph
+  - [ ] experimental: dynamic_graph that allows use of different containers
+    - [ ] vertices: vector, deque. 
+    - [ ] edges: forward_list, list, vector, deque
+    - [ ] future: map, multimap, unordered_map, unordered_multimap, mset, multiset, unordered_set, unordered_multiset
+  - [ ] undirected_adjacency_list has value for validating algorithms
 
 ## Resolved
 ### ToDo Completed

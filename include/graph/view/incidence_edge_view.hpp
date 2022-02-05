@@ -2,9 +2,9 @@
 #include "graph/graph.hpp"
 
 //
-// edges_view(g,u):
+// edges_view(g,u) -> pair<vertex_key_t<G>,vertex_edge_t<G>&>:
 //
-// enable: for([vkey, uv] : edges_view(g,u)
+// enable: for([vkey, uv] : edges_view(g,u))
 //
 namespace std::graph {
 
@@ -17,7 +17,7 @@ class vertex_edge_view_iterator;
 template <typename G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(const G& g, vertex_reference_t<const G> u) {
-  using vertex_type = remove_cvref_t<decltype(u)>;
+  using vertex_type   = remove_cvref_t<decltype(u)>;
   using iter_type     = const_vertex_edge_view_iterator<const G>;
   using sentinal_type = typename iter_type::edge_iterator;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
@@ -35,10 +35,18 @@ constexpr auto edges_view(G& g, vertex_reference_t<G> u) {
   using sentinal_type = typename iter_type::edge_iterator;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
 
-  auto first = iter_type(g, ranges::begin(edges(g,u)));
-  auto last  = sentinal_type(ranges::end(edges(g,u)));
+  auto first = iter_type(g, ranges::begin(edges(g, u)));
+  auto last  = sentinal_type(ranges::end(edges(g, u)));
   return SR(first, last);
 }
+
+template <typename G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto edges_view(const G& g, vertex_key_t<const G> ukey) { return edges_view(g, *find_vertex(g, ukey)); }
+
+template <typename G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto edges_view(G& g, vertex_key_t<G> ukey) { return edges_view(g, *find_vertex(g, ukey)); }
 
 
 template <typename G>

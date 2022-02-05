@@ -25,7 +25,7 @@ namespace std::graph {
 namespace access {
   // ranges
   TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices], vertices(g,u) -> [adjacency edges]
-  TAG_INVOKE_DEF(edges);    // edges(g) -> [graph edges], edges(g,u) -> [incidence edges]
+  TAG_INVOKE_DEF(edges);    // edges(g,u) -> [incidence edges]
 
   // graph value
   TAG_INVOKE_DEF(graph_value); // graph_value(g) -> GV&
@@ -59,14 +59,18 @@ namespace access {
                                 // default = x != &target(g,uv) ? target(g,uv) : source(g,uv)
 
   // find
-  TAG_INVOKE_DEF(find_vertex);        // find_vertex(g,ukey) -> ui
-                                      // default = begin(vertices(g)) + ukey, for random_access_range<vertex_range_t<G>>
-  TAG_INVOKE_DEF(find_vertex_edge);   // find_vertex_edge(g,u,vkey) -> uvi; default = find(edges(g,u), [](uv) {target_id(g,uv)==vkey;}
-                                      // find_vertex_edge(g,ukey,vkey) -> uvi; default = find_vertex_edge(g,*find_vertex(g,ukey),vkey)
-  TAG_INVOKE_DEF(find_vertex_vertex); // find_vertex_vertex(g,u,vkey) -> uvi; default = find(vertices(g,u), [](uv) {target_id(g,uv==vkey;}
-                                      // find_vertex_vertex(g,ukey,vkey) -> uvi; default = find_vertex_vertex(g,*find_vertex(g,ukey),vkey)
-  TAG_INVOKE_DEF(find_edge);          // find_edge(g,ukey,vkey) -> uvi
-  TAG_INVOKE_DEF(contains_edge);      // contains_edge(g,ukey,vkey) -> bool
+  TAG_INVOKE_DEF(find_vertex); // find_vertex(g,ukey) -> ui
+                               // default = begin(vertices(g)) + ukey, for random_access_range<vertex_range_t<G>>
+  TAG_INVOKE_DEF(
+        find_vertex_edge); // find_vertex_edge(g,u,vkey) -> uvi; default = find(edges(g,u), [](uv) {target_id(g,uv)==vkey;}
+                           // find_vertex_edge(g,ukey,vkey) -> uvi; default = find_vertex_edge(g,*find_vertex(g,ukey),vkey)
+#  ifdef OBSOLETE
+  TAG_INVOKE_DEF(
+        find_vertex_vertex); // find_vertex_vertex(g,u,vkey) -> uvi; default = find(vertices(g,u), [](uv) {target_id(g,uv==vkey;}
+  // find_vertex_vertex(g,ukey,vkey) -> uvi; default = find_vertex_vertex(g,*find_vertex(g,ukey),vkey)
+  TAG_INVOKE_DEF(find_edge); // find_edge(g,ukey,vkey) -> uvi
+#  endif
+  TAG_INVOKE_DEF(contains_edge); // contains_edge(g,ukey,vkey) -> bool
 } // namespace access
 
 //
@@ -99,6 +103,7 @@ using vertex_edge_range_t = decltype(edges(declval<G&&>(), declval<vertex_refere
 template <typename G>
 using vertex_edge_iterator_t = ranges::iterator_t<vertex_edge_range_t<G>>;
 
+#  ifdef OBSOLETE
 //
 // Vertex-vertex range (adjacency) & directly related types
 //
@@ -117,7 +122,7 @@ template <typename G>
 using vertex_vertex_range_t = decltype(vertices(declval<G&&>(), declval<vertex_reference_t<G>>()));
 template <typename G>
 using vertex_vertex_iterator_t = ranges::iterator_t<vertex_vertex_range_t<G>>;
-
+#  endif //OBSOLETE
 
 //
 // Edges range & directly related types
@@ -198,10 +203,12 @@ template <typename G>
 auto target_key(G&& g, const ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
   return access::target_key(g, uv);
 }
+#  ifdef OBSOLETE
 template <typename G>
 auto target_key(G&& g, const ranges::range_reference_t<vertex_vertex_range_t<G>> uv) {
   return access::target_key(g, uv);
 }
+#  endif
 
 //target(g,uv)
 //
@@ -225,6 +232,7 @@ auto&& target(G&& g, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
     return *(begin(vertices(g)) + target_key(g, uv));
 }
 
+#  ifdef OBSOLETE
 template <typename G>
 requires access::_has_target_adl<G, vertex_vertex_range_t<G>> || _can_eval_target<G, vertex_vertex_range_t<G>>
 auto&& target(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> uv) {
@@ -233,6 +241,7 @@ auto&& target(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> uv) {
   else if constexpr (_can_eval_target<G, vertex_vertex_range_t<G>>)
     return *(begin(vertices(g)) + target_key(g, uv));
 }
+#  endif
 
 //edge_value(g,uv)
 //
@@ -251,10 +260,12 @@ template <typename G>
 auto source_key(G&& g, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
   return access::source_key(g, uv);
 }
+#  ifdef OBSOLETE
 template <typename G>
 auto source_key(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> uv) {
   return access::source_key(g, uv);
 }
+#  endif
 
 //source(g,uv)
 //
@@ -277,6 +288,7 @@ auto&& source(G&& g, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
   else if constexpr (_can_eval_source<G, vertex_edge_range_t<G>>)
     return *(begin(vertices(g)) + source_key(g, uv));
 }
+#  ifdef OBSOLETE
 template <typename G>
 requires access::_has_source_adl<G, vertex_vertex_range_t<G>> || _can_eval_source<G, vertex_vertex_range_t<G>>
 auto&& source(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> uv) {
@@ -285,6 +297,7 @@ auto&& source(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> uv) {
   else if constexpr (_can_eval_source<G, vertex_vertex_range_t<G>>)
     return *(begin(vertices(g)) + source_key(g, uv));
 }
+#  endif
 
 // edge_key(g,uv)
 //
@@ -308,6 +321,7 @@ auto edge_key(G&& g, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
   else if constexpr (_can_eval_edge_key<G, vertex_edge_range_t<G>>)
     return pair(source_key(g, uv), target_key(g, uv));
 }
+#  ifdef OBSOLETE
 template <typename G>
 requires access::_has_edge_key_adl<G, vertex_vertex_range_t<G>> || _can_eval_edge_key<G, vertex_vertex_range_t<G>>
 auto edge_key(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> uv) {
@@ -316,6 +330,7 @@ auto edge_key(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> uv) {
   else if constexpr (_can_eval_edge_key<G, vertex_vertex_range_t<G>>)
     return pair(source_key(g, uv), target_key(g, uv));
 }
+#  endif
 
 // other_key
 //
@@ -339,6 +354,7 @@ auto other_key(G&& g, ranges::range_reference_t<vertex_edge_range_t<G>> uv, vert
   else if constexpr (_can_eval_other_key<G, vertex_edge_range_t<G>>)
     return xkey != target_key(g, uv) ? target_key(g, uv) : source_key(g, uv);
 }
+#  ifdef OBSOLETE
 template <typename G>
 requires access::_has_other_key_adl<G, vertex_vertex_range_t<G>> || _can_eval_other_key<G, vertex_vertex_range_t<G>>
 auto other_key(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> uv, vertex_key_t<G> xkey) {
@@ -347,6 +363,7 @@ auto other_key(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> uv, ve
   else if constexpr (_can_eval_other_key<G, vertex_vertex_range_t<G>>)
     return xkey != target_key(g, uv) ? target_key(g, uv) : source_key(g, uv);
 }
+#  endif
 
 // other_vertex
 //
@@ -370,6 +387,7 @@ auto&& other_vertex(G&& g, ranges::range_reference_t<vertex_edge_range_t<G>> uv,
   else if constexpr (_can_eval_other_vertex<G, vertex_edge_range_t<G>>)
     return &x != &target(g, uv) ? target(g, uv) : source(g, uv);
 }
+#  ifdef OBSOLETE
 template <typename G>
 requires access::_has_other_vertex_adl<G, vertex_vertex_range_t<G>> ||
       _can_eval_other_vertex<G, vertex_vertex_range_t<G>>
@@ -379,7 +397,7 @@ auto&& other_vertex(G&& g, ranges::range_reference_t<vertex_vertex_range_t<G>> u
   else if constexpr (_can_eval_other_vertex<G, vertex_vertex_range_t<G>>)
     return &x != &target(g, uv) ? target(g, uv) : source(g, uv);
 }
-
+#  endif
 
 // find_vertex
 //
@@ -392,7 +410,7 @@ namespace access {
 
 template <typename G>
 requires access::_has_find_vertex_adl<G> || ranges::random_access_range<vertex_range_t<G>>
-auto find_vertex_edge(G&& g, vertex_key_t<G> ukey) {
+auto find_vertex(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_find_vertex_adl<G>)
     return access::find_vertex(g, ukey);
   else if constexpr (ranges::random_access_range<vertex_range_t<G>>)
@@ -431,6 +449,7 @@ auto find_vertex_edge(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
     find_vertex_edge(g, *(begin(vertices(g)) + ukey), vkey);
 }
 
+#ifdef OBSOLETE
 // find_vertex_vertex
 //
 namespace access {
@@ -469,6 +488,7 @@ template <typename G>
 auto find_edge(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
   return access::find_edge(g, ukey, vkey);
 }
+#  endif // OBSOLETE
 
 // contains_edge
 //

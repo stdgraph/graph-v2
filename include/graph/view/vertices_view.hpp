@@ -2,9 +2,9 @@
 #include "graph/graph.hpp"
 
 //
-// vertices_view(g):
+// vertices_view(g) -> pair<vertex_key_t<G>, vertex_reference_t<G>>:
 //
-// enable: for([ukey, u] : vertices_view(g)
+// enable: for(auto&& [ukey, u] : vertices_view(g))
 //
 namespace std::graph {
 

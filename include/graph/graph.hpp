@@ -70,17 +70,19 @@ concept incidence_graph = ranges::range<vertex_range_t<G>> && ranges::range<vert
 template <typename G>
 concept sourced_incidence_graph = incidence_graph<G> && sourced_edge_range<G, vertex_edge_range_t<G>>;
 
+#  ifdef OBSOLETE
 template <typename G>
 concept adjacencey_graph = ranges::range<vertex_range_t<G>> && ranges::range<vertex_vertex_range_t<G>> &&
       is_same_v<vertex_vertex_range_t<G>, vertex_range_t<G>> && edge_range<G, vertex_vertex_range_t<G>>;
 
 template <typename G>
 concept sourced_adjacencey_graph = adjacencey_graph<G> && sourced_edge_range<G, vertex_vertex_range_t<G>>;
+#  endif //OBSOLETE
 
 template <typename G>
 concept adjacency_matrix = false; // tag algorithms that can take advantage of matrix layout
 
-#  if 0
+#  ifdef FUTURE
 // use other_key & other_vertex existence to identify a graph as unordered?
 // overridable per graph to direct algorithm
 template <typename G, typename ER>
@@ -97,7 +99,7 @@ template <typename G, typename ER>
 using is_undefined_order = bool_constant<!is_ordered_v<G, ER> && !is_unordered_v<G, ER>>;
 template <typename G, typename ER>
 inline constexpr bool is_undefined_order_v = is_undefined_order_v<G, ER>;
-#  endif
+#  endif //FUTURE
 
 //
 // property concepts
@@ -138,13 +140,94 @@ concept has_find_vertex_vertex = requires(G&& g, vertex_key_t<G> ukey, vertex_ke
 
 template <typename G>
 concept has_find_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
-  {find_edge(g, ukey, vkey)} -> forward_iterator;
+  { find_edge(g, ukey, vkey) } -> forward_iterator;
 };
 
 template <typename G>
 concept has_contains_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
   { contains_edge(g, ukey, vkey) } -> convertible_to<bool>;
 };
+
+namespace view {
+  //
+  // vertex
+  //
+  template <typename VKey, typename V, typename VV>
+  struct vertex {
+    VKey key;
+    V&   vertex;
+    VV&  value;
+  };
+  template <typename VKey, typename V>
+  struct vertex<VKey, V, void> {
+    VKey key;
+    V&   vertex;
+  };
+
+  //
+  // targeted_edge
+  //
+  template <typename VKey, typename V, typename E, typename EV>
+  struct targeted_edge {
+    VKey target_key;
+    E&   edge;
+    EV&  value;
+  };
+  template <typename VKey, typename V, typename E>
+  struct targeted_edge<VKey, V, E, void> {
+    VKey target_key;
+    E&   edge;
+  };
+
+  //
+  // sourced_edge
+  //
+  template <typename VKey, typename V, typename E, typename EV>
+  struct sourced_edge {
+    VKey source_key;
+    VKey target_key;
+    E&   edge;
+    EV&  value;
+  };
+  template <typename VKey, typename V, typename E>
+  struct sourced_edge<VKey, V, E, void> {
+    VKey source_key;
+    VKey target_key;
+    E&   edge;
+  };
+
+  //
+  // neighbor
+  //
+  template <typename VKey, typename V, typename VV>
+  struct neighbor {
+    VKey target_key;
+    V&   target;
+    VV&  target_value;
+  };
+  template <typename VKey, typename V>
+  struct neighbor<VKey, V, void> {
+    VKey target_key;
+    V&   target;
+  };
+
+  //
+  // edgelist_edge
+  //
+  template<typename VKey, typename E, typename EV>
+  struct edgelist_edge {
+    VKey source_key;
+    VKey target_key;
+    E&   edge;
+    EV&  value;
+  };
+  template <typename VKey, typename E>
+  struct edgelist_edge<VKey, E, void> {
+    VKey source_key;
+    VKey target_key;
+    E&   edge;
+  };
+} // namespace experimental
 
 } // namespace std::graph
 
