@@ -6,7 +6,7 @@
 //
 // enable: for([vkey, uv] : edges_view(g,u))
 //
-namespace std::graph {
+namespace std::graph::view {
 
 template <typename G>
 class const_vertex_edge_view_iterator;
@@ -180,4 +180,4 @@ protected:
   friend bool operator==(const edge_iterator& lhs, const vertex_edge_view_iterator& rhs) { return lhs == rhs.iter_; }
 };
 
-} // namespace std::graph
+} // namespace std::graph::view

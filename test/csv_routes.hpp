@@ -179,7 +179,7 @@ OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
     ++ukey;
   }
 #else
-  for (auto&& [ukey, u] : vertices_view(g)) {
+  for (auto&& [ukey, u] : view::vertices_view(g)) {
     os << '[' << ukey << ' ' << vertex_value(g, u) << ']' << std::endl;
     //auto vw = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
     for (auto&& uv : edges(g, u)) {

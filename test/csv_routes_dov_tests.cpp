@@ -128,8 +128,8 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     const G& g2 = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
 
-    std::graph::const_vertices_view_iterator<G> i0; // default construction
-    std::graph::const_vertices_view_iterator<G> i1(g);
+    std::graph::view::const_vertices_view_iterator<G> i0; // default construction
+    std::graph::view::const_vertices_view_iterator<G> i1(g);
     {
       auto&& [ukey, u] = *i1;
       static_assert(is_const_v<decltype(ukey)>);
@@ -143,7 +143,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::const_vertices_view_iterator<G> i2(g2);
+    std::graph::view::const_vertices_view_iterator<G> i2(g2);
     {
       auto&& [ukey, u] = *i2;
       static_assert(is_const_v<decltype(ukey)>);
@@ -157,10 +157,10 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
       REQUIRE(i2b == i2);
     }
 
-    using view_t = decltype(std::graph::vertices_view(g2));
+    using view_t = decltype(std::graph::view::vertices_view(g2));
     static_assert(forward_range<view_t>);
     size_t cnt = 0;
-    for (auto&& [ukey, u] : std::graph::vertices_view(g2)) {
+    for (auto&& [ukey, u] : std::graph::view::vertices_view(g2)) {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
@@ -170,8 +170,8 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     static_assert(!std::is_const_v<std::remove_reference_t<decltype(g)>>);
     static_assert(!std::is_const_v<G>);
 
-    std::graph::vertices_view_iterator<G> i0; // default construction
-    std::graph::vertices_view_iterator<G> i1(g);
+    std::graph::view::vertices_view_iterator<G> i0; // default construction
+    std::graph::view::vertices_view_iterator<G> i1(g);
     {
       auto&& [ukey, u] = *i1;
       static_assert(is_const_v<decltype(ukey)>);
@@ -185,7 +185,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::vertices_view_iterator<G> i2(g);
+    std::graph::view::vertices_view_iterator<G> i2(g);
     {
       auto&& [ukey, u] = *i2;
       static_assert(is_const_v<decltype(ukey)>);
@@ -200,12 +200,12 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [ukey, u] : std::graph::vertices_view(g)) {
+    for (auto&& [ukey, u] : std::graph::view::vertices_view(g)) {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
 
-    std::graph::const_vertices_view_iterator<const G> j0;
+    std::graph::view::const_vertices_view_iterator<const G> j0;
     //j0 = i0;
     //i0 == j0;
   }
@@ -213,11 +213,11 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
   SECTION("const_incidence_edge_view") {
     const G& g2 = g;
 
-    std::graph::const_vertex_edge_view_iterator<G> i0; // default construction
+    std::graph::view::const_vertex_edge_view_iterator<G> i0; // default construction
 
     auto& u = g2[frankfurt_key];
 
-    std::graph::const_vertex_edge_view_iterator<G> i1(g2, u);
+    std::graph::view::const_vertex_edge_view_iterator<G> i1(g2, u);
     {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
@@ -232,18 +232,18 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [vkey, uv] : std::graph::edges_view(g, u)) {
+    for (auto&& [vkey, uv] : std::graph::view::edges_view(g, u)) {
       ++cnt;
     }
     REQUIRE(cnt == 3);
   }
 
   SECTION("incidence_edge_view") {
-    std::graph::vertex_edge_view_iterator<G> i0; // default construction
+    std::graph::view::vertex_edge_view_iterator<G> i0; // default construction
 
     auto& u = g[frankfurt_key];
 
-    std::graph::vertex_edge_view_iterator<G> i1(g, u);
+    std::graph::view::vertex_edge_view_iterator<G> i1(g, u);
     {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
@@ -258,7 +258,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [vkey, uv] : std::graph::edges_view(g, u)) {
+    for (auto&& [vkey, uv] : std::graph::view::edges_view(g, u)) {
       ++cnt;
     }
     REQUIRE(cnt == 3);
@@ -267,11 +267,11 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
   SECTION("const_adjacency_edge_view") {
     const G& g2 = g;
 
-    std::graph::const_vertex_vertex_view_iterator<G> i0; // default construction
+    std::graph::view::const_vertex_vertex_view_iterator<G> i0; // default construction
 
     auto& u = g2[frankfurt_key];
 
-    std::graph::const_vertex_vertex_view_iterator<G> i1(g2, u);
+    std::graph::view::const_vertex_vertex_view_iterator<G> i1(g2, u);
     {
       auto&& [vkey, v] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
@@ -286,18 +286,18 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [vkey, v] : std::graph::edges_view(g, u)) {
+    for (auto&& [vkey, v] : std::graph::view::edges_view(g, u)) {
       ++cnt;
     }
     REQUIRE(cnt == 3);
   }
 
   SECTION("adjacency_edge_view") {
-    std::graph::vertex_vertex_view_iterator<G> i0; // default construction
+    std::graph::view::vertex_vertex_view_iterator<G> i0; // default construction
 
     auto& u = g[frankfurt_key];
 
-    std::graph::vertex_vertex_view_iterator<G> i1(g, u);
+    std::graph::view::vertex_vertex_view_iterator<G> i1(g, u);
     {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
@@ -312,7 +312,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [vkey, v] : std::graph::edges_view(g, u)) {
+    for (auto&& [vkey, v] : std::graph::view::edges_view(g, u)) {
       ++cnt;
     }
     REQUIRE(cnt == 3);

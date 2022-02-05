@@ -56,7 +56,7 @@ auto dijkstra_book(
     //extension:
     //for (auto&& [v, uv, w] : std::graph::edges_view(g, u, weight)) {
     //
-    for (auto&& [v, uv] : edges_view(g, u)) {
+    for (auto&& [v, uv] : view::edges_view(g, u)) {
       weight_type w = weight(uv);
       if (distance[u] + w < distance[v]) {
         distance[v] = distance[u] + w;

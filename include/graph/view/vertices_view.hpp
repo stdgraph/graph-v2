@@ -6,7 +6,7 @@
 //
 // enable: for(auto&& [ukey, u] : vertices_view(g))
 //
-namespace std::graph {
+namespace std::graph::view {
 
 template <typename G>
 class const_vertices_view_iterator;
@@ -210,4 +210,4 @@ protected:
   }
 };
 
-} // namespace std::graph
+} // namespace std::graph::view
