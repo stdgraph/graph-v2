@@ -99,6 +99,7 @@
   - [ ] Core data structures? static graph(CSR), dynamic graph (vol variant), edgelist graph
   - [ ] vertex_key or vertex_id?
 - [ ] Can we drop the vertex_verge_range in favor of just having vertices_view(g,u) [adjacency view]?
+- [ ] Should operator\[\](n) -> vertex& be a requirement for a graph?
 
 ### Presentation
 - [ ] Step back and start fresh
