@@ -3,10 +3,16 @@
 This library is in the alpha stage that may include significant changes to the interface. It is not recommended for general use.
 
 ## Build & Run Requirements
-This is being actively developed with the latest releases of MSVC (VS2022) and gcc (11). Any other compiler or release
-may or may not work.
+This is being actively developed with the latest releases of MSVC (VS2022) on Windows and gcc (11) on Linux. Any releases
+or compilers may or may not work. (At the time of this writing Clang doesn't have a \<concepts\> header and so it hasn't
+been used.)
 
 ### Prerequesites
+C++20 compliant compiler that fully supports concepts and ranges.
+
+CMake 20 or later
+
+Python3 with the conan package manager installed
 
 ### Cloning & Building
 
