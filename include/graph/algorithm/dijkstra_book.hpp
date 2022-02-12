@@ -6,13 +6,13 @@
 
 namespace std::graph {
 
-template <typename G, typename F>
+template <class G, class F>
 concept edge_weight_function = // e.g. weight(uv)
       copy_constructible<F> && regular_invocable<F&, ranges::range_reference_t<vertex_edge_range_t<G>>>;
 
 
 // The index into weight vector stored as the first property
-template <incidence_graph G, typename WF>
+template <incidence_graph G, class WF>
 requires edge_weight_function<G, WF> &&
       is_arithmetic_v<invoke_result_t<WF, ranges::range_reference_t<vertex_edge_range_t<G>>>> &&
       ranges::random_access_range<vertex_range_t<G>>

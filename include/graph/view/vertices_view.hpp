@@ -8,13 +8,13 @@
 //
 namespace std::graph::view {
 
-template <typename G>
+template <class G>
 class const_vertices_view_iterator;
-template <typename G>
+template <class G>
 class vertices_view_iterator;
 
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto vertices_view(const G& g) {
   using iter_type     = const_vertices_view_iterator<const G>;
@@ -26,7 +26,7 @@ constexpr auto vertices_view(const G& g) {
   return SR(first, last);
 }
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto vertices_view(G& g) {
   using iter_type     = vertices_view_iterator<G>;
@@ -39,7 +39,7 @@ constexpr auto vertices_view(G& g) {
 }
 
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto vertices_view(const G& g, vertex_iterator_t<const G> first, vertex_iterator_t<const G> last) {
   using iter_type          = const_vertices_view_iterator<const G>;
@@ -49,7 +49,7 @@ constexpr auto vertices_view(const G& g, vertex_iterator_t<const G> first, verte
   return SR(iter_type(first, start_at), last);
 }
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto vertices_view(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
   using iter_type          = const_vertices_view_iterator<G>;
@@ -60,7 +60,7 @@ constexpr auto vertices_view(G& g, vertex_iterator_t<G> first, vertex_iterator_t
 }
 
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto
 vertices_view(const G& g, vertex_iterator_t<const G> first, vertex_iterator_t<const G> last, vertex_key_t<G> start_at) {
@@ -70,7 +70,7 @@ vertices_view(const G& g, vertex_iterator_t<const G> first, vertex_iterator_t<co
   return SR(iter_type(first, start_at), last);
 }
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto vertices_view(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, vertex_key_t<G> start_at) {
   using iter_type     = const_vertices_view_iterator<G>;
@@ -80,7 +80,7 @@ constexpr auto vertices_view(G& g, vertex_iterator_t<G> first, vertex_iterator_t
 }
 
 
-template <typename G>
+template <class G>
 class const_vertices_view_iterator {
 public:
   using graph_type            = G;
@@ -146,7 +146,7 @@ protected:
   }
 };
 
-template <typename G>
+template <class G>
 class vertices_view_iterator : public const_vertices_view_iterator<G> {
 public:
   using base_type             = const_vertices_view_iterator<G>;

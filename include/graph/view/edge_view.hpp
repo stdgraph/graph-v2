@@ -9,13 +9,13 @@
 //
 namespace std::graph::view {
 
-template <typename G>
+template <class G>
 class const_edge_view_iterator;
-template <typename G>
+template <class G>
 class edge_view_iterator;
 
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(const G& g) {
   using vertex_type   = remove_cvref_t<decltype(u)>;
@@ -29,7 +29,7 @@ constexpr auto edges_view(const G& g) {
 }
 
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(G& g) {
   using iter_type     = edge_view_iterator<G>;
@@ -42,7 +42,7 @@ constexpr auto edges_view(G& g) {
 }
 
 
-template <typename G>
+template <class G>
 class const_edge_view_iterator {
 public:
   using graph_type = remove_cvref_t<G>;
@@ -131,7 +131,7 @@ protected:
   //friend bool operator==(const edge_iterator& lhs, const const_edge_view_iterator& rhs) { return lhs == rhs.edg_iter_; }
 };
 
-template <typename G>
+template <class G>
 class edge_view_iterator : public const_edge_view_iterator<G> {
 public:
   using base_type = const_edge_view_iterator<G>;

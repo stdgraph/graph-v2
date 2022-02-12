@@ -7,14 +7,18 @@
 
 namespace std::graph::container {
 
-template <typename EV = empty_value, integral KeyT = uint32_t, typename Alloc = allocator<uint32_t>>
+template <class EV      = empty_value,
+          class VV      = void,
+          class GV      = void,
+          integral VKey = uint32_t,
+          class Alloc   = allocator<uint32_t>>
 class csr_graph;
 
 
-template <typename EV, integral KeyT, typename Alloc>
+template <class EV, class VV, class GV, integral VKey, class Alloc>
 class const_csr_vertex_iterator {
 public: // types
-  using graph_type        = csr_graph<EV, KeyT, Alloc>;
+  using graph_type        = csr_graph<EV, VV, GV, VKey, Alloc>;
   using index_vector_type = graph_type::index_vector_type;
 
   using key_type        = graph_type::vertex_key_type;
@@ -109,19 +113,19 @@ protected: // Member Variables
   index_iterator vi_;
 };
 
-template <typename EV, integral KeyT, typename Alloc>
-const_csr_vertex_iterator<EV, KeyT, Alloc>
-operator+(typename const_csr_vertex_iterator<EV, KeyT, Alloc>::difference_type offset,
-          const_csr_vertex_iterator<EV, KeyT, Alloc>                           iter) noexcept {
+template <class EV, class VV, class GV, integral VKey, class Alloc>
+const_csr_vertex_iterator<EV, VV, GV, VKey, Alloc>
+operator+(typename const_csr_vertex_iterator<EV, VV, GV, VKey, Alloc>::difference_type offset,
+          const_csr_vertex_iterator<EV, VV, GV, VKey, Alloc>                           iter) noexcept {
   iter += offset;
   return iter;
 }
 
 
-template <typename EV, integral KeyT, typename Alloc>
-class csr_vertex_iterator : public const_csr_vertex_iterator<EV, KeyT, Alloc> {
+template <class EV, class VV, class GV, integral VKey, class Alloc>
+class csr_vertex_iterator : public const_csr_vertex_iterator<EV, VV, GV, VKey, Alloc> {
 public: // types
-  using base_type         = const_csr_vertex_iterator<EV, KeyT, Alloc>;
+  using base_type         = const_csr_vertex_iterator<EV, VV, GV, VKey, Alloc>;
   using graph_type        = base_type::graph_type;
   using index_vector_type = base_type::index_vector_type;
 
@@ -211,9 +215,10 @@ public: // Relational Operators
   }
 };
 
-template <typename EV, integral KeyT, typename Alloc>
-csr_vertex_iterator<EV, KeyT, Alloc> operator+(typename csr_vertex_iterator<EV, KeyT, Alloc>::difference_type offset,
-                                               csr_vertex_iterator<EV, KeyT, Alloc> iter) noexcept {
+template <class EV, class VV, class GV, integral VKey, class Alloc>
+csr_vertex_iterator<EV, VV, GV, VKey, Alloc>
+operator+(typename csr_vertex_iterator<EV, VV, GV, VKey, Alloc>::difference_type offset,
+          csr_vertex_iterator<EV, VV, GV, VKey, Alloc>                           iter) noexcept {
   iter += offset;
   return iter;
 }
@@ -224,14 +229,14 @@ csr_vertex_iterator<EV, KeyT, Alloc> operator+(typename csr_vertex_iterator<EV, 
 ///
 /// </summary>
 /// <typeparam name="EV"></typeparam>
-/// <typeparam name="KeyT"></typeparam>
+/// <typeparam name="VKey"></typeparam>
 /// <typeparam name="Alloc"></typeparam>
-template <typename EV, integral KeyT, typename Alloc>
+template <class EV, class VV, class GV, integral VKey, class Alloc>
 class csr_graph {
-  using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<KeyT>;
+  using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
   using v_allocator_type     = typename allocator_traits<Alloc>::template rebind_alloc<EV>;
 
-  using index_vector_type = std::vector<KeyT, index_allocator_type>;
+  using index_vector_type = std::vector<VKey, index_allocator_type>;
   using v_vector_type     = std::vector<EV, v_allocator_type>;
 
   index_vector_type row_index_; // index into col_index_ and v_
@@ -245,17 +250,17 @@ class csr_graph {
   using const_csr_vertex_edge_range_type = const index_vector_type;
 
 public: // Types
-  using graph_type = csr_graph<EV, KeyT, Alloc>;
+  using graph_type = csr_graph<EV, VKey, Alloc>;
 
-  using vertex_key_type   = KeyT;
+  using vertex_key_type   = VKey;
   using vertex_value_type = vertex_key_type;
 
-  using edge_key_type   = pair<KeyT, KeyT>;
+  using edge_key_type   = pair<VKey, VKey>;
   using edge_value_type = EV;
-  using edge_type       = KeyT; // index into v_
+  using edge_type       = VKey; // index into v_
 
-  using const_iterator = const_csr_vertex_iterator<EV, KeyT, Alloc>;
-  using iterator       = csr_vertex_iterator<EV, KeyT, Alloc>;
+  using const_iterator = const_csr_vertex_iterator<EV, VV, GV, VKey, Alloc>;
+  using iterator       = csr_vertex_iterator<EV, VV, GV, VKey, Alloc>;
 
 public: // Construction/Destruction
   constexpr csr_graph()                 = default;
@@ -286,7 +291,7 @@ public: // Construction/Destruction
   /// @param alloc      The allocator to use for internal containers for
   ///                   vertices & edges.
   ///
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   constexpr csr_graph(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
         : row_index_(alloc), col_index_(alloc), v_(alloc) {
@@ -307,7 +312,7 @@ public: // Construction/Destruction
     load_edges(max_row_idx, erng_size, erng, ekey_fnc, evalue_fnc);
   }
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   constexpr csr_graph(vertex_key_type  max_vertex_key,
                       size_t           max_edges,
@@ -338,7 +343,7 @@ public: // Construction/Destruction
                 [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) { return get<2>(e); }) {}
 
 protected:
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   constexpr void load_edges(vertex_key_type  max_vertex_key,
                             size_t           max_edges,
@@ -392,9 +397,8 @@ public: // Iterators
   const_iterator end() const { return const_iterator(*this, row_index_.end()); }
   const_iterator cend() const { return const_iterator(*this, row_index_.end()); }
 
-  friend const_csr_vertex_iterator<EV, KeyT, Alloc>;
-  friend csr_vertex_iterator<EV, KeyT, Alloc>;
+  friend const_csr_vertex_iterator<EV, VV, GV, VKey, Alloc>;
+  friend csr_vertex_iterator<EV, VV, GV, VKey, Alloc>;
 };
-
 
 } // namespace std::graph::container

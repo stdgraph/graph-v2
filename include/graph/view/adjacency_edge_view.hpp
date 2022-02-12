@@ -8,13 +8,13 @@
 //
 namespace std::graph::view {
 
-template <typename G>
+template <class G>
 class const_vertex_vertex_view_iterator;
-template <typename G>
+template <class G>
 class vertex_vertex_view_iterator;
 
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto vertices_view(const G& g, vertex_reference_t<const G> u) {
   using vertex_type   = remove_cvref_t<decltype(u)>;
@@ -28,7 +28,7 @@ constexpr auto vertices_view(const G& g, vertex_reference_t<const G> u) {
 }
 
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto vertices_view(G& g, vertex_reference_t<G> u) {
   using iter_type     = vertex_vertex_view_iterator<G>;
@@ -41,7 +41,7 @@ constexpr auto vertices_view(G& g, vertex_reference_t<G> u) {
 }
 
 
-template <typename G>
+template <class G>
 class const_vertex_vertex_view_iterator {
 public:
   using graph_type = remove_cvref_t<G>;
@@ -109,7 +109,7 @@ protected:
   }
 };
 
-template <typename G>
+template <class G>
 class vertex_vertex_view_iterator : public const_vertex_vertex_view_iterator<G> {
 public:
   using base_type = const_vertex_vertex_view_iterator<G>;

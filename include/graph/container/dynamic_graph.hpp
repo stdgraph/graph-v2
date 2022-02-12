@@ -12,31 +12,31 @@ namespace std::graph::container {
 // dynamic_graph forward references
 //
 
-template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VKey = uint32_t>
+template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VKey = uint32_t>
 struct vofl_graph_traits;
 
-template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VKey = uint32_t>
+template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VKey = uint32_t>
 struct vol_graph_traits;
 
-template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VKey = uint32_t>
+template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VKey = uint32_t>
 struct vov_graph_traits;
 
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_edge;
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_vertex;
 
-template <typename EV     = void,
-          typename VV     = void,
-          typename GV     = void,
+template <class EV        = void,
+          class VV        = void,
+          class GV        = void,
           bool Sourced    = false,
-          typename VKey   = uint32_t,
-          typename Traits = vofl_graph_traits<EV, VV, GV, Sourced, VKey>>
+          class VKey      = uint32_t,
+          class Traits = vofl_graph_traits<EV, VV, GV, Sourced, VKey>>
 class dynamic_graph;
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
+template <class EV, class VV, class GV, bool Sourced, class VKey>
 struct vofl_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
@@ -52,7 +52,7 @@ struct vofl_graph_traits {
   using edges_type    = forward_list<edge_type>;
 };
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
+template <class EV, class VV, class GV, bool Sourced, class VKey>
 struct vol_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
@@ -68,7 +68,7 @@ struct vol_graph_traits {
   using edges_type    = list<edge_type>;
 };
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey>
+template <class EV, class VV, class GV, bool Sourced, class VKey>
 struct vov_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
@@ -84,7 +84,7 @@ struct vov_graph_traits {
   using edges_type    = vector<edge_type>;
 };
 
-template <typename Traits>
+template <class Traits>
 using dynamic_adjacency_graph = dynamic_graph<typename Traits::edge_value_type,
                                               typename Traits::vertex_value_type,
                                               typename Traits::graph_value_type,
@@ -96,42 +96,42 @@ using dynamic_adjacency_graph = dynamic_graph<typename Traits::edge_value_type,
 // utility functions
 //
 
-template <typename C>
+template <class C>
 concept reservable = requires(C& container, typename C::size_type n) {
   {container.reserve(n)};
 };
-template <typename C>
+template <class C>
 concept resizable = requires(C& container, typename C::size_type n) {
   {container.resize(n)};
 };
 
-template <typename C>
+template <class C>
 concept has_emplace_back = requires(C& container, typename C::value_type&& value) {
   {container.emplace_back(move(value))};
 };
-template <typename C>
+template <class C>
 concept has_push_back = requires(C& container, const typename C::value_type& value) {
   {container.push_back(value)};
 };
-template <typename C>
+template <class C>
 concept has_emplace_front = requires(C& container, typename C::value_type&& value) {
   {container.emplace_front(move(value))};
 };
-template <typename C>
+template <class C>
 concept has_push_front = requires(C& container, const typename C::value_type& value) {
   {container.push_front(value)};
 };
-template <typename C>
+template <class C>
 concept has_emplace = requires(C& container, typename C::value_type&& value) {
   {container.emplace(move(value))};
 };
-template <typename C>
+template <class C>
 concept has_insert = requires(C& container, const typename C::value_type& value) {
   {container.insert(value)};
 };
 
 // return a lambda to push/insert/emplace an element in a container
-template <typename C>
+template <class C>
 constexpr auto push_or_insert(C& container) {
   // favor pushing to the back over the front for things list list & deque
   if constexpr (has_emplace_back<C>)
@@ -157,7 +157,7 @@ constexpr auto push_or_insert(C& container) {
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge_target
 //
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_edge_target {
 public:
   using vertex_key_type = VKey;
@@ -199,13 +199,13 @@ private:
   }
 };
 
-template <typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_edge_target<void, VV, GV, Sourced, VKey, Traits> {};
 
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge_source
 //
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_edge_source {
 public:
   using vertex_key_type = VKey;
@@ -247,13 +247,13 @@ private:
   }
 };
 
-template <typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_edge_source<void, VV, GV, Sourced, VKey, Traits> {};
 
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge_value
 //
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_edge_value {
 public:
   using value_type  = EV;
@@ -291,14 +291,14 @@ private: // tag_invoke properties
   }
 };
 
-template <typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_edge_value<void, VV, GV, Sourced, VKey, Traits> {};
 
 
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge
 //
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_edge
       : public dynamic_edge_target<EV, VV, GV, Sourced, VKey, Traits>
       , public dynamic_edge_source<EV, VV, GV, Sourced, VKey, Traits>
@@ -331,7 +331,7 @@ public:
   constexpr dynamic_edge& operator=(dynamic_edge&&) = default;
 };
 
-template <typename VV, typename GV, typename VKey, typename Traits>
+template <class VV, class GV, class VKey, class Traits>
 class dynamic_edge<void, VV, GV, true, VKey, Traits>
       : public dynamic_edge_target<void, VV, GV, true, VKey, Traits>
       , public dynamic_edge_source<void, VV, GV, true, VKey, Traits>
@@ -361,7 +361,7 @@ public:
 };
 
 
-template <typename EV, typename VV, typename GV, typename VKey, typename Traits>
+template <class EV, class VV, class GV, class VKey, class Traits>
 class dynamic_edge<EV, VV, GV, false, VKey, Traits>
       : public dynamic_edge_target<EV, VV, GV, false, VKey, Traits>
       , public dynamic_edge_source<EV, VV, GV, false, VKey, Traits>
@@ -393,7 +393,7 @@ public:
   constexpr dynamic_edge& operator=(dynamic_edge&&) = default;
 };
 
-template <typename VV, typename GV, typename VKey, typename Traits>
+template <class VV, class GV, class VKey, class Traits>
 class dynamic_edge<void, VV, GV, false, VKey, Traits>
       : public dynamic_edge_target<void, VV, GV, false, VKey, Traits>
       , public dynamic_edge_source<void, VV, GV, false, VKey, Traits>
@@ -421,7 +421,7 @@ public:
 //--------------------------------------------------------------------------------------------------
 // dynamic_vertex
 //
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_vertex_base {
 public:
   using vertex_key_type = VKey;
@@ -485,7 +485,7 @@ private: // tag_invoke properties
 };
 
 
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_vertex : public dynamic_vertex_base<EV, VV, GV, Sourced, VKey, Traits> {
 public:
   using base_type       = dynamic_vertex_base<EV, VV, GV, Sourced, VKey, Traits>;
@@ -532,7 +532,7 @@ private: // tag_invoke properties
 };
 
 
-template <typename EV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_vertex<EV, void, GV, Sourced, VKey, Traits>
       : public dynamic_vertex_base<EV, void, GV, Sourced, VKey, Traits> {
 public:
@@ -568,7 +568,7 @@ public:
 /// A possible change to test the lower bounds of requirements is to use a deque to store the
 /// vertices instead of a vector.
 ///
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_graph_base {
 public: // types
   using graph_type   = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
@@ -621,7 +621,7 @@ public: // Construction/Destruction/Assignment
   /// @param alloc      The allocator to use for internal containers for
   ///                   vertices & edges.
   ///
-  template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph_base(ERng&                 erng,
                      VRng&                 vrng,
@@ -655,7 +655,7 @@ public: // Construction/Destruction/Assignment
   /// @param alloc      The allocator to use for internal containers for
   ///                   vertices & edges.
   ///
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, vertex_allocator_type alloc)
         : vertices_(alloc) {
@@ -684,7 +684,7 @@ public: // Construction/Destruction/Assignment
   /// @param alloc      The allocator to use for internal containers for
   ///                   vertices & edges.
   ///
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph_base(vertex_key_type       max_row_idx,
                      ERng&                 erng,
@@ -697,7 +697,7 @@ public: // Construction/Destruction/Assignment
   }
 
 public:
-  template <typename VRng, typename VValueFnc>
+  template <class VRng, class VValueFnc>
   void load_vertices(VRng& vrng, VValueFnc& vvalue_fnc, vertex_allocator_type alloc = vertex_allocator_type()) {
     if constexpr (reservable<vertices_type>)
       vertices_.reserve(ranges::size(vrng));
@@ -707,7 +707,7 @@ public:
     //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
   }
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   void load_edges(vertex_key_type     max_row_idx,
                   ERng&               erng,
@@ -738,7 +738,7 @@ public:
       }
     }
   }
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   void load_edges(ERng&               erng,
                   const EKeyFnc&      ekey_fnc,
@@ -808,7 +808,7 @@ private: // tag_invoke properties
 /// @tparam VKey  [default=uint32_t] The type used for the vertex key.
 /// @tparam Alloc The allocator used for storing the vertices and edges.
 ///
-template <typename EV, typename VV, typename GV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_graph : public dynamic_graph_base<EV, VV, GV, Sourced, VKey, Traits> {
 public:
   using base_type       = dynamic_graph_base<EV, VV, GV, Sourced, VKey, Traits>;
@@ -826,14 +826,14 @@ public:
   dynamic_graph& operator=(const dynamic_graph&) = default;
   dynamic_graph& operator=(dynamic_graph&&) = default;
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(ERng&            erng,
                 const EKeyFnc&   ekey_fnc,
                 const EValueFnc& evalue_fnc,
                 allocator_type   alloc = allocator_type())
         : base_type(erng, ekey_fnc, evalue_fnc, alloc) {}
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(vertex_key_type  max_vertex_key,
                 ERng&            erng,
@@ -842,7 +842,7 @@ public:
                 allocator_type   alloc = allocator_type())
         : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc) {}
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(const GV&        g,
                 ERng&            erng,
@@ -850,7 +850,7 @@ public:
                 const EValueFnc& evalue_fnc,
                 allocator_type   alloc = allocator_type())
         : base_type(erng, ekey_fnc, evalue_fnc, alloc), value_(g) {}
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(vertex_key_type  max_vertex_key,
                 const GV&        gv,
@@ -860,7 +860,7 @@ public:
                 allocator_type   alloc = allocator_type())
         : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc), value_(gv) {}
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(GV&&             g,
                 ERng&            erng,
@@ -869,7 +869,7 @@ public:
                 allocator_type   alloc = allocator_type())
         : base_type(erng, ekey_fnc, evalue_fnc, alloc), value_(move(g)) {}
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(vertex_key_type  max_vertex_key,
                 GV&&             gv,
@@ -879,7 +879,7 @@ public:
                 allocator_type   alloc = allocator_type())
         : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc), value_(move(gv)) {}
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph(const GV&        gv,
                 const ERng&      erng,
@@ -890,7 +890,7 @@ public:
                 allocator_type   alloc = allocator_type())
         : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc), value_(gv) {}
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph(GV&&             gv,
                 const ERng&      erng,
@@ -916,7 +916,7 @@ private: // tag_invoke properties
 };
 
 // a specialization for dynamic_graph<...> that doesn't have a graph value_type
-template <typename EV, typename VV, bool Sourced, typename VKey, typename Traits>
+template <class EV, class VV, bool Sourced, class VKey, class Traits>
 class dynamic_graph<EV, VV, void, Sourced, VKey, Traits>
       : public dynamic_graph_base<EV, VV, void, Sourced, VKey, Traits> {
 public:
@@ -936,7 +936,7 @@ public:
   dynamic_graph& operator=(const dynamic_graph&) = default;
   dynamic_graph& operator=(dynamic_graph&&) = default;
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(ERng&            erng,
                 const EKeyFnc&   ekey_fnc,
@@ -944,7 +944,7 @@ public:
                 allocator_type   alloc = allocator_type())
         : base_type(erng, ekey_fnc, evalue_fnc, alloc) {}
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc>
+  template <class ERng, typename EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(vertex_key_type  max_vertex_key,
                 ERng&            erng,
@@ -953,7 +953,7 @@ public:
                 allocator_type   alloc = allocator_type())
         : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc) {}
 
-  template <typename ERng, typename EKeyFnc, typename EValueFnc, typename VRng, typename VValueFnc>
+  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph(ERng&            erng,
                 VRng&            vrng,

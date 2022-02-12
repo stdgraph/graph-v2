@@ -8,7 +8,7 @@ namespace std::graph::container {
 // Requirements for extracting edge values from external sources for graph construction
 // ERng is a forward_range because it is traversed twice; once to get the max vertex_key
 // and a second time to load the edges.
-template <typename ERng, typename EKeyFnc, typename EValueFnc>
+template <class ERng, class EKeyFnc, class EValueFnc>
 concept edge_value_extractor = ranges::forward_range<ERng> && invocable<EKeyFnc, typename ERng::value_type> &&
       invocable<EValueFnc, typename ERng::value_type>;
 

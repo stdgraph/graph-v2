@@ -70,39 +70,39 @@ namespace access {
 //
 // Vertex range & directly related types
 //
-template <typename G>
+template <class G>
 auto&& vertices(G&& g) {
   return access::vertices(g);
 }
 
-template <typename G>
+template <class G>
 using vertex_range_t = decltype(std::graph::vertices(declval<G&&>()));
-template <typename G>
+template <class G>
 using vertex_iterator_t = ranges::iterator_t<vertex_range_t<G&&>>;
 
-template <typename G>
+template <class G>
 using vertex_t = ranges::range_value_t<vertex_range_t<G>>;
-template <typename G>
+template <class G>
 using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
 
 //
 // Vertex-edge range (incidence) & directly related types
 //
-template <typename G>
+template <class G>
 auto&& edges(G&& g, vertex_reference_t<G> u) {
   return access::edges(g, u);
 }
 
-template <typename G>
+template <class G>
 using vertex_edge_range_t = decltype(edges(declval<G&&>(), declval<vertex_reference_t<G>>()));
-template <typename G>
+template <class G>
 using vertex_edge_iterator_t = ranges::iterator_t<vertex_edge_range_t<G>>;
-template <typename G>
+template <class G>
 using edge_t = typename ranges::range_value_t<vertex_edge_range_t<G>>;
-template <typename G>
+template <class G>
 using edge_reference_t = ranges::range_reference_t<vertex_edge_range_t<G>>;
 
-template <typename G>
+template <class G>
 using edge_key_t = decltype(edge_key(declval<G&&>(),
                                      declval<edge_reference_t<G>>())); // e.g. pair<vertex_key_t<G>,vertex_key_t<G>>
 
@@ -117,12 +117,12 @@ using edge_key_t = decltype(edge_key(declval<G&&>(),
 //vertex_key(g,ui)
 //
 namespace access {
-  template <typename G>
+  template <class G>
   concept _has_vertex_key_adl = requires(G&& g, vertex_iterator_t<G> ui) {
     {vertex_key(g, ui)};
   };
 } // namespace access
-template <typename G>
+template <class G>
 requires access::_has_vertex_key_adl<G> || random_access_iterator<vertex_iterator_t<G>>
 auto vertex_key(G&& g, vertex_iterator_t<G> ui) {
   if constexpr (access::_has_vertex_key_adl<G>)
@@ -131,29 +131,29 @@ auto vertex_key(G&& g, vertex_iterator_t<G> ui) {
     return ui - ranges::begin(vertices(g));
 }
 
-template <typename G>
+template <class G>
 using vertex_key_t = decltype(vertex_key(declval<G&&>(), declval<vertex_iterator_t<G>>()));
 
 
 //vertex_value(g,u)
 //
-template <typename G>
+template <class G>
 auto&& vertex_value(G&& g, vertex_reference_t<G> u) {
   return access::vertex_value(g, u);
 }
-template <typename G>
+template <class G>
 using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_reference_t<G>>()));
 
 // degree - number of outgoing edges (e.g. neighbors)
 //
 namespace access {
-  template <typename G>
+  template <class G>
   concept _has_degree_adl = requires(G&& g, vertex_reference_t<G> u) {
     {degree(g, u)};
   };
 } // namespace access
 
-template <typename G>
+template <class G>
 requires access::_has_degree_adl<G> || ranges::sized_range<vertex_edge_range_t<G>>
 auto degree(G&& g, vertex_reference_t<G> u) {
   if constexpr (access::_has_degree_adl<G>)
@@ -169,7 +169,7 @@ auto degree(G&& g, vertex_reference_t<G> u) {
 
 //target_key(g,uv)
 //
-template <typename G>
+template <class G>
 auto target_key(G&& g, edge_reference_t<const G> uv) {
   return access::target_key(g, uv);
 }
@@ -177,17 +177,17 @@ auto target_key(G&& g, edge_reference_t<const G> uv) {
 //target(g,uv)
 //
 namespace access {
-  template <typename G, typename ER>
+  template <class G, class ER>
   concept _has_target_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
     {target(g, uv)};
   };
 } // namespace access
-template <typename G, typename ER>
+template <class G, class ER>
 concept _can_eval_target = ranges::random_access_range<ER> && requires(G&& g, ranges::range_reference_t<ER> uv) {
   { target_key(g, uv) } -> integral;
 };
 
-template <typename G>
+template <class G>
 requires access::_has_target_adl<G, vertex_edge_range_t<G>> || _can_eval_target<G, vertex_edge_range_t<G>>
 auto&& target(G&& g, edge_reference_t<G> uv) {
   if constexpr (access::_has_target_adl<G, vertex_edge_range_t<G>>)
@@ -198,7 +198,7 @@ auto&& target(G&& g, edge_reference_t<G> uv) {
 
 //edge_value(g,uv)
 //
-template <typename G>
+template <class G>
 auto&& edge_value(G&& g, edge_reference_t<G> uv) {
   return access::edge_value(g, uv);
 }
@@ -209,7 +209,7 @@ auto&& edge_value(G&& g, edge_reference_t<G> uv) {
 
 // source_key
 //
-template <typename G>
+template <class G>
 auto source_key(G&& g, edge_reference_t<G> uv) {
   return access::source_key(g, uv);
 }
@@ -217,17 +217,17 @@ auto source_key(G&& g, edge_reference_t<G> uv) {
 //source(g,uv)
 //
 namespace access {
-  template <typename G, typename ER>
+  template <class G, class ER>
   concept _has_source_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
     {source(g, uv)};
   };
 } // namespace access
-template <typename G, typename ER>
+template <class G, class ER>
 concept _can_eval_source = ranges::random_access_range<ER> && requires(G&& g, ranges::range_reference_t<ER> uv) {
   { source_key(g, uv) } -> integral;
 };
 
-template <typename G>
+template <class G>
 requires access::_has_source_adl<G, vertex_edge_range_t<G>> || _can_eval_source<G, vertex_edge_range_t<G>>
 auto&& source(G&& g, edge_reference_t<G> uv) {
   if constexpr (access::_has_source_adl<G, vertex_edge_range_t<G>>)
@@ -239,18 +239,18 @@ auto&& source(G&& g, edge_reference_t<G> uv) {
 // edge_key(g,uv)
 //
 namespace access {
-  template <typename G, typename ER>
+  template <class G, class ER>
   concept _has_edge_key_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
     {edge_key(g, uv)};
   };
 } // namespace access
-template <typename G, typename ER>
+template <class G, class ER>
 concept _can_eval_edge_key = requires(G&& g, ranges::range_reference_t<ER> uv) {
   {target_key(g, uv)};
   {source_key(g, uv)};
 };
 
-template <typename G>
+template <class G>
 requires access::_has_edge_key_adl<G, vertex_edge_range_t<G>> || _can_eval_edge_key<G, vertex_edge_range_t<G>>
 auto edge_key(G&& g, edge_reference_t<G> uv) {
   if constexpr (access::_has_edge_key_adl<G, vertex_edge_range_t<G>>)
@@ -262,18 +262,18 @@ auto edge_key(G&& g, edge_reference_t<G> uv) {
 // other_key
 //
 namespace access {
-  template <typename G, typename ER>
+  template <class G, class ER>
   concept _has_other_key_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
     {other_key(g, uv)};
   };
 } // namespace access
-template <typename G, typename ER>
+template <class G, class ER>
 concept _can_eval_other_key = requires(G&& g, ranges::range_reference_t<ER> uv) {
   {target_key(g, uv)};
   {source_key(g, uv)};
 };
 
-template <typename G>
+template <class G>
 requires access::_has_other_key_adl<G, vertex_edge_range_t<G>> || _can_eval_other_key<G, vertex_edge_range_t<G>>
 auto other_key(G&& g, edge_reference_t<G> uv, vertex_key_t<G> xkey) {
   if constexpr (access::_has_other_key_adl<G, vertex_edge_range_t<G>>)
@@ -285,18 +285,18 @@ auto other_key(G&& g, edge_reference_t<G> uv, vertex_key_t<G> xkey) {
 // other_vertex
 //
 namespace access {
-  template <typename G, typename ER>
+  template <class G, class ER>
   concept _has_other_vertex_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
     {other_vertex(g, uv)};
   };
 } // namespace access
-template <typename G, typename ER>
+template <class G, class ER>
 concept _can_eval_other_vertex = requires(G&& g, ranges::range_reference_t<ER> uv) {
   {target(g, uv)};
   {source(g, uv)};
 };
 
-template <typename G>
+template <class G>
 requires access::_has_other_vertex_adl<G, vertex_edge_range_t<G>> || _can_eval_other_vertex<G, vertex_edge_range_t<G>>
 auto&& other_vertex(G&& g, edge_reference_t<G> uv, vertex_reference_t<G> x) {
   if constexpr (access::_has_other_vertex_adl<G, vertex_edge_range_t<G>>)
@@ -308,13 +308,13 @@ auto&& other_vertex(G&& g, edge_reference_t<G> uv, vertex_reference_t<G> x) {
 // find_vertex
 //
 namespace access {
-  template <typename G>
+  template <class G>
   concept _has_find_vertex_adl = requires(G&& g, vertex_key_t<G> ukey) {
     {find_vertex(g, ukey)};
   };
 } // namespace access
 
-template <typename G>
+template <class G>
 requires access::_has_find_vertex_adl<G> || ranges::random_access_range<vertex_range_t<G>>
 auto find_vertex(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_find_vertex_adl<G>)
@@ -326,19 +326,19 @@ auto find_vertex(G&& g, vertex_key_t<G> ukey) {
 // find_vertex_edge
 //
 namespace access {
-  template <typename G>
+  template <class G>
   concept _has_find_vertex_edge_adl =
         requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey, vertex_reference_t<G> u) {
     {find_vertex_edge(g, u, vkey)};
   };
-  template <typename G>
+  template <class G>
   concept _has_find_vertex_key_edge_adl =
         requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey, vertex_reference_t<G> u) {
     {find_vertex_edge(g, ukey, vkey)};
   };
 } // namespace access
 
-template <typename G>
+template <class G>
 auto find_vertex_edge(G&& g, vertex_reference_t<G> u, vertex_key_t<G> vkey) {
   if constexpr (access::_has_find_vertex_edge_adl<G>)
     return access::find_vertex_edge(g, u, vkey);
@@ -346,7 +346,7 @@ auto find_vertex_edge(G&& g, vertex_reference_t<G> u, vertex_key_t<G> vkey) {
     return ranges::find(edges(g, u), [&g, &vkey](auto&& uv) { return target_key(g, uv) == vkey; });
 }
 
-template <typename G>
+template <class G>
 requires access::_has_find_vertex_key_edge_adl<G> || ranges::random_access_range<vertex_range_t<G>>
 auto find_vertex_edge(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
   if constexpr (access::_has_find_vertex_key_edge_adl<G>)
@@ -357,7 +357,7 @@ auto find_vertex_edge(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
 
 // contains_edge
 //
-template <typename G>
+template <class G>
 auto contains_edge(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
   return access::contains_edge(g, ukey, vkey);
 }
@@ -365,11 +365,11 @@ auto contains_edge(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
 
 // graph_value
 //
-template <typename G>
+template <class G>
 auto&& graph_value(G&& g) {
   return access::graph_value(g);
 }
-template <typename G>
+template <class G>
 using graph_value_t = decltype(graph_value(declval<G&&>()));
 
 

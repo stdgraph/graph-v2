@@ -8,15 +8,15 @@
 //
 namespace std::graph::view {
 
-template <typename G>
+template <class G>
 class const_vertex_edge_view_iterator;
-template <typename G>
+template <class G>
 class vertex_edge_view_iterator;
 
-template <typename G>
+template <class G>
 class const_vertex_edge_view_iterator;
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(const G& g, vertex_reference_t<const G> u) {
   using vertex_type   = remove_cvref_t<decltype(u)>;
@@ -30,7 +30,7 @@ constexpr auto edges_view(const G& g, vertex_reference_t<const G> u) {
 }
 
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(G& g, vertex_reference_t<G> u) {
   using iter_type     = vertex_edge_view_iterator<G>;
@@ -42,16 +42,16 @@ constexpr auto edges_view(G& g, vertex_reference_t<G> u) {
   return SR(first, last);
 }
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(const G& g, vertex_key_t<const G> ukey) { return edges_view(g, *find_vertex(g, ukey)); }
 
-template <typename G>
+template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(G& g, vertex_key_t<G> ukey) { return edges_view(g, *find_vertex(g, ukey)); }
 
 
-template <typename G, typename Projection>
+template <class G, class Projection>
 class vertex_edge_view_iterator_base {
 public:
   using graph_type      = remove_cvref_t<G>;
@@ -94,7 +94,7 @@ protected:
   projection_fn             projection_;
 };
 
-template <typename G>
+template <class G>
 class vertex_edge_view_iterator_base<G, void> {
 public:
   using graph_type      = remove_cvref_t<G>;
@@ -135,7 +135,7 @@ protected:
   edge_iterator             iter_;
 };
 
-template <typename G>
+template <class G>
 class const_vertex_edge_view_iterator {
 public:
   using graph_type = remove_cvref_t<G>;
@@ -203,7 +203,7 @@ protected:
   }
 };
 
-template <typename G>
+template <class G>
 class vertex_edge_view_iterator : public const_vertex_edge_view_iterator<G> {
 public:
   using base_type = const_vertex_edge_view_iterator<G>;
