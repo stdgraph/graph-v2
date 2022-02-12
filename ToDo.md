@@ -141,9 +141,6 @@
   - [x] make it obvious it's unavailable for non-contiguous vertices
   - [x] Answer: for([ukey,u] : vertices(g))
 - [x] Best way to extend vol_graph to support different container types?
-  - [x] template-template parameters?
-  - [x] container template arguments like stack/queue?
-  - [x] template specializations? (extension of current implementation)
   - [x] Answer: graph_traits with template specializations for user-defined values. vol_graph renamed to dynamic_graph
 - [x] What is the best dynamic graph to propose for the std? vol, vov? premature. Revisit later
 - [x] Can an edgelist be trivially created by a user? (e.g. vector<pair<target_key,weight>>) yes; need to flush this out in paper

@@ -13,6 +13,8 @@ class const_vertex_edge_view_iterator;
 template <typename G>
 class vertex_edge_view_iterator;
 
+template <typename G>
+class const_vertex_edge_view_iterator;
 
 template <typename G>
 requires ranges::forward_range<vertex_range_t<G>>
@@ -114,7 +116,7 @@ protected:
   vertex_edge_view_iterator_base(const graph_type& g, edge_iterator iter)
         : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
   vertex_edge_view_iterator_base(const graph_type& g, const vertex_type& u)
-        : const_vertex_edge_view_iterator(
+        : vertex_edge_view_iterator_base(
                 g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
 
   vertex_edge_view_iterator_base()                                      = default;

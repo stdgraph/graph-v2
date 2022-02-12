@@ -40,11 +40,6 @@ using std::graph::edge_value;
 using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 
-//TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
-//  init_console();
-//  routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
-//}
-
 template<typename G>
 constexpr auto find_frankfurt_key(const G& g) {
   return find_city_key(g, "Frankf\xC3\xBCrt");

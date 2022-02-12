@@ -57,11 +57,6 @@ struct dov_graph_traits {
 using routes_dov_graph_traits = dov_graph_traits<double, std::string>;
 using routes_dov_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_dov_graph_traits>;
 
-//TEST_CASE("Germany routes CSV+csr test", "[csv][csr]") {
-//  init_console();
-//  routes_csv_csr_graph germany_routes(TEST_DATA_ROOT_DIR "germany_routes.csv");
-//}
-
 template <typename G>
 constexpr auto find_frankfurt_key(const G& g) {
   return find_city_key(g, "Frankf\xC3\xBCrt");

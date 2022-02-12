@@ -68,7 +68,7 @@ auto dijkstra_book(
 template <incidence_graph G>
 void vertex_key_example(G&& g) {
   auto ui   = begin(vertices(g));
-  auto ukey = vertex_key(g,ui);
+  auto key = vertex_key(g,ui);
 
   for (auto&& [ukey, u] : view::vertices_view(g)) { //
   }
