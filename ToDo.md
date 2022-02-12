@@ -5,6 +5,7 @@
 ### ToDo 
 - API
   - [ ] Common
+    - [ ] template --> class in template definitions
   - [ ] Ranges
     - [x] Deprecate vertex_vertex_range_t (and related types and functions) in favor of adjacency_edge_view
     - [x] Deprecate edge_range_t (and related types and functions) in favor of edge_view
@@ -13,21 +14,24 @@
     - [x] as CPO
     - [x] default implementations (e.g. degree==size)
     - [x] [deprecated] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
+  - [ ] Graph Views
+    - [ ] **edge_range<graph, vertex_range, vertex_edge_range>**
+    - [x] for([vkey, v] : vertices_view(g,u): vertex_vertex_range<graph, vertex_range, vertex_edge_range>
+    - [x] for([ukey, u] : vertices_view(g))
+    - [x] for([vkey,uv] : edges_view(g,u)) (incidence)
+    - [ ] create CPOs
+      - [ ] create CPO
+      - [ ] view::vertices_view is the class
+      - [ ] vertices(g) is the function calling the class
+    - [x] Add view types in std::graph::view
+      - [ ] Use the types in the view functions
+      - [ ] Add optional value function object parameters to the functions
 - Algorithms
   - [ ] Common
   - [ ] Ranges
     - [ ] BFS
     - [ ] DFS
     - [ ] Toplogical Sort
-  - [ ] Graph Views
-    - [ ] **edge_range<graph, vertex_range, vertex_edge_range>**
-    - [x] for([vkey, v] : vertices_view(g,u): vertex_vertex_range<graph, vertex_range, vertex_edge_range>
-    - [x] for([ukey, u] : vertices_view(g))
-    - [x] for([vkey,uv] : edges_view(g,u)) (incidence)
-    - [ ] define views as CPOs
-    - [x] Add view types in std::graph::view
-      - [ ] Use the types in the view functions
-      - [ ] Add optional value function object parameters to the functions
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra (book, impl from AndrewL)
@@ -76,7 +80,11 @@
     - [ ] Add general description
     - [ ] Add link to paper
     - [ ] Add instructions for building
+  - [ ] P1709
+    - [ ] Google Doc --> LaTex
 - Feedback
+- Readiness
+  - [ ] Feb-2025 deadline for C++26
 
 ### Issues
 - [ ] Can't run tests in VS+WSL2 (they will run in VSCode, but is slow)
@@ -88,58 +96,17 @@
   - [ ] can it be reused for multi-pass?
   - [x] Fork: No response to issues submitted
 - [ ] Are the CSR vertex & edge types different? (requirement of incidence and adjacency concepts)
-- [ ] What is the best dynamic graph to propose for the std? vol, vov?
-- [ ] Can an edgelist be trivially created by a user? (e.g. vector<pair<target_key,weight>>)
 - [ ] If we have an access namespace, do we need a container namespace?
-- [ ] Best way to extend vol_graph to support different container types?
-  - [ ] template-template parameters?
-  - [ ] container template arguments like stack/queue?
-  - [ ] template specializations? (extension of current implementation)
 - [ ] SG19 Input
   - [ ] Core data structures? static graph(CSR), dynamic graph (vol variant), edgelist graph
   - [ ] vertex_key or vertex_id?
-- [ ] Can we drop the vertex_verge_range in favor of just having vertices_view(g,u) [adjacency view]?
 - [ ] Should operator\[\](n) -> vertex& be a requirement for a graph?
-
-### Presentation
-- [ ] Step back and start fresh
-  - [ ] prototype impl gathering cruft
-  - [ ] some abilities not available: loading data from CSV, constexpr testing
-  - [ ] struggling with proper interface
-  - [ ] data structures ???
-  - [ ] learning C++20: ranges, concepts, CPO, ...
-- [ ] Andrew's feedback
-  - [ ] awkward syntax: iterator --> reference parameter (before & after)
-    - [ ] Reference parameter exception: vertex_key(g,ui)
-  - [ ] separate source_key/source from target_key/target
-  - [ ] Demonstrate Dijkstra's code (design w/ Andrew)
-    - [ ] view: edges_view(g,u)
-- [ ] Observation: 2 core data structures
-  - [ ] edge list
-  - [ ] incidence graph with different views
-      - [ ] vertices_view(g)
-      - [ ] edges_view(g,u) - incidence edges on a vertex
-      - [ ] vertices_view(g,u) - adjacency/neighbors of a vertex
-      - [ ] edges_view(g) - edgelist in graph
-- [ ] Graph API
-  - [ ] ranges
-    - [ ] incidence graph (2 ranges)
-    - [ ] edge list (1 range)
-    - [ ] removed: vertex_vertex_range_t<G> & edge_range_t<G> (+ related types & fncs) in favor of views
-      - [ ] assumption: specialized adjacency or edge list views won't be better on native graph
-  - [ ] functions:
-    - [ ] required: vertices(g), edges(g,u), target_key(g,uv), 
-    - [ ] optional: edge_value(g,uv), vertex_value(g,u), graph_value(g), vertex_key(g,ui), source_key(g,uv), contains_edge(g,ukey,vkey)
-    - [ ] other: degree(g,u), target(g,uv), source(g,uv), edge_key(g,uv), other_key(g,uv,xkey), other_vertex(g,uv,x), 
-                 find_vertex(g,ukey), find_vertex_edge(g,u,vkey), find_vertex_edge(g,ukey,vkey)
-    - [ ] removed: find_vertex_vertex(g,u,vkey), find_vertex_vertex(g,ukey,vkey), find_edge(g,ukey,vkey)
-- [ ] Data structures
-  - [ ] replace directed_adjacency_vector with csr_graph
-  - [ ] experimental: dynamic_graph that allows use of different containers
-    - [ ] vertices: vector, deque. 
-    - [ ] edges: forward_list, list, vector, deque
-    - [ ] future: map, multimap, unordered_map, unordered_multimap, mset, multiset, unordered_set, unordered_multiset
-  - [ ] undirected_adjacency_list has value for validating algorithms
+- [ ] Can std::array be used as a basis for a constexpr graph? What would the graph be?
+- [ ] How are CPOs implemented for views in the standard (e.g. view::vertices_view for class & view::vertices for CPO)
+  - [ ] Can tag_invoke still be used
+- [ ] Does a LaTeX document take fewer pages than equivilent in Google Docs?
+- [ ] SG19 Questions
+  - [ ] key vs. id?
 
 ## Resolved
 ### ToDo Completed
@@ -158,6 +125,7 @@
       - [x] Implement graph, vector, edge
       - [x] Load from CSV file
       - [x] Add \<bool sourced\> template parameter to include source_key
+    - [x] Can std::vector be used as a basis for a constexpr graph? Not really because we can't have variables of vector
 - C\+\+20 and C\+\+23
   - [x] connection points (e.g. tag_invoke)
 - Tools, Libraries & Infrastructure
@@ -172,3 +140,11 @@
   - [x] how to define vertex_key_t without calling vertex_key()? 
   - [x] make it obvious it's unavailable for non-contiguous vertices
   - [x] Answer: for([ukey,u] : vertices(g))
+- [x] Best way to extend vol_graph to support different container types?
+  - [x] template-template parameters?
+  - [x] container template arguments like stack/queue?
+  - [x] template specializations? (extension of current implementation)
+  - [x] Answer: graph_traits with template specializations for user-defined values. vol_graph renamed to dynamic_graph
+- [x] What is the best dynamic graph to propose for the std? vol, vov? premature. Revisit later
+- [x] Can an edgelist be trivially created by a user? (e.g. vector<pair<target_key,weight>>) yes; need to flush this out in paper
+- [x] Can we drop the vertex_vertex_range in favor of just having vertices_view(g,u) [adjacency view]? yes

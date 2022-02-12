@@ -23,7 +23,7 @@ auto dijkstra_book(
   using key_type    = vertex_key_t<G>;
   using weight_type = decltype(weight(std::declval<ranges::range_reference_t<vertex_edge_range_t<G>>>()));
 
-  size_t N(size(g));
+  size_t N(size(vertices(g)));
   assert(source < N);
 
   vector<weight_type> distance(N, numeric_limits<weight_type>::max());
@@ -42,30 +42,36 @@ auto dijkstra_book(
 
   while (!Q.empty()) {
 
-    auto u = Q.top().vertex_key;
+    auto ukey = Q.top().vertex_key;
     Q.pop();
 
-    //for (auto&& [v, w] : g[u]) -- pretty but would only allow one property
-    //
-    //auto vw = incidence_edges_view(g, u, target_key); // (can't put it in for stmt below right now)
-    //for (auto&& [v, uv] : vw) {
+    //for (auto&& [vkey, w] : g[u]) -- pretty but would only allow one property
     //
     //for (auto&& uv : std::graph::edges(g, g[u])) {
-    //  auto        v = target_key(g, uv);
+    //  auto        vkey = target_key(g, uv);
     //
     //extension:
-    //for (auto&& [v, uv, w] : std::graph::edges_view(g, u, weight)) {
+    //for (auto&& [vkey, uv, w] : std::graph::edges_view(g, u, weight)) {
     //
-    for (auto&& [v, uv] : view::edges_view(g, u)) {
+    for (auto&& [vkey, uv] : view::edges_view(g, ukey)) { // see zip
       weight_type w = weight(uv);
-      if (distance[u] + w < distance[v]) {
-        distance[v] = distance[u] + w;
-        Q.push({v, distance[v]});
+      if (distance[ukey] + w < distance[vkey]) {
+        distance[vkey] = distance[ukey] + w;
+        Q.push({vkey, distance[vkey]});
       }
     }
   }
 
   return distance;
+}
+
+template <incidence_graph G>
+void vertex_key_example(G&& g) {
+  auto ui   = begin(vertices(g));
+  auto ukey = vertex_key(g,ui);
+
+  for (auto&& [ukey, u] : view::vertices_view(g)) { //
+  }
 }
 
 } // namespace std::graph

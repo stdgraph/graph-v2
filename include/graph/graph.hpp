@@ -28,13 +28,6 @@ namespace std::graph {
 
 // edge value types
 template <typename G>
-using edge_t = typename ranges::range_value_t<vertex_edge_range_t<G>>;
-template <typename G>
-using edge_reference_t = typename ranges::range_reference_t<vertex_edge_range_t<G>>;
-template <typename G, typename ER>
-using edge_key_t = decltype(edge_key(declval<G&&>(),
-                                     declval<edge_reference_t<G>>())); // e.g. pair<vertex_key_t<G>,vertex_key_t<G>>
-template <typename G>
 using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_t<G>>()));
 
 //
@@ -70,15 +63,6 @@ concept incidence_graph = ranges::range<vertex_range_t<G>> && ranges::range<vert
 template <typename G>
 concept sourced_incidence_graph = incidence_graph<G> && sourced_edge_range<G, vertex_edge_range_t<G>>;
 
-#  ifdef OBSOLETE
-template <typename G>
-concept adjacencey_graph = ranges::range<vertex_range_t<G>> && ranges::range<vertex_vertex_range_t<G>> &&
-      is_same_v<vertex_vertex_range_t<G>, vertex_range_t<G>> && edge_range<G, vertex_vertex_range_t<G>>;
-
-template <typename G>
-concept sourced_adjacencey_graph = adjacencey_graph<G> && sourced_edge_range<G, vertex_vertex_range_t<G>>;
-#  endif //OBSOLETE
-
 template <typename G>
 concept adjacency_matrix = false; // tag algorithms that can take advantage of matrix layout
 
@@ -109,15 +93,6 @@ concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
   {degree(g, u)};
 };
 
-template <typename G>
-concept has_graph_value = semiregular<graph_value_t<G>>;
-
-template <typename G>
-concept has_vertex_value = semiregular<vertex_value_t<G>>;
-
-template <typename G, typename EI>
-concept has_edge_value = semiregular<edge_value_t<G, EI>>;
-
 //
 // find/contains concepts
 //
@@ -133,17 +108,6 @@ concept has_find_vertex_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_
 };
 
 template <typename G>
-concept has_find_vertex_vertex = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey, vertex_reference_t<G> u) {
-  { find_vertex_vertex(g, u, vkey) } -> forward_iterator;
-  { find_vertex_vertex(g, ukey, vkey) } -> forward_iterator;
-};
-
-template <typename G>
-concept has_find_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
-  { find_edge(g, ukey, vkey) } -> forward_iterator;
-};
-
-template <typename G>
 concept has_contains_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
   { contains_edge(g, ukey, vkey) } -> convertible_to<bool>;
 };
@@ -153,6 +117,8 @@ namespace view {
 
   //
   // vertex
+  // for(auto&& [ukey, u, value] : vertices_view(g, [](vertex_reference_t<G> u) { return ...; } )
+  // for(auto&& [ukey, u]        : vertices_view(g))
   //
   template <typename VKey, typename V, typename VV>
   struct vertex {
@@ -168,6 +134,8 @@ namespace view {
 
   //
   // targeted_edge
+  // for(auto&& [vkey,uv,value] : edges_view(g, u, [](vertex_edge_reference_t<G> uv) { return ...; } )
+  // for(auto&& [vkey,uv]       : edges_view(g, u) )
   //
   template <typename VKey, typename E, typename EV>
   struct targeted_edge {
@@ -183,6 +151,8 @@ namespace view {
 
   //
   // sourced_edge
+  // for(auto&& [ukey,vkey,uv,value] : sourced_edges_view(g, u, [](vertex_edge_reference_t<G> uv) { return ...; } )
+  // for(auto&& [ukey,vkey,uv]       : sourced_edges_view(g, u) )
   //
   template <typename VKey, typename V, typename E, typename EV>
   struct sourced_edge {
@@ -201,6 +171,8 @@ namespace view {
   //
   // neighbor
   //
+  // for(auto&& [vkey,v,value] : vertices_view(g, u, [](vertex_reference_t<G> v) { return ...; } )
+  // for(auto&& [vkey,v]       : vertices_view(g, u) )
   template <typename VKey, typename V, typename VV>
   struct neighbor {
     VKey target_key;
@@ -215,6 +187,8 @@ namespace view {
 
   //
   // edgelist_edge
+  // for(auto&& [ukey,vkey,uv,value] : edges_view(g, [](vertex_edge_reference_t<G> g) { return ...; } )
+  // for(auto&& [ukey,vkey,uv]       : edges_view(g) )
   //
   template <typename VKey, typename E, typename EV>
   struct edgelist_edge {
