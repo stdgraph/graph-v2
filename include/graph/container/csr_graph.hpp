@@ -205,16 +205,16 @@ private: // tag_invoke properties
   }
 
   friend constexpr edges_type tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {
+    static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1; // requires contiguous addresses
     return edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
   friend constexpr const edges_type
   tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_type& u) {
-    const vertex_type* u2 = &u + 1; // requires contiguous addresses
+    static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
+    const vertex_type* u2 = &u + 1;
     return const_edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
-
-private: //friends
 };
 
 } // namespace std::graph::container
