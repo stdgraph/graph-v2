@@ -15,16 +15,17 @@ template <class EV      = empty_value,
           class Alloc   = allocator<uint32_t>>
 class csr_graph;
 
-
 /// <summary>
-/// csr_graph - compressed sparse row adjacency graph
+/// csr_graph_base - base class for compressed sparse row adjacency graph
 ///
 /// </summary>
-/// <typeparam name="EV"></typeparam>
-/// <typeparam name="VKey"></typeparam>
-/// <typeparam name="Alloc"></typeparam>
+/// <typeparam name="EV">Edge value type</typeparam>
+/// <typeparam name="VV">Vertex value type</typeparam>
+/// <typeparam name="GV">Graph value type</typeparam>
+/// <typeparam name="VKey">Vertex Key type</typeparam>
+/// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
-class csr_graph {
+class csr_graph_base {
   using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
   using v_allocator_type     = typename allocator_traits<Alloc>::template rebind_alloc<EV>;
 
@@ -38,7 +39,7 @@ class csr_graph {
   using const_csr_vertex_edge_range_type = const index_vector_type;
 
 public: // Types
-  using graph_type = csr_graph<EV, VV, GV, VKey, Alloc>;
+  using graph_type = csr_graph_base<EV, VV, GV, VKey, Alloc>;
 
   using vertex_key_type   = VKey;
   using vertex_type       = vertex_key_type;
@@ -53,13 +54,13 @@ public: // Types
   using iterator       = typename index_vector_type::iterator;
 
 public: // Construction/Destruction
-  constexpr csr_graph()                 = default;
-  constexpr csr_graph(const csr_graph&) = default;
-  constexpr csr_graph(csr_graph&&)      = default;
-  constexpr ~csr_graph()                = default;
+  constexpr csr_graph_base()                      = default;
+  constexpr csr_graph_base(const csr_graph_base&) = default;
+  constexpr csr_graph_base(csr_graph_base&&)      = default;
+  constexpr ~csr_graph_base()                     = default;
 
-  constexpr csr_graph& operator=(const csr_graph&) = default;
-  constexpr csr_graph& operator=(csr_graph&&) = default;
+  constexpr csr_graph_base& operator=(const csr_graph_base&) = default;
+  constexpr csr_graph_base& operator=(csr_graph_base&&) = default;
 
   /// Constructor that takes edge ranges to create the csr graph.
   ///
@@ -83,7 +84,7 @@ public: // Construction/Destruction
   ///
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
+  constexpr csr_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
         : row_index_(alloc), col_index_(alloc), v_(alloc) {
 
     // Nothing to do?
@@ -104,12 +105,12 @@ public: // Construction/Destruction
 
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph(vertex_key_type  max_vertex_key,
-                      size_t           max_edges,
-                      ERng&            erng,
-                      const EKeyFnc&   ekey_fnc,
-                      const EValueFnc& evalue_fnc,
-                      Alloc            alloc = Alloc())
+  constexpr csr_graph_base(vertex_key_type  max_vertex_key,
+                           size_t           max_edges,
+                           ERng&            erng,
+                           const EKeyFnc&   ekey_fnc,
+                           const EValueFnc& evalue_fnc,
+                           Alloc            alloc = Alloc())
         : row_index_(alloc), col_index_(alloc), v_(alloc) {
 
     load_edges(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc);
@@ -123,9 +124,9 @@ public: // Construction/Destruction
   ///              target_vertex_key and the edge value.
   /// @param alloc Allocator.
   ///
-  constexpr csr_graph(const initializer_list<tuple<vertex_key_type, vertex_key_type, edge_value_type>>& ilist,
-                      const Alloc&                                                                      alloc = Alloc())
-        : csr_graph(
+  constexpr csr_graph_base(const initializer_list<tuple<vertex_key_type, vertex_key_type, edge_value_type>>& ilist,
+                           const Alloc& alloc = Alloc())
+        : csr_graph_base(
                 ilist,
                 [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) {
                   return pair{get<0>(e), get<1>(e)};
@@ -193,14 +194,14 @@ private:                        // Member variables
   v_vector_type     v_;         // v_[n]         holds the edge value for col_index_[n]
 
 private: // tag_invoke properties
-  friend constexpr index_vector_type& tag_invoke(::std::graph::access::vertices_fn_t, csr_graph& g) {
+  friend constexpr index_vector_type& tag_invoke(::std::graph::access::vertices_fn_t, csr_graph_base& g) {
     return g.row_index_;
   }
-  friend constexpr const index_vector_type& tag_invoke(::std::graph::access::vertices_fn_t, const csr_graph& g) {
+  friend constexpr const index_vector_type& tag_invoke(::std::graph::access::vertices_fn_t, const csr_graph_base& g) {
     return g.row_index_;
   }
 
-  friend vertex_key_type tag_invoke(::std::graph::access::vertex_key_fn_t, const csr_graph& g, const_iterator ui) {
+  friend vertex_key_type tag_invoke(::std::graph::access::vertex_key_fn_t, const csr_graph_base& g, const_iterator ui) {
     return static_cast<vertex_key_type>(ui - g.row_index_.begin());
   }
 
@@ -215,6 +216,90 @@ private: // tag_invoke properties
     const vertex_type* u2 = &u + 1;
     return const_edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
+};
+
+
+/// <summary>
+/// csr_graph - compressed sparse row adjacency graph
+///
+/// </summary>
+/// <typeparam name="EV">Edge value type</typeparam>
+/// <typeparam name="VV">Vertex value type</typeparam>
+/// <typeparam name="GV">Graph value type</typeparam>
+/// <typeparam name="VKey">Vertex Key type</typeparam>
+/// <typeparam name="Alloc">Allocator</typeparam>
+template <class EV, class VV, class GV, integral VKey, class Alloc>
+class csr_graph : public csr_graph_base<EV, VV, GV, VKey, Alloc> {
+public: // Types
+  using graph_type = csr_graph<EV, VV, GV, VKey, Alloc>;
+  using base_type  = csr_graph_base<EV, VV, GV, VKey, Alloc>;
+
+  using edge_value_type = EV;
+
+  using vertex_key_type   = VKey;
+  using vertex_value_type = VV;
+
+  using graph_value_type = GV;
+
+public: // Construction/Destruction
+  constexpr csr_graph()                 = default;
+  constexpr csr_graph(const csr_graph&) = default;
+  constexpr csr_graph(csr_graph&&)      = default;
+  constexpr ~csr_graph()                = default;
+
+  constexpr csr_graph& operator=(const csr_graph&) = default;
+  constexpr csr_graph& operator=(csr_graph&&) = default;
+
+  /// Constructor that takes edge ranges to create the csr graph.
+  ///
+  /// @tparam ERng      The edge data range.
+  /// @tparam EKeyFnc   Function object to return edge_key_type of the
+  ///                   ERng::value_type.
+  /// @tparam EValueFnc Function object to return the edge_value_type, or
+  ///                   a type that edge_value_type is constructible
+  ///                   from. If the return type is void or empty_value the
+  ///                   edge_value_type default constructor will be used
+  ///                   to initialize the value.
+  ///
+  /// @param erng       The container of edge data.
+  /// @param ekey_fnc   The edge key extractor functor:
+  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
+  /// @param evalue_fnc The edge value extractor functor:
+  ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
+  ///                   edge_value_t<G>).
+  /// @param alloc      The allocator to use for internal containers for
+  ///                   vertices & edges.
+  ///
+  template <class ERng, class EKeyFnc, class EValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  constexpr csr_graph(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
+        : base_type(erng, ekey_fnc, evalue_fnc, alloc) {}
+
+  template <class ERng, class EKeyFnc, class EValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  constexpr csr_graph(vertex_key_type  max_vertex_key,
+                      size_t           max_edges,
+                      ERng&            erng,
+                      const EKeyFnc&   ekey_fnc,
+                      const EValueFnc& evalue_fnc,
+                      Alloc            alloc = Alloc())
+        : base_type(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc, alloc) {}
+
+  /// Constructor for easy creation of a graph that takes an initializer
+  /// list with a tuple with 3 edge elements: source_vertex_key,
+  /// target_vertex_key and edge_value.
+  ///
+  /// @param ilist Initializer list of tuples with source_vertex_key,
+  ///              target_vertex_key and the edge value.
+  /// @param alloc Allocator.
+  ///
+  constexpr csr_graph(const initializer_list<tuple<vertex_key_type, vertex_key_type, edge_value_type>>& ilist,
+                      const Alloc&                                                                      alloc = Alloc())
+        : base_type(ilist, alloc) {}
+
+
+public:  // Operations
+private: // tag_invoke properties
 };
 
 } // namespace std::graph::container
