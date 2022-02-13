@@ -8,12 +8,90 @@
 
 namespace std::graph::container {
 
+//
+// forward declarations
+//
 template <class EV      = empty_value,
           class VV      = void,
           class GV      = void,
           integral VKey = uint32_t,
           class Alloc   = allocator<uint32_t>>
 class csr_graph;
+
+/// <summary>
+/// Class to hold vertex values in a vector that is the same size as row_index_. 
+/// If is_void_v<VV> then the class is empty with a single
+/// constructor that accepts (and ignores) an allocator.
+/// </summary>
+/// <typeparam name="EV"></typeparam>
+/// <typeparam name="VV"></typeparam>
+/// <typeparam name="GV"></typeparam>
+/// <typeparam name="Alloc"></typeparam>
+template <class EV, class VV, class GV, integral VKey, class Alloc>
+class csr_vertex_values {
+protected:
+  using graph_type = csr_graph<EV, VV, GV, VKey, Alloc>;
+
+  using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
+  using index_vector_type    = std::vector<VKey, index_allocator_type>;
+
+  using vertex_key_type             = VKey;
+  using vertex_type                 = vertex_key_type;
+  using vertex_value_type           = VV;
+  using vertex_value_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
+  using vertex_values_type          = vector<vertex_value_type, vertex_value_allocator_type>;
+
+  constexpr csr_vertex_values(Alloc& alloc) : vertex_values_(alloc) {}
+
+  constexpr csr_vertex_values()                         = default;
+  constexpr csr_vertex_values(const csr_vertex_values&) = default;
+  constexpr csr_vertex_values(csr_vertex_values&&)      = default;
+  constexpr ~csr_vertex_values()                        = default;
+
+  constexpr csr_vertex_values& operator=(const csr_vertex_values&) = default;
+  constexpr csr_vertex_values& operator=(csr_vertex_values&&) = default;
+
+  template <ranges::forward_range VRng, class VValueFnc>
+  // VValueFnc is a projection with default of identity
+  constexpr void load_vertex_values(const VRng& vrng, const VValueFnc& vvalue_fnc) {
+    if constexpr (ranges::sized_range<VRng>)
+      vertex_values_.reserve(vrng.size());
+    for (auto&& vvalue : vrng)
+      vertex_values_.push_back(vvalue_fnc(vvalue));
+  }
+
+protected: // Member variables
+  vertex_values_type vertex_values_;
+
+private: // tag_invoke properties
+  friend constexpr vertex_value_type&
+  tag_invoke(::std::graph::access::vertex_value_fn_t, graph_type& g, vertex_type& u) {
+    static_assert(ranges::contiguous_range<index_vector_type>,
+                  "row_index_ must be a contiguous range to evaluate uidx");
+    auto uidx = &u - g.row_index_.data();
+    return g.vertex_values_[uidx];
+  }
+  friend constexpr const vertex_value_type&
+  tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
+    static_assert(ranges::contiguous_range<index_vector_type>,
+                  "row_index_ must be a contiguous range to evaluate uidx");
+    auto uidx = &u - g.row_index_.data();
+    return g.vertex_values_[uidx];
+  }
+};
+
+template <class EV, class GV, integral VKey, class Alloc>
+class csr_vertex_values<EV, void, GV, VKey, Alloc> {
+  constexpr csr_vertex_values(Alloc& alloc) {}
+  constexpr csr_vertex_values()                         = default;
+  constexpr csr_vertex_values(const csr_vertex_values&) = default;
+  constexpr csr_vertex_values(csr_vertex_values&&)      = default;
+  constexpr ~csr_vertex_values()                        = default;
+
+  constexpr csr_vertex_values& operator=(const csr_vertex_values&) = default;
+  constexpr csr_vertex_values& operator=(csr_vertex_values&&) = default;
+};
+
 
 /// <summary>
 /// csr_graph_base - base class for compressed sparse row adjacency graph
@@ -25,7 +103,9 @@ class csr_graph;
 /// <typeparam name="VKey">Vertex Key type</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
-class csr_graph_base {
+class csr_graph_base : protected csr_vertex_values<EV, VV, GV, VKey, Alloc> {
+  using base_type = csr_vertex_values<EV, VV, GV, VKey, Alloc>;
+
   using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
   using v_allocator_type     = typename allocator_traits<Alloc>::template rebind_alloc<EV>;
 
@@ -85,7 +165,7 @@ public: // Construction/Destruction
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   constexpr csr_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
-        : row_index_(alloc), col_index_(alloc), v_(alloc) {
+        : base_type(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
 
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng))
@@ -133,7 +213,7 @@ public: // Construction/Destruction
                            const EKeyFnc&   ekey_fnc,
                            const EValueFnc& evalue_fnc,
                            Alloc            alloc = Alloc())
-        : row_index_(alloc), col_index_(alloc), v_(alloc) {
+        : base_type(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
 
     load_edges(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc);
   }
@@ -153,9 +233,21 @@ public: // Construction/Destruction
                 [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) {
                   return pair{get<0>(e), get<1>(e)};
                 },
-                [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) { return get<2>(e); }) {}
+                [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) { return get<2>(e); },
+                alloc) {
+    if (!is_void_v<vertex_value_type>)
+      this->vertex_values_.resize(row_index_.size());
+  }
 
 protected:
+  template <ranges::forward_range ERng, class EKeyFnc>
+  constexpr vertex_key_type max_vertex_key(const ERng& erng, const EKeyFnc& ekey_fnc) {
+    vertex_key_type max_key = 0;
+    for (auto&& [source_key, target_key] : erng)
+      max_key = max(max_key, max(source_key, target_key));
+    return max_key;
+  }
+
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   constexpr void load_edges(vertex_key_type  max_vertex_key,
@@ -201,15 +293,6 @@ public: // Operations
     return row_index_.begin() + key;
   }
 
-private: // Iterators
-  iterator       begin() { return row_index_.begin(); }
-  const_iterator begin() const { return row_index_.begin(); }
-  const_iterator cbegin() const { return row_index_.begin(); }
-
-  iterator       end() { return row_index_.end(); }
-  const_iterator end() const { return row_index_.end(); }
-  const_iterator cend() const { return row_index_.end(); }
-
 private:                        // Member variables
   index_vector_type row_index_; // starting index into col_index_ and v_
   index_vector_type col_index_; // col_index_[n] holds the column index (aka target)
@@ -229,7 +312,7 @@ private: // tag_invoke properties
 
   friend constexpr edges_type tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
-    vertex_type* u2 = &u + 1; // requires contiguous addresses
+    vertex_type* u2 = &u + 1;
     return edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
   friend constexpr const edges_type
@@ -272,6 +355,11 @@ public: // Construction/Destruction
 
   constexpr csr_graph& operator=(const csr_graph&) = default;
   constexpr csr_graph& operator=(csr_graph&&) = default;
+
+  // gv&,  alloc
+  // gv&&, alloc
+  //       alloc
+
 
   /// Constructor that takes edge ranges to create the csr graph.
   ///

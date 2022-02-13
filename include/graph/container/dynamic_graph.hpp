@@ -28,11 +28,11 @@ class dynamic_edge;
 template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
 class dynamic_vertex;
 
-template <class EV        = void,
-          class VV        = void,
-          class GV        = void,
-          bool Sourced    = false,
-          class VKey      = uint32_t,
+template <class EV     = void,
+          class VV     = void,
+          class GV     = void,
+          bool Sourced = false,
+          class VKey   = uint32_t,
           class Traits = vofl_graph_traits<EV, VV, GV, Sourced, VKey>>
 class dynamic_graph;
 
@@ -593,6 +593,12 @@ public: // Construction/Destruction/Assignment
   constexpr dynamic_graph_base& operator=(const dynamic_graph_base&) = default;
   constexpr dynamic_graph_base& operator=(dynamic_graph_base&&) = default;
 
+  /// <summary>
+  /// Create an empty graph using the allocator passed.
+  /// </summary>
+  /// <param name="alloc">The allocator to use for internal containers for vertices and edges</param>
+  dynamic_graph_base(vertex_allocator_type alloc) : vertices_(alloc) {}
+
   /// Constructor that takes edge & vertex ranges to create the graph.
   ///
   /// @tparam ERng      The edge data range.
@@ -774,10 +780,6 @@ public: // Properties
   constexpr vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
   constexpr const vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
 
-public:
-  //constexpr vertices_type&       vertices() noexcept { return vertices_; }
-  //constexpr const vertices_type& vertices() const noexcept { return vertices_; }
-
 private: // Member Variables
   vertices_type vertices_;
 
@@ -826,13 +828,56 @@ public:
   dynamic_graph& operator=(const dynamic_graph&) = default;
   dynamic_graph& operator=(dynamic_graph&&) = default;
 
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(ERng&            erng,
+  // gv&,  alloc
+  // gv&&, alloc
+  //       alloc
+
+  dynamic_graph(allocator_type alloc) : base_type(alloc) {}
+  dynamic_graph(const GV& gv, allocator_type alloc) : base_type(alloc), value_(gv) {}
+  dynamic_graph(GV&& gv, allocator_type alloc) : base_type(alloc), value_(move(gv)) {}
+
+
+  // erng, ekey_fnc, evalue_fnc, vvalue_fnc,       alloc
+  // erng, ekey_fnc, evalue_fnc, vvalue_fnc, gv&,  alloc
+  // erng, ekey_fnc, evalue_fnc, vvalue_fnc, gv&&, alloc
+
+  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  dynamic_graph(const ERng&      erng,
+                const VRng&      vrng,
                 const EKeyFnc&   ekey_fnc,
                 const EValueFnc& evalue_fnc,
+                const VValueFnc& vvalue_fnc,
                 allocator_type   alloc = allocator_type())
-        : base_type(erng, ekey_fnc, evalue_fnc, alloc) {}
+        : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc) {}
+
+  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  dynamic_graph(const ERng&      erng,
+                const VRng&      vrng,
+                const EKeyFnc&   ekey_fnc,
+                const EValueFnc& evalue_fnc,
+                const VValueFnc& vvalue_fnc,
+                const GV&        gv,
+                allocator_type   alloc = allocator_type())
+        : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc), value_(gv) {}
+
+  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  dynamic_graph(const ERng&      erng,
+                const VRng&      vrng,
+                const EKeyFnc&   ekey_fnc,
+                const EValueFnc& evalue_fnc,
+                const VValueFnc& vvalue_fnc,
+                GV&&             gv,
+                allocator_type   alloc = allocator_type())
+        : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc), value_(move(gv)) {}
+
+
+  // max_vertex_key, erng, ekey_fnc, evalue_fnc,       alloc
+  // max_vertex_key, erng, ekey_fnc, evalue_fnc, gv&,  alloc
+  // max_vertex_key, erng, ekey_fnc, evalue_fnc, gv&&, alloc
+
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(vertex_key_type  max_vertex_key,
@@ -844,62 +889,53 @@ public:
 
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(const GV&        g,
-                ERng&            erng,
-                const EKeyFnc&   ekey_fnc,
-                const EValueFnc& evalue_fnc,
-                allocator_type   alloc = allocator_type())
-        : base_type(erng, ekey_fnc, evalue_fnc, alloc), value_(g) {}
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(vertex_key_type  max_vertex_key,
-                const GV&        gv,
                 ERng&            erng,
                 const EKeyFnc&   ekey_fnc,
                 const EValueFnc& evalue_fnc,
+                const GV&        gv,
                 allocator_type   alloc = allocator_type())
         : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc), value_(gv) {}
 
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(GV&&             g,
-                ERng&            erng,
-                const EKeyFnc&   ekey_fnc,
-                const EValueFnc& evalue_fnc,
-                allocator_type   alloc = allocator_type())
-        : base_type(erng, ekey_fnc, evalue_fnc, alloc), value_(move(g)) {}
-
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph(vertex_key_type  max_vertex_key,
-                GV&&             gv,
                 ERng&            erng,
                 const EKeyFnc&   ekey_fnc,
                 const EValueFnc& evalue_fnc,
+                GV&&             gv,
                 allocator_type   alloc = allocator_type())
         : base_type(max_vertex_key, erng, ekey_fnc, evalue_fnc, alloc), value_(move(gv)) {}
 
-  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
-  dynamic_graph(const GV&        gv,
-                const ERng&      erng,
-                const VRng&      vrng,
-                const EKeyFnc&   ekey_fnc,
-                const EValueFnc& evalue_fnc,
-                const VValueFnc& vvalue_fnc,
-                allocator_type   alloc = allocator_type())
-        : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc), value_(gv) {}
+  // erng, ekey_fnc, evalue_fnc,       alloc
+  // erng, ekey_fnc, evalue_fnc, gv&,  alloc
+  // erng, ekey_fnc, evalue_fnc, gv&&, alloc
 
-  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
-  dynamic_graph(GV&&             gv,
-                const ERng&      erng,
-                const VRng&      vrng,
+  template <class ERng, class EKeyFnc, class EValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  dynamic_graph(ERng&            erng,
                 const EKeyFnc&   ekey_fnc,
                 const EValueFnc& evalue_fnc,
-                const VValueFnc& vvalue_fnc,
                 allocator_type   alloc = allocator_type())
-        : base_type(erng, vrng, ekey_fnc, evalue_fnc, vvalue_fnc, alloc), value_(move(gv)) {}
+        : base_type(erng, ekey_fnc, evalue_fnc, alloc) {}
+
+  template <class ERng, class EKeyFnc, class EValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  dynamic_graph(ERng&            erng,
+                const EKeyFnc&   ekey_fnc,
+                const EValueFnc& evalue_fnc,
+                const GV&        gv,
+                allocator_type   alloc = allocator_type())
+        : base_type(erng, ekey_fnc, evalue_fnc, alloc), value_(gv) {}
+
+  template <class ERng, class EKeyFnc, class EValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  dynamic_graph(ERng&            erng,
+                const EKeyFnc&   ekey_fnc,
+                const EValueFnc& evalue_fnc,
+                GV&&             gv,
+                allocator_type   alloc = allocator_type())
+        : base_type(erng, ekey_fnc, evalue_fnc, alloc), value_(move(gv)) {}
 
 public:
   constexpr value_type&       value() { return value_; }
