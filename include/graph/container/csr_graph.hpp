@@ -6,6 +6,12 @@
 #include <cstdint>
 #include "graph/graph.hpp"
 
+// NOTES
+//  have public load_edges(...), load_vertices(...), and load()
+//  allow separation of construction and load
+//  allow multiple calls to load edges as long as subsequent edges have ukey >= last vertex (append)
+
+
 namespace std::graph::container {
 
 //
@@ -19,7 +25,7 @@ template <class EV      = empty_value,
 class csr_graph;
 
 /// <summary>
-/// Class to hold vertex values in a vector that is the same size as row_index_. 
+/// Class to hold vertex values in a vector that is the same size as row_index_.
 /// If is_void_v<VV> then the class is empty with a single
 /// constructor that accepts (and ignores) an allocator.
 /// </summary>
@@ -121,14 +127,16 @@ class csr_graph_base : protected csr_vertex_values<EV, VV, GV, VKey, Alloc> {
 public: // Types
   using graph_type = csr_graph_base<EV, VV, GV, VKey, Alloc>;
 
-  using vertex_key_type   = VKey;
-  using vertex_type       = vertex_key_type;
-  using vertex_value_type = VV;
+  using vertex_key_type     = VKey;
+  using vertex_type         = vertex_key_type;
+  using vertex_value_type   = VV;
+  using vertices_type       = ranges::subrange<ranges::iterator_t<index_vector_type>>;
+  using const_vertices_type = ranges::subrange<ranges::iterator_t<const index_vector_type>>;
 
-  using edges_type       = ranges::subrange<ranges::iterator_t<index_vector_type>>;
-  using const_edges_type = ranges::subrange<ranges::iterator_t<const index_vector_type>>;
   using edge_value_type  = EV;
   using edge_type        = VKey; // index into v_
+  using edges_type       = ranges::subrange<ranges::iterator_t<index_vector_type>>;
+  using const_edges_type = ranges::subrange<ranges::iterator_t<const index_vector_type>>;
 
   using const_iterator = typename index_vector_type::const_iterator;
   using iterator       = typename index_vector_type::iterator;
@@ -171,16 +179,61 @@ public: // Construction/Destruction
     if (ranges::begin(erng) == ranges::end(erng))
       return;
 
-    // Evaluate max vertex key needed
-    size_t          erng_size   = 0;
-    vertex_key_type max_row_idx = 0;
-    for (auto& edge_data : erng) {
-      auto&& [uidx, vidx] = ekey_fnc(edge_data);
-      max_row_idx         = max(max_row_idx, max(uidx, vidx));
-      ++erng_size;
-    }
+    // Evaluate edge_count and max vertex key needed
+    auto [max_key, edge_count] = max_vertex_key(erng, ekey_fnc);
 
-    load_edges(max_row_idx, erng_size, erng, ekey_fnc, evalue_fnc);
+    load_edges(erng, ekey_fnc, evalue_fnc, max_key, edge_count);
+    if (!is_void_v<vertex_value_type>) {
+      this->vertex_values_.resize(row_index_.size());
+    }
+  }
+
+  /// Constructor that takes edge ranges to create the csr graph.
+  ///
+  /// @tparam ERng      The edge data range.
+  /// @tparam EKeyFnc   Function object to return edge_key_type of the
+  ///                   ERng::value_type.
+  /// @tparam EValueFnc Function object to return the edge_value_type, or
+  ///                   a type that edge_value_type is constructible
+  ///                   from. If the return type is void or empty_value the
+  ///                   edge_value_type default constructor will be used
+  ///                   to initialize the value.
+  ///
+  /// @param erng       The container of edge data.
+  /// @param ekey_fnc   The edge key extractor functor:
+  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
+  /// @param evalue_fnc The edge value extractor functor:
+  ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
+  ///                   edge_value_t<G>).
+  /// @param alloc      The allocator to use for internal containers for
+  ///                   vertices & edges.
+  ///
+  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  constexpr csr_graph_base(ERng&            erng,
+                           const EKeyFnc&   ekey_fnc,
+                           const EValueFnc& evalue_fnc,
+                           VRng&            vrng,
+                           const VValueFnc& vvalue_fnc,
+                           Alloc            alloc = Alloc())
+        : base_type(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
+
+    // Nothing to do?
+    if (ranges::begin(erng) == ranges::end(erng))
+      return;
+
+    // Evaluate edge_count and max vertex key needed
+    auto [max_key, edge_count] = max_vertex_key(erng, ekey_fnc);
+
+    if (ranges::sized_range<VRng>)
+      max_key = max(max_key, static_cast<vertex_key_type>(ranges::size(vrng) - 1));
+
+    load_edges(erng, ekey_fnc, evalue_fnc, max_key, edge_count);
+    if (!is_void_v<vertex_value_type>) {
+      this->load_vertex_values(vrng, vvalue_fnc);
+      //this->vertex_values_.resize(row_index_.size() - 1);
+      assert(this->vertex_values_.size() == row_index_.size() - 1); // what to do if not the same?
+    }
   }
 
   /// Constructor that takes edge ranges to create the csr graph.
@@ -207,15 +260,59 @@ public: // Construction/Destruction
   ///
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph_base(vertex_key_type  max_vertex_key,
-                           size_t           max_edges,
-                           ERng&            erng,
+  constexpr csr_graph_base(ERng&            erng,
                            const EKeyFnc&   ekey_fnc,
                            const EValueFnc& evalue_fnc,
-                           Alloc            alloc = Alloc())
+                           vertex_key_type  max_vertex_key,
+                           size_t           edge_count = 0,
+                           Alloc            alloc      = Alloc())
         : base_type(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
 
-    load_edges(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc);
+    load_edges(erng, ekey_fnc, evalue_fnc, max_vertex_key, edge_count);
+    if (!is_void_v<vertex_value_type>)
+      this->vertex_values_.resize(row_index_.size() - 1);
+  }
+
+  /// Constructor that takes edge ranges to create the csr graph.
+  ///
+  /// @tparam ERng      The edge data range.
+  /// @tparam EKeyFnc   Function object to return edge_key_type of the
+  ///                   ERng::value_type.
+  /// @tparam EValueFnc Function object to return the edge_value_type, or
+  ///                   a type that edge_value_type is constructible
+  ///                   from. If the return type is void or empty_value the
+  ///                   edge_value_type default constructor will be used
+  ///                   to initialize the value.
+  ///
+  /// @param max_vertex_key Number of vertices to reserve before loading the graph
+  /// @param max_edges      Number of edges to reserve before loading the graph
+  /// @param erng           The container of edge data.
+  /// @param ekey_fnc       The edge key extractor functor:
+  ///                       ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
+  /// @param evalue_fnc     The edge value extractor functor:
+  ///                       evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
+  ///                       edge_value_t<G>).
+  /// @param alloc          The allocator to use for internal containers for
+  ///                       vertices & edges.
+  ///
+  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  constexpr csr_graph_base(ERng&            erng,
+                           const EKeyFnc&   ekey_fnc,
+                           const EValueFnc& evalue_fnc,
+                           VRng&            vrng,
+                           const VValueFnc& vvalue_fnc,
+                           vertex_key_type  max_vertex_key,
+                           size_t           edge_count = 0,
+                           Alloc            alloc      = Alloc())
+        : base_type(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
+
+    load_edges(erng, ekey_fnc, evalue_fnc, max_vertex_key, edge_count);
+    if (!is_void_v<vertex_value_type>) {
+      load_vertex_values(vrng, vvalue_fnc);
+      //this->vertex_values_.resize(row_index_.size() - 1);
+      assert(this->vertex_values_.size() == row_index_.size() - 1); // what to do if not the same?
+    }
   }
 
   /// Constructor for easy creation of a graph that takes an initializer
@@ -234,54 +331,49 @@ public: // Construction/Destruction
                   return pair{get<0>(e), get<1>(e)};
                 },
                 [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) { return get<2>(e); },
-                alloc) {
-    if (!is_void_v<vertex_value_type>)
-      this->vertex_values_.resize(row_index_.size());
-  }
+                alloc) {}
 
 protected:
   template <ranges::forward_range ERng, class EKeyFnc>
-  constexpr vertex_key_type max_vertex_key(const ERng& erng, const EKeyFnc& ekey_fnc) {
-    vertex_key_type max_key = 0;
-    for (auto&& [source_key, target_key] : erng)
+  constexpr pair<vertex_key_type, size_t> max_vertex_key(const ERng& erng, const EKeyFnc& ekey_fnc) {
+    size_t          edge_count = 0;
+    vertex_key_type max_key    = 0;
+    for (auto&& [source_key, target_key] : erng) {
       max_key = max(max_key, max(source_key, target_key));
-    return max_key;
+      ++edge_count;
+    }
+    return pair(max_key, edge_count);
   }
 
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr void load_edges(vertex_key_type  max_vertex_key,
-                            size_t           max_edges,
-                            ERng&            erng,
+  constexpr void load_edges(ERng&            erng,
                             const EKeyFnc&   ekey_fnc,
-                            const EValueFnc& evalue_fnc) {
-    // copy edge key+val & sort in row/col order (CSR def allows cols to be unsorted)
-    using EKey       = decltype(ekey_fnc(declval<std::ranges::range_value_t<ERng>>()));
-    using EVal       = decltype(evalue_fnc(declval<std::ranges::range_value_t<ERng>>()));
-    using EKeyVal    = std::pair<EKey, EVal>;
-    using EKeyValVec = std::vector<EKeyVal>;
-    EKeyValVec edges;
-    edges.reserve(max_edges);
-    for (auto& edge_data : erng)
-      edges.emplace_back(EKeyVal(ekey_fnc(edge_data), evalue_fnc(edge_data)));
-    auto ecmp = [](auto&& lhs, auto&& rhs) { return lhs.first < rhs.first; };
-    std::ranges::sort(edges, ecmp);
-    auto unique_edges = std::ranges::unique(edges, ecmp);
+                            const EValueFnc& evalue_fnc,
+                            vertex_key_type  max_vertex_key = 0,
+                            size_t           edge_count     = 0) {
+    if (ranges::sized_range<ERng>)
+      edge_count = max(edge_count, ranges::size(erng));
 
-    max_edges = std::ranges::size(unique_edges);
-    row_index_.reserve(static_cast<size_t>(max_vertex_key) + 1);
-    col_index_.reserve(max_edges);
-    v_.reserve(max_edges);
+    row_index_.reserve(static_cast<size_t>(max_vertex_key) + 2); // +1 for zero-based-index and +1 for terminating row
+    col_index_.reserve(edge_count);
+    v_.reserve(edge_count);
 
     // add edges
-    for (auto& [key, val] : unique_edges) {
-      auto& [ukey, vkey] = key;
+    vertex_key_type last_ukey = 0;
+    for (auto&& edge_data : erng) {
+      auto&& [ukey, vkey] = ekey_fnc(edge_data);
+      auto&& value        = evalue_fnc(edge_data);
 
+      assert(ukey >= last_ukey); // ordered by ukey?
       row_index_.resize(static_cast<size_t>(ukey) + 1, static_cast<vertex_key_type>(v_.size()));
       col_index_.push_back(vkey);
-      v_.emplace_back(val);
+      v_.emplace_back(value);
+      last_ukey = ukey;
     }
-    row_index_.resize(static_cast<size_t>(max_vertex_key) + 1, static_cast<vertex_key_type>(v_.size()));
+    assert(max_vertex_key >= row_index_.size() - 1);
+    row_index_.resize(static_cast<size_t>(max_vertex_key) + 1,
+                      static_cast<vertex_key_type>(v_.size())); // add terminating row
   }
 
 
@@ -299,11 +391,17 @@ private:                        // Member variables
   v_vector_type     v_;         // v_[n]         holds the edge value for col_index_[n]
 
 private: // tag_invoke properties
-  friend constexpr index_vector_type& tag_invoke(::std::graph::access::vertices_fn_t, csr_graph_base& g) {
-    return g.row_index_;
+  friend constexpr vertices_type tag_invoke(::std::graph::access::vertices_fn_t, csr_graph_base& g) {
+    if (g.row_index_.empty())
+      return vertices_type(g.row_index_); // really empty
+    else
+      return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
-  friend constexpr const index_vector_type& tag_invoke(::std::graph::access::vertices_fn_t, const csr_graph_base& g) {
-    return g.row_index_;
+  friend constexpr const_vertices_type tag_invoke(::std::graph::access::vertices_fn_t, const csr_graph_base& g) {
+    if (g.row_index_.empty())
+      return const_vertices_type(g.row_index_); // really empty
+    else
+      return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
 
   friend vertex_key_type tag_invoke(::std::graph::access::vertex_key_fn_t, const csr_graph_base& g, const_iterator ui) {
@@ -313,12 +411,18 @@ private: // tag_invoke properties
   friend constexpr edges_type tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u) < g.col_index_.size() &&
+           static_cast<size_t>(*u2) < g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
   friend constexpr const edges_type
   tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
     const vertex_type* u2 = &u + 1;
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u) < g.col_index_.size() &&
+           static_cast<size_t>(*u2) < g.col_index_.size()); // in col_index_ bounds?
     return const_edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
 };
