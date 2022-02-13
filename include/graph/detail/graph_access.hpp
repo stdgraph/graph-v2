@@ -71,7 +71,7 @@ namespace access {
 // Vertex range & directly related types
 //
 template <class G>
-auto&& vertices(G&& g) {
+auto vertices(G&& g) -> decltype(access::vertices(g)) {
   return access::vertices(g);
 }
 
@@ -89,7 +89,7 @@ using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
 // Vertex-edge range (incidence) & directly related types
 //
 template <class G>
-auto&& edges(G&& g, vertex_reference_t<G> u) {
+auto edges(G&& g, vertex_reference_t<G> u) -> decltype(access::edges(g, u)) {
   return access::edges(g, u);
 }
 
@@ -138,7 +138,7 @@ using vertex_key_t = decltype(vertex_key(declval<G&&>(), declval<vertex_iterator
 //vertex_value(g,u)
 //
 template <class G>
-auto&& vertex_value(G&& g, vertex_reference_t<G> u) {
+auto vertex_value(G&& g, vertex_reference_t<G> u) -> decltype(access::vertex_value(g, u)) {
   return access::vertex_value(g, u);
 }
 template <class G>
@@ -170,7 +170,7 @@ auto degree(G&& g, vertex_reference_t<G> u) {
 //target_key(g,uv)
 //
 template <class G>
-auto target_key(G&& g, edge_reference_t<const G> uv) {
+auto target_key(G&& g, edge_reference_t<const G> uv) -> decltype(access::target_key(g, uv)) {
   return access::target_key(g, uv);
 }
 
@@ -199,7 +199,7 @@ auto&& target(G&& g, edge_reference_t<G> uv) {
 //edge_value(g,uv)
 //
 template <class G>
-auto&& edge_value(G&& g, edge_reference_t<G> uv) {
+auto edge_value(G&& g, edge_reference_t<G> uv) -> decltype(access::edge_value(g, uv)) {
   return access::edge_value(g, uv);
 }
 
@@ -210,7 +210,7 @@ auto&& edge_value(G&& g, edge_reference_t<G> uv) {
 // source_key
 //
 template <class G>
-auto source_key(G&& g, edge_reference_t<G> uv) {
+auto source_key(G&& g, edge_reference_t<G> uv) -> decltype(access::source_key(g, uv)) {
   return access::source_key(g, uv);
 }
 
