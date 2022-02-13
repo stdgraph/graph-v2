@@ -8,12 +8,12 @@ endif()
 add_compile_definitions(TEST_DATA_ROOT_DIR="${TEST_DATA_ROOT_DIR}")
 
 
-add_library(catch_main STATIC catch_main.cpp "csv_routes.hpp" )
+add_library(catch_main STATIC catch_main.cpp "csv_routes.hpp")
 target_link_libraries(catch_main PUBLIC CONAN_PKG::catch2)
 target_link_libraries(catch_main PRIVATE project_options)
 target_link_options(catch_main INTERFACE $<$<CXX_COMPILER_ID:GNU>:-pthread>)
 
-add_executable(tests tests.cpp "csv_routes_vofl_tests.cpp" "csv_routes.hpp"  "csv_routes.cpp"   "csv_routes_dov_tests.cpp" "examples.cpp")
+add_executable(tests tests.cpp "csv_routes_vofl_tests.cpp" "csv_routes.hpp"  "csv_routes.cpp"   "csv_routes_dov_tests.cpp" "examples.cpp" "csv_routes_csr_tests.cpp")
 target_link_libraries(tests PRIVATE project_warnings project_options catch_main graph)
 target_link_libraries(tests PRIVATE CONAN_PKG::fmt)
 target_link_libraries(tests PRIVATE csv_parser)
