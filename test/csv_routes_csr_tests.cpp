@@ -50,7 +50,12 @@ auto find_frankfurt(G&& g) {
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   init_console();
 
-  using G  = routes_csr_graph_type;
+  using G = routes_csr_graph_type;
+  G g;
+  for (auto&& u : vertices(g)) {
+    for (auto&& uv : edges(g, u)) {
+    }
+  }
 #if 0
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 

@@ -247,14 +247,16 @@ class csr_graph {
   using const_csr_vertex_edge_range_type = const index_vector_type;
 
 public: // Types
-  using graph_type = csr_graph<EV, VKey, Alloc>;
+  using graph_type = csr_graph<EV, VV, GV, VKey, Alloc>;
 
   using vertex_key_type   = VKey;
-  using vertex_value_type = vertex_key_type;
+  using vertex_type       = vertex_key_type;
+  using vertex_value_type = VV;
 
-  using edge_key_type   = pair<VKey, VKey>;
-  using edge_value_type = EV;
-  using edge_type       = VKey; // index into v_
+  using edges_type       = ranges::subrange<ranges::iterator_t<index_vector_type>>;
+  using const_edges_type = ranges::subrange<ranges::iterator_t<const index_vector_type>>;
+  using edge_value_type  = EV;
+  using edge_type        = VKey; // index into v_
 
   using const_iterator = typename index_vector_type::const_iterator;
   using iterator       = typename index_vector_type::iterator;
@@ -409,6 +411,16 @@ private: // tag_invoke properties
 
   friend vertex_key_type tag_invoke(::std::graph::access::vertex_key_fn_t, const csr_graph& g, const_iterator ui) {
     return static_cast<vertex_key_type>(ui - g.row_index_.begin());
+  }
+
+  friend constexpr edges_type tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {
+    vertex_type* u2 = &u + 1; // requires contiguous addresses
+    return edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
+  }
+  friend constexpr const edges_type
+  tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_type& u) {
+    const vertex_type* u2 = &u + 1; // requires contiguous addresses
+    return const_edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
 
 private: //friends
