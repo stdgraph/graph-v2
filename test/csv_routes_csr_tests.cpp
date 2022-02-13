@@ -47,11 +47,11 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
-#if 0
-
-TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
+TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   init_console();
+
   using G  = routes_csr_graph_type;
+#if 0
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   auto frankfurt     = find_frankfurt(g);
@@ -468,6 +468,6 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
     REQUIRE(10 == size(vertices(g))); // all vertices visited?
 #endif
   }
+#endif //0
 }
 
-#endif //0

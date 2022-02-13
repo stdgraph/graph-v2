@@ -4,6 +4,7 @@
 #include <vector>
 #include <concepts>
 #include <cstdint>
+#include "graph/graph.hpp"
 
 namespace std::graph::container {
 
@@ -239,10 +240,6 @@ class csr_graph {
   using index_vector_type = std::vector<VKey, index_allocator_type>;
   using v_vector_type     = std::vector<EV, v_allocator_type>;
 
-  index_vector_type row_index_; // index into col_index_ and v_
-  index_vector_type col_index_; // col_index_[n] holds the column index for v_[n]
-  v_vector_type     v_;         // edge values for non-zero entries
-
   using csr_vertex_range_type       = index_vector_type;
   using const_csr_vertex_range_type = const index_vector_type;
 
@@ -259,8 +256,8 @@ public: // Types
   using edge_value_type = EV;
   using edge_type       = VKey; // index into v_
 
-  using const_iterator = const_csr_vertex_iterator<EV, VV, GV, VKey, Alloc>;
-  using iterator       = csr_vertex_iterator<EV, VV, GV, VKey, Alloc>;
+  using const_iterator = typename index_vector_type::const_iterator;
+  using iterator       = typename index_vector_type::iterator;
 
 public: // Construction/Destruction
   constexpr csr_graph()                 = default;
@@ -388,15 +385,33 @@ public: // Operations
     return row_index_.begin() + key;
   }
 
-public: // Iterators
-  iterator       begin() { return iterator(*this, row_index_.begin()); }
-  const_iterator begin() const { return const_iterator(*this, row_index_.begin()); }
-  const_iterator cbegin() const { return const_iterator(*this, row_index_.begin()); }
+private: // Iterators
+  iterator       begin() { return row_index_.begin(); }
+  const_iterator begin() const { return row_index_.begin(); }
+  const_iterator cbegin() const { return row_index_.begin(); }
 
-  iterator       end() { return iterator(*this, row_index_.end()); }
-  const_iterator end() const { return const_iterator(*this, row_index_.end()); }
-  const_iterator cend() const { return const_iterator(*this, row_index_.end()); }
+  iterator       end() { return row_index_.end(); }
+  const_iterator end() const { return row_index_.end(); }
+  const_iterator cend() const { return row_index_.end(); }
 
+private:                        // Member variables
+  index_vector_type row_index_; // starting index into col_index_ and v_
+  index_vector_type col_index_; // col_index_[n] holds the column index (aka target)
+  v_vector_type     v_;         // v_[n]         holds the edge value for col_index_[n]
+
+private: // tag_invoke properties
+  friend constexpr index_vector_type& tag_invoke(::std::graph::access::vertices_fn_t, csr_graph& g) {
+    return g.row_index_;
+  }
+  friend constexpr const index_vector_type& tag_invoke(::std::graph::access::vertices_fn_t, const csr_graph& g) {
+    return g.row_index_;
+  }
+
+  friend vertex_key_type tag_invoke(::std::graph::access::vertex_key_fn_t, const csr_graph& g, const_iterator ui) {
+    return static_cast<vertex_key_type>(ui - g.row_index_.begin());
+  }
+
+private: //friends
   friend const_csr_vertex_iterator<EV, VV, GV, VKey, Alloc>;
   friend csr_vertex_iterator<EV, VV, GV, VKey, Alloc>;
 };
