@@ -53,6 +53,7 @@
     - [ ] directed_adjacency_vector
     - [ ] undirected_adjacency_list
     - [ ] graph with map-based vertices (requires different algorithm impl)
+    - [ ] edge_value_extractor is a "projection"
 - [ ] Testing Patterns
   - [x] Validate content
   - [ ] Validate graph API
