@@ -1,0 +1,232 @@
+\documentclass[10pt,onecolumn]{article}
+
+\usepackage[
+	left=0.5in,
+	top=0.5in,
+	right=0.5in,
+	bottom=0.75in]{geometry}
+\usepackage{listings}
+\usepackage{soul}
+\usepackage{Times}
+\usepackage{url}
+\usepackage{xcolor}
+
+\definecolor{light-gray}{gray}{0.95}
+\definecolor{medium-gray}{gray}{0.33}
+
+\lstset
+{
+	language=C++,
+	backgroundcolor=\color{light-gray},
+	basicstyle=\ttfamily,
+	breaklines=true,
+	commentstyle=\color{medium-gray},
+	frame=single,
+	framerule=0pt,
+	showstringspaces=false
+}
+
+\begin{document}
+
+\begin{titlepage}
+~
+\vfill
+\begin{center}
+\LARGE
+\textbf{Graph Library}\\
+\vspace{12pt}
+\normalsize
+	Phillip Ratzloff (SAS Institute)\\
+	Richard Dosselmann (University of Regina)\\
+	Michael Wong (Codeplay)\\
+	Matthew Galati (SAS Institute)\\	
+	Andrew Lumsdaine (PNNL/University of Washington)\\
+	Jens Maurer\\
+	Domagoj Saric\\
+	Jesun Firoz\\
+	Kevin Deweese\\
+\end{center}
+\vspace{32pt}
+\begin{tabular}{ll}
+\textbf{Document Number:} & P1709R3\\
+\textbf{Date:} & \hl{March \#}, 2022 (mailing)\\ 
+\textbf{Project:} & ISO JTC1/SC22/WG21: Programming Language C++\\
+\textbf{Audience:} & SG19, WG21, LEWG\\
+\textbf{Emails:}
+	&\texttt{phil.ratzloff@sas.com}\\
+	&\texttt{dosselmr@cs.uregina.ca}\\
+	&\texttt{michael@codeplay.com}\\
+	&\texttt{Matthew.Galati@sas.com}\\
+\textbf{Reply to:}
+	&\texttt{\textbf{phil.ratzloff@sas.com}}\\
+\end{tabular}
+\vfill
+~
+\end{titlepage}
+
+\tableofcontents
+
+\clearpage
+
+\section{Introduction}
+This document proposes the addition of a \textbf{graph data structure} and \textbf{graph algorithms} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed data structures and algorithms.
+
+\subsection{Revision History}
+\subsubsection*{P1709R2}
+Define the \textbf{uniform API} for undirected and directed algorithms (an extended API also exists for directed graphs). Added \textbf{concepts} for undirected, directed and bidirected graphs. Refined \textbf{DFS} and \textbf{BFS} range definitions from prototype experience. Refined \textbf{shortest paths} and \textbf{transitive closure} algorithms from input and prototype experience.
+
+\subsubsection*{P1709R1}
+Rewrite with a focus on a \textbf{purely functional design}, emphasizing the algorithms and graph API. Also added \textbf{concepts} and \textbf{ranges} into the design. Addressed concerns from Cologne review to change to functional design.
+
+\subsubsection*{P1709R0}
+Focus on \textbf{object-oriented API} for data structures and example code for a few algorithms.
+
+\section{Motivation and Scope}
+A graph data structure, used in ML and other \textbf{scientific} domains, as well as \textbf{industrial} and \textbf{general} programming, does \textbf{not} presently exist in the C++ standard. In ML, a graph forms the underlying structure of an \textbf{artificial neural network} (ANN). In a \textbf{game}, a graph can be used to
+represent the \textbf{map} of a game world. In \textbf{business} environments, graphs arise as \textbf{entity relationship diagrams} (ERD) or \textbf{data flow diagrams} (DFD). In the realm of \textbf{social media}, a graph represents a \textbf{social network}.
+
+\subsection{Graph}
+ A \textit{graph} \cite{REF_graph} $G = (V, E)$ is a set of \textit{vertices} \cite{REF_graph} $V$, \textbf{points} in a space, and \textit{edges} \cite{REF_graph} $E$, \textbf{links} between these vertices. Edges may or may not be \textbf{oriented}, that is, \textit{directed} \cite{REF_graph} or \textit{undirected} \cite{REF_graph}, respectively. Moreover, edges may be \textit{weighted} \cite{REF_graph}, that is, assigned a value. Both \textbf{static} and \textbf{dynamic} implementations of a graph exist, specifically a (static) \textbf{matrix}, each having the typical advantages and disadvantages associated with static and dynamic data structures.
+
+\subsection{Data Structures}
+TBA
+
+\subsubsection{Adjacency List}
+TBA
+
+\subsubsection{Adjacency Array}
+TBA
+
+\subsubsection{Adjacency Matrix}
+TBA
+
+\subsection{Algorithms}
+TBA
+
+\subsubsection{Depth-First Search}
+The depth-first search \cite{REF_graph} (DFS) ...
+
+\subsubsection{Breadth-First Search}
+The breadth-First search \cite{REF_graph} (BFS) ...
+
+\subsubsection{Topological Search}
+The Topological search \cite{REF_} (TopoSort) ...
+
+\subsubsection{Dijkstra's Algorithm}
+Dijkstra's algorithm \cite{REF_} ...
+
+\subsubsection{Bellman-Ford Algorithm}
+The Bellman-Ford algorithm \cite{REF_} ...
+
+\subsubsection{Connected Components}
+Connected components \cite{REF_} ...
+
+\subsubsection{Strongly Connected Components}
+Strongly connected components \cite{REF_} ...
+
+\subsubsection{Biconnected Components}
+Biconnected components \cite{REF_} ...
+
+\subsubsection{Articulation Points}
+Articulation points \cite{REF_} ...
+
+\subsubsection{Transitive Closure}
+Transitive closure \cite{REF_} ...
+
+\subsubsection{Other Algorithms}
+The following algorithms have been identified for consideration in (an) \textbf{additional} paper(s).
+
+\begin{enumerate}
+\item Minimum spanning tree
+\item Maximum flow
+\item Matching
+\item Bipartite matching
+\item Min-cost network flow
+\item Isomorphism
+\item Subgraph isomorphism
+\item Centrality
+\item Minimum cut
+\item Cycle detection
+\item Path enumeration
+\item Community detection
+\item Clique enumeration
+\item Find triangles
+\item Lowest common ancestor
+\item Dominator algorithms
+\end{enumerate}
+
+\section{Impact on the Standard}
+This proposal is a pure \textbf{library} extension.
+
+\section{Design Decisions}
+TBA
+
+\subsection{TBA}
+TBA
+
+\section{Technical Specifications}
+TBA
+
+\subsection{Header \texttt{<graph>} synopsis [graph.syn]}
+
+\begin{lstlisting}
+namespace std {
+
+namespace graph {
+
+// ...
+
+template <typename G>
+void reserve_vertices (G& g, vertex_size_t<G>);
+
+template <typename G>
+void resize_vertices (G& g, vertex_size_t<G>);
+
+// ...
+
+}
+
+}
+\end{lstlisting}
+
+\vspace{10pt}
+
+\noindent The following is a synopsis of the functions and classes above.
+
+\begin{lstlisting}
+template <typename G>
+void reserve_vertices (G& g, vertex_size_t<G>);
+\end{lstlisting}
+%
+\begin{itemize}
+\item Preconditions: TBA.
+\item Effects: TBA.
+\item Complexity: TBA.
+\item Returns: TBA.
+\item Remarks: TBA.
+\end{itemize}
+
+\vspace{10pt}
+
+\begin{lstlisting}
+template <typename G>
+void resize_vertices (G& g, vertex_size_t<G>);
+\end{lstlisting}
+%
+\begin{itemize}
+\item Preconditions: TBA.
+\item Effects: TBA.
+\item Complexity: TBA.
+\item Returns: TBA.
+\item Remarks: TBA.
+\end{itemize}
+
+\section{Acknowledgements}
+Michael Wong's work is made possible by Codeplay Software Ltd., ISOCPP Foundation, Khronos and the Standards Council of Canada.  The authors of this proposal wish to further thank the members of SG19 for their contributions.
+
+\footnotesize
+\bibliographystyle{unsrt}
+\bibliography{graph}
+\normalsize
+
+\end{document}

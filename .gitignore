@@ -1,17 +1,20 @@
-
 #Ignore thumbnails created by Windows
 Thumbs.db
+
 #Ignore tool config
 .vscode/
+
 #Ignore files related to cmake
 [Bb]uild*/
 CMakeUserPresets.json
+
 #Ignore files related to conan
 conan.lock
 conanbuildinfo.cmake
 conanbuildinfo.txt
 conanfile.txt
 conaninfo.txt
+
 #Ignore files built by Visual Studio
 *.obj
 *.exe
@@ -41,3 +44,7 @@ _ReSharper*/
 out/
 packages/
 .vs/
+
+#Ignore generated doc files (for now)
+doc/*.pdf
+doc/*.gz
