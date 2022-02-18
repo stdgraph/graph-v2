@@ -34,7 +34,7 @@ class csr_graph;
 /// <typeparam name="GV"></typeparam>
 /// <typeparam name="Alloc"></typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
-class csr_vertex_values {
+class csr_row_values {
 protected:
   using graph_type = csr_graph<EV, VV, GV, VKey, Alloc>;
 
@@ -47,15 +47,15 @@ protected:
   using vertex_value_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
   using vertex_values_type          = vector<vertex_value_type, vertex_value_allocator_type>;
 
-  constexpr csr_vertex_values(Alloc& alloc) : vertex_values_(alloc) {}
+  constexpr csr_row_values(Alloc& alloc) : vertex_values_(alloc) {}
 
-  constexpr csr_vertex_values()                         = default;
-  constexpr csr_vertex_values(const csr_vertex_values&) = default;
-  constexpr csr_vertex_values(csr_vertex_values&&)      = default;
-  constexpr ~csr_vertex_values()                        = default;
+  constexpr csr_row_values()                      = default;
+  constexpr csr_row_values(const csr_row_values&) = default;
+  constexpr csr_row_values(csr_row_values&&)      = default;
+  constexpr ~csr_row_values()                     = default;
 
-  constexpr csr_vertex_values& operator=(const csr_vertex_values&) = default;
-  constexpr csr_vertex_values& operator=(csr_vertex_values&&) = default;
+  constexpr csr_row_values& operator=(const csr_row_values&) = default;
+  constexpr csr_row_values& operator=(csr_row_values&&) = default;
 
   template <ranges::forward_range VRng, class VValueFnc>
   // VValueFnc is a projection with default of identity
@@ -87,15 +87,15 @@ private: // tag_invoke properties
 };
 
 template <class EV, class GV, integral VKey, class Alloc>
-class csr_vertex_values<EV, void, GV, VKey, Alloc> {
-  constexpr csr_vertex_values(Alloc& alloc) {}
-  constexpr csr_vertex_values()                         = default;
-  constexpr csr_vertex_values(const csr_vertex_values&) = default;
-  constexpr csr_vertex_values(csr_vertex_values&&)      = default;
-  constexpr ~csr_vertex_values()                        = default;
+class csr_row_values<EV, void, GV, VKey, Alloc> {
+  constexpr csr_row_values(Alloc& alloc) {}
+  constexpr csr_row_values()                      = default;
+  constexpr csr_row_values(const csr_row_values&) = default;
+  constexpr csr_row_values(csr_row_values&&)      = default;
+  constexpr ~csr_row_values()                     = default;
 
-  constexpr csr_vertex_values& operator=(const csr_vertex_values&) = default;
-  constexpr csr_vertex_values& operator=(csr_vertex_values&&) = default;
+  constexpr csr_row_values& operator=(const csr_row_values&) = default;
+  constexpr csr_row_values& operator=(csr_row_values&&) = default;
 };
 
 
@@ -109,8 +109,8 @@ class csr_vertex_values<EV, void, GV, VKey, Alloc> {
 /// <typeparam name="VKey">Vertex Key type</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
-class csr_graph_base : protected csr_vertex_values<EV, VV, GV, VKey, Alloc> {
-  using base_type = csr_vertex_values<EV, VV, GV, VKey, Alloc>;
+class csr_graph_base : protected csr_row_values<EV, VV, GV, VKey, Alloc> {
+  using base_type = csr_row_values<EV, VV, GV, VKey, Alloc>;
 
   using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
   using v_allocator_type     = typename allocator_traits<Alloc>::template rebind_alloc<EV>;
@@ -343,6 +343,15 @@ protected:
       ++edge_count;
     }
     return pair(max_key, edge_count);
+  }
+
+  template <class VRng, class VValueFnc>
+  constexpr void load_vertices(VRng& vrng, const VValueFnc& vvalue_fnc) {
+    if constexpr (!is_void_v<VV>) {
+      using fnc_value_t = decltype(vvalue_fnc(declval<ranges::range_value_t<VRng>>()));
+      static_assert(is_convertible_v<fnc_value_t, VV>);
+      load_vertex_values(vrng, vvalue_fnc);
+    }
   }
 
   template <class ERng, class EKeyFnc, class EValueFnc>

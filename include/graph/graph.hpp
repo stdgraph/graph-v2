@@ -58,9 +58,9 @@ concept sourced_edge_range =
 
 template <class G>
 concept incidence_graph = ranges::range<vertex_range_t<G>> && ranges::range<vertex_edge_range_t<G>> &&
-                          edge_range<G, vertex_edge_range_t<G>>;
-                          //!is_same_v<vertex_edge_range_t<G>, vertex_range_t<G>> && 
-                          // CSR fails this condition b/c row_index & col_index are both index_vectors; common?
+      edge_range<G, vertex_edge_range_t<G>>;
+//!is_same_v<vertex_edge_range_t<G>, vertex_range_t<G>> &&
+// CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
 template <class G>
 concept sourced_incidence_graph = incidence_graph<G> && sourced_edge_range<G, vertex_edge_range_t<G>>;
@@ -169,6 +169,35 @@ namespace view {
     VKey target_key;
     E&   edge;
   };
+
+  //
+  // edge (combines targeted_edge, sourced_edge)
+  //
+  template <bool Sourced, class VKey, class E, class EV>
+  struct edge {
+    VKey source_key;
+    VKey target_key;
+    E&   edge;
+    EV&  value;
+  };
+  template <class VKey, class E, class EV>
+  struct edge<false, VKey, E, EV> {
+    VKey target_key;
+    E&   edge;
+    EV&  value;
+  };
+  template <class VKey, class E>
+  struct edge<true, VKey, E, void> {
+    VKey source_key;
+    VKey target_key;
+    E&   edge;
+  };
+  template <class VKey, class E>
+  struct edge<false, VKey, E, void> {
+    VKey target_key;
+    E&   edge;
+  };
+
 
   //
   // neighbor

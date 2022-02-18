@@ -26,6 +26,7 @@
     - [x] Add view types in std::graph::view
       - [ ] Use the types in the view functions
       - [ ] Add optional value function object parameters to the functions
+      - [ ] combine targeted_edge & sourced_edge; use bool Sourced template parameter to add Sourced key
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -43,13 +44,14 @@
     - [ ] Articulation Points
     - [ ] Transitive Closure
 - Graph Containers (data structures)
-    - [ ] vol_graph
     - [ ] **csr_graph**
       - [ ] Implement graph, vertex, edge
       - [ ] Load from CSV file
       - [ ] Validate with vol_graph tests
+      - [ ] use view structs for loaders, ctors and initializer lists
     - [ ] edge_list_graph
     - [ ] dynamic_graph: vol template params for vertex & edge containers (like stack/queue)
+      - [ ] use view structs for loaders, ctors and initializer lists
     - [ ] directed_adjacency_vector
     - [ ] undirected_adjacency_list
     - [ ] graph with map-based vertices (requires different algorithm impl)
@@ -108,6 +110,7 @@
 - [ ] Does a LaTeX document take fewer pages than equivilent in Google Docs?
 - [ ] SG19 Questions
   - [ ] key vs. id?
+- [ ] Can CSR edges have a void value?
 
 ## Resolved
 ### ToDo Completed
