@@ -45,13 +45,13 @@
     - [ ] Transitive Closure
 - Graph Containers (data structures)
     - [ ] **csr_graph**
-      - [ ] Implement graph, vertex, edge
+      - [x] Implement graph, vertex, edge
       - [ ] Load from CSV file
       - [ ] Validate with vol_graph tests
-      - [ ] use view structs for loaders, ctors and initializer lists
+      - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer lists
     - [ ] edge_list_graph
     - [ ] dynamic_graph: vol template params for vertex & edge containers (like stack/queue)
-      - [ ] use view structs for loaders, ctors and initializer lists
+      - [ ] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer 
     - [ ] directed_adjacency_vector
     - [ ] undirected_adjacency_list
     - [ ] graph with map-based vertices (requires different algorithm impl)
