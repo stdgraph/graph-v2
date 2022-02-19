@@ -15,10 +15,10 @@
 //
 // load_edges(erng, eproj) -> [ukey,vkey]
 // load_edges(erng, eproj) -> [ukey,vkey, eval]
-// 
+//
 // load_edges(erng, eproj) -> [ukey,vkey]
 // load_edges(erng, eproj) -> [ukey,vkey, eval]
-// 
+//
 // load_edges(erng, eproj, vrng, vproj) -> [ukey,vkey],       [ukey,vval]
 // load_edges(erng, eproj, vrng, vproj) -> [ukey,vkey, eval], [ukey,vval]
 //
@@ -52,7 +52,7 @@ class csr_graph;
 /// <typeparam name="Alloc"></typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
 class csr_row_values {
-protected:
+public:
   using graph_type = csr_graph<EV, VV, GV, VKey, Alloc>;
 
   using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
@@ -62,9 +62,11 @@ protected:
   using vertex_type                 = vertex_key_type;
   using vertex_value_type           = VV;
   using vertex_value_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
-  using vertex_values_type          = vector<vertex_value_type, vertex_value_allocator_type>;
+  using values_type                 = vector<vertex_value_type, vertex_value_allocator_type>;
 
-  constexpr csr_row_values(Alloc& alloc) : vertex_values_(alloc) {}
+  using size_type = ranges::range_size_t<values_type>;
+
+  constexpr csr_row_values(Alloc& alloc) : values_(alloc) {}
 
   constexpr csr_row_values()                      = default;
   constexpr csr_row_values(const csr_row_values&) = default;
@@ -76,15 +78,20 @@ protected:
 
   template <ranges::forward_range VRng, class VValueFnc>
   // VValueFnc is a projection with default of identity
-  constexpr void load_vertex_values(const VRng& vrng, const VValueFnc& vvalue_fnc) {
+  constexpr void load_values(const VRng& vrng, const VValueFnc& vvalue_fnc) {
     if constexpr (ranges::sized_range<VRng>)
-      vertex_values_.reserve(vrng.size());
+      values_.reserve(vrng.size());
     for (auto&& vvalue : vrng)
-      vertex_values_.push_back(vvalue_fnc(vvalue));
+      values_.push_back(vvalue_fnc(vvalue));
   }
 
-protected: // Member variables
-  vertex_values_type vertex_values_;
+  constexpr size_type size() const noexcept { return values_.size(); }
+
+  constexpr void reserve(size_type new_cap) { values_.reserve(new_cap); }
+  constexpr void resize(size_type n) { values_.resize(n); }
+
+private: // Member variables
+  values_type values_;
 
 private: // tag_invoke properties
   friend constexpr vertex_value_type&
@@ -92,20 +99,24 @@ private: // tag_invoke properties
     static_assert(ranges::contiguous_range<index_vector_type>,
                   "row_index_ must be a contiguous range to evaluate uidx");
     auto uidx = &u - g.row_index_.data();
-    return g.vertex_values_[uidx];
+    return g.values_[uidx];
   }
   friend constexpr const vertex_value_type&
   tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<index_vector_type>,
                   "row_index_ must be a contiguous range to evaluate uidx");
     auto uidx = &u - g.row_index_.data();
-    return g.vertex_values_[uidx];
+    return g.values_[uidx];
   }
 };
 
 template <class EV, class GV, integral VKey, class Alloc>
 class csr_row_values<EV, void, GV, VKey, Alloc> {
+public:
+  using size_type = size_t;
+
   constexpr csr_row_values(Alloc& alloc) {}
+
   constexpr csr_row_values()                      = default;
   constexpr csr_row_values(const csr_row_values&) = default;
   constexpr csr_row_values(csr_row_values&&)      = default;
@@ -113,6 +124,16 @@ class csr_row_values<EV, void, GV, VKey, Alloc> {
 
   constexpr csr_row_values& operator=(const csr_row_values&) = default;
   constexpr csr_row_values& operator=(csr_row_values&&) = default;
+
+  constexpr size_type size() const noexcept { return 0; }
+
+  constexpr void reserve(size_type new_cap) {}
+  constexpr void resize(size_type n) {}
+
+  template <ranges::forward_range VRng, class VValueFnc>
+  constexpr void load_values(const VRng& vrng, const VValueFnc& vvalue_fnc) {
+    //static_assert(false, "vertex values being loaded when VV is void for csr_graph");
+  }
 };
 
 
@@ -126,9 +147,7 @@ class csr_row_values<EV, void, GV, VKey, Alloc> {
 /// <typeparam name="VKey">Vertex Key type</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
-class csr_graph_base : protected csr_row_values<EV, VV, GV, VKey, Alloc> {
-  using base_type = csr_row_values<EV, VV, GV, VKey, Alloc>;
-
+class csr_graph_base {
   using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
   using v_allocator_type     = typename allocator_traits<Alloc>::template rebind_alloc<EV>;
 
@@ -140,6 +159,8 @@ class csr_graph_base : protected csr_row_values<EV, VV, GV, VKey, Alloc> {
 
   using csr_vertex_edge_range_type       = index_vector_type;
   using const_csr_vertex_edge_range_type = const index_vector_type;
+
+  using row_values_type = csr_row_values<EV, VV, GV, VKey, Alloc>;
 
 public: // Types
   using graph_type = csr_graph_base<EV, VV, GV, VKey, Alloc>;
@@ -190,7 +211,7 @@ public: // Construction/Destruction
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   constexpr csr_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
-        : base_type(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
+        : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
 
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng))
@@ -200,9 +221,7 @@ public: // Construction/Destruction
     auto [max_key, edge_count] = max_vertex_key(erng, ekey_fnc);
 
     load_edges(erng, ekey_fnc, evalue_fnc, max_key, edge_count);
-    if (!is_void_v<vertex_value_type>) {
-      this->vertex_values_.resize(row_index_.size());
-    }
+    row_value_.resize(row_index_.size());
   }
 
   /// Constructor that takes edge ranges to create the csr graph.
@@ -233,7 +252,7 @@ public: // Construction/Destruction
                            VRng&            vrng,
                            const VValueFnc& vvalue_fnc,
                            Alloc            alloc = Alloc())
-        : base_type(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
+        : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
 
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng))
@@ -246,11 +265,7 @@ public: // Construction/Destruction
       max_key = max(max_key, static_cast<vertex_key_type>(ranges::size(vrng) - 1));
 
     load_edges(erng, ekey_fnc, evalue_fnc, max_key, edge_count);
-    if (!is_void_v<vertex_value_type>) {
-      this->load_vertex_values(vrng, vvalue_fnc);
-      //this->vertex_values_.resize(row_index_.size() - 1);
-      assert(this->vertex_values_.size() == row_index_.size() - 1); // what to do if not the same?
-    }
+    row_value_.load_values(vrng, vvalue_fnc);
   }
 
   /// Constructor that takes edge ranges to create the csr graph.
@@ -283,11 +298,10 @@ public: // Construction/Destruction
                            vertex_key_type  max_vertex_key,
                            size_t           edge_count = 0,
                            Alloc            alloc      = Alloc())
-        : base_type(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
+        : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
 
     load_edges(erng, ekey_fnc, evalue_fnc, max_vertex_key, edge_count);
-    if (!is_void_v<vertex_value_type>)
-      this->vertex_values_.resize(row_index_.size() - 1);
+    row_value_.resize(row_index_.size() - 1);
   }
 
   /// Constructor that takes edge ranges to create the csr graph.
@@ -322,14 +336,12 @@ public: // Construction/Destruction
                            vertex_key_type  max_vertex_key,
                            size_t           edge_count = 0,
                            Alloc            alloc      = Alloc())
-        : base_type(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
+        : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
 
     load_edges(erng, ekey_fnc, evalue_fnc, max_vertex_key, edge_count);
-    if (!is_void_v<vertex_value_type>) {
-      load_vertex_values(vrng, vvalue_fnc);
-      //this->vertex_values_.resize(row_index_.size() - 1);
-      assert(this->vertex_values_.size() == row_index_.size() - 1); // what to do if not the same?
-    }
+    row_value_.load_values(vrng, vvalue_fnc);
+    //this->vertex_values_.resize(row_index_.size() - 1);
+    //assert(this->vertex_values_.size() == row_index_.size() - 1); // what to do if not the same?
   }
 
   /// Constructor for easy creation of a graph that takes an initializer
@@ -367,7 +379,7 @@ protected:
     if constexpr (!is_void_v<VV>) {
       using fnc_value_t = decltype(vvalue_fnc(declval<ranges::range_value_t<VRng>>()));
       static_assert(is_convertible_v<fnc_value_t, VV>);
-      load_vertex_values(vrng, vvalue_fnc);
+      load_values(vrng, vvalue_fnc);
     }
   }
 
@@ -415,6 +427,7 @@ private:                        // Member variables
   index_vector_type row_index_; // starting index into col_index_ and v_
   index_vector_type col_index_; // col_index_[n] holds the column index (aka target)
   v_vector_type     v_;         // v_[n]         holds the edge value for col_index_[n]
+  row_values_type   row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
 
 private: // tag_invoke properties
   friend constexpr vertices_type tag_invoke(::std::graph::access::vertices_fn_t, csr_graph_base& g) {
