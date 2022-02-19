@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/view/vertices_view.hpp"
-#include "graph/view/incidence_edge_view.hpp"
-#include "graph/view/adjacency_edge_view.hpp"
+#include "graph/views/vertices_view.hpp"
+#include "graph/views/incidence_edge_view.hpp"
+#include "graph/views/adjacency_edge_view.hpp"
 #include "graph/container/csr_graph.hpp"
 #include <cassert>
 #ifdef _MSC_VER

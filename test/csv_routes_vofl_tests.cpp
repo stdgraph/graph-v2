@@ -2,9 +2,9 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/algorithm/dijkstra_book.hpp"
-#include "graph/view/vertices_view.hpp"
-#include "graph/view/incidence_edge_view.hpp"
-#include "graph/view/adjacency_edge_view.hpp"
+#include "graph/views/vertices_view.hpp"
+#include "graph/views/incidence_edge_view.hpp"
+#include "graph/views/adjacency_edge_view.hpp"
 //#include "graph/view/edge_view.hpp"
 #include "graph/container/dynamic_graph.hpp"
 #include <cassert>

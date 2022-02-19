@@ -26,7 +26,7 @@
 #endif
 
 #include "graph/graph.hpp"
-#include "graph/view/vertices_view.hpp"
+#include "graph/views/vertices_view.hpp"
 #include <set>
 #include <algorithm>
 #include <string_view>
