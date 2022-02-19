@@ -11,7 +11,24 @@
 //  allow separation of construction and load
 //  allow multiple calls to load edges as long as subsequent edges have ukey >= last vertex (append)
 
-
+// load_vertices(vrng, vvalue_fnc) -> [ukey,vval]
+//
+// load_edges(erng, eproj) -> [ukey,vkey]
+// load_edges(erng, eproj) -> [ukey,vkey, eval]
+// 
+// load_edges(erng, eproj) -> [ukey,vkey]
+// load_edges(erng, eproj) -> [ukey,vkey, eval]
+// 
+// load_edges(erng, eproj, vrng, vproj) -> [ukey,vkey],       [ukey,vval]
+// load_edges(erng, eproj, vrng, vproj) -> [ukey,vkey, eval], [ukey,vval]
+//
+// load_edges(initializer_list<[ukey,vkey]>
+// load_edges(initializer_list<[ukey,vkey,eval]>
+//
+// [ukey,vval]      <-- copyable_vertex<VKey,VV>
+// [ukey,vkey]      <-- copyable_edge<VKey,void>
+// [ukey,vkey,eval] <-- copyable_edge<VKey,EV>
+//
 namespace std::graph::container {
 
 //
