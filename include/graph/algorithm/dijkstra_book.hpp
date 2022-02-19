@@ -53,7 +53,7 @@ auto dijkstra_book(
     //extension:
     //for (auto&& [vkey, uv, w] : std::graph::edges_view(g, u, weight)) {
     //
-    for (auto&& [vkey, uv] : view::edges_view(g, ukey)) { // see zip
+    for (auto&& [vkey, uv] : views::edges_view(g, ukey)) { // see zip
       weight_type w = weight(uv);
       if (distance[ukey] + w < distance[vkey]) {
         distance[vkey] = distance[ukey] + w;
@@ -70,7 +70,7 @@ void vertex_key_example(G&& g) {
   auto ui   = begin(vertices(g));
   auto key = vertex_key(g,ui);
 
-  for (auto&& [ukey, u] : view::vertices_view(g)) { //
+  for (auto&& [ukey, u] : views::vertices_view(g)) { //
   }
 }
 

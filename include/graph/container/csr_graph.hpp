@@ -80,7 +80,7 @@ public:
   constexpr csr_row_values& operator=(csr_row_values&&) = default;
 
   template <ranges::forward_range VRng, class Proj = identity>
-  requires view::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, VV>
+  requires views::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_values(VRng&& vrng, Proj&& projection, size_type vertex_count = 0) {
     if constexpr (ranges::sized_range<VRng>)
       vertex_count = max(vertex_count, ranges::size(vrng));
@@ -135,7 +135,7 @@ public:
   constexpr void resize(size_type n) {}
 
   template <ranges::forward_range VRng, class Proj = identity>
-  requires view::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, void>
+  requires views::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, void>
   constexpr void load_values(VRng&& vrng, Proj&& projection, size_type vertex_count = 0) {
     // do nothing when VV=void
   }
@@ -381,7 +381,7 @@ protected:
 
 public:
   template <class VRng, class Proj = identity>
-  requires view::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, VV>
+  requires views::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_vertices(VRng& vrng, const Proj& projection) { row_value_.load_values(vrng, projection); }
 
   template <class ERng, class EKeyFnc, class EValueFnc>
@@ -416,7 +416,7 @@ public:
   }
 
   template <ranges::forward_range ERng, class Proj = identity>
-  requires view::copyable_edge<invoke_result<Proj, ranges::range_value_t<ERng>>, VKey, EV>
+  requires views::copyable_edge<invoke_result<Proj, ranges::range_value_t<ERng>>, VKey, EV>
   constexpr vertex_key_type
   load_edges(ERng&& erng, Proj&& projection, vertex_key_type max_vertex_key = 0, size_type edge_count = 0) {
     if (ranges::sized_range<ERng>)

@@ -114,7 +114,7 @@ concept has_contains_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G
   { contains_edge(g, ukey, vkey) } -> convertible_to<bool>;
 };
 
-namespace view {
+namespace views {
   // experimental
 
   //
