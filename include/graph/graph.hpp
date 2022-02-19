@@ -174,7 +174,7 @@ namespace views {
   template <class VKey, class E, class EV>
   struct edge<VKey, false, E, EV> {
     VKey target_key;
-    E&   edge;
+    E    edge;
     EV   value;
   };
   template <class VKey, class E>
@@ -231,13 +231,13 @@ namespace views {
   template <class VKey, class V, class VV>
   struct neighbor {
     VKey target_key;
-    V&   target;
-    VV&  target_value;
+    V    target;
+    VV   target_value;
   };
   template <class VKey, class V>
   struct neighbor<VKey, V, void> {
     VKey target_key;
-    V&   target;
+    V    target;
   };
 
   //
@@ -249,7 +249,7 @@ namespace views {
   template <class T, class VKey, class EV>
   concept copyable_edge = convertible_to<T, copyable_edge_t<VKey, EV>>;
 
-} // namespace view
+} // namespace views
 
 } // namespace std::graph
 

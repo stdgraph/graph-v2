@@ -110,9 +110,8 @@ template <typename G>
 auto load_graph(csv::string_view csv_file) {
   using namespace std::graph;
 
-  using graph_type       = G;
-  using vertex_key_type  = vertex_key_t<graph_type>;
-  using vertex_reference = vertex_reference_t<graph_type>;
+  using graph_type      = G;
+  using vertex_key_type = vertex_key_t<graph_type>;
 
   // Scan the CSV to get the unique city names (cols 0 & 1)
   auto&& [city_names, csv_row_cnt] = unique_vertex_labels(csv_file, 0UL, 1UL);
@@ -124,24 +123,19 @@ auto load_graph(csv::string_view csv_file) {
   g.load_vertices(city_names, city_name_getter);
 
   // load edges
-  auto vertex_to_name = [&g](vertex_reference u) { return vertex_value(g, u); }; // projection
-
-  auto ekey_fnc = [&g](const csv::CSVRow& row) { // get edge key
-    auto from_key = find_city_key(g, row[0].get_sv());
-    auto to_key   = find_city_key(g, row[1].get_sv());
-    assert(from_key < size(vertices(g)) && to_key < size(vertices(g)));
-    return std::pair{from_key, to_key};
-  };
-  auto evalue_fnc = [&g](const csv::CSVRow& row) { // get edge weight
-    auto to_key = find_city_key(g, row[1].get<std::string_view>());
-    auto dist   = row[2].get<double>();
-    assert(to_key < size(vertices(g)));
-    return dist;
+  auto eproj = [&g](const csv::CSVRow& row) {
+    using edge_value_type    = std::remove_cvref_t<edge_value_t<G>>;
+    using copyable_edge_type = std::graph::views::copyable_edge_t<vertex_key_type, edge_value_type>;
+    copyable_edge_type retval{};
+    retval.source_key = find_city_key(g, row[0].get_sv());
+    retval.target_key = find_city_key(g, row[1].get_sv());
+    retval.value      = row[2].get<double>();
+    return retval;
   };
 
   const vertex_key_type max_city_key = static_cast<vertex_key_type>(size(city_names)) - 1;
   csv::CSVReader        reader(csv_file); // CSV file reader
-  g.load_edges(max_city_key, reader, ekey_fnc, evalue_fnc);
+  g.load_edges(max_city_key, reader, eproj);
 
   return g;
 }
@@ -193,7 +187,7 @@ OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
 }
 
 
-void utf8_append(std::string& out, const char ch);
+void        utf8_append(std::string& out, const char ch);
 std::string quoted_utf8(const std::string& s);
 std::string quoted_utf8(const std::string_view& s);
 std::string quoted_utf8(const char* s);
