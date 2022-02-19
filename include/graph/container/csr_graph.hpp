@@ -13,25 +13,41 @@
 //  allow separation of construction and load
 //  allow multiple calls to load edges as long as subsequent edges have ukey >= last vertex (append)
 
-// load_vertices(vrng, vvalue_fnc) -> [ukey,vval]
+// load_vertices(vrng, vproj) <- [ukey,vval]
+// load_edges(erng, eproj) <- [ukey, vkey, eval]
+// load(erng, eproj, vrng, vproj): load_edges(erng,eproj), load_vertices(vrng,vproj)
 //
-// load_edges(erng, eproj) -> [ukey,vkey]
-// load_edges(erng, eproj) -> [ukey,vkey, eval]
-//
-// load_edges(erng, eproj) -> [ukey,vkey]
-// load_edges(erng, eproj) -> [ukey,vkey, eval]
-//
-// load_edges(erng, eproj, vrng, vproj) -> [ukey,vkey],       [ukey,vval]
-// load_edges(erng, eproj, vrng, vproj) -> [ukey,vkey, eval], [ukey,vval]
-//
-// load_edges(initializer_list<[ukey,vkey]>
-// load_edges(initializer_list<[ukey,vkey,eval]>
+// csr_graph(initializer_list<[ukey,vkey,eval]>) : load_edges(erng,eproj)
+// csr_graph(erng, eproj) : load_edges(erng,eproj)
+// csr_graph(erng, eproj, vrng, vproj): load(erng, eproj, vrng, vprog)
 //
 // [ukey,vval]      <-- copyable_vertex<VKey,VV>
-// [ukey,vkey]      <-- copyable_edge<VKey,void>
 // [ukey,vkey,eval] <-- copyable_edge<VKey,EV>
 //
 namespace std::graph::container {
+
+/// <summary>
+/// Scans a range used for input for loading edges to determine the largest vertex key used.
+/// </summary>
+/// <typeparam name="EProj">Edge Projection to convert from the input object to a copyable_edge_t<VKey,EV></typeparam>
+/// <typeparam name="VKey">Vertex Key type</typeparam>
+/// <typeparam name="EV">Edge Value type</typeparam>
+/// <param name="erng">Input range to scan</param>
+/// <param name="eprojection">Projects (converts) a value in erng to a copyable_edge_t<VKey,EV></param>
+/// <returns>A pair<VKey,size_t> with the max vertex key used and the number of edges scanned.</returns>
+template <class VKey, class EV, ranges::forward_range ERng, class EProj = identity>
+requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
+constexpr auto max_vertex_key(const ERng& erng, const EProj& eprojection) {
+  size_t edge_count = 0;
+  VKey   max_key    = 0;
+  for (auto&& edge_data : erng) {
+    const views::copyable_edge_t<VKey, EV>& uv = eprojection(edge_data);
+    max_key = max(max_key, max(static_cast<VKey>(uv.source_key), static_cast<VKey>(uv.target_key)));
+    ++edge_count;
+  }
+  return pair(max_key, edge_count);
+}
+
 
 //
 // forward declarations
@@ -79,14 +95,16 @@ public:
   constexpr csr_row_values& operator=(const csr_row_values&) = default;
   constexpr csr_row_values& operator=(csr_row_values&&) = default;
 
-  template <ranges::forward_range VRng, class Proj = identity>
-  requires views::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_values(VRng&& vrng, Proj&& projection, size_type vertex_count = 0) {
+  template <ranges::forward_range VRng, class VProj = identity>
+  requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_values(const VRng& vrng, VProj projection, size_type vertex_count = 0) {
     if constexpr (ranges::sized_range<VRng>)
       vertex_count = max(vertex_count, ranges::size(vrng));
     values_.reserve(max(ranges::size(vrng), vertex_count));
     for (auto&& vvalue : vrng)
       values_.push_back(projection(vvalue));
+    if (values_.size() < vertex_count)
+      values_.resize(vertex_count);
   }
 
   constexpr size_type size() const noexcept { return values_.size(); }
@@ -134,9 +152,9 @@ public:
   constexpr void reserve(size_type new_cap) {}
   constexpr void resize(size_type n) {}
 
-  template <ranges::forward_range VRng, class Proj = identity>
-  requires views::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, void>
-  constexpr void load_values(VRng&& vrng, Proj&& projection, size_type vertex_count = 0) {
+  template <ranges::forward_range VRng, class VProj = identity>
+  requires views::copyable_vertex < invoke_result<VProj, ranges::range_value_t<VRng>>, VKey,
+  void > constexpr void load_values(const VRng& vrng, VProj projection, size_type vertex_count = 0) {
     // do nothing when VV=void
   }
 };
@@ -195,258 +213,157 @@ public: // Construction/Destruction
   constexpr csr_graph_base& operator=(const csr_graph_base&) = default;
   constexpr csr_graph_base& operator=(csr_graph_base&&) = default;
 
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param erng       The container of edge data.
-  /// @param ekey_fnc   The edge key extractor functor:
-  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc The edge value extractor functor:
-  ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                   edge_value_t<G>).
-  /// @param alloc      The allocator to use for internal containers for
-  ///                   vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph_base(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
+  constexpr csr_graph_base(const Alloc& alloc) : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {}
+
+  /// <summary>
+  /// Constructor that takes a edge range to create the CSR graph.
+  /// Edges must be ordered by source_key (enforced by asssertion).
+  /// </summary>
+  /// <typeparam name="EProj">Edge projection function</typeparam>
+  /// <param name="erng">The input range of edges</param>
+  /// <param name="eprojection">Projection function that creates a copyable_edge_t<VKey,EV> from an erng value</param>
+  /// <param name="alloc">Allocator to use for internal containers</param>
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
+  constexpr csr_graph_base(const ERng& erng, EProj eprojection = {}, const Alloc& alloc = Alloc())
         : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
 
-    // Nothing to do?
-    if (ranges::begin(erng) == ranges::end(erng))
-      return;
-
-    // Evaluate edge_count and max vertex key needed
-    auto [max_key, edge_count] = max_vertex_key(erng, ekey_fnc);
-
-    load_edges(erng, ekey_fnc, evalue_fnc, max_key, edge_count);
-    row_value_.resize(row_index_.size());
+    load_edges(erng, eprojection);
   }
 
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param erng       The container of edge data.
-  /// @param ekey_fnc   The edge key extractor functor:
-  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc The edge value extractor functor:
-  ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                   edge_value_t<G>).
-  /// @param alloc      The allocator to use for internal containers for
-  ///                   vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph_base(ERng&            erng,
-                           const EKeyFnc&   ekey_fnc,
-                           const EValueFnc& evalue_fnc,
-                           VRng&            vrng,
-                           const VValueFnc& vvalue_fnc,
-                           Alloc            alloc = Alloc())
+  /// <summary>
+  /// Constructor that takes edge range and vertex range to create the CSR graph.
+  /// Edges must be ordered by source_key (enforced by asssertion).
+  /// </summary>
+  /// <typeparam name="EProj">Edge projection function</typeparam>
+  /// <typeparam name="VProj">Vertex projection function</typeparam>
+  /// <param name="erng">The input range of edges</param>
+  /// <param name="vrng">The input range of vertices</param>
+  /// <param name="eprojection">Projection function that creates a copyable_edge_t<VKey,EV> from an erng value</param>
+  /// <param name="vprojection">Projection function that creates a copyable_vertex_t<VKey,EV> from a vrng value</param>
+  /// <param name="alloc">Allocator to use for internal containers</param>
+  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV> &&
+        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr csr_graph_base(const ERng&  erng,
+                           const VRng&  vrng,
+                           EProj        eprojection = {},
+                           VProj        vprojection = {},
+                           const Alloc& alloc       = Alloc())
         : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
 
-    // Nothing to do?
-    if (ranges::begin(erng) == ranges::end(erng))
-      return;
-
-    // Evaluate edge_count and max vertex key needed
-    auto [max_key, edge_count] = max_vertex_key(erng, ekey_fnc);
-
-    if (ranges::sized_range<VRng>)
-      max_key = max(max_key, static_cast<vertex_key_type>(ranges::size(vrng) - 1));
-
-    load_edges(erng, ekey_fnc, evalue_fnc, max_key, edge_count);
-    row_value_.load_values(vrng, vvalue_fnc, row_index_.size() - 1);
+    load(erng, vrng, eprojection, vprojection);
   }
 
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param max_vertex_key Number of vertices to reserve before loading the graph
-  /// @param max_edges      Number of edges to reserve before loading the graph
-  /// @param erng           The container of edge data.
-  /// @param ekey_fnc       The edge key extractor functor:
-  ///                       ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc     The edge value extractor functor:
-  ///                       evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                       edge_value_t<G>).
-  /// @param alloc          The allocator to use for internal containers for
-  ///                       vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph_base(ERng&            erng,
-                           const EKeyFnc&   ekey_fnc,
-                           const EValueFnc& evalue_fnc,
-                           vertex_key_type  max_vertex_key,
-                           size_t           edge_count = 0,
-                           Alloc            alloc      = Alloc())
-        : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
-
-    load_edges(erng, ekey_fnc, evalue_fnc, max_vertex_key, edge_count);
-    row_value_.resize(row_index_.size() - 1);
-  }
-
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param max_vertex_key Number of vertices to reserve before loading the graph
-  /// @param max_edges      Number of edges to reserve before loading the graph
-  /// @param erng           The container of edge data.
-  /// @param ekey_fnc       The edge key extractor functor:
-  ///                       ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc     The edge value extractor functor:
-  ///                       evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                       edge_value_t<G>).
-  /// @param alloc          The allocator to use for internal containers for
-  ///                       vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc, class VRng, class VValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph_base(ERng&            erng,
-                           const EKeyFnc&   ekey_fnc,
-                           const EValueFnc& evalue_fnc,
-                           VRng&            vrng,
-                           const VValueFnc& vvalue_fnc,
-                           vertex_key_type  max_vertex_key,
-                           size_t           edge_count = 0,
-                           Alloc            alloc      = Alloc())
-        : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
-
-    load_edges(erng, ekey_fnc, evalue_fnc, max_vertex_key, edge_count);
-    row_value_.load_values(vrng, vvalue_fnc, row_index_.size() - 1);
-  }
-
-  /// Constructor for easy creation of a graph that takes an initializer
-  /// list with a tuple with 3 edge elements: source_vertex_key,
-  /// target_vertex_key and edge_value.
-  ///
-  /// @param ilist Initializer list of tuples with source_vertex_key,
-  ///              target_vertex_key and the edge value.
-  /// @param alloc Allocator.
-  ///
-  constexpr csr_graph_base(const initializer_list<tuple<vertex_key_type, vertex_key_type, edge_value_type>>& ilist,
-                           const Alloc& alloc = Alloc())
-        : csr_graph_base(
-                ilist,
-                [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) {
-                  return pair{get<0>(e), get<1>(e)};
-                },
-                [](const tuple<vertex_key_type, vertex_key_type, edge_value_type>& e) { return get<2>(e); },
-                alloc) {}
-
-protected:
-  template <ranges::forward_range ERng, class EKeyFnc>
-  constexpr pair<vertex_key_type, size_t> max_vertex_key(const ERng& erng, const EKeyFnc& ekey_fnc) {
-    size_t          edge_count = 0;
-    vertex_key_type max_key    = 0;
-    for (auto&& [source_key, target_key] : erng) {
-      max_key = max(max_key, max(source_key, target_key));
-      ++edge_count;
-    }
-    return pair(max_key, edge_count);
-  }
+  /// <summary>
+  /// Constructor for easy creation of a graph that takes an initializer list
+  /// of copyable_edge_t<VKey,EV> -> [source_key, target_key, value].
+  /// </summary>
+  /// <param name="ilist">Initializer list of copyable_edge_t<VKey,EV> -> [source_key, target_key, value]</param>
+  /// <param name="alloc">Allocator to use for internal containers</param>
+  constexpr csr_graph_base(const initializer_list<views::copyable_edge_t<VKey, EV>>& ilist,
+                           const Alloc&                                              alloc = Alloc())
+        : csr_graph_base(ilist, identity(), alloc) {}
 
 public:
-  template <class VRng, class Proj = identity>
-  requires views::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_vertices(VRng& vrng, const Proj& projection) { row_value_.load_values(vrng, projection); }
+  /// <summary>
+  /// Load vertex values. This should be called after load_edges() to assure that there are
+  /// at least as many values as there are rows.
+  /// 
+  /// After this is called, the number of values will match the number of rows loaded if
+  /// there are fewer values than rows that exist. If more values are passed than rows
+  /// created by load_edges() then the extra values are loaded.
+  /// </summary>
+  /// <typeparam name="VProj">Projection function for vrng values</typeparam>
+  /// <param name="vrng">Range of values to load for vertices. The order of the values is preserved in the internal vector.</param>
+  /// <param name="vprojection">Projection function for vrng values</param>
+  template <ranges::forward_range VRng, class VProj = identity>
+  requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_vertices(const VRng& vrng, VProj vprojection) {
+    size_type vertex_count = row_index_.empty() ? 0 : row_index_.size() - 1; // edges loaded?
+    row_value_.load_values(vrng, vprojection, vertex_count);
+  }
 
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr void load_edges(ERng&            erng,
-                            const EKeyFnc&   ekey_fnc,
-                            const EValueFnc& evalue_fnc,
-                            vertex_key_type  max_vertex_key = 0,
-                            size_t           edge_count     = 0) {
-    if (ranges::sized_range<ERng>)
+  /// <summary>
+  /// Load the edges for the graph. 
+  /// 
+  /// Space for the col_index and v vectors is reserved if it can easily be evaluated (if the erng
+  /// is a sized range or it is a random access range). The edge_count parameter can also be supplied
+  /// to determine the number of edges to reserved. When both exist, the maximum of the two values 
+  /// is used. If the edge count still can't be pre-determined the normal processing to periodically
+  /// reallocate the internal vectors will occur.
+  /// 
+  /// Space for the row_index vector is reserved if a vertex_count > 0 is passed. If it is zero then
+  /// the normal processing to periodically reallocated the internal vectors will occur.
+  /// </summary>
+  /// <typeparam name="EProj">Edge Projection</typeparam>
+  /// <param name="erng">Input range for edges</param>
+  /// <param name="eprojection">Edge projection function</param>
+  /// <param name="vertex_count">Number of vertices to reserve</param>
+  /// <param name="edge_count">Number of edges to reserve</param>
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
+  constexpr void
+  load_edges(const ERng& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
+    // Nothing to do?
+    if (ranges::begin(erng) == ranges::end(erng)) {
+      row_index_.resize(vertex_count + 1, static_cast<vertex_key_type>(v_.size())); // add terminating row
+      return;
+    }
+
+    // reserve space for rows if caller has provided it
+    if (vertex_count > 0)
+      row_index_.reserve(vertex_count + 1); // +1 for terminating row
+
+    // Eval number of input rows and reserve space for the edges, if possible
+    if constexpr (ranges::sized_range<ERng>)
       edge_count = max(edge_count, ranges::size(erng));
-
-    row_index_.reserve(static_cast<size_t>(max_vertex_key) + 2); // +1 for zero-based-index and +1 for terminating row
+    else if constexpr (ranges::random_access_range<ERng>)
+      edge_count = max(edge_count, (ranges::end(erng) - ranges::begin(erng)));
     col_index_.reserve(edge_count);
     v_.reserve(edge_count);
 
-    // add edges
-    vertex_key_type last_ukey = 0;
+    // Add edges
+    vertex_key_type last_ukey = 0, max_vkey = 0;
     for (auto&& edge_data : erng) {
-      auto&& [ukey, vkey] = ekey_fnc(edge_data);
-      auto&& value        = evalue_fnc(edge_data);
-
-      assert(ukey >= last_ukey); // ordered by ukey?
+      auto&& [ukey, vkey, value] = eprojection(edge_data); // csr_graph requires EV!=void
+      assert(ukey >= last_ukey);                           // ordered by ukey? (requirement)
       row_index_.resize(static_cast<size_t>(ukey) + 1, static_cast<vertex_key_type>(v_.size()));
       col_index_.push_back(vkey);
-      v_.emplace_back(value);
+      v_.emplace_back(std::move(value));
       last_ukey = ukey;
+      max_vkey  = max(max_vkey, vkey);
     }
-    assert(max_vertex_key >= row_index_.size() - 1);
-    row_index_.resize(static_cast<size_t>(max_vertex_key) + 1,
-                      static_cast<vertex_key_type>(v_.size())); // add terminating row
+
+    // ukey and vkey may refer to rows that exceed the value passed in vertex_count
+    vertex_count = max(vertex_count, max(row_index_.size(), static_cast<size_type>(max_vkey + 1)));
+
+    // add any rows that haven't been added yet, and (+1) terminating row
+    row_index_.resize(vertex_count + 1, static_cast<vertex_key_type>(v_.size()));
   }
 
-  template <ranges::forward_range ERng, class Proj = identity>
-  requires views::copyable_edge<invoke_result<Proj, ranges::range_value_t<ERng>>, VKey, EV>
-  constexpr vertex_key_type
-  load_edges(ERng&& erng, Proj&& projection, vertex_key_type max_vertex_key = 0, size_type edge_count = 0) {
-    if (ranges::sized_range<ERng>)
-      edge_count = max(edge_count, ranges::size(erng));
-
-    // reserve space if possible
-    if (max_vertex_key > 0) // +1 for zero-based-index and +1 for terminating row
-      row_index_.reserve(static_cast<size_type>(max_vertex_key) + 2);
-    col_index_.reserve(edge_count);
-    v_.reserve(edge_count);
-
-    vertex_key_type last_ukey = 0;
-    for (auto&& edge_data : erng) {
-      auto&& [ukey, vkey, value] = projection(edge_data);
-      assert(ukey >= last_ukey); // ordered by ukey?
-      row_index_.resize(static_cast<size_t>(ukey) + 1, static_cast<vertex_key_type>(v_.size()));
-      col_index_.push_back(vkey);
-      v_.emplace_back(value);
-      last_ukey      = ukey;
-      max_vertex_key = max(max_vertex_key, vkey);
-    }
-    max_vertex_key = max(max_vertex_key, row_index_.size() - 1);
-
-    assert(v_.size() <=
-           static_cast<size_type>(numeric_limits<vertex_key_type>::max())); // too many edges for vertex_key_type?
-    assert(max_vertex_key >= row_index_.size() - 1);
-    row_index_.resize(static_cast<size_t>(max_vertex_key) + 1,
-                      static_cast<vertex_key_type>(v_.size())); // add terminating row
+  /// <summary>
+  /// Load edges and then vertices for the graph. See load_edges() and load_vertices() for more
+  /// information.
+  /// </summary>
+  /// <typeparam name="EProj">Edge Projection Function Type</typeparam>
+  /// <typeparam name="VProj">Vertex Projectiong Function Type</typeparam>
+  /// <param name="erng">Input edge range</param>
+  /// <param name="vrng">Input vertex range</param>
+  /// <param name="eprojection">Edge projection function object</param>
+  /// <param name="vprojection">Vertex projection function object</param>
+  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV> &&
+        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load(const ERng& erng, const VRng& vrng, EProj eprojection = {}, VProj vprojection = {}) {
+    size_type vertex_count = 0;
+    if constexpr (ranges::sized_range<VRng>)
+      vertex_count = ranges::size(vrng);
+    else if constexpr (ranges::random_access_range<VRng>)
+      vertex_count = max(vertex_count, (ranges::end(vrng) - ranges::begin(vrng)));
+    load_edges(erng, eprojection, vertex_count);
+    load_vertices(vrng, vprojection);
   }
-
 
 public: // Operations
   constexpr ranges::iterator_t<index_vector_type> find_vertex(vertex_key_type key) noexcept {
@@ -457,7 +374,7 @@ public: // Operations
   }
 
 private:                        // Member variables
-  index_vector_type row_index_; // starting index into col_index_ and v_
+  index_vector_type row_index_; // starting index into col_index_ and v_; holds +1 extra terminating row
   index_vector_type col_index_; // col_index_[n] holds the column index (aka target)
   v_vector_type     v_;         // v_[n]         holds the edge value for col_index_[n]
   row_values_type   row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
@@ -533,207 +450,71 @@ public: // Construction/Destruction
   constexpr csr_graph& operator=(const csr_graph&) = default;
   constexpr csr_graph& operator=(csr_graph&&) = default;
 
-  // gv&,  alloc
-  // gv&&, alloc
-  //       alloc
+  // csr_graph(      alloc)
+  // csr_graph(gv&,  alloc)
+  // csr_graph(gv&&, alloc)
 
+  constexpr csr_graph(const Alloc& alloc) : base_type(alloc) {}
+  constexpr csr_graph(const graph_value_type& value, const Alloc& alloc = Alloc()) : base_type(alloc), value_(value) {}
+  constexpr csr_graph(graph_value_type&& value, const Alloc& alloc = Alloc()) : base_type(alloc), value_(move(value)) {}
 
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param erng       The container of edge data.
-  /// @param ekey_fnc   The edge key extractor functor:
-  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc The edge value extractor functor:
-  ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                   edge_value_t<G>).
-  /// @param alloc      The allocator to use for internal containers for
-  ///                   vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
-        : base_type(erng, ekey_fnc, evalue_fnc, alloc) {}
+  // csr_graph(      erng, eprojection, alloc)
+  // csr_graph(gv&,  erng, eprojection, alloc)
+  // csr_graph(gv&&, erng, eprojection, alloc)
 
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param value      The graph value.
-  /// @param erng       The container of edge data.
-  /// @param ekey_fnc   The edge key extractor functor:
-  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc The edge value extractor functor:
-  ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                   edge_value_t<G>).
-  /// @param alloc      The allocator to use for internal containers for
-  ///                   vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
+  constexpr csr_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+        : base_type(erng, eprojection, alloc) {}
+
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
+  constexpr csr_graph(const graph_value_type& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+        : base_type(erng, eprojection, alloc), value_(value) {}
+
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
+  constexpr csr_graph(graph_value_type&& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+        : base_type(erng, eprojection, alloc), value_(move(value)) {}
+
+  // csr_graph(      erng, vrng, eprojection, vprojection, alloc)
+  // csr_graph(gv&,  erng, vrng, eprojection, vprojection, alloc)
+  // csr_graph(gv&&, erng, vrng, eprojection, vprojection, alloc)
+
+  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV> &&
+        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr csr_graph(const ERng&  erng,
+                      const VRng&  vrng,
+                      EProj        eprojection = {},
+                      VProj        vprojection = {},
+                      const Alloc& alloc       = Alloc())
+        : base_type(erng, vrng, eprojection, vprojection, alloc) {}
+
+  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV> &&
+        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr csr_graph(const graph_value_type& value,
-                      ERng&                   erng,
-                      const EKeyFnc&          ekey_fnc,
-                      const EValueFnc&        evalue_fnc,
-                      Alloc                   alloc = Alloc())
-        : base_type(erng, ekey_fnc, evalue_fnc, alloc), value_(value) {}
+                      const ERng&             erng,
+                      const VRng&             vrng,
+                      EProj                   eprojection = {},
+                      VProj                   vprojection = {},
+                      const Alloc&            alloc       = Alloc())
+        : base_type(erng, vrng, eprojection, vprojection, alloc), value_(value) {}
 
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param value      The graph value.
-  /// @param erng       The container of edge data.
-  /// @param ekey_fnc   The edge key extractor functor:
-  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc The edge value extractor functor:
-  ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                   edge_value_t<G>).
-  /// @param alloc      The allocator to use for internal containers for
-  ///                   vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV> &&
+        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr csr_graph(graph_value_type&& value,
-                      ERng&              erng,
-                      const EKeyFnc&     ekey_fnc,
-                      const EValueFnc&   evalue_fnc,
-                      Alloc              alloc = Alloc())
-        : base_type(erng, ekey_fnc, evalue_fnc, alloc), value_(move(value)) {}
+                      const ERng&        erng,
+                      const VRng&        vrng,
+                      EProj              eprojection = {},
+                      VProj              vprojection = {},
+                      const Alloc&       alloc       = Alloc())
+        : base_type(erng, vrng, eprojection, vprojection, alloc), value_(move(value)) {}
 
 
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param max_vertex_key Number of vertices to reserve before loading the graph
-  /// @param max_edges      Number of edges to reserve before loading the graph
-  /// @param erng           The container of edge data.
-  /// @param ekey_fnc       The edge key extractor functor:
-  ///                       ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc     The edge value extractor functor:
-  ///                       evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                       edge_value_t<G>).
-  /// @param alloc          The allocator to use for internal containers for
-  ///                       vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph(vertex_key_type  max_vertex_key,
-                      size_t           max_edges,
-                      ERng&            erng,
-                      const EKeyFnc&   ekey_fnc,
-                      const EValueFnc& evalue_fnc,
-                      Alloc            alloc = Alloc())
-        : base_type(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc, alloc) {}
-
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param value          Graph value.
-  /// @param max_vertex_key Number of vertices to reserve before loading the graph
-  /// @param max_edges      Number of edges to reserve before loading the graph
-  /// @param erng           The container of edge data.
-  /// @param ekey_fnc       The edge key extractor functor:
-  ///                       ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc     The edge value extractor functor:
-  ///                       evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                       edge_value_t<G>).
-  /// @param alloc          The allocator to use for internal containers for
-  ///                       vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph(const graph_value_type& value,
-                      vertex_key_type         max_vertex_key,
-                      size_t                  max_edges,
-                      ERng&                   erng,
-                      const EKeyFnc&          ekey_fnc,
-                      const EValueFnc&        evalue_fnc,
-                      Alloc                   alloc = Alloc())
-        : base_type(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc, alloc), value_(value) {}
-
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param value          Graph value.
-  /// @param max_vertex_key Number of vertices to reserve before loading the graph
-  /// @param max_edges      Number of edges to reserve before loading the graph
-  /// @param erng           The container of edge data.
-  /// @param ekey_fnc       The edge key extractor functor:
-  ///                       ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc     The edge value extractor functor:
-  ///                       evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                       edge_value_t<G>).
-  /// @param alloc          The allocator to use for internal containers for
-  ///                       vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph(graph_value_type&& value,
-                      vertex_key_type    max_vertex_key,
-                      size_t             max_edges,
-                      ERng&              erng,
-                      const EKeyFnc&     ekey_fnc,
-                      const EValueFnc&   evalue_fnc,
-                      Alloc              alloc = Alloc())
-        : base_type(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc, alloc), value_(move(value)) {}
-
-  /// Constructor for easy creation of a graph that takes an initializer
-  /// list with a tuple with 3 edge elements: source_vertex_key,
-  /// target_vertex_key and edge_value.
-  ///
-  /// @param ilist Initializer list of tuples with source_vertex_key,
-  ///              target_vertex_key and the edge value.
-  /// @param alloc Allocator.
-  ///
-  constexpr csr_graph(const initializer_list<tuple<vertex_key_type, vertex_key_type, edge_value_type>>& ilist,
-                      const Alloc&                                                                      alloc = Alloc())
+  constexpr csr_graph(const initializer_list<views::copyable_edge_t<VKey, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
 private: // tag_invoke properties
@@ -779,73 +560,22 @@ public: // Construction/Destruction
   constexpr csr_graph& operator=(const csr_graph&) = default;
   constexpr csr_graph& operator=(csr_graph&&) = default;
 
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param erng       The container of edge data.
-  /// @param ekey_fnc   The edge key extractor functor:
-  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc The edge value extractor functor:
-  ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                   edge_value_t<G>).
-  /// @param alloc      The allocator to use for internal containers for
-  ///                   vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph(ERng& erng, const EKeyFnc& ekey_fnc, const EValueFnc& evalue_fnc, Alloc alloc = Alloc())
-        : base_type(erng, ekey_fnc, evalue_fnc, alloc) {}
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
+  constexpr csr_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+        : base_type(erng, eprojection, alloc) {}
 
-  /// Constructor that takes edge ranges to create the csr graph.
-  ///
-  /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
-  ///                   ERng::value_type.
-  /// @tparam EValueFnc Function object to return the edge_value_type, or
-  ///                   a type that edge_value_type is constructible
-  ///                   from. If the return type is void or empty_value the
-  ///                   edge_value_type default constructor will be used
-  ///                   to initialize the value.
-  ///
-  /// @param max_vertex_key Number of vertices to reserve before loading the graph
-  /// @param max_edges      Number of edges to reserve before loading the graph
-  /// @param erng           The container of edge data.
-  /// @param ekey_fnc       The edge key extractor functor:
-  ///                       ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
-  /// @param evalue_fnc     The edge value extractor functor:
-  ///                       evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
-  ///                       edge_value_t<G>).
-  /// @param alloc          The allocator to use for internal containers for
-  ///                       vertices & edges.
-  ///
-  template <class ERng, class EKeyFnc, class EValueFnc>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  constexpr csr_graph(vertex_key_type  max_vertex_key,
-                      size_t           max_edges,
-                      ERng&            erng,
-                      const EKeyFnc&   ekey_fnc,
-                      const EValueFnc& evalue_fnc,
-                      Alloc            alloc = Alloc())
-        : base_type(max_vertex_key, max_edges, erng, ekey_fnc, evalue_fnc, alloc) {}
+  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV> &&
+        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr csr_graph(const ERng&  erng,
+                      const VRng&  vrng,
+                      EProj        eprojection = {},
+                      VProj        vprojection = {},
+                      const Alloc& alloc       = Alloc())
+        : base_type(erng, vrng, eprojection, vprojection, alloc) {}
 
-  /// Constructor for easy creation of a graph that takes an initializer
-  /// list with a tuple with 3 edge elements: source_vertex_key,
-  /// target_vertex_key and edge_value.
-  ///
-  /// @param ilist Initializer list of tuples with source_vertex_key,
-  ///              target_vertex_key and the edge value.
-  /// @param alloc Allocator.
-  ///
-  constexpr csr_graph(const initializer_list<tuple<vertex_key_type, vertex_key_type, edge_value_type>>& ilist,
-                      const Alloc&                                                                      alloc = Alloc())
+  constexpr csr_graph(const initializer_list<views::copyable_edge_t<VKey, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
 

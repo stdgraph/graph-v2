@@ -245,6 +245,7 @@ namespace views {
   //
   template <class T, class VKey, class VV>
   concept copyable_vertex = convertible_to<T, copyable_vertex_t<VKey, VV>>;
+
   template <class T, class VKey, class EV>
   concept copyable_edge = convertible_to<T, copyable_edge_t<VKey, EV>>;
 
