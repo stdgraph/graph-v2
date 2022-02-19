@@ -140,7 +140,7 @@ namespace view {
   };
 
   template <class VKey, class VV>
-  using copyable_vertex = vertex<VKey, void, VV>; // {key, value}
+  using copyable_vertex_t = vertex<VKey, void, VV>; // {key, value}
 
   //
   // edge
@@ -221,7 +221,7 @@ namespace view {
   // copyable_edge
   //
   template <class VKey, class EV>
-  using copyable_edge = edge<VKey, true, void, EV>; // {source_key, target_key [, value]}
+  using copyable_edge_t = edge<VKey, true, void, EV>; // {source_key, target_key [, value]}
 
   //
   // neighbor
@@ -239,6 +239,14 @@ namespace view {
     VKey target_key;
     V&   target;
   };
+
+  //
+  // view concepts
+  //
+  template <class T, class VKey, class VV>
+  concept copyable_vertex = convertible_to<T, copyable_vertex_t<VKey, VV>>;
+  template <class T, class VKey, class EV>
+  concept copyable_edge = convertible_to<T, copyable_edge_t<VKey, EV>>;
 
 } // namespace view
 

@@ -3,6 +3,8 @@
 #include "container_utility.hpp"
 #include <vector>
 #include <concepts>
+#include <functional>
+#include <ranges>
 #include <cstdint>
 #include "graph/graph.hpp"
 
@@ -34,12 +36,13 @@ namespace std::graph::container {
 //
 // forward declarations
 //
-template <class EV      = empty_value,
+template <class EV      = bool,
           class VV      = void,
           class GV      = void,
           integral VKey = uint32_t,
           class Alloc   = allocator<uint32_t>>
-class csr_graph;
+requires(!is_void_v<EV>) //
+      class csr_graph;
 
 /// <summary>
 /// Class to hold vertex values in a vector that is the same size as row_index_.
@@ -76,13 +79,14 @@ public:
   constexpr csr_row_values& operator=(const csr_row_values&) = default;
   constexpr csr_row_values& operator=(csr_row_values&&) = default;
 
-  template <ranges::forward_range VRng, class VValueFnc>
-  // VValueFnc is a projection with default of identity
-  constexpr void load_values(const VRng& vrng, const VValueFnc& vvalue_fnc) {
+  template <ranges::forward_range VRng, class Proj = identity>
+  requires view::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_values(VRng&& vrng, Proj&& projection, size_type vertex_count = 0) {
     if constexpr (ranges::sized_range<VRng>)
-      values_.reserve(vrng.size());
+      vertex_count = max(vertex_count, ranges::size(vrng));
+    values_.reserve(max(ranges::size(vrng), vertex_count));
     for (auto&& vvalue : vrng)
-      values_.push_back(vvalue_fnc(vvalue));
+      values_.push_back(projection(vvalue));
   }
 
   constexpr size_type size() const noexcept { return values_.size(); }
@@ -130,9 +134,10 @@ public:
   constexpr void reserve(size_type new_cap) {}
   constexpr void resize(size_type n) {}
 
-  template <ranges::forward_range VRng, class VValueFnc>
-  constexpr void load_values(const VRng& vrng, const VValueFnc& vvalue_fnc) {
-    //static_assert(false, "vertex values being loaded when VV is void for csr_graph");
+  template <ranges::forward_range VRng, class Proj = identity>
+  requires view::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, void>
+  constexpr void load_values(VRng&& vrng, Proj&& projection, size_type vertex_count = 0) {
+    // do nothing when VV=void
   }
 };
 
@@ -178,6 +183,8 @@ public: // Types
 
   using const_iterator = typename index_vector_type::const_iterator;
   using iterator       = typename index_vector_type::iterator;
+
+  using size_type = ranges::range_size_t<index_vector_type>;
 
 public: // Construction/Destruction
   constexpr csr_graph_base()                      = default;
@@ -265,7 +272,7 @@ public: // Construction/Destruction
       max_key = max(max_key, static_cast<vertex_key_type>(ranges::size(vrng) - 1));
 
     load_edges(erng, ekey_fnc, evalue_fnc, max_key, edge_count);
-    row_value_.load_values(vrng, vvalue_fnc);
+    row_value_.load_values(vrng, vvalue_fnc, row_index_.size() - 1);
   }
 
   /// Constructor that takes edge ranges to create the csr graph.
@@ -339,9 +346,7 @@ public: // Construction/Destruction
         : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
 
     load_edges(erng, ekey_fnc, evalue_fnc, max_vertex_key, edge_count);
-    row_value_.load_values(vrng, vvalue_fnc);
-    //this->vertex_values_.resize(row_index_.size() - 1);
-    //assert(this->vertex_values_.size() == row_index_.size() - 1); // what to do if not the same?
+    row_value_.load_values(vrng, vvalue_fnc, row_index_.size() - 1);
   }
 
   /// Constructor for easy creation of a graph that takes an initializer
@@ -374,14 +379,10 @@ protected:
     return pair(max_key, edge_count);
   }
 
-  template <class VRng, class VValueFnc>
-  constexpr void load_vertices(VRng& vrng, const VValueFnc& vvalue_fnc) {
-    if constexpr (!is_void_v<VV>) {
-      using fnc_value_t = decltype(vvalue_fnc(declval<ranges::range_value_t<VRng>>()));
-      static_assert(is_convertible_v<fnc_value_t, VV>);
-      load_values(vrng, vvalue_fnc);
-    }
-  }
+public:
+  template <class VRng, class Proj = identity>
+  requires view::copyable_vertex<invoke_result<Proj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_vertices(VRng& vrng, const Proj& projection) { row_value_.load_values(vrng, projection); }
 
   template <class ERng, class EKeyFnc, class EValueFnc>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
@@ -409,6 +410,38 @@ protected:
       v_.emplace_back(value);
       last_ukey = ukey;
     }
+    assert(max_vertex_key >= row_index_.size() - 1);
+    row_index_.resize(static_cast<size_t>(max_vertex_key) + 1,
+                      static_cast<vertex_key_type>(v_.size())); // add terminating row
+  }
+
+  template <ranges::forward_range ERng, class Proj = identity>
+  requires view::copyable_edge<invoke_result<Proj, ranges::range_value_t<ERng>>, VKey, EV>
+  constexpr vertex_key_type
+  load_edges(ERng&& erng, Proj&& projection, vertex_key_type max_vertex_key = 0, size_type edge_count = 0) {
+    if (ranges::sized_range<ERng>)
+      edge_count = max(edge_count, ranges::size(erng));
+
+    // reserve space if possible
+    if (max_vertex_key > 0) // +1 for zero-based-index and +1 for terminating row
+      row_index_.reserve(static_cast<size_type>(max_vertex_key) + 2);
+    col_index_.reserve(edge_count);
+    v_.reserve(edge_count);
+
+    vertex_key_type last_ukey = 0;
+    for (auto&& edge_data : erng) {
+      auto&& [ukey, vkey, value] = projection(edge_data);
+      assert(ukey >= last_ukey); // ordered by ukey?
+      row_index_.resize(static_cast<size_t>(ukey) + 1, static_cast<vertex_key_type>(v_.size()));
+      col_index_.push_back(vkey);
+      v_.emplace_back(value);
+      last_ukey      = ukey;
+      max_vertex_key = max(max_vertex_key, vkey);
+    }
+    max_vertex_key = max(max_vertex_key, row_index_.size() - 1);
+
+    assert(v_.size() <=
+           static_cast<size_type>(numeric_limits<vertex_key_type>::max())); // too many edges for vertex_key_type?
     assert(max_vertex_key >= row_index_.size() - 1);
     row_index_.resize(static_cast<size_t>(max_vertex_key) + 1,
                       static_cast<vertex_key_type>(v_.size())); // add terminating row
@@ -477,7 +510,8 @@ private: // tag_invoke properties
 /// <typeparam name="VKey">Vertex Key type</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
-class csr_graph : public csr_graph_base<EV, VV, GV, VKey, Alloc> {
+requires(!is_void_v<EV>) //
+      class csr_graph : public csr_graph_base<EV, VV, GV, VKey, Alloc> {
 public: // Types
   using graph_type = csr_graph<EV, VV, GV, VKey, Alloc>;
   using base_type  = csr_graph_base<EV, VV, GV, VKey, Alloc>;
@@ -722,7 +756,8 @@ private: // Member variables
 /// <typeparam name="VKey">Vertex Key type</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, integral VKey, class Alloc>
-class csr_graph<EV, VV, void, VKey, Alloc> : public csr_graph_base<EV, VV, void, VKey, Alloc> {
+requires(!is_void_v<EV>) //
+      class csr_graph<EV, VV, void, VKey, Alloc> : public csr_graph_base<EV, VV, void, VKey, Alloc> {
 public: // Types
   using graph_type = csr_graph<EV, VV, void, VKey, Alloc>;
   using base_type  = csr_graph_base<EV, VV, void, VKey, Alloc>;
