@@ -110,7 +110,8 @@
 - [ ] Does a LaTeX document take fewer pages than equivilent in Google Docs?
 - [ ] SG19 Questions
   - [ ] key vs. id?
-- [ ] Can CSR edges have a void value?
+- [ ] Can CSR edges have a void value? (e.g. no v vector)
+- [ ] Should CSR support source_key on edges (Sourced template parameter)?
 
 ## Resolved
 ### ToDo Completed

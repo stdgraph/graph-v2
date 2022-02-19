@@ -414,6 +414,31 @@ private: // tag_invoke properties
            static_cast<size_t>(*u2) < g.col_index_.size()); // in col_index_ bounds?
     return const_edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
+
+  // target_key(g,uv), target(g,uv)
+  friend constexpr vertex_key_type
+  tag_invoke(::std::graph::access::target_key_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+    return uv;
+  }
+  friend constexpr vertex_type& tag_invoke(::std::graph::access::target_fn_t, graph_type& g, edge_type& uv) noexcept {
+    return g.row_index_[uv];
+  }
+  friend constexpr const vertex_type&
+  tag_invoke(::std::graph::access::target_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+    return g.row_index_[uv];
+  }
+
+  // edge_value(g,uv)
+  friend constexpr edge_value_type&
+  tag_invoke(::std::graph::access::edge_value_fn_t, graph_type& g, edge_type& uv) noexcept {
+    ptrdiff_t uv_idx = &uv - g.col_index_.data();
+    return g.v_[uv_idx];
+  }
+  friend constexpr const edge_value_type&
+  tag_invoke(::std::graph::access::edge_value_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+    ptrdiff_t uv_idx = &uv - g.col_index_.data();
+    return g.v_[uv_idx];
+  }
 };
 
 
