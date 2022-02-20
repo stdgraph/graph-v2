@@ -107,6 +107,18 @@ public:
       values_.resize(vertex_count);
   }
 
+  template <ranges::forward_range VRng, class VProj = identity>
+  requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_values(VRng& vrng, VProj projection, size_type vertex_count = 0) {
+    if constexpr (ranges::sized_range<VRng>)
+      vertex_count = max(vertex_count, ranges::size(vrng));
+    values_.reserve(max(ranges::size(vrng), vertex_count));
+    for (auto&& vvalue : vrng)
+      values_.emplace_back(move(projection(vvalue)));
+    if (values_.size() < vertex_count)
+      values_.resize(vertex_count);
+  }
+
   constexpr size_type size() const noexcept { return values_.size(); }
 
   constexpr void reserve(size_type new_cap) { values_.reserve(new_cap); }
@@ -269,7 +281,7 @@ public:
   /// <summary>
   /// Load vertex values. This should be called after load_edges() to assure that there are
   /// at least as many values as there are rows.
-  /// 
+  ///
   /// After this is called, the number of values will match the number of rows loaded if
   /// there are fewer values than rows that exist. If more values are passed than rows
   /// created by load_edges() then the extra values are loaded.
@@ -280,6 +292,24 @@ public:
   template <ranges::forward_range VRng, class VProj = identity>
   requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_vertices(const VRng& vrng, VProj vprojection) {
+    size_type vertex_count = row_index_.empty() ? 0 : row_index_.size() - 1; // edges loaded?
+    row_value_.load_values(vrng, vprojection, vertex_count);
+  }
+
+  /// <summary>
+  /// Load vertex values. This should be called after load_edges() to assure that there are
+  /// at least as many values as there are rows.
+  /// 
+  /// After this is called, the number of values will match the number of rows loaded if
+  /// there are fewer values than rows that exist. If more values are passed than rows
+  /// created by load_edges() then the extra values are loaded.
+  /// </summary>
+  /// <typeparam name="VProj">Projection function for vrng values</typeparam>
+  /// <param name="vrng">Range of values to load for vertices. The order of the values is preserved in the internal vector.</param>
+  /// <param name="vprojection">Projection function for vrng values</param>
+  template <ranges::forward_range VRng, class VProj = identity>
+  requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_vertices(VRng& vrng, VProj vprojection) {
     size_type vertex_count = row_index_.empty() ? 0 : row_index_.size() - 1; // edges loaded?
     row_value_.load_values(vrng, vprojection, vertex_count);
   }
