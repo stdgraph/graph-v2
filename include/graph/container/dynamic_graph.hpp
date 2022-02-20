@@ -652,24 +652,20 @@ public: // Construction/Destruction/Assignment
 
 public:
   template <class VRng, class VProj = identity>
-  void load_vertices(VRng&& vrng, VProj vproj = VProj(), vertex_allocator_type alloc = vertex_allocator_type()) {
-    if constexpr (reservable<vertices_type>)
-      vertices_.reserve(ranges::size(vrng));
+  void load_vertices(VRng&& vrng, VProj vproj = VProj()) {
+    reserve_vertices(ranges::size(vrng));
     auto add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng)
-      add_vertex(vertex_type(std::move(vproj(u)), alloc));
+      add_vertex(vertex_type(std::move(vproj(u)), vertices_.get_allocator()));
     //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
   }
 
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  void load_edges(vertex_key_type     max_row_idx,
-                  ERng&&              erng,
-                  EProj               eproj = EProj(),
-                  edge_allocator_type alloc = edge_allocator_type()) {
+  void load_edges(vertex_key_type max_row_idx, ERng&& erng, EProj eproj = EProj()) {
     if constexpr (resizable<vertices_type>) {
       if (vertices_.size() < static_cast<size_t>(max_row_idx) + 1)
-        vertices_.resize(static_cast<size_t>(max_row_idx) + 1, vertex_type(alloc));
+        vertices_.resize(static_cast<size_t>(max_row_idx) + 1, vertex_type(vertices_.get_allocator()));
     }
 
     // add edges
@@ -695,7 +691,7 @@ public:
   }
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  void load_edges(ERng&& erng, EProj eproj = EProj(), edge_allocator_type alloc = edge_allocator_type()) {
+  void load_edges(ERng&& erng, EProj eproj = EProj()) {
     // Nothing to do?
     if (erng.begin() == erng.end())
       return;
@@ -709,7 +705,7 @@ public:
       ++erng_size;
     }
 
-    load_edges(max_row_idx, erng, eproj, alloc);
+    load_edges(max_row_idx, erng, eproj);
   }
 
 public: // Properties
@@ -725,6 +721,15 @@ public: // Properties
 
   constexpr vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
   constexpr const vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
+
+public: // Operations
+  void reserve_vertices(size_type count) {
+    if constexpr (reservable<vertices_type>) // reserve if we can; otherwise ignored
+      vertices_.reserve(count);
+  }
+  void reserve_edges(size_type count) {
+    // ignored for this graph; may be meaningful for another data structure like CSR
+  }
 
 private: // Member Variables
   vertices_type vertices_;

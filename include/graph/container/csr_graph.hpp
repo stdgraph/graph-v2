@@ -278,6 +278,16 @@ public: // Construction/Destruction
         : csr_graph_base(ilist, identity(), alloc) {}
 
 public:
+public: // Operations
+  void reserve_vertices(size_type count) {
+    row_index_.reserve(count);
+    row_value_.reserve(count);
+  }
+  void reserve_edges(size_type count) {
+    col_index_.reserve(count);
+    v_.reserve(count);
+  }
+
   /// <summary>
   /// Load vertex values. This should be called after load_edges() to assure that there are
   /// at least as many values as there are rows.
@@ -299,7 +309,7 @@ public:
   /// <summary>
   /// Load vertex values. This should be called after load_edges() to assure that there are
   /// at least as many values as there are rows.
-  /// 
+  ///
   /// After this is called, the number of values will match the number of rows loaded if
   /// there are fewer values than rows that exist. If more values are passed than rows
   /// created by load_edges() then the extra values are loaded.
@@ -315,14 +325,14 @@ public:
   }
 
   /// <summary>
-  /// Load the edges for the graph. 
-  /// 
+  /// Load the edges for the graph.
+  ///
   /// Space for the col_index and v vectors is reserved if it can easily be evaluated (if the erng
   /// is a sized range or it is a random access range). The edge_count parameter can also be supplied
-  /// to determine the number of edges to reserved. When both exist, the maximum of the two values 
+  /// to determine the number of edges to reserved. When both exist, the maximum of the two values
   /// is used. If the edge count still can't be pre-determined the normal processing to periodically
   /// reallocate the internal vectors will occur.
-  /// 
+  ///
   /// Space for the row_index vector is reserved if a vertex_count > 0 is passed. If it is zero then
   /// the normal processing to periodically reallocated the internal vectors will occur.
   /// </summary>
@@ -350,8 +360,7 @@ public:
       edge_count = max(edge_count, ranges::size(erng));
     else if constexpr (ranges::random_access_range<ERng>)
       edge_count = max(edge_count, (ranges::end(erng) - ranges::begin(erng)));
-    col_index_.reserve(edge_count);
-    v_.reserve(edge_count);
+    reserve_edges(edge_count);
 
     // Add edges
     vertex_key_type last_ukey = 0, max_vkey = 0;

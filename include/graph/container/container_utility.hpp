@@ -47,7 +47,7 @@ concept has_insert = requires(C& container, const typename C::value_type& value)
 // return a lambda to push/insert/emplace an element in a container
 template <class C>
 constexpr auto push_or_insert(C& container) {
-  // favor pushing to the back over the front for things list list & deque
+  // favor pushing to the back over the front for things like list & deque
   if constexpr (has_emplace_back<C>)
     return [&container](C::value_type&& value) { container.emplace_back(move(value)); };
   else if constexpr (has_push_back<C>) {
@@ -60,12 +60,15 @@ constexpr auto push_or_insert(C& container) {
     return [&container](C::value_type&& value) { container.emplace(move(value)); };
   else if constexpr (has_insert<C>) {
     return [&container](const C::value_type& value) { container.insert(value); };
-  } else {
-#  ifdef _MSC_VER
-    static_assert(false,
-                  "The container doesn't have emplace_back, push_back, emplace_front, push_front, emplace or insert");
-#  endif
   }
+#  ifdef _MSC_VER
+  // This didn't assert if a previous if was true until MSVC 1931; gcc has always asserted
+  // We need the ability to put constexpr on an else
+  //else {
+  //    static_assert(false,
+  //              "The container doesn't have emplace_back, push_back, emplace_front, push_front, emplace or insert");
+  //}
+#  endif
 }
 
 
