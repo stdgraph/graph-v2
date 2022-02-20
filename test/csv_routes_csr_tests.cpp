@@ -35,7 +35,7 @@ using std::graph::target;
 using std::graph::edge_value;
 
 
-using routes_csr_graph_type   = std::graph::container::csr_graph<double, std::string>;
+using routes_csr_graph_type = std::graph::container::csr_graph<double, std::string>;
 
 template <typename G>
 constexpr auto find_frankfurt_key(const G& g) {
@@ -47,15 +47,40 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
+//template<typename T>
+void f(int& v) { //
+  auto&& val = v;
+}
+
+void f(const int& v) { //
+  auto&& val = v;
+}
+
+void f(int&& v) { //
+  auto&& val = v;
+}
+
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   init_console();
 
-  using G = routes_csr_graph_type;
-  G g;
+  int   i1 = 1;
+  int&  i2 = i1;
+  int&& i3 = 3;
+
+  f(std::move(i3));
+
+  using G                        = routes_csr_graph_type;
+  G                        g;
   for (auto&& u : vertices(g)) {
     for (auto&& uv : edges(g, u)) {
     }
   }
+  //using return_type = std::graph::views::copyable_vertex_t<vertex_key_t<G>, std::graph::vertex_value_t<G>&>;
+  //uint32_t key         = 0;
+  //auto name_getter  = [&key](auto&& name) -> return_type { return return_type{key++, name}; };
+  //std::vector<std::string> names = {"Raleigh", "Cary", "Apex"};
+  //g.load_vertices(names, name_getter);
+
 #if 0
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
@@ -277,11 +302,11 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   }
 
   SECTION("content") {
-#if TEST_OPTION == TEST_OPTION_OUTPUT
+#  if TEST_OPTION == TEST_OPTION_OUTPUT
     cout << "\nGermany Routes using vector+forward_list"
          << "\n----------------------------------------" << endl
          << routes_graph(g) << endl;
-#elif TEST_OPTION == TEST_OPTION_GEN
+#  elif TEST_OPTION == TEST_OPTION_GEN
     ostream_indenter indent;
     cout << endl << indent << "auto ui = begin(vertices(g));" << endl;
     cout << indent << "vertex_key_t<G> ukey = 0;" << endl;
@@ -323,7 +348,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
 
     cout << endl
          << indent << "REQUIRE(" << size(vertices(g)) << " == size(vertices(g))); // all vertices visited?" << endl;
-#elif TEST_OPTION == TEST_OPTION_TEST
+#  elif TEST_OPTION == TEST_OPTION_TEST
 
     auto            ui   = begin(vertices(g));
     vertex_key_t<G> ukey = 0;
@@ -471,8 +496,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     }
 
     REQUIRE(10 == size(vertices(g))); // all vertices visited?
-#endif
+#  endif
   }
 #endif //0
 }
-

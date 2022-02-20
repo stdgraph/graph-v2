@@ -82,6 +82,8 @@ public:
   using vertex_value_type           = VV;
   using vertex_value_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
   using values_type                 = vector<vertex_value_type, vertex_value_allocator_type>;
+  using reference_type              = vertex_value_type&;
+  using const_reference_type        = const vertex_value_type&;
 
   using size_type = ranges::range_size_t<values_type>;
 
@@ -96,7 +98,7 @@ public:
   constexpr csr_row_values& operator=(csr_row_values&&) = default;
 
   template <ranges::forward_range VRng, class VProj = identity>
-  requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_values(const VRng& vrng, VProj projection, size_type vertex_count = 0) {
     if constexpr (ranges::sized_range<VRng>)
       vertex_count = max(vertex_count, ranges::size(vrng));
@@ -108,13 +110,13 @@ public:
   }
 
   template <ranges::forward_range VRng, class VProj = identity>
-  requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_values(VRng& vrng, VProj projection, size_type vertex_count = 0) {
     if constexpr (ranges::sized_range<VRng>)
       vertex_count = max(vertex_count, ranges::size(vrng));
     values_.reserve(max(ranges::size(vrng), vertex_count));
     for (auto&& vvalue : vrng)
-      values_.emplace_back(move(projection(vvalue)));
+      values_.push_back(projection(vvalue).value);
     if (values_.size() < vertex_count)
       values_.resize(vertex_count);
   }
@@ -124,30 +126,22 @@ public:
   constexpr void reserve(size_type new_cap) { values_.reserve(new_cap); }
   constexpr void resize(size_type n) { values_.resize(n); }
 
+  constexpr reference_type       value(vertex_key_type key) { return values_[key]; }
+  constexpr const_reference_type value(vertex_key_type key) const { return values_[key]; }
+
 private: // Member variables
   values_type values_;
 
 private: // tag_invoke properties
-  friend constexpr vertex_value_type&
-  tag_invoke(::std::graph::access::vertex_value_fn_t, graph_type& g, vertex_type& u) {
-    static_assert(ranges::contiguous_range<index_vector_type>,
-                  "row_index_ must be a contiguous range to evaluate uidx");
-    auto uidx = &u - g.row_index_.data();
-    return g.values_[uidx];
-  }
-  friend constexpr const vertex_value_type&
-  tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
-    static_assert(ranges::contiguous_range<index_vector_type>,
-                  "row_index_ must be a contiguous range to evaluate uidx");
-    auto uidx = &u - g.row_index_.data();
-    return g.values_[uidx];
-  }
 };
 
 template <class EV, class GV, integral VKey, class Alloc>
 class csr_row_values<EV, void, GV, VKey, Alloc> {
 public:
-  using size_type = size_t;
+  using size_type            = size_t;
+  using vertex_value_type    = void;
+  //using reference_type       = vertex_value_type&;
+  //using const_reference_type = const vertex_value_type&;
 
   constexpr csr_row_values(Alloc& alloc) {}
 
@@ -169,6 +163,9 @@ public:
   void > constexpr void load_values(const VRng& vrng, VProj projection, size_type vertex_count = 0) {
     // do nothing when VV=void
   }
+
+  //constexpr reference_type       value(vertex_key_type key) {}
+  //constexpr const_reference_type value(vertex_key_type key) const {}
 };
 
 
@@ -300,7 +297,7 @@ public: // Operations
   /// <param name="vrng">Range of values to load for vertices. The order of the values is preserved in the internal vector.</param>
   /// <param name="vprojection">Projection function for vrng values</param>
   template <ranges::forward_range VRng, class VProj = identity>
-  requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_vertices(const VRng& vrng, VProj vprojection) {
     size_type vertex_count = row_index_.empty() ? 0 : row_index_.size() - 1; // edges loaded?
     row_value_.load_values(vrng, vprojection, vertex_count);
@@ -318,7 +315,7 @@ public: // Operations
   /// <param name="vrng">Range of values to load for vertices. The order of the values is preserved in the internal vector.</param>
   /// <param name="vprojection">Projection function for vrng values</param>
   template <ranges::forward_range VRng, class VProj = identity>
-  requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_vertices(VRng& vrng, VProj vprojection) {
     size_type vertex_count = row_index_.empty() ? 0 : row_index_.size() - 1; // edges loaded?
     row_value_.load_values(vrng, vprojection, vertex_count);
@@ -346,7 +343,7 @@ public: // Operations
   /// <param name="vertex_count">Number of vertices to reserve</param>
   /// <param name="edge_count">Number of edges to reserve</param>
   template <ranges::forward_range ERng, class EProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
+  //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
   constexpr void load_edges(size_type vertex_count, size_type edge_count, const ERng& erng, EProj eprojection = {}) {
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng)) {
@@ -451,6 +448,21 @@ private: // tag_invoke properties
     return static_cast<vertex_key_type>(ui - g.row_index_.begin());
   }
 
+  friend constexpr vertex_value_type&
+  tag_invoke(::std::graph::access::vertex_value_fn_t, graph_type& g, vertex_type& u) {
+    static_assert(ranges::contiguous_range<index_vector_type>,
+                  "row_index_ must be a contiguous range to evaluate uidx");
+    auto uidx = &u - g.row_index_.data();
+    return g.values_[uidx];
+  }
+  friend constexpr const vertex_value_type&
+  tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
+    static_assert(ranges::contiguous_range<index_vector_type>,
+                  "row_index_ must be a contiguous range to evaluate uidx");
+    auto uidx = &u - g.row_index_.data();
+    return g.values_[uidx];
+  }
+
   friend constexpr edges_type tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
@@ -475,11 +487,11 @@ private: // tag_invoke properties
     return uv;
   }
   friend constexpr vertex_type& tag_invoke(::std::graph::access::target_fn_t, graph_type& g, edge_type& uv) noexcept {
-    return g.row_index_[uv];
+    return g.row_index_.value(uv);
   }
   friend constexpr const vertex_type&
   tag_invoke(::std::graph::access::target_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return g.row_index_[uv];
+    return g.row_index_.value(uv);
   }
 
   // edge_value(g,uv)

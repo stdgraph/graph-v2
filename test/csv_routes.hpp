@@ -119,7 +119,9 @@ auto load_graph(csv::string_view csv_file) {
   graph_type g;
 
   // Load vertices, moving city name to vertex for ownership
-  auto city_name_getter = [](auto&& name) -> std::string&& { return std::move(name); };
+  using copyable_name              = std::graph::views::copyable_vertex_t<vertex_key_type, std::string&>;
+  vertex_key_type key              = 0;
+  auto            city_name_getter = [&key](auto&& name) { return copyable_name{key++, name}; };
   g.load_vertices(city_names, city_name_getter);
 
   // load edges
@@ -135,7 +137,7 @@ auto load_graph(csv::string_view csv_file) {
 
   const vertex_key_type max_city_key = static_cast<vertex_key_type>(size(city_names)) - 1;
   csv::CSVReader        reader(csv_file); // CSV file reader
-  g.load_edges(max_city_key+1, csv_row_cnt, reader, eproj);
+  g.load_edges(static_cast<size_t>(max_city_key + 1), csv_row_cnt, reader, eproj);
 
   return g;
 }

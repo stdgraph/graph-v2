@@ -655,8 +655,10 @@ public:
     if (ranges::sized_range<VRng>)
       reserve_vertices(ranges::size(vrng));
     auto add_vertex = push_or_insert(vertices_);
-    for (auto&& u : vrng)
-      add_vertex(vertex_type(std::move(vproj(u)), vertices_.get_allocator()));
+    for (auto&& u : vrng) {
+      auto&& copy_vertex = vproj(u);
+      add_vertex(vertex_type(std::move(copy_vertex.value), vertices_.get_allocator()));
+    }
   }
 
   template <class ERng, class EProj = identity>
