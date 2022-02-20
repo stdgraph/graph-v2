@@ -327,6 +327,10 @@ public: // Operations
   /// <summary>
   /// Load the edges for the graph.
   ///
+  /// If vertex_count=0 is passed and erng is bi-directional, the source key will be taken from the
+  /// last erng entry and vertex_count will be set to source_key + 1. This is reliable since erng
+  /// is required to be ordered on source key.
+  ///
   /// Space for the col_index and v vectors is reserved if it can easily be evaluated (if the erng
   /// is a sized range or it is a random access range). The edge_count parameter can also be supplied
   /// to determine the number of edges to reserved. When both exist, the maximum of the two values
@@ -334,7 +338,7 @@ public: // Operations
   /// reallocate the internal vectors will occur.
   ///
   /// Space for the row_index vector is reserved if a vertex_count > 0 is passed. If it is zero then
-  /// the normal processing to periodically reallocated the internal vectors will occur.
+  /// the normal processing to periodically reallocate the internal vectors will occur.
   /// </summary>
   /// <typeparam name="EProj">Edge Projection</typeparam>
   /// <param name="erng">Input range for edges</param>
@@ -343,17 +347,28 @@ public: // Operations
   /// <param name="edge_count">Number of edges to reserve</param>
   template <ranges::forward_range ERng, class EProj = identity>
   requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
-  constexpr void
-  load_edges(const ERng& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
+  constexpr void load_edges(size_type vertex_count, size_type edge_count, const ERng& erng, EProj eprojection = {}) {
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng)) {
       row_index_.resize(vertex_count + 1, static_cast<vertex_key_type>(v_.size())); // add terminating row
       return;
     }
 
+    // If caller didn't have the vertext_count, we can reliably get the last vertex key
+    // from the list because erng is required to be ordered by the source key.
+    if constexpr (ranges::bidirectional_range<ERng>) {
+      if (vertex_count == 0) {
+        auto lastIt = ranges::end(erng);
+        --lastIt;
+        auto&& [ukey, vkey, value] = eprojection(*lastIt);
+        vertex_count               = static_cast<size_type>(ukey + 1);
+      }
+    }
+
     // reserve space for rows if caller has provided it
     if (vertex_count > 0)
       row_index_.reserve(vertex_count + 1); // +1 for terminating row
+
 
     // Eval number of input rows and reserve space for the edges, if possible
     if constexpr (ranges::sized_range<ERng>)
@@ -400,7 +415,7 @@ public: // Operations
       vertex_count = ranges::size(vrng);
     else if constexpr (ranges::random_access_range<VRng>)
       vertex_count = max(vertex_count, (ranges::end(vrng) - ranges::begin(vrng)));
-    load_edges(erng, eprojection, vertex_count);
+    load_edges(vertex_count, 0, erng, eprojection);
     load_vertices(vrng, vprojection);
   }
 

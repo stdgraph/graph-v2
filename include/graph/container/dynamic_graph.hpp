@@ -589,8 +589,8 @@ public: // Construction/Destruction/Assignment
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph_base(ERng&& erng, VRng&& vrng, EProj eproj, VProj vproj, vertex_allocator_type alloc)
         : vertices_(alloc) {
-    load_vertices(vrng, vproj, alloc);
-    load_edges(static_cast<vertex_key_type>(vertices_.size() - 1), erng, eproj, alloc);
+    load_vertices(vrng, vproj);
+    load_edges(vertices_.size(), 0, erng, eproj);
   }
 
   /// Constructor that takes edge ranges to create the graph. Edges are scanned to determine the
@@ -618,7 +618,7 @@ public: // Construction/Destruction/Assignment
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   dynamic_graph_base(ERng&& erng, EProj eproj, vertex_allocator_type alloc) : vertices_(alloc) {
 
-    load_edges(move(erng), eproj, alloc);
+    load_edges(move(erng), eproj);
   }
 
   /// Constructor that takes edge ranges to create the csr graph.
@@ -644,28 +644,27 @@ public: // Construction/Destruction/Assignment
   ///
   template <class ERng, class EProj>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph_base(vertex_key_type max_row_idx, ERng&& erng, EProj eproj, vertex_allocator_type alloc)
-        : vertices_(alloc) {
+  dynamic_graph_base(size_type vertex_count, ERng&& erng, EProj eproj, vertex_allocator_type alloc) : vertices_(alloc) {
 
-    load_edges(max_row_idx, move(erng), eproj, alloc);
+    load_edges(vertex_count, 0, move(erng), eproj);
   }
 
 public:
   template <class VRng, class VProj = identity>
-  void load_vertices(VRng&& vrng, VProj vproj = VProj()) {
-    reserve_vertices(ranges::size(vrng));
+  void load_vertices(VRng&& vrng, VProj vproj = {}) {
+    if (ranges::sized_range<VRng>)
+      reserve_vertices(ranges::size(vrng));
     auto add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng)
       add_vertex(vertex_type(std::move(vproj(u)), vertices_.get_allocator()));
-    //vertices_.emplace_back(vertex_type(std::move(vvalue_fnc(u)), alloc));
   }
 
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  void load_edges(vertex_key_type max_row_idx, ERng&& erng, EProj eproj = EProj()) {
+  void load_edges(size_type vertex_count, size_type edge_count_hint, ERng&& erng, EProj eproj = {}) {
     if constexpr (resizable<vertices_type>) {
-      if (vertices_.size() < static_cast<size_t>(max_row_idx) + 1)
-        vertices_.resize(static_cast<size_t>(max_row_idx) + 1, vertex_type(vertices_.get_allocator()));
+      if (vertices_.size() < vertex_count)
+        vertices_.resize(vertex_count, vertex_type(vertices_.get_allocator()));
     }
 
     // add edges
@@ -691,13 +690,13 @@ public:
   }
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  void load_edges(ERng&& erng, EProj eproj = EProj()) {
+  void load_edges(ERng&& erng, EProj eproj = {}) {
     // Nothing to do?
     if (erng.begin() == erng.end())
       return;
 
     // Evaluate max vertex key needed
-    size_t          erng_size   = 0;
+    size_type       erng_size   = 0;
     vertex_key_type max_row_idx = 0;
     for (auto& edge_data : erng) {
       auto&& e    = eproj(edge_data);
@@ -705,7 +704,7 @@ public:
       ++erng_size;
     }
 
-    load_edges(max_row_idx, erng, eproj);
+    load_edges(static_cast<size_type>(max_row_idx + 1), erng_size, erng, eproj);
   }
 
 public: // Properties
@@ -794,11 +793,8 @@ public:
 
   template <class ERng, class VRng, class EProj = identity, class VProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
-  dynamic_graph(const ERng&    erng,
-                const VRng&    vrng,
-                EProj          eproj = EProj(),
-                VProj          vproj = VProj(),
-                allocator_type alloc = allocator_type())
+  dynamic_graph(
+        const ERng& erng, const VRng& vrng, EProj eproj = {}, VProj vproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc) {}
 
   template <class ERng, class VRng, class EProj = identity, class VProj = identity>
@@ -806,8 +802,8 @@ public:
   dynamic_graph(const GV&      gv,
                 const ERng&    erng,
                 const VRng&    vrng,
-                EProj          eproj = EProj(),
-                VProj          vproj = VProj(),
+                EProj          eproj = {},
+                VProj          vproj = {},
                 allocator_type alloc = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc), value_(gv) {}
 
@@ -824,10 +820,7 @@ public:
 
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(vertex_key_type max_vertex_key,
-                ERng&           erng,
-                EProj           eproj = EProj(),
-                allocator_type  alloc = allocator_type())
+  dynamic_graph(vertex_key_type max_vertex_key, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(max_vertex_key, erng, eproj, alloc) {}
 
   template <class ERng, class EProj = identity>
@@ -835,17 +828,14 @@ public:
   dynamic_graph(const GV&       gv,
                 vertex_key_type max_vertex_key,
                 ERng&           erng,
-                EProj           eproj = EProj(),
+                EProj           eproj = {},
                 allocator_type  alloc = allocator_type())
         : base_type(max_vertex_key, erng, eproj, alloc), value_(gv) {}
 
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(GV&&            gv,
-                vertex_key_type max_vertex_key,
-                ERng&           erng,
-                EProj           eproj = EProj(),
-                allocator_type  alloc = allocator_type())
+  dynamic_graph(
+        GV&& gv, vertex_key_type max_vertex_key, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(max_vertex_key, erng, eproj, alloc), value_(move(gv)) {}
 
   // erng, eproj,       alloc
@@ -854,17 +844,17 @@ public:
 
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(ERng& erng, EProj eproj = EProj(), allocator_type alloc = allocator_type())
+  dynamic_graph(ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, eproj, alloc) {}
 
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(const GV& gv, ERng& erng, EProj eproj = EProj(), allocator_type alloc = allocator_type())
+  dynamic_graph(const GV& gv, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, eproj, alloc), value_(gv) {}
 
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(GV&& gv, ERng& erng, EProj eproj = EProj(), allocator_type alloc = allocator_type())
+  dynamic_graph(GV&& gv, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, eproj, alloc), value_(move(gv)) {}
 
 public:
@@ -904,21 +894,17 @@ public:
 
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(ERng& erng, EProj eproj = EProj(), allocator_type alloc = allocator_type())
+  dynamic_graph(ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, eproj, alloc) {}
 
   template <class ERng, typename EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(vertex_key_type max_vertex_key,
-                ERng&           erng,
-                EProj           eproj = EProj(),
-                allocator_type  alloc = allocator_type())
+  dynamic_graph(vertex_key_type max_vertex_key, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(max_vertex_key, erng, eproj, alloc) {}
 
   template <class ERng, class VRng, class EProj = identity, class VProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
-  dynamic_graph(
-        ERng& erng, VRng& vrng, EProj eproj = EProj(), VProj vproj = VProj(), allocator_type alloc = allocator_type())
+  dynamic_graph(ERng& erng, VRng& vrng, EProj eproj = {}, VProj vproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc) {}
 };
 

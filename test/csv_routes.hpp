@@ -135,7 +135,7 @@ auto load_graph(csv::string_view csv_file) {
 
   const vertex_key_type max_city_key = static_cast<vertex_key_type>(size(city_names)) - 1;
   csv::CSVReader        reader(csv_file); // CSV file reader
-  g.load_edges(max_city_key, reader, eproj);
+  g.load_edges(max_city_key+1, csv_row_cnt, reader, eproj);
 
   return g;
 }
