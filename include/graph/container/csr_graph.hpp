@@ -126,8 +126,8 @@ public:
   constexpr void reserve(size_type new_cap) { values_.reserve(new_cap); }
   constexpr void resize(size_type n) { values_.resize(n); }
 
-  constexpr reference_type       value(vertex_key_type key) { return values_[key]; }
-  constexpr const_reference_type value(vertex_key_type key) const { return values_[key]; }
+  constexpr reference_type       value(size_t key) { return values_[key]; }
+  constexpr const_reference_type value(size_t key) const { return values_[key]; }
 
 private: // Member variables
   values_type values_;
@@ -336,15 +336,17 @@ public: // Operations
   ///
   /// Space for the row_index vector is reserved if a vertex_count > 0 is passed. If it is zero then
   /// the normal processing to periodically reallocate the internal vectors will occur.
+  /// 
+  /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   /// </summary>
   /// <typeparam name="EProj">Edge Projection</typeparam>
   /// <param name="erng">Input range for edges</param>
   /// <param name="eprojection">Edge projection function</param>
   /// <param name="vertex_count">Number of vertices to reserve</param>
   /// <param name="edge_count">Number of edges to reserve</param>
-  template <ranges::forward_range ERng, class EProj = identity>
+  template <class ERng, class EProj = identity>
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
-  constexpr void load_edges(size_type vertex_count, size_type edge_count, const ERng& erng, EProj eprojection = {}) {
+  constexpr void load_edges(size_type vertex_count, size_type edge_count, ERng&& erng, EProj eprojection = {}) {
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng)) {
       row_index_.resize(vertex_count + 1, static_cast<vertex_key_type>(v_.size())); // add terminating row
@@ -365,7 +367,6 @@ public: // Operations
     // reserve space for rows if caller has provided it
     if (vertex_count > 0)
       row_index_.reserve(vertex_count + 1); // +1 for terminating row
-
 
     // Eval number of input rows and reserve space for the edges, if possible
     if constexpr (ranges::sized_range<ERng>)
@@ -404,8 +405,8 @@ public: // Operations
   /// <param name="eprojection">Edge projection function object</param>
   /// <param name="vprojection">Vertex projection function object</param>
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV> &&
-        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV> &&
+  //      views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load(const ERng& erng, const VRng& vrng, EProj eprojection = {}, VProj vprojection = {}) {
     size_type vertex_count = 0;
     if constexpr (ranges::sized_range<VRng>)
@@ -453,14 +454,14 @@ private: // tag_invoke properties
     static_assert(ranges::contiguous_range<index_vector_type>,
                   "row_index_ must be a contiguous range to evaluate uidx");
     auto uidx = &u - g.row_index_.data();
-    return g.values_[uidx];
+    return g.row_value_.value(static_cast<size_t>(uidx));
   }
   friend constexpr const vertex_value_type&
   tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<index_vector_type>,
                   "row_index_ must be a contiguous range to evaluate uidx");
     auto uidx = &u - g.row_index_.data();
-    return g.values_[uidx];
+    return g.row_value_.value(static_cast<size_t>(uidx));
   }
 
   friend constexpr edges_type tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {

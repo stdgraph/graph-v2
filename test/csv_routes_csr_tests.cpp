@@ -47,41 +47,14 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
-//template<typename T>
-void f(int& v) { //
-  auto&& val = v;
-}
+// Things to test
+//  csr_graph with VV=void (does it compile?)
 
-void f(const int& v) { //
-  auto&& val = v;
-}
-
-void f(int&& v) { //
-  auto&& val = v;
-}
 
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   init_console();
 
-  int   i1 = 1;
-  int&  i2 = i1;
-  int&& i3 = 3;
-
-  f(std::move(i3));
-
   using G                        = routes_csr_graph_type;
-  G                        g;
-  for (auto&& u : vertices(g)) {
-    for (auto&& uv : edges(g, u)) {
-    }
-  }
-  //using return_type = std::graph::views::copyable_vertex_t<vertex_key_t<G>, std::graph::vertex_value_t<G>&>;
-  //uint32_t key         = 0;
-  //auto name_getter  = [&key](auto&& name) -> return_type { return return_type{key++, name}; };
-  //std::vector<std::string> names = {"Raleigh", "Cary", "Apex"};
-  //g.load_vertices(names, name_getter);
-
-#if 0
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   auto frankfurt     = find_frankfurt(g);
@@ -93,6 +66,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   //auto frantfurt = germany_routes.frankfurt();
   //REQUIRE(frantfurt != end(germany_routes.cities()));
 
+#if 0
   SECTION("metadata") {
     REQUIRE(10 == std::ranges::size(vertices(g)));
     size_t edge_cnt   = 0;

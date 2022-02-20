@@ -661,6 +661,7 @@ public:
     }
   }
 
+  /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   void load_edges(size_type vertex_count, size_type edge_count_hint, ERng&& erng, EProj eproj = {}) {
@@ -690,6 +691,8 @@ public:
       }
     }
   }
+
+  /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   void load_edges(ERng&& erng, EProj eproj = {}) {
