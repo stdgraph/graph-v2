@@ -162,7 +162,7 @@ auto load_graph(csv::string_view csv_file) {
 /// Requires a single pass throught the CSV file to build both a map of unique labels --> vertex_key,
 /// and a "copy" of the rows. The rows have iterators to the unique labels for source and target keys
 /// plus a copy of the values stored.
-/// 
+///
 /// The resulting graph should give similar (same?) order as load_graph(csv_file) for vertices and
 /// edges.
 /// </summary>
@@ -172,16 +172,19 @@ auto load_graph(csv::string_view csv_file) {
 template <typename G>
 auto load_ordered_graph(csv::string_view csv_file) {
   using namespace std::graph;
+  using std::string;
   using std::string_view;
   using std::map;
+  using std::vector;
   using std::deque;
+  using std::move;
   using graph_type      = G;
   using vertex_key_type = vertex_key_t<G>;
   using edge_value_type = edge_value_t<G>; //std::remove_cvref<edge_value_t<G>>;
 
   csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
 
-  using labels_map   = map<string_view, int64_t>; // label, vertex key (also output order, assigned later)
+  using labels_map   = map<string, int64_t>; // label, vertex key (also output order, assigned later)
   using csv_row_type = views::copyable_edge_t<labels_map::iterator, double>;
   using csv_row_deq  = deque<csv_row_type>;
 
@@ -194,25 +197,31 @@ auto load_ordered_graph(csv::string_view csv_file) {
     string_view source_key                = row[0].get_sv();
     string_view target_key                = row[1].get_sv();
     double      value                     = row[2].get<double>();
-    auto&& [source_iter, source_inserted] = lbls.insert(labels_map::value_type(source_key, -1));
-    auto&& [target_iter, target_inserted] = lbls.insert(labels_map::value_type(target_key, -1));
-    if (source_iter->second == -1) // first time found as source? assign order
+    auto&& [source_iter, source_inserted] = lbls.emplace(labels_map::value_type(source_key, -1));
+    auto&& [target_iter, target_inserted] = lbls.emplace(labels_map::value_type(target_key, -1));
+    if (source_inserted) // first time found?
       source_iter->second = row_order++;
+    if (target_inserted) // first time found?
+      target_iter->second = row_order++;
 
     row_deq.push_back({source_iter, target_iter, value});
   }
-
-  // Assign unique vertex keys to each label (assigned in label order)
-  // This only occurs for vertices where target_key is never a source
-  for (auto&& [lbl, key] : lbls)
-    if (key == -1)
-      key = row_order++;
 
   // Sort the rows based on the source_key, using it's key just assigned
   // row order is preserved within the same source_key (this should give the same order as load_ordered_graph)
   std::ranges::stable_sort(row_deq, [](const csv_row_type& lhs, const csv_row_type& rhs) {
     return lhs.source_key->second < rhs.source_key->second;
   });
+
+  // Create sorted list of iterators to the cities/labels using the row_order value assigned
+  using lbl_iter = std::ranges::iterator_t<labels_map>;
+  using lbl_iter_vec = vector<lbl_iter>;
+  lbl_iter_vec ordered_cities;
+  ordered_cities.reserve(lbls.size());
+  for (auto it = lbls.begin(); it != lbls.end(); ++it)
+    ordered_cities.emplace_back(it);
+  std::ranges::sort(ordered_cities,
+                    [](const lbl_iter& lhs, const lbl_iter& rhs) -> bool { return lhs->second < rhs->second; });
 
   // Create an empty graph
   graph_type g;
@@ -229,11 +238,11 @@ auto load_ordered_graph(csv::string_view csv_file) {
   // load vertices
   using graph_copyable_vertex      = std::graph::views::copyable_vertex_t<vertex_key_type, std::string_view>;
   vertex_key_type key              = 0;
-  auto            city_name_getter = [&key](labels_map::value_type& lbl) {
-    graph_copyable_vertex retval{key++, lbl.first};
+  auto            city_name_getter = [&key](lbl_iter& lbl) {
+    graph_copyable_vertex retval{key++, lbl->first};
     return retval;
   };
-  g.load_vertices(lbls, city_name_getter);
+  g.load_vertices(ordered_cities, city_name_getter);
 
   return g;
 }
