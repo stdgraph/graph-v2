@@ -114,10 +114,12 @@ public:
   constexpr void reserve(size_type new_cap) { values_.reserve(new_cap); }
   constexpr void resize(size_type n) { values_.resize(n); }
 
-  constexpr reference_type       value(size_t key) { //
-      return values_[key]; }
+  constexpr reference_type value(size_t key) { //
+    return values_[key];
+  }
   constexpr const_reference_type value(size_t key) const { //
-      return values_[key]; }
+    return values_[key];
+  }
 
 private: // Member variables
   values_type values_;
@@ -128,8 +130,8 @@ private: // tag_invoke properties
 template <class EV, class GV, integral VKey, class Alloc>
 class csr_row_values<EV, void, GV, VKey, Alloc> {
 public:
-  using size_type            = size_t;
-  using vertex_value_type    = void;
+  using size_type         = size_t;
+  using vertex_value_type = void;
   //using reference_type       = vertex_value_type&;
   //using const_reference_type = const vertex_value_type&;
 
@@ -326,7 +328,7 @@ public: // Operations
   ///
   /// Space for the row_index vector is reserved if a vertex_count > 0 is passed. If it is zero then
   /// the normal processing to periodically reallocate the internal vectors will occur.
-  /// 
+  ///
   /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   /// </summary>
   /// <typeparam name="EProj">Edge Projection</typeparam>
@@ -414,6 +416,10 @@ public: // Operations
   constexpr ranges::iterator_t<const index_vector_type> find_vertex(vertex_key_type key) const noexcept {
     return row_index_.begin() + key;
   }
+
+public: // Operators
+  constexpr vertex_type& operator[](vertex_key_type key) noexcept { return row_index_[key]; }
+  constexpr const vertex_type& operator[](vertex_key_type key) const noexcept { return row_index_[key]; }
 
 private:                        // Member variables
   index_vector_type row_index_; // starting index into col_index_ and v_; holds +1 extra terminating row
