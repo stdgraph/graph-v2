@@ -6,9 +6,6 @@
 #include "graph/views/adjacency_edge_view.hpp"
 #include "graph/container/csr_graph.hpp"
 #include <cassert>
-#ifdef _MSC_VER
-#  include "Windows.h"
-#endif
 
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
 #define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file

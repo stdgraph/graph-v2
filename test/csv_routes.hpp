@@ -172,7 +172,6 @@ auto load_graph(csv::string_view csv_file) {
 template <typename G>
 auto load_ordered_graph(csv::string_view csv_file) {
   using namespace std::graph;
-  using std::string;
   using std::string_view;
   using std::map;
   using std::vector;
@@ -184,7 +183,7 @@ auto load_ordered_graph(csv::string_view csv_file) {
 
   csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
 
-  using labels_map   = map<string, int64_t>; // label, vertex key (also output order, assigned later)
+  using labels_map   = map<string_view, int64_t>; // label, vertex key (also output order, assigned later)
   using csv_row_type = views::copyable_edge_t<labels_map::iterator, double>;
   using csv_row_deq  = deque<csv_row_type>;
 

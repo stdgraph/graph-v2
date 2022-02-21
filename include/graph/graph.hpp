@@ -138,6 +138,10 @@ namespace views {
     VKey key;
     VV   value;
   };
+  template <class VKey>
+  struct vertex<VKey, void, void> {
+    VKey key;
+  };
 
   template <class VKey, class VV>
   using copyable_vertex_t = vertex<VKey, void, VV>; // {key, value}

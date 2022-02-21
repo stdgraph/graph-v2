@@ -44,12 +44,13 @@
     - [ ] Articulation Points
     - [ ] Transitive Closure
 - Graph Containers (data structures)
-    - [ ] **csr_graph**
+    - [ ] csr_graph
       - [x] Implement graph, vertex, edge
-      - [ ] Load from CSV file
-      - [ ] Validate with vol_graph tests
+      - [x] Load from CSV file
+      - [x] Validate with vofl_graph tests
       - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer lists
-    - [ ] edge_list_graph
+      - [ ] clean up naming
+    - [ ] edge_list_graph (edgelist_edge<VKey,E,EV> view?)
     - [ ] dynamic_graph: vol template params for vertex & edge containers (like stack/queue)
       - [ ] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer 
     - [ ] directed_adjacency_vector
@@ -62,13 +63,18 @@
     - [ ] All functions work (with/without defaults)
     - [ ] Minimal functions functional (sourced/unsourced): vertices(g), edges(g,u), target_key(g,uv), source_key(g,uv)
     - [ ] Default values same as dynamic graph values
+    - [ ] void & non-void for EV, VV & GV can store & retreive values
   - [ ] Validate algorithms
   - [ ] Validate const
-  - [ ] Validate constexpr
+  - [ ] Validate constexpr (need to use std::array)
   - [ ] Apply to multiple data structures
+    - [ ] load_edges() can use copy and move to set EV & VV values
+    - [ ] use load_ordered_graph() for all data structures (consistency)
+    - [ ] use values, references and ptrs for value types: EV, VV, GV
+    - [ ] support const on value types(?)
 - Tools, Libraries & Infrastructure
   - [ ] Create mtx parser (from nwgraph)
-  - [ ] **Constexpr unit tests (initial tests to verify pattern)**
+  - [ ] Constexpr unit tests (initial tests to verify pattern)
   - [ ] Generate doxygen output
   - [ ] Validate address sanitizer build
   - [ ] Support Clang (waiting for full concepts support)
