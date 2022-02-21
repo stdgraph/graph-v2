@@ -28,6 +28,8 @@
 #include "graph/graph.hpp"
 #include "graph/views/vertices_view.hpp"
 #include <set>
+#include <map>
+#include <deque>
 #include <algorithm>
 #include <string_view>
 #include <iomanip>
@@ -89,9 +91,9 @@ template <typename G>
 std::optional<std::graph::vertex_iterator_t<G>> find_city(G&& g, std::string_view city_name) {
   auto vertex_to_name = [&g](std::graph::vertex_reference_t<G> u) { return std::graph::vertex_value<G>(g, u); };
   auto it = std::ranges::lower_bound(std::graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
-  if (it != end(std::graph::vertices(g)) && std::graph::vertex_value(g, *it) != city_name)
-    it = end(std::graph::vertices(g));
-  if (it != end(std::graph::vertices(g)))
+  bool atEnd = (it == end(std::graph::vertices(g)));
+  auto key   = it - begin(std::graph::vertices(g));
+  if (it != end(std::graph::vertices(g)) && std::graph::vertex_value(g, *it) == city_name)
     return std::optional<std::graph::vertex_iterator_t<G>>(it);
   return std::optional<std::graph::vertex_iterator_t<G>>();
 }
@@ -127,7 +129,7 @@ auto load_graph(csv::string_view csv_file) {
   // load edges
   auto eproj = [&g](const csv::CSVRow& row) {
     using edge_value_type    = std::remove_cvref_t<edge_value_t<G>>;
-    using copyable_edge_type = std::graph::views::copyable_edge_t<vertex_key_type, edge_value_type>;
+    using copyable_edge_type = views::copyable_edge_t<vertex_key_type, edge_value_type>;
     copyable_edge_type retval{};
     retval.source_key = find_city_key(g, row[0].get_sv());
     retval.target_key = find_city_key(g, row[1].get_sv());
@@ -138,6 +140,78 @@ auto load_graph(csv::string_view csv_file) {
   const vertex_key_type max_city_key = static_cast<vertex_key_type>(size(city_names)) - 1;
   csv::CSVReader        reader(csv_file); // CSV file reader
   g.load_edges(static_cast<size_t>(max_city_key + 1), csv_row_cnt, reader, eproj);
+
+  return g;
+}
+
+/// <summary>
+/// Loads graph such that the vertices are orderd by the source & target keys from the input table.
+/// 
+/// Requires a single pass throught the CSV file to build both a map of unique labels --> vertex_key,
+/// and a "copy" of the rows. The rows have iterators to the unique labels for source and target keys
+/// plus a copy of the values stored.
+/// </summary>
+/// <typeparam name="G"></typeparam>
+/// <param name="csv_file"></param>
+/// <returns></returns>
+template <typename G>
+auto load_ordered_graph(csv::string_view csv_file) {
+  using namespace std::graph;
+  using std::string_view;
+  using std::map;
+  using std::deque;
+  using graph_type      = G;
+  using vertex_key_type = vertex_key_t<G>;
+  using edge_value_type = edge_value_t<G>; //std::remove_cvref<edge_value_t<G>>;
+
+  csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
+
+  using labels_map   = map<string_view, size_t>; // label, vertex key (also output order, assigned later)
+  using csv_row_type = views::copyable_edge_t<labels_map::iterator, double>;
+  using csv_row_deq  = deque<csv_row_type>;
+
+  labels_map  lbls;    // unique labels for both source_key and target_key, ordered
+  csv_row_deq row_deq; // all rows in the csv, though the labels only refer to entries in lbls
+
+  // scan the CSV file. lbls has the only (unique) string_views into the file.
+  for (csv::CSVRow& row : reader) {
+    string_view                   source_key  = row[0].get_sv();
+    string_view                   target_key  = row[1].get_sv();
+    double                        value       = row[2].get<double>();
+    typename labels_map::iterator source_iter = lbls.insert(labels_map::value_type(source_key, 0)).first;
+    typename labels_map::iterator target_iter = lbls.insert(labels_map::value_type(target_key, 0)).first;
+    row_deq.push_back({source_iter, target_iter, value});
+  }
+  // reader.n_rows()
+
+  // Assign unique vertex keys to each label (assigned in label order)
+  for (size_t i = 0; auto&& [lbl, key] : lbls)
+    key = i++;
+
+  // Sort the rows based on the source_key, using it's key just assigned
+  std::ranges::sort(
+        row_deq, [](csv_row_type& lhs, csv_row_type& rhs) { return lhs.source_key->second < rhs.source_key->second; });
+
+  // Create an empty graph
+  graph_type g;
+
+  // load edges
+  auto eproj = [&g](csv_row_type& row) {
+    using graph_copyable_edge_type = views::copyable_edge_t<vertex_key_type, edge_value_type>;
+    graph_copyable_edge_type retval{static_cast<vertex_key_type>(row.source_key->second),
+                                    static_cast<vertex_key_type>(row.target_key->second), row.value};
+    return retval;
+  };
+  g.load_edges(lbls.size(), row_deq.size(), row_deq, eproj);
+
+  // load vertices
+  using graph_copyable_vertex      = std::graph::views::copyable_vertex_t<vertex_key_type, std::string_view>;
+  vertex_key_type key              = 0;
+  auto            city_name_getter = [&key](labels_map::value_type& lbl) {
+    graph_copyable_vertex retval{key++, lbl.first};
+    return retval;
+  };
+  g.load_vertices(lbls, city_name_getter);
 
   return g;
 }

@@ -49,13 +49,14 @@ auto find_frankfurt(G&& g) {
 
 // Things to test
 //  csr_graph with VV=void (does it compile?)
+//  push_back and emplace_back work correctly when adding city names (applies to csr_graph & dynamic_graph)
 
 
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   init_console();
 
   using G                        = routes_csr_graph_type;
-  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   auto frankfurt     = find_frankfurt(g);
   auto frankfurt_key = find_frankfurt_key(g);
@@ -66,21 +67,24 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   //auto frantfurt = germany_routes.frankfurt();
   //REQUIRE(frantfurt != end(germany_routes.cities()));
 
-#if 0
   SECTION("metadata") {
     REQUIRE(10 == std::ranges::size(vertices(g)));
+    size_t vertex_cnt = 0;
     size_t edge_cnt   = 0;
     double total_dist = 0;
     for (auto&& u : vertices(g)) {
+      ++vertex_cnt;
       for (auto&& uv : edges(g, u)) {
         ++edge_cnt; // forward_list doesn't have size()
         total_dist += edge_value(g, uv);
       }
     }
+    REQUIRE(vertex_cnt == 10);
     REQUIRE(edge_cnt == 11);
     REQUIRE(total_dist == 2030.0);
   }
 
+#if 0
   SECTION("const_vertices_view") {
     const G& g2 = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);

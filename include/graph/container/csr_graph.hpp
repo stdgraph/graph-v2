@@ -99,24 +99,12 @@ public:
 
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_values(const VRng& vrng, VProj projection, size_type vertex_count = 0) {
+  constexpr void load_values(VRng&& vrng, VProj projection, size_type vertex_count = 0) {
     if constexpr (ranges::sized_range<VRng>)
       vertex_count = max(vertex_count, ranges::size(vrng));
     values_.reserve(max(ranges::size(vrng), vertex_count));
     for (auto&& vvalue : vrng)
-      values_.push_back(projection(vvalue));
-    if (values_.size() < vertex_count)
-      values_.resize(vertex_count);
-  }
-
-  template <ranges::forward_range VRng, class VProj = identity>
-  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_values(VRng& vrng, VProj projection, size_type vertex_count = 0) {
-    if constexpr (ranges::sized_range<VRng>)
-      vertex_count = max(vertex_count, ranges::size(vrng));
-    values_.reserve(max(ranges::size(vrng), vertex_count));
-    for (auto&& vvalue : vrng)
-      values_.push_back(projection(vvalue).value);
+      values_.push_back(vertex_value_type(projection(vvalue).value));
     if (values_.size() < vertex_count)
       values_.resize(vertex_count);
   }
@@ -126,8 +114,10 @@ public:
   constexpr void reserve(size_type new_cap) { values_.reserve(new_cap); }
   constexpr void resize(size_type n) { values_.resize(n); }
 
-  constexpr reference_type       value(size_t key) { return values_[key]; }
-  constexpr const_reference_type value(size_t key) const { return values_[key]; }
+  constexpr reference_type       value(size_t key) { //
+      return values_[key]; }
+  constexpr const_reference_type value(size_t key) const { //
+      return values_[key]; }
 
 private: // Member variables
   values_type values_;
@@ -316,7 +306,7 @@ public: // Operations
   /// <param name="vprojection">Projection function for vrng values</param>
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_vertices(VRng& vrng, VProj vprojection) {
+  constexpr void load_vertices(VRng&& vrng, VProj vprojection) {
     size_type vertex_count = row_index_.empty() ? 0 : row_index_.size() - 1; // edges loaded?
     row_value_.load_values(vrng, vprojection, vertex_count);
   }
@@ -468,8 +458,8 @@ private: // tag_invoke properties
     static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
     assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
-    assert(static_cast<size_t>(u) < g.col_index_.size() &&
-           static_cast<size_t>(*u2) < g.col_index_.size()); // in col_index_ bounds?
+    assert(static_cast<size_t>(u) <= g.col_index_.size() &&
+           static_cast<size_t>(*u2) <= g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
   friend constexpr const edges_type
@@ -477,8 +467,8 @@ private: // tag_invoke properties
     static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
     const vertex_type* u2 = &u + 1;
     assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
-    assert(static_cast<size_t>(u) < g.col_index_.size() &&
-           static_cast<size_t>(*u2) < g.col_index_.size()); // in col_index_ bounds?
+    assert(static_cast<size_t>(u) <= g.col_index_.size() &&
+           static_cast<size_t>(*u2) <= g.col_index_.size()); // in col_index_ bounds?
     return const_edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
   }
 
@@ -498,12 +488,12 @@ private: // tag_invoke properties
   // edge_value(g,uv)
   friend constexpr edge_value_type&
   tag_invoke(::std::graph::access::edge_value_fn_t, graph_type& g, edge_type& uv) noexcept {
-    ptrdiff_t uv_idx = &uv - g.col_index_.data();
+    size_t uv_idx = static_cast<size_t>(&uv - g.col_index_.data());
     return g.v_[uv_idx];
   }
   friend constexpr const edge_value_type&
   tag_invoke(::std::graph::access::edge_value_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    ptrdiff_t uv_idx = &uv - g.col_index_.data();
+    size_t uv_idx = static_cast<size_t>(&uv - g.col_index_.data());
     return g.v_[uv_idx];
   }
 };
