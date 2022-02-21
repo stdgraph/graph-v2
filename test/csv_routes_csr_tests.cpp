@@ -58,8 +58,8 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   using G                        = routes_csr_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
-  auto frankfurt     = find_frankfurt(g);
-  auto frankfurt_key = find_frankfurt_key(g);
+  const auto frankfurt     = find_frankfurt(g);
+  const auto frankfurt_key = find_frankfurt_key(g);
 
   //using inv_vec = std::vector<int>;
   //using sr = std::ranges::subrange<inv_vec::iterator>;
@@ -170,7 +170,6 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     //i0 == j0;
   }
 
-#if 0
   SECTION("const_incidence_edge_view") {
     const G& g2 = g;
 
@@ -183,7 +182,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 4);
+      REQUIRE(vkey == 5);
     }
     {
       auto&& [vkey, uv] = *++i1;
@@ -209,7 +208,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 4);
+      REQUIRE(vkey == 5);
     }
     {
       auto&& [vkey, uv] = *++i1;
@@ -237,7 +236,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       auto&& [vkey, v] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(is_const_v<remove_reference_t<decltype(v)>>);
-      REQUIRE(vkey == 4);
+      REQUIRE(vkey == 5);
     }
     {
       auto&& [vkey, v] = *++i1;
@@ -263,7 +262,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 4);
+      REQUIRE(vkey == 5);
     }
     {
       auto&& [vkey, v] = *++i1;
@@ -278,14 +277,12 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     }
     REQUIRE(cnt == 3);
   }
-#endif
 
   SECTION("content") {
 #  if TEST_OPTION == TEST_OPTION_OUTPUT
     cout << "\nGermany Routes using csr_graph"
          << "\n----------------------------------------" << endl
          << routes_graph(g) << endl;
-#  if 0
 #  elif TEST_OPTION == TEST_OPTION_GEN
     ostream_indenter indent;
     cout << endl << indent << "auto ui = begin(vertices(g));" << endl;
@@ -477,6 +474,5 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
 
     REQUIRE(10 == size(vertices(g))); // all vertices visited?
 #  endif
-#endif //0
   }
 }

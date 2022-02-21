@@ -155,16 +155,16 @@ auto load_graph(csv::string_view csv_file) {
 }
 
 /// <summary>
-/// Loads graph such that the vertices are orderd by the source & target keys from the input table.
-/// The order is defined by the order of the source_key when first encountered. All rows are kept
-/// in the same relative order encountered within a source_key.
-///
+/// Loads a graph such that the vertices are ordered alphabetically by their label so that find_city()
+/// can use std::lower_bound. Edges are shown in the same order as they appear in the CSV, relative
+/// to the source city.
+/// 
 /// Requires a single pass throught the CSV file to build both a map of unique labels --> vertex_key,
 /// and a "copy" of the rows. The rows have iterators to the unique labels for source and target keys
 /// plus a copy of the values stored.
 ///
-/// The resulting graph should give similar (same?) order as load_graph(csv_file) for vertices and
-/// edges.
+/// The resulting graph should give the order as load_graph(csv_file) for vertices but edges may be
+/// ordered differently.
 /// </summary>
 /// <typeparam name="G"></typeparam>
 /// <param name="csv_file"></param>
@@ -199,13 +199,15 @@ auto load_ordered_graph(csv::string_view csv_file) {
     double      value                     = row[2].get<double>();
     auto&& [source_iter, source_inserted] = lbls.emplace(labels_map::value_type(source_key, -1));
     auto&& [target_iter, target_inserted] = lbls.emplace(labels_map::value_type(target_key, -1));
-    if (source_inserted) // first time found?
-      source_iter->second = row_order++;
-    if (target_inserted) // first time found?
-      target_iter->second = row_order++;
 
     row_deq.push_back({source_iter, target_iter, value});
   }
+
+  // Assign unique vertex keys to each label (assigned in label order)
+  // This only occurs for vertices where target_key is never a source
+  for (auto&& [lbl, key] : lbls)
+    if (key == -1)
+      key = row_order++;
 
   // Sort the rows based on the source_key, using it's key just assigned
   // row order is preserved within the same source_key (this should give the same order as load_ordered_graph)
