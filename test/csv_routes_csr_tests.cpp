@@ -13,7 +13,7 @@
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
 #define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file
 #define TEST_OPTION_TEST (3)   // run unit tests
-#define TEST_OPTION TEST_OPTION_OUTPUT
+#define TEST_OPTION TEST_OPTION_TEST
 
 using std::cout;
 using std::endl;
@@ -357,9 +357,9 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
 
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
-      REQUIRE(4 == target_key(g, *uvi));
-      REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(173 == edge_value(g, *uvi));
+      REQUIRE(5 == target_key(g, *uvi));
+      REQUIRE("Mannheim" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(85 == edge_value(g, *uvi));
       ++uv_cnt;
 
       ++uvi;
@@ -369,9 +369,9 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       ++uv_cnt;
 
       ++uvi;
-      REQUIRE(5 == target_key(g, *uvi));
-      REQUIRE("Mannheim" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(85 == edge_value(g, *uvi));
+      REQUIRE(4 == target_key(g, *uvi));
+      REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(173 == edge_value(g, *uvi));
       ++uv_cnt;
 
       REQUIRE(3 == uv_cnt);
@@ -430,15 +430,15 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
 
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
-      REQUIRE(6 == target_key(g, *uvi));
-      REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(167 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
       REQUIRE(8 == target_key(g, *uvi));
       REQUIRE("Stuttgart" == vertex_value(g, target(g, *uvi)));
       REQUIRE(183 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
+      REQUIRE(6 == target_key(g, *uvi));
+      REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(167 == edge_value(g, *uvi));
       ++uv_cnt;
 
       REQUIRE(2 == uv_cnt);
@@ -458,15 +458,15 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
 
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
-      REQUIRE(7 == target_key(g, *uvi));
-      REQUIRE("N\xc3\xbcrnberg" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(103 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
       REQUIRE(1 == target_key(g, *uvi));
       REQUIRE("Erfurt" == vertex_value(g, target(g, *uvi)));
       REQUIRE(186 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
+      REQUIRE(7 == target_key(g, *uvi));
+      REQUIRE("N\xc3\xbcrnberg" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(103 == edge_value(g, *uvi));
       ++uv_cnt;
 
       REQUIRE(2 == uv_cnt);
