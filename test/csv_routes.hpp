@@ -108,6 +108,16 @@ std::graph::vertex_key_t<G> find_city_key(G&& g, std::string_view city_name) {
                                                   begin(std::graph::vertices(g))); // == size(vertices(g)) if not found
 }
 
+/// <summary>
+/// Loads graph such that the vertices are ordered in the same order as the source_key on the edges.
+/// The value of the source_key is not significant. Edges must be ordered by their source_key.
+///
+/// Uses 2 passes the the CSV file. The first is to get the set of unique vertex keys and to create
+/// the vertices. The second pass is used to create the edges.
+/// </summary>
+/// <typeparam name="G"></typeparam>
+/// <param name="csv_file"></param>
+/// <returns></returns>
 template <typename G>
 auto load_graph(csv::string_view csv_file) {
   using namespace std::graph;
@@ -146,10 +156,14 @@ auto load_graph(csv::string_view csv_file) {
 
 /// <summary>
 /// Loads graph such that the vertices are orderd by the source & target keys from the input table.
-/// 
+/// The order is defined by the order of the source_key when first encountered. All rows are kept
+/// in the same relative order encountered within a source_key.
+///
 /// Requires a single pass throught the CSV file to build both a map of unique labels --> vertex_key,
 /// and a "copy" of the rows. The rows have iterators to the unique labels for source and target keys
 /// plus a copy of the values stored.
+/// 
+/// The output result should give the same order as load_graph(csv_file).
 /// </summary>
 /// <typeparam name="G"></typeparam>
 /// <param name="csv_file"></param>
@@ -166,7 +180,7 @@ auto load_ordered_graph(csv::string_view csv_file) {
 
   csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
 
-  using labels_map   = map<string_view, size_t>; // label, vertex key (also output order, assigned later)
+  using labels_map   = map<string_view, int64_t>; // label, vertex key (also output order, assigned later)
   using csv_row_type = views::copyable_edge_t<labels_map::iterator, double>;
   using csv_row_deq  = deque<csv_row_type>;
 
@@ -174,23 +188,30 @@ auto load_ordered_graph(csv::string_view csv_file) {
   csv_row_deq row_deq; // all rows in the csv, though the labels only refer to entries in lbls
 
   // scan the CSV file. lbls has the only (unique) string_views into the file.
+  int64_t row_order = 0;
   for (csv::CSVRow& row : reader) {
-    string_view                   source_key  = row[0].get_sv();
-    string_view                   target_key  = row[1].get_sv();
-    double                        value       = row[2].get<double>();
-    typename labels_map::iterator source_iter = lbls.insert(labels_map::value_type(source_key, 0)).first;
-    typename labels_map::iterator target_iter = lbls.insert(labels_map::value_type(target_key, 0)).first;
+    string_view source_key                = row[0].get_sv();
+    string_view target_key                = row[1].get_sv();
+    double      value                     = row[2].get<double>();
+    auto&& [source_iter, source_inserted] = lbls.insert(labels_map::value_type(source_key, -1));
+    auto&& [target_iter, target_inserted] = lbls.insert(labels_map::value_type(target_key, -1));
+    if (source_iter->second == -1) // first time found as source? assign order
+      source_iter->second = row_order++;
+
     row_deq.push_back({source_iter, target_iter, value});
   }
-  // reader.n_rows()
 
   // Assign unique vertex keys to each label (assigned in label order)
-  for (size_t i = 0; auto&& [lbl, key] : lbls)
-    key = i++;
+  // This only occurs for vertices where target_key is never a source
+  for (auto&& [lbl, key] : lbls)
+    if (key == -1)
+      key = row_order++;
 
   // Sort the rows based on the source_key, using it's key just assigned
-  std::ranges::sort(
-        row_deq, [](csv_row_type& lhs, csv_row_type& rhs) { return lhs.source_key->second < rhs.source_key->second; });
+  // row order is preserved within the same source_key (this should give the same order as load_ordered_graph)
+  std::ranges::stable_sort(row_deq, [](const csv_row_type& lhs, const csv_row_type& rhs) {
+    return lhs.source_key->second < rhs.source_key->second;
+  });
 
   // Create an empty graph
   graph_type g;
