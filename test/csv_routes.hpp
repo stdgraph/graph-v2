@@ -163,7 +163,8 @@ auto load_graph(csv::string_view csv_file) {
 /// and a "copy" of the rows. The rows have iterators to the unique labels for source and target keys
 /// plus a copy of the values stored.
 /// 
-/// The output result should give the same order as load_graph(csv_file).
+/// The resulting graph should give similar (same?) order as load_graph(csv_file) for vertices and
+/// edges.
 /// </summary>
 /// <typeparam name="G"></typeparam>
 /// <param name="csv_file"></param>

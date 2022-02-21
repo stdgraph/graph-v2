@@ -12,6 +12,7 @@
 //  have public load_edges(...), load_vertices(...), and load()
 //  allow separation of construction and load
 //  allow multiple calls to load edges as long as subsequent edges have ukey >= last vertex (append)
+//  VKey must be large enough for the total edges and the total vertices.
 
 // load_vertices(vrng, vproj) <- [ukey,vval]
 // load_edges(erng, eproj) <- [ukey, vkey, eval]
@@ -59,6 +60,19 @@ template <class EV      = bool,
           class Alloc   = allocator<uint32_t>>
 requires(!is_void_v<EV>) //
       class csr_graph;
+
+template <integral VKey>
+struct csr_row {
+  using vertex_key_type = VKey;
+  vertex_key_type index = 0;
+};
+
+template <integral VKey>
+struct csr_col {
+  using vertex_key_type = VKey;
+  vertex_key_type index = 0;
+};
+
 
 /// <summary>
 /// Class to hold vertex values in a vector that is the same size as row_index_.
@@ -168,21 +182,23 @@ public:
 /// <typeparam name="EV">Edge value type</typeparam>
 /// <typeparam name="VV">Vertex value type</typeparam>
 /// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VKey">Vertex Key type</typeparam>
+/// <typeparam name="VKey">Vertex Key type. This must be large enough for the total edges and the total vertices.</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
 class csr_graph_base {
-  using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
-  using v_allocator_type     = typename allocator_traits<Alloc>::template rebind_alloc<EV>;
+  using row_type           = csr_row<VKey>;
+  using row_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<row_type>;
+  using row_index_vector   = vector<row_type, row_allocator_type>;
 
-  using index_vector_type = std::vector<VKey, index_allocator_type>;
-  using v_vector_type     = std::vector<EV, v_allocator_type>;
+  using col_type           = csr_col<VKey>;
+  using col_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<col_type>;
+  using col_index_vector   = vector<col_type, col_allocator_type>;
 
-  using csr_vertex_range_type       = index_vector_type;
-  using const_csr_vertex_range_type = const index_vector_type;
+  //using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
+  using v_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<EV>;
+  using v_vector_type    = std::vector<EV, v_allocator_type>;
 
-  using csr_vertex_edge_range_type       = index_vector_type;
-  using const_csr_vertex_edge_range_type = const index_vector_type;
+  //using index_vector_type = std::vector<VKey, index_allocator_type>;
 
   using row_values_type = csr_row_values<EV, VV, GV, VKey, Alloc>;
 
@@ -190,20 +206,20 @@ public: // Types
   using graph_type = csr_graph_base<EV, VV, GV, VKey, Alloc>;
 
   using vertex_key_type     = VKey;
-  using vertex_type         = vertex_key_type;
+  using vertex_type         = row_type;
   using vertex_value_type   = VV;
-  using vertices_type       = ranges::subrange<ranges::iterator_t<index_vector_type>>;
-  using const_vertices_type = ranges::subrange<ranges::iterator_t<const index_vector_type>>;
+  using vertices_type       = ranges::subrange<ranges::iterator_t<row_index_vector>>;
+  using const_vertices_type = ranges::subrange<ranges::iterator_t<const row_index_vector>>;
 
   using edge_value_type  = EV;
-  using edge_type        = VKey; // index into v_
-  using edges_type       = ranges::subrange<ranges::iterator_t<index_vector_type>>;
-  using const_edges_type = ranges::subrange<ranges::iterator_t<const index_vector_type>>;
+  using edge_type        = col_type; // index into v_
+  using edges_type       = ranges::subrange<ranges::iterator_t<col_index_vector>>;
+  using const_edges_type = ranges::subrange<ranges::iterator_t<const col_index_vector>>;
 
-  using const_iterator = typename index_vector_type::const_iterator;
-  using iterator       = typename index_vector_type::iterator;
+  using const_iterator = typename row_index_vector::const_iterator;
+  using iterator       = typename row_index_vector::iterator;
 
-  using size_type = ranges::range_size_t<index_vector_type>;
+  using size_type = ranges::range_size_t<row_index_vector>;
 
 public: // Construction/Destruction
   constexpr csr_graph_base()                      = default;
@@ -236,6 +252,7 @@ public: // Construction/Destruction
   /// Constructor that takes edge range and vertex range to create the CSR graph.
   /// Edges must be ordered by source_key (enforced by asssertion).
   /// </summary>
+
   /// <typeparam name="EProj">Edge projection function</typeparam>
   /// <typeparam name="VProj">Vertex projection function</typeparam>
   /// <param name="erng">The input range of edges</param>
@@ -341,7 +358,7 @@ public: // Operations
   constexpr void load_edges(size_type vertex_count, size_type edge_count, ERng&& erng, EProj eprojection = {}) {
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng)) {
-      row_index_.resize(vertex_count + 1, static_cast<vertex_key_type>(v_.size())); // add terminating row
+      row_index_.resize(vertex_count + 1, vertex_type{static_cast<vertex_key_type>(v_.size())}); // add terminating row
       return;
     }
 
@@ -372,8 +389,8 @@ public: // Operations
     for (auto&& edge_data : erng) {
       auto&& [ukey, vkey, value] = eprojection(edge_data); // csr_graph requires EV!=void
       assert(ukey >= last_ukey);                           // ordered by ukey? (requirement)
-      row_index_.resize(static_cast<size_t>(ukey) + 1, static_cast<vertex_key_type>(v_.size()));
-      col_index_.push_back(vkey);
+      row_index_.resize(static_cast<size_t>(ukey) + 1, vertex_type{static_cast<vertex_key_type>(v_.size())});
+      col_index_.push_back(edge_type{vkey});
       v_.emplace_back(std::move(value));
       last_ukey = ukey;
       max_vkey  = max(max_vkey, vkey);
@@ -383,7 +400,7 @@ public: // Operations
     vertex_count = max(vertex_count, max(row_index_.size(), static_cast<size_type>(max_vkey + 1)));
 
     // add any rows that haven't been added yet, and (+1) terminating row
-    row_index_.resize(vertex_count + 1, static_cast<vertex_key_type>(v_.size()));
+    row_index_.resize(vertex_count + 1, vertex_type{static_cast<vertex_key_type>(v_.size())});
   }
 
   /// <summary>
@@ -410,22 +427,22 @@ public: // Operations
   }
 
 public: // Operations
-  constexpr ranges::iterator_t<index_vector_type> find_vertex(vertex_key_type key) noexcept {
+  constexpr ranges::iterator_t<row_index_vector> find_vertex(vertex_key_type key) noexcept {
     return row_index_.begin() + key;
   }
-  constexpr ranges::iterator_t<const index_vector_type> find_vertex(vertex_key_type key) const noexcept {
+  constexpr ranges::iterator_t<const row_index_vector> find_vertex(vertex_key_type key) const noexcept {
     return row_index_.begin() + key;
   }
 
 public: // Operators
-  constexpr vertex_type& operator[](vertex_key_type key) noexcept { return row_index_[key]; }
+  constexpr vertex_type&       operator[](vertex_key_type key) noexcept { return row_index_[key]; }
   constexpr const vertex_type& operator[](vertex_key_type key) const noexcept { return row_index_[key]; }
 
-private:                        // Member variables
-  index_vector_type row_index_; // starting index into col_index_ and v_; holds +1 extra terminating row
-  index_vector_type col_index_; // col_index_[n] holds the column index (aka target)
-  v_vector_type     v_;         // v_[n]         holds the edge value for col_index_[n]
-  row_values_type   row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
+private:                       // Member variables
+  row_index_vector row_index_; // starting index into col_index_ and v_; holds +1 extra terminating row
+  col_index_vector col_index_; // col_index_[n] holds the column index (aka target)
+  v_vector_type    v_;         // v_[n]         holds the edge value for col_index_[n]
+  row_values_type  row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
 
 private: // tag_invoke properties
   friend constexpr vertices_type tag_invoke(::std::graph::access::vertices_fn_t, csr_graph_base& g) {
@@ -447,41 +464,39 @@ private: // tag_invoke properties
 
   friend constexpr vertex_value_type&
   tag_invoke(::std::graph::access::vertex_value_fn_t, graph_type& g, vertex_type& u) {
-    static_assert(ranges::contiguous_range<index_vector_type>,
-                  "row_index_ must be a contiguous range to evaluate uidx");
+    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
     auto uidx = &u - g.row_index_.data();
     return g.row_value_.value(static_cast<size_t>(uidx));
   }
   friend constexpr const vertex_value_type&
   tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
-    static_assert(ranges::contiguous_range<index_vector_type>,
-                  "row_index_ must be a contiguous range to evaluate uidx");
+    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
     auto uidx = &u - g.row_index_.data();
     return g.row_value_.value(static_cast<size_t>(uidx));
   }
 
   friend constexpr edges_type tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {
-    static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
+    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
     assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
-    assert(static_cast<size_t>(u) <= g.col_index_.size() &&
-           static_cast<size_t>(*u2) <= g.col_index_.size()); // in col_index_ bounds?
-    return edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
+    assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
+           static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
+    return edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
   }
   friend constexpr const edges_type
   tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_type& u) {
-    static_assert(ranges::contiguous_range<index_vector_type>, "row_index_ must be a contiguous range to get next row");
+    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     const vertex_type* u2 = &u + 1;
     assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
-    assert(static_cast<size_t>(u) <= g.col_index_.size() &&
-           static_cast<size_t>(*u2) <= g.col_index_.size()); // in col_index_ bounds?
-    return const_edges_type(g.col_index_.begin() + u, g.col_index_.begin() + *u2);
+    assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
+           static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
+    return const_edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
   }
 
   // target_key(g,uv), target(g,uv)
   friend constexpr vertex_key_type
   tag_invoke(::std::graph::access::target_key_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return uv;
+    return uv.index;
   }
   friend constexpr vertex_type& tag_invoke(::std::graph::access::target_fn_t, graph_type& g, edge_type& uv) noexcept {
     return g.row_index_.value(uv);
@@ -512,7 +527,7 @@ private: // tag_invoke properties
 /// <typeparam name="EV">Edge value type</typeparam>
 /// <typeparam name="VV">Vertex value type</typeparam>
 /// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VKey">Vertex Key type</typeparam>
+/// <typeparam name="VKey">Vertex Key type. This must be large enough for the total edges and the total vertices.</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
 requires(!is_void_v<EV>) //
@@ -622,7 +637,7 @@ private: // Member variables
 /// <typeparam name="EV">Edge value type</typeparam>
 /// <typeparam name="VV">Vertex value type</typeparam>
 /// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VKey">Vertex Key type</typeparam>
+/// <typeparam name="VKey">Vertex Key type. This must be large enough for the total edges and the total vertices.</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, integral VKey, class Alloc>
 requires(!is_void_v<EV>) //
