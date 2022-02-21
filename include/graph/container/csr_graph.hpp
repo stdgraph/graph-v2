@@ -483,7 +483,7 @@ private: // tag_invoke properties
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
   }
-  friend constexpr const edges_type
+  friend constexpr const_edges_type
   tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     const vertex_type* u2 = &u + 1;
@@ -499,11 +499,11 @@ private: // tag_invoke properties
     return uv.index;
   }
   friend constexpr vertex_type& tag_invoke(::std::graph::access::target_fn_t, graph_type& g, edge_type& uv) noexcept {
-    return g.row_index_.value(uv);
+    return g.row_index_[uv.index];
   }
   friend constexpr const vertex_type&
   tag_invoke(::std::graph::access::target_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return g.row_index_.value(uv);
+    return g.row_index_[uv.index];
   }
 
   // edge_value(g,uv)
