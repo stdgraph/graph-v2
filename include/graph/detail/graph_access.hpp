@@ -67,6 +67,13 @@ namespace access {
   TAG_INVOKE_DEF(contains_edge); // contains_edge(g,ukey,vkey) -> bool
 } // namespace access
 
+// Additional functions to consider
+//  reserve_vertices(g,n) - noop if n/a
+//  reserve_edges(g,n)    - noop if n/a
+//
+//  load_graph(g,erng,vrng,eproj,vproj)
+//
+
 //
 // Vertex range & directly related types
 //

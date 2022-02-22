@@ -234,7 +234,7 @@ auto load_ordered_graph(csv::string_view csv_file) {
                                     static_cast<vertex_key_type>(row.target_key->second), row.value};
     return retval;
   };
-  g.load_edges(lbls.size(), row_deq.size(), row_deq, eproj);
+  g.load_edges(/* lbls.size(), row_deq.size(),*/ row_deq, eproj);
 
   // load vertices
   using graph_copyable_vertex      = std::graph::views::copyable_vertex_t<vertex_key_type, std::string_view>;

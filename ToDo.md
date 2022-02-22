@@ -27,6 +27,7 @@
       - [ ] Use the types in the view functions
       - [ ] Add optional value function object parameters to the functions
       - [ ] combine targeted_edge & sourced_edge; use bool Sourced template parameter to add Sourced key
+      - [ ] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -57,6 +58,7 @@
     - [ ] undirected_adjacency_list
     - [ ] graph with map-based vertices (requires different algorithm impl)
     - [ ] edge_value_extractor is a "projection"
+    - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
 - [ ] Testing Patterns
   - [x] Validate content
   - [ ] Validate graph API
