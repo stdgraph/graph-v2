@@ -65,6 +65,57 @@ auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOr
   return std::pair(std::move(lbl_vec), reader.n_rows()); // return (unique lbls, num rows read)
 }
 
+enum struct name_order_policy : int8_t { order_found, alphabetical };
+using label_key_map = std::map<std::string_view, int64_t>; // label, vertex key
+
+/// <summary>
+/// Scans 2 columns in a CSV file and returns a map<string_view,size>, where the string_view is a
+/// unique label in occurring in either column and size_t is it's unique key.
+/// </summary>
+/// <typeparam name="ColNumOrName">Column name or column number to specify the column in the CSV file</typeparam>
+/// <param name="csv_file">CSV filename</param>
+/// <param name="col1">First column to use</param>
+/// <param name="col2">Second column to use</param>
+/// <param name="order_policy">For order_policy=order_found, the label key is assigned to the row it was
+/// first encountered in the first column. Labels that only occur in the second column will be assigned
+/// a key that follows the other keys in the first column. For order_policy=alphabetical, the key will be
+/// assigned based on the alphabetical ordering of the labels.</param>
+/// <returns></returns>
+template <typename ColNumOrName>
+auto unique_vertex_labels2(csv::string_view        csv_file,
+                           ColNumOrName            col1,
+                           ColNumOrName            col2,
+                           const name_order_policy order_policy) {
+  csv::CSVReader reader(csv_file); // CSV file reader
+  label_key_map  lbls;
+
+  int64_t row_order = 0;
+  for (csv::CSVRow& row : reader) {
+    std::string_view source_key           = row[0].get_sv();
+    std::string_view target_key           = row[1].get_sv();
+    auto&& [source_iter, source_inserted] = lbls.emplace(label_key_map::value_type(source_key, -1));
+    auto&& [target_iter, target_inserted] = lbls.emplace(label_key_map::value_type(target_key, -1));
+
+    if (order_policy == name_order_policy::order_found && source_iter->second == -1)
+      source_iter->second = row_order++;
+  }
+
+  // Assign unique keys to each label that doesn't have an order assigned yet.
+  // The following behavior will occur for different order_policy:
+  // 1. ==alphabetical: no order has been assigned yet and all values will be assigned to
+  //    reflect the order in the map (alphabetical).
+  // 2. ==order_found, then the order reflected will be defined as the first
+  //    time the label was found as the source_key in the file. Anything that hasn't been
+  //    assigned yet only appears in the target_key and will be assigned values at the end.
+  // assign order to labels that were only targets
+  for (auto&& [lbl, key] : lbls)
+    if (key == -1)
+      key = row_order++;
+
+  return std::pair(std::move(lbls), reader.n_rows());
+}
+
+
 #ifdef FUTURE
 /// <summary>
 /// Gets the maximum value of two columns in a CSV file with integral values.
