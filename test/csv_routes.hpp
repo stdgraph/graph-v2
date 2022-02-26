@@ -65,7 +65,11 @@ auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOr
   return std::pair(std::move(lbl_vec), reader.n_rows()); // return (unique lbls, num rows read)
 }
 
-enum struct name_order_policy : int8_t { order_found, alphabetical };
+enum struct name_order_policy : int8_t {
+  order_found,        // key assigned when first encountered as source or target
+  source_order_found, // key assigned when first encountered as source only; names that are only targets appear at end
+  alphabetical        // key assigned after all keys found, in name order
+};
 
 /// <summary>
 /// Scans 2 columns in a CSV file and returns a map<string_view,size>, where the string_view is a
@@ -228,7 +232,8 @@ auto load_graph(csv::string_view csv_file) {
 /// <param name="csv_file"></param>
 /// <returns></returns>
 template <typename G>
-auto load_ordered_graph(csv::string_view csv_file) {
+auto load_ordered_graph(csv::string_view        csv_file,
+                        const name_order_policy order_policy = name_order_policy::alphabetical) {
   using namespace std::graph;
   using std::string_view;
   using std::map;
@@ -241,7 +246,7 @@ auto load_ordered_graph(csv::string_view csv_file) {
 
   csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
 
-  using labels_map   = map<string_view, int64_t>; // label, vertex key (also output order, assigned later)
+  using labels_map   = map<string_view, vertex_key_type>; // label, vertex key (also output order, assigned later)
   using csv_row_type = views::copyable_edge_t<labels_map::iterator, double>;
   using csv_row_deq  = deque<csv_row_type>;
 
@@ -249,13 +254,23 @@ auto load_ordered_graph(csv::string_view csv_file) {
   csv_row_deq row_deq; // all rows in the csv, though the labels only refer to entries in lbls
 
   // scan the CSV file. lbls has the only (unique) string_views into the file.
-  int64_t row_order = 0;
+  vertex_key_type row_order = 0;
   for (csv::CSVRow& row : reader) {
-    string_view source_key                = row[0].get_sv();
-    string_view target_key                = row[1].get_sv();
-    double      value                     = row[2].get<double>();
-    auto&& [source_iter, source_inserted] = lbls.emplace(labels_map::value_type(source_key, -1));
-    auto&& [target_iter, target_inserted] = lbls.emplace(labels_map::value_type(target_key, -1));
+    string_view source_key = row[0].get_sv();
+    string_view target_key = row[1].get_sv();
+    double      value      = row[2].get<double>();
+    auto&& [source_iter, source_inserted] =
+          lbls.emplace(labels_map::value_type(source_key, std::numeric_limits<vertex_key_type>::max()));
+    auto&& [target_iter, target_inserted] =
+          lbls.emplace(labels_map::value_type(target_key, std::numeric_limits<vertex_key_type>::max()));
+
+    if (order_policy == name_order_policy::order_found || order_policy == name_order_policy::source_order_found) {
+      if (source_iter->second == std::numeric_limits<vertex_key_type>::max())
+        source_iter->second = row_order++;
+      if (order_policy != name_order_policy::source_order_found &&
+          target_iter->second == std::numeric_limits<vertex_key_type>::max())
+        target_iter->second = row_order++;
+    }
 
     row_deq.push_back({source_iter, target_iter, value});
   }
@@ -263,13 +278,14 @@ auto load_ordered_graph(csv::string_view csv_file) {
   // Assign unique vertex keys to each label (assigned in label order)
   // This only occurs for vertices where target_key is never a source
   for (auto&& [lbl, key] : lbls)
-    if (key == -1)
+    if (key == std::numeric_limits<vertex_key_type>::max())
       key = row_order++;
 
   // Sort the rows based on the source_key, using it's key just assigned
   // row order is preserved within the same source_key (this should give the same order as load_ordered_graph)
-  std::ranges::stable_sort(row_deq, [](const csv_row_type& lhs, const csv_row_type& rhs) {
-    return lhs.source_key->second < rhs.source_key->second;
+  std::ranges::sort(row_deq, [](const csv_row_type& lhs, const csv_row_type& rhs) {
+    return std::tie(lhs.source_key->second, lhs.target_key->second) <
+           std::tie(rhs.source_key->second, rhs.target_key->second);
   });
 
   // Create sorted list of iterators to the cities/labels using the row_order value assigned

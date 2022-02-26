@@ -10,7 +10,7 @@
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
 #define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file
 #define TEST_OPTION_TEST (3)   // run unit tests
-#define TEST_OPTION TEST_OPTION_TEST
+#define TEST_OPTION TEST_OPTION_OUTPUT
 
 using std::cout;
 using std::endl;
@@ -53,7 +53,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   init_console();
 
   using G                        = routes_csr_graph_type;
-  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::alphabetical);
 
   const auto frankfurt     = find_frankfurt(g);
   const auto frankfurt_key = find_frankfurt_key(g);
@@ -81,6 +81,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     REQUIRE(total_dist == 2030.0);
   }
 
+#if 1
   SECTION("const_vertices_view") {
     const G& g2 = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
@@ -179,11 +180,11 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 5);
+      REQUIRE(vkey == 4);
     }
     {
       auto&& [vkey, uv] = *++i1;
-      REQUIRE(vkey == 9);
+      REQUIRE(vkey == 5);
       auto i1b = i1;
       REQUIRE(i1b == i1);
     }
@@ -205,11 +206,11 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 5);
+      REQUIRE(vkey == 4);
     }
     {
       auto&& [vkey, uv] = *++i1;
-      REQUIRE(vkey == 9);
+      REQUIRE(vkey == 5);
       auto i1b = i1;
       REQUIRE(i1b == i1);
     }
@@ -233,11 +234,11 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       auto&& [vkey, v] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(is_const_v<remove_reference_t<decltype(v)>>);
-      REQUIRE(vkey == 5);
+      REQUIRE(vkey == 4);
     }
     {
       auto&& [vkey, v] = *++i1;
-      REQUIRE(vkey == 9);
+      REQUIRE(vkey == 5);
       auto i1b = i1;
       REQUIRE(i1b == i1);
     }
@@ -259,11 +260,11 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 5);
+      REQUIRE(vkey == 4);
     }
     {
       auto&& [vkey, v] = *++i1;
-      REQUIRE(vkey == 9);
+      REQUIRE(vkey == 5);
       auto i1b = i1;
       REQUIRE(i1b == i1);
     }
@@ -274,12 +275,14 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     }
     REQUIRE(cnt == 3);
   }
+#endif
 
   SECTION("content") {
 #  if TEST_OPTION == TEST_OPTION_OUTPUT
     cout << "\nGermany Routes using csr_graph"
          << "\n----------------------------------------" << endl
          << routes_graph(g) << endl;
+    int x = 0;
 #  elif TEST_OPTION == TEST_OPTION_GEN
     ostream_indenter indent;
     cout << endl << indent << "auto ui = begin(vertices(g));" << endl;
@@ -354,6 +357,12 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
 
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
+      REQUIRE(4 == target_key(g, *uvi));
+      REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(173 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
       REQUIRE(5 == target_key(g, *uvi));
       REQUIRE("Mannheim" == vertex_value(g, target(g, *uvi)));
       REQUIRE(85 == edge_value(g, *uvi));
@@ -363,12 +372,6 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       REQUIRE(9 == target_key(g, *uvi));
       REQUIRE("W\xc3\xbcrzburg" == vertex_value(g, target(g, *uvi)));
       REQUIRE(217 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
-      REQUIRE(4 == target_key(g, *uvi));
-      REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(173 == edge_value(g, *uvi));
       ++uv_cnt;
 
       REQUIRE(3 == uv_cnt);
@@ -427,15 +430,15 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
 
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
-      REQUIRE(8 == target_key(g, *uvi));
-      REQUIRE("Stuttgart" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(183 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
       REQUIRE(6 == target_key(g, *uvi));
       REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
       REQUIRE(167 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
+      REQUIRE(8 == target_key(g, *uvi));
+      REQUIRE("Stuttgart" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(183 == edge_value(g, *uvi));
       ++uv_cnt;
 
       REQUIRE(2 == uv_cnt);
