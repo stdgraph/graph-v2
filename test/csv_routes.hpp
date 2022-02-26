@@ -66,7 +66,6 @@ auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOr
 }
 
 enum struct name_order_policy : int8_t { order_found, alphabetical };
-using label_key_map = std::map<std::string_view, int64_t>; // label, vertex key
 
 /// <summary>
 /// Scans 2 columns in a CSV file and returns a map<string_view,size>, where the string_view is a
@@ -81,22 +80,26 @@ using label_key_map = std::map<std::string_view, int64_t>; // label, vertex key
 /// a key that follows the other keys in the first column. For order_policy=alphabetical, the key will be
 /// assigned based on the alphabetical ordering of the labels.</param>
 /// <returns></returns>
-template <typename ColNumOrName>
+template <typename ColNumOrName, typename VKey = uint32_t>
 auto unique_vertex_labels2(csv::string_view        csv_file,
                            ColNumOrName            col1,
                            ColNumOrName            col2,
                            const name_order_policy order_policy) {
   csv::CSVReader reader(csv_file); // CSV file reader
-  label_key_map  lbls;
 
-  int64_t row_order = 0;
+  using label_key_map = std::map<std::string, VKey>; // label, vertex key
+  label_key_map lbls;
+
+  VKey row_order = 0;
   for (csv::CSVRow& row : reader) {
-    std::string_view source_key           = row[0].get_sv();
-    std::string_view target_key           = row[1].get_sv();
-    auto&& [source_iter, source_inserted] = lbls.emplace(label_key_map::value_type(source_key, -1));
-    auto&& [target_iter, target_inserted] = lbls.emplace(label_key_map::value_type(target_key, -1));
+    std::string_view source_key = row[col1].get_sv();
+    std::string_view target_key = row[col2].get_sv();
+    auto&& [source_iter, source_inserted] =
+          lbls.emplace(typename label_key_map::value_type(source_key, std::numeric_limits<VKey>::max()));
+    auto&& [target_iter, target_inserted] =
+          lbls.emplace(typename label_key_map::value_type(target_key, std::numeric_limits<VKey>::max()));
 
-    if (order_policy == name_order_policy::order_found && source_iter->second == -1)
+    if (order_policy == name_order_policy::order_found && source_iter->second == std::numeric_limits<VKey>::max())
       source_iter->second = row_order++;
   }
 
@@ -109,10 +112,10 @@ auto unique_vertex_labels2(csv::string_view        csv_file,
   //    assigned yet only appears in the target_key and will be assigned values at the end.
   // assign order to labels that were only targets
   for (auto&& [lbl, key] : lbls)
-    if (key == -1)
+    if (key == std::numeric_limits<VKey>::max())
       key = row_order++;
 
-  return std::pair(std::move(lbls), reader.n_rows());
+  return std::pair(lbls, reader.n_rows());
 }
 
 
@@ -175,32 +178,37 @@ auto load_graph(csv::string_view csv_file) {
 
   using graph_type      = G;
   using vertex_key_type = vertex_key_t<graph_type>;
+  static_assert(!std::is_const_v<vertex_key_type>);
+
+  const size_t col1 = 0;
+  const size_t col2 = 1;
 
   // Scan the CSV to get the unique city names (cols 0 & 1)
-  auto&& [city_names, csv_row_cnt] = unique_vertex_labels(csv_file, 0UL, 1UL);
-
+  auto&& [city_names, csv_row_cnt] = unique_vertex_labels2(csv_file, col1, col2, name_order_policy::alphabetical);
+  using city_key_map               = std::ranges::range_value_t<decltype(city_names)>;
   graph_type g;
 
-  // Load vertices, moving city name to vertex for ownership
-  using copyable_name              = std::graph::views::copyable_vertex_t<vertex_key_type, std::string&>;
-  vertex_key_type key              = 0;
-  auto            city_name_getter = [&key](auto&& name) { return copyable_name{key++, name}; };
-  g.load_vertices(city_names, city_name_getter);
+  // Load vertices
+  auto city_key_getter = [&city_names](const city_key_map& name_key) {
+    using copyable_key_name = std::graph::views::copyable_vertex_t<vertex_key_type, std::string>;
+    return copyable_key_name{name_key.second,
+                             name_key.first}; // {key,name} don't move name b/c we need to keep it in the map
+  };
+  g.load_vertices(city_names, city_key_getter);
 
   // load edges
-  auto eproj = [&g](const csv::CSVRow& row) {
+  auto eproj = [&g, col1, col2](const csv::CSVRow& row) {
     using edge_value_type    = std::remove_cvref_t<edge_value_t<G>>;
     using copyable_edge_type = views::copyable_edge_t<vertex_key_type, edge_value_type>;
-    copyable_edge_type retval{};
-    retval.source_key = find_city_key(g, row[0].get_sv());
-    retval.target_key = find_city_key(g, row[1].get_sv());
-    retval.value      = row[2].get<double>();
-    return retval;
+    return copyable_edge_type{
+          find_city_key(g, row[col1].get_sv()), // source_key
+          find_city_key(g, row[col2].get_sv()), // target_key
+          row[2].get<double>()                  // value
+    };
   };
 
-  const vertex_key_type max_city_key = static_cast<vertex_key_type>(size(city_names)) - 1;
-  csv::CSVReader        reader(csv_file); // CSV file reader
-  g.load_edges(reader, eproj, static_cast<size_t>(max_city_key + 1), csv_row_cnt);
+  csv::CSVReader reader(csv_file); // CSV file reader
+  g.load_edges(reader, eproj, size(city_names), csv_row_cnt);
 
   return g;
 }
@@ -209,7 +217,7 @@ auto load_graph(csv::string_view csv_file) {
 /// Loads a graph such that the vertices are ordered alphabetically by their label so that find_city()
 /// can use std::lower_bound. Edges are shown in the same order as they appear in the CSV, relative
 /// to the source city.
-/// 
+///
 /// Requires a single pass throught the CSV file to build both a map of unique labels --> vertex_key,
 /// and a "copy" of the rows. The rows have iterators to the unique labels for source and target keys
 /// plus a copy of the values stored.
@@ -266,7 +274,7 @@ auto load_ordered_graph(csv::string_view csv_file) {
   });
 
   // Create sorted list of iterators to the cities/labels using the row_order value assigned
-  using lbl_iter = std::ranges::iterator_t<labels_map>;
+  using lbl_iter     = std::ranges::iterator_t<labels_map>;
   using lbl_iter_vec = vector<lbl_iter>;
   lbl_iter_vec ordered_cities;
   ordered_cities.reserve(lbls.size());

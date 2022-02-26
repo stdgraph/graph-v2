@@ -448,7 +448,7 @@ class dynamic_vertex : public dynamic_vertex_base<EV, VV, GV, Sourced, VKey, Tra
 public:
   using base_type       = dynamic_vertex_base<EV, VV, GV, Sourced, VKey, Traits>;
   using vertex_key_type = VKey;
-  using value_type      = VV;
+  using value_type      = remove_cvref_t<VV>;
   using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
   using vertex_type     = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
   using edge_type       = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
@@ -651,13 +651,24 @@ public: // Construction/Destruction/Assignment
 
 public:
   template <class VRng, class VProj = identity>
-  void load_vertices(VRng&& vrng, VProj vproj = {}, size_type vertex_count=0) {
+  void load_vertices(const VRng& vrng, VProj vproj = {}, size_type vertex_count = 0) {
     if (ranges::sized_range<VRng>)
-      reserve_vertices(max(vertex_count,ranges::size(vrng)));
+      reserve_vertices(max(vertex_count, ranges::size(vrng)));
     auto add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng) {
-      auto&& copy_vertex = vproj(u);
-      add_vertex(vertex_type(std::move(copy_vertex.value), vertices_.get_allocator()));
+      views::copyable_vertex_t<VKey,VV> copy_vertex = move(vproj(u));
+      add_vertex(vertex_type(copy_vertex.value, vertices_.get_allocator()));
+    }
+  }
+
+  template <class VRng, class VProj = identity>
+  void load_vertices(VRng&& vrng, VProj vproj = {}, size_type vertex_count = 0) {
+    if (ranges::sized_range<VRng>)
+      reserve_vertices(max(vertex_count, ranges::size(vrng)));
+    auto add_vertex = push_or_insert(vertices_);
+    for (auto&& u : vrng) {
+      views::copyable_vertex_t<VKey, VV> copy_vertex = move(vproj(u));
+      add_vertex(vertex_type(move(copy_vertex.value), vertices_.get_allocator()));
     }
   }
 
