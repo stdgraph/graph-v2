@@ -200,7 +200,7 @@ auto load_graph(csv::string_view csv_file) {
 
   const vertex_key_type max_city_key = static_cast<vertex_key_type>(size(city_names)) - 1;
   csv::CSVReader        reader(csv_file); // CSV file reader
-  g.load_edges(static_cast<size_t>(max_city_key + 1), csv_row_cnt, reader, eproj);
+  g.load_edges(reader, eproj, static_cast<size_t>(max_city_key + 1), csv_row_cnt);
 
   return g;
 }
@@ -285,7 +285,7 @@ auto load_ordered_graph(csv::string_view csv_file) {
                                     static_cast<vertex_key_type>(row.target_key->second), row.value};
     return retval;
   };
-  g.load_edges(/* lbls.size(), row_deq.size(),*/ row_deq, eproj);
+  g.load_edges(row_deq, eproj, lbls.size(), row_deq.size());
 
   // load vertices
   using graph_copyable_vertex      = std::graph::views::copyable_vertex_t<vertex_key_type, std::string_view>;

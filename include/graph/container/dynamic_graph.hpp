@@ -651,9 +651,9 @@ public: // Construction/Destruction/Assignment
 
 public:
   template <class VRng, class VProj = identity>
-  void load_vertices(VRng&& vrng, VProj vproj = {}) {
+  void load_vertices(VRng&& vrng, VProj vproj = {}, size_type vertex_count=0) {
     if (ranges::sized_range<VRng>)
-      reserve_vertices(ranges::size(vrng));
+      reserve_vertices(max(vertex_count,ranges::size(vrng)));
     auto add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng) {
       auto&& copy_vertex = vproj(u);
@@ -664,7 +664,7 @@ public:
   /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  void load_edges(size_type vertex_count, size_type edge_count_hint, ERng&& erng, EProj eproj = {}) {
+  void load_edges(ERng&& erng, EProj eproj = {}, size_type vertex_count = 0, size_type edge_count_hint = 0) {
     if constexpr (resizable<vertices_type>) {
       if (vertices_.size() < vertex_count)
         vertices_.resize(vertex_count, vertex_type(vertices_.get_allocator()));
@@ -732,6 +732,14 @@ public: // Operations
       vertices_.reserve(count);
   }
   void reserve_edges(size_type count) {
+    // ignored for this graph; may be meaningful for another data structure like CSR
+  }
+
+  void resize_vertices(size_type count) {
+    if constexpr (resizable<vertices_type>) // resize if we can; otherwise ignored
+      vertices_.resize(count);
+  }
+  void resize_edges(size_type count) {
     // ignored for this graph; may be meaningful for another data structure like CSR
   }
 

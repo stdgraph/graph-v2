@@ -120,20 +120,38 @@ public:
 
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_values(VRng&& vrng, VProj projection, size_type vertex_count) {
-    if constexpr (ranges::sized_range<VRng>) {
+  constexpr void load_values(const VRng& vrng, VProj projection, size_type vertex_count) {
+    if constexpr (ranges::sized_range<VRng>)
       vertex_count = max(vertex_count, ranges::size(vrng));
+    values_.resize(ranges::size(vrng));
+
+    for (auto&& vtx : vrng) {
+      const auto& [key, value] = move(projection(vtx));
+
+      // if an unsized vrng is passed, the caller is responsible to call
+      // resize_vertices(n) with enough entries for all the values.
+      assert(static_cast<size_t>(key) < values_.size());
+
+      values_[key] = value;
     }
-    values_.reserve(vertex_count);
+  }
 
-    auto add_value = push_or_insert(values_);
-    for (auto&& vvalue : vrng)
-      add_value(vertex_value_type(projection(vvalue).value));
+  template <ranges::forward_range VRng, class VProj = identity>
+  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_values(VRng&& vrng, VProj projection, size_type vertex_count) {
+    if constexpr (ranges::sized_range<VRng>)
+      vertex_count = max(vertex_count, ranges::size(vrng));
+    values_.resize(ranges::size(vrng));
 
-    // If edges have been loaded and the number of values is less than the number of rows,
-    // extend the number of values to avoid out-of-bounds when accessing a value for a row.
-    if (values_.size() < vertex_count)
-      values_.resize(vertex_count); // fill out any missing values
+    for (auto&& vtx : vrng) {
+      auto&& [key, value] = move(projection(vtx));
+
+      // if an unsized vrng is passed, the caller is responsible to call
+      // resize_vertices(n) with enough entries for all the values.
+      assert(static_cast<size_t>(key) < values_.size());
+
+      values_[key] = move(value);
+    }
   }
 
   constexpr size_type size() const noexcept { return values_.size(); }
@@ -174,8 +192,14 @@ public:
   constexpr void resize(size_type n) {}
 
   template <ranges::forward_range VRng, class VProj = identity>
-  requires views::copyable_vertex < invoke_result<VProj, ranges::range_value_t<VRng>>, VKey,
-  void > constexpr void load_values(const VRng& vrng, VProj projection, size_type vertex_count) {
+  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_values(const VRng& vrng, VProj projection, size_type vertex_count) {
+    // do nothing when VV=void
+  }
+
+  template <ranges::forward_range VRng, class VProj = identity>
+  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_values(VRng&& vrng, VProj projection, size_type vertex_count) {
     // do nothing when VV=void
   }
 
@@ -301,20 +325,13 @@ public: // Operations
     v_.reserve(count);
   }
 
-  /// <summary>
-  /// Load vertex values. This can be called either before or after load_edges(erng,eproj).
-  ///
-  /// If load_edges(vrng,vproj) has been called before this, the row_values_ vector will be
-  /// extended to match the number of row_index_.size()-1 to avoid out-of-bounds errors when
-  /// accessing vertex values.
-  /// </summary>
-  /// <typeparam name="VProj">Projection function for vrng values</typeparam>
-  /// <param name="vrng">Range of values to load for vertices. The order of the values is preserved in the internal vector.</param>
-  /// <param name="vprojection">Projection function for vrng values</param>
-  template <ranges::forward_range VRng, class VProj = identity>
-  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_vertices(const VRng& vrng, VProj vprojection) {
-    row_value_.load_values(vrng, vprojection, (row_index_.empty() ? 0 : row_index_.size() - 1));
+  void resize_vertices(size_type count) {
+    row_index_.resize(count + 1); // +1 for terminating row
+    row_value_.resize(count);
+  }
+  void resize_edges(size_type count) {
+    col_index_.reserve(count);
+    v_.reserve(count);
   }
 
   /// <summary>
@@ -329,8 +346,24 @@ public: // Operations
   /// <param name="vprojection">Projection function for vrng values</param>
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_vertices(VRng& vrng, VProj vprojection) {
-    row_value_.load_values(vrng, vprojection, (row_index_.empty() ? 0 : row_index_.size() - 1));
+  constexpr void load_vertices(const VRng& vrng, VProj vprojection, size_type vertex_count = 0) {
+    row_value_.load_values(max(vrng, vprojection, vertex_count, ranges::size(vrng)));
+  }
+
+  /// <summary>
+  /// Load vertex values. This can be called either before or after load_edges(erng,eproj).
+  ///
+  /// If load_edges(vrng,vproj) has been called before this, the row_values_ vector will be
+  /// extended to match the number of row_index_.size()-1 to avoid out-of-bounds errors when
+  /// accessing vertex values.
+  /// </summary>
+  /// <typeparam name="VProj">Projection function for vrng values</typeparam>
+  /// <param name="vrng">Range of values to load for vertices. The order of the values is preserved in the internal vector.</param>
+  /// <param name="vprojection">Projection function for vrng values</param>
+  template <ranges::forward_range VRng, class VProj = identity>
+  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
+  constexpr void load_vertices(VRng& vrng, VProj vprojection = {}, size_type vertex_count = 0) {
+    row_value_.load_values(vrng, vprojection, max(vertex_count, ranges::size(vrng)));
   }
 
   /// <summary>
@@ -358,7 +391,7 @@ public: // Operations
   /// If load_vertices(vrng,vproj) has been called before this, the row_values_ vector will be
   /// extended to match the number of row_index_.size()-1 to avoid out-of-bounds errors when
   /// accessing vertex values.
-  /// 
+  ///
   /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   /// </summary>
   /// <typeparam name="EProj">Edge Projection</typeparam>
@@ -366,30 +399,29 @@ public: // Operations
   /// <param name="eprojection">Edge projection function that returns a copyable_edge_t<VKey,EV> for an element in erng</param>
   template <class ERng, class EProj = identity>
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
-  constexpr void load_edges(ERng&& erng, EProj eprojection = {}) {
+  constexpr void load_edges(ERng&& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
+    assert(row_index_.empty() && col_index_.empty() && v_.empty());
+
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng)) {
-      if (row_index_.empty())
-        row_index_.resize(1, vertex_type{static_cast<vertex_key_type>(v_.size())}); // add terminating row
       return;
     }
 
-    // We can get the last vertex key from the list because erng is required to be ordered by 
+    // We can get the last vertex key from the list because erng is required to be ordered by
     // the source key. It's possible a target_key could have a larger key also, which is taken
     // care of at the end of this function.
-    size_type vertex_count = 0;
     if constexpr (ranges::bidirectional_range<ERng>) {
       auto lastIt = ranges::end(erng);
       --lastIt;
       auto&& edge_vw = eprojection(*lastIt);
-      vertex_count   = static_cast<size_type>(edge_vw.source_key + 1); // +1 for zero-based index
-      reserve_vertices(vertex_count);
+      vertex_count   = max(vertex_count, static_cast<size_type>(edge_vw.source_key + 1)); // +1 for zero-based index
+      if (row_index_.size() < vertex_count)
+        resize_vertices(vertex_count);
     }
 
     // Eval number of input rows and reserve space for the edges, if possible
-    size_type edge_count = 0;
     if constexpr (ranges::sized_range<ERng>)
-      edge_count = ranges::size(erng);
+      edge_count = max(edge_count, ranges::size(erng));
     reserve_edges(edge_count);
 
     // Add edges
