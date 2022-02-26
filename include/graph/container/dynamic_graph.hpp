@@ -656,8 +656,8 @@ public:
       reserve_vertices(max(vertex_count, ranges::size(vrng)));
     auto add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng) {
-      views::copyable_vertex_t<VKey,VV> copy_vertex = move(vproj(u));
-      add_vertex(vertex_type(copy_vertex.value, vertices_.get_allocator()));
+      views::copyable_vertex_t<VKey, VV> copy_vertex = move(vproj(u));
+      add_vertex(vertex_type(move(copy_vertex.value), vertices_.get_allocator()));
     }
   }
 
@@ -675,6 +675,37 @@ public:
   /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  void load_edges(const ERng& erng, EProj eproj = {}, size_type vertex_count = 0, size_type edge_count_hint = 0) {
+    if constexpr (resizable<vertices_type>) {
+      if (vertices_.size() < vertex_count)
+        vertices_.resize(vertex_count, vertex_type(vertices_.get_allocator()));
+    }
+
+    // add edges
+    for (auto&& edge_data : erng) {
+      views::copyable_edge_t<VKey, EV> e = move(eproj(edge_data));
+
+      if (static_cast<size_t>(e.source_key) >= vertices_.size()) {
+        assert(false);
+        throw runtime_error("source key exceeds the number of vertices in load_edges");
+      }
+      if (static_cast<size_t>(e.target_key) >= vertices_.size()) {
+        assert(false);
+        throw runtime_error("target key exceeds the number of vertices in load_edges");
+      }
+
+      auto&& edge_adder = push_or_insert(vertices_[e.source_key].edges());
+      if constexpr (is_void_v<EV>) {
+        edge_adder(edge_type(move(e.target_key)));
+      } else {
+        edge_adder(edge_type(move(e.target_key), move(e.value)));
+      }
+    }
+  }
+
+  /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
+  template <class ERng, class EProj = identity>
+  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
   void load_edges(ERng&& erng, EProj eproj = {}, size_type vertex_count = 0, size_type edge_count_hint = 0) {
     if constexpr (resizable<vertices_type>) {
       if (vertices_.size() < vertex_count)
@@ -683,26 +714,27 @@ public:
 
     // add edges
     for (auto&& edge_data : erng) {
-      auto&& e    = eproj(edge_data);
-      auto&& ukey = e.source_key;
-      auto&& vkey = e.target_key;
-      assert(static_cast<size_t>(ukey) < vertices_.size() && static_cast<size_t>(vkey) < vertices_.size());
-      if (static_cast<size_t>(ukey) >= vertices_.size())
-        throw runtime_error("source key exceeds the number of vertices in load_edges");
-      if (static_cast<size_t>(vkey) >= vertices_.size())
-        throw runtime_error("target key exceeds the number of vertices in load_edges");
+      views::copyable_edge_t<VKey, EV> e = move(eproj(edge_data));
 
-      auto&& add_edge = push_or_insert(vertices_[ukey].edges());
-      if constexpr (is_same_v<EV, void>) {
-        add_edge(edge_type(vkey));
-        //vertices_[ukey].edges().push_front(edge_type(vkey));
+      if (static_cast<size_t>(e.source_key) >= vertices_.size()) {
+        assert(false);
+        throw runtime_error("source key exceeds the number of vertices in load_edges");
+      }
+      if (static_cast<size_t>(e.target_key) >= vertices_.size()) {
+        assert(false);
+        throw runtime_error("target key exceeds the number of vertices in load_edges");
+      }
+
+      auto&& edge_adder = push_or_insert(vertices_[e.source_key].edges());
+      if constexpr (is_void_v<EV>) {
+        edge_adder(edge_type(move(e.target_key)));
       } else {
-        add_edge(edge_type(vkey, e.value));
-        //vertices_[ukey].edges().push_front(edge_type(vkey, evalue_fnc(edge_data)));
+        edge_adder(edge_type(move(e.target_key), move(e.value)));
       }
     }
   }
 
+#if 0
   /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
@@ -722,6 +754,7 @@ public:
 
     load_edges(static_cast<size_type>(max_row_idx + 1), erng_size, erng, eproj);
   }
+#endif
 
 public: // Properties
   constexpr auto begin() noexcept { return vertices_.begin(); }

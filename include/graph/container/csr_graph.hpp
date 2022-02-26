@@ -400,6 +400,7 @@ public: // Operations
   template <class ERng, class EProj = identity>
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
   constexpr void load_edges(ERng&& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
+    // should only be loading into an empty graph
     assert(row_index_.empty() && col_index_.empty() && v_.empty());
 
     // Nothing to do?
@@ -446,6 +447,61 @@ public: // Operations
     // the vertices then we extend the size to remove possibility of out-of-bounds occuring when
     // getting a value for a row.
     if (row_value_.size() > 1 && row_value_.size() < vertex_count)
+      row_value_.resize(vertex_count);
+  }
+
+  // The only diff with this and ERng&& is v_.push_back vs. v_.emplace_back
+  template <class ERng, class EProj = identity>
+  //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
+  constexpr void
+  load_edges(const ERng& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
+    // should only be loading into an empty graph
+    assert(row_index_.empty() && col_index_.empty() && v_.empty());
+
+    // Nothing to do?
+    if (ranges::begin(erng) == ranges::end(erng)) {
+      return;
+    }
+
+    // We can get the last vertex key from the list because erng is required to be ordered by
+    // the source key. It's possible a target_key could have a larger key also, which is taken
+    // care of at the end of this function.
+    if constexpr (ranges::bidirectional_range<ERng>) {
+      auto lastIt = ranges::end(erng);
+      --lastIt;
+      auto&& edge_vw = eprojection(*lastIt);
+      vertex_count   = max(vertex_count, static_cast<size_type>(edge_vw.source_key + 1)); // +1 for zero-based index
+      if (row_index_.size() < vertex_count)
+        resize_vertices(vertex_count);
+    }
+
+    // Eval number of input rows and reserve space for the edges, if possible
+    if constexpr (ranges::sized_range<ERng>)
+      edge_count = max(edge_count, ranges::size(erng));
+    reserve_edges(edge_count);
+
+    // Add edges
+    vertex_key_type last_ukey = 0, max_vkey = 0;
+    for (auto&& edge_data : erng) {
+      auto&& [ukey, vkey, value] = eprojection(edge_data); // csr_graph requires EV!=void
+      assert(ukey >= last_ukey);                           // ordered by ukey? (requirement)
+      row_index_.resize(static_cast<size_t>(ukey) + 1, vertex_type{static_cast<vertex_key_type>(v_.size())});
+      col_index_.push_back(edge_type{vkey});
+      v_.push_back(value);
+      last_ukey = ukey;
+      max_vkey  = max(max_vkey, vkey);
+    }
+
+    // ukey and vkey may refer to rows that exceed the value evaluated for vertex_count (if any)
+    vertex_count = max(vertex_count, max(row_index_.size(), static_cast<size_type>(max_vkey + 1)));
+
+    // add any rows that haven't been added yet, and (+1) terminating row
+    row_index_.resize(vertex_count + 1, vertex_type{static_cast<vertex_key_type>(v_.size())});
+
+    // If load_vertices(vrng,vproj) has been called but it doesn't have enough values for all
+    // the vertices then we extend the size to remove possibility of out-of-bounds occuring when
+    // getting a value for a row.
+    if (row_value_.size() > 0 && row_value_.size() < vertex_count)
       row_value_.resize(vertex_count);
   }
 

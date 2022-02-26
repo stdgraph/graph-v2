@@ -178,7 +178,6 @@ auto load_graph(csv::string_view csv_file) {
 
   using graph_type      = G;
   using vertex_key_type = vertex_key_t<graph_type>;
-  static_assert(!std::is_const_v<vertex_key_type>);
 
   const size_t col1 = 0;
   const size_t col2 = 1;
@@ -203,7 +202,7 @@ auto load_graph(csv::string_view csv_file) {
     return copyable_edge_type{
           find_city_key(g, row[col1].get_sv()), // source_key
           find_city_key(g, row[col2].get_sv()), // target_key
-          row[2].get<double>()                  // value
+          row[2].get<double>()                  // value (e.g. distance)
     };
   };
 
