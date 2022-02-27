@@ -411,14 +411,9 @@ public: // Operations
     // We can get the last vertex key from the list because erng is required to be ordered by
     // the source key. It's possible a target_key could have a larger key also, which is taken
     // care of at the end of this function.
-    if constexpr (ranges::bidirectional_range<ERng>) {
-      auto lastIt = ranges::end(erng);
-      --lastIt;
-      auto&& edge_vw = eprojection(*lastIt);
-      vertex_count   = max(vertex_count, static_cast<size_type>(edge_vw.source_key + 1)); // +1 for zero-based index
-      if (row_index_.size() < vertex_count)
-        resize_vertices(vertex_count);
-    }
+    vertex_count = std::max(vertex_count,
+                            static_cast<size_type>(last_erng_key(erng, eprojection) + 1)); // +1 for zero-based index
+    reserve_vertices(vertex_count);
 
     // Eval number of input rows and reserve space for the edges, if possible
     if constexpr (ranges::sized_range<ERng>)
@@ -466,14 +461,9 @@ public: // Operations
     // We can get the last vertex key from the list because erng is required to be ordered by
     // the source key. It's possible a target_key could have a larger key also, which is taken
     // care of at the end of this function.
-    if constexpr (ranges::bidirectional_range<ERng>) {
-      auto lastIt = ranges::end(erng);
-      --lastIt;
-      auto&& edge_vw = eprojection(*lastIt);
-      vertex_count   = max(vertex_count, static_cast<size_type>(edge_vw.source_key + 1)); // +1 for zero-based index
-      if (row_index_.size() < vertex_count)
-        resize_vertices(vertex_count);
-    }
+    vertex_count = std::max(vertex_count,
+                            static_cast<size_type>(last_erng_key(erng, eprojection) + 1)); // +1 for zero-based index
+    reserve_vertices(vertex_count);
 
     // Eval number of input rows and reserve space for the edges, if possible
     if constexpr (ranges::sized_range<ERng>)
@@ -521,6 +511,21 @@ public: // Operations
   constexpr void load(const ERng& erng, const VRng& vrng, EProj eprojection = {}, VProj vprojection = {}) {
     load_edges(erng, eprojection);
     load_vertices(vrng, vprojection); // load the values
+  }
+
+protected:
+  template <class ERng, class EProj>
+  constexpr vertex_key_type last_erng_key(ERng&& erng, EProj eprojection) const {
+    vertex_key_type last_key = vertex_key_type();
+    if constexpr (ranges::bidirectional_range<ERng>) {
+      if (ranges::begin(erng) != ranges::end(erng)) {
+        auto lastIt = ranges::end(erng);
+        --lastIt;
+        auto&& e = move(eprojection(*lastIt)); // copyable_edge
+        last_key = max(e.source_key, e.target_key);
+      }
+    }
+    return last_key;
   }
 
 public: // Operations
