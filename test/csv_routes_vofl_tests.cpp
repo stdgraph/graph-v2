@@ -86,6 +86,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
     REQUIRE(total_dist == 2030.0);
   }
 
+#if 0
   SECTION("const_vertices_view") {
     const G& g2 = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
@@ -279,12 +280,14 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
     }
     REQUIRE(cnt == 3);
   }
+#endif //0
 
   SECTION("content") {
 #if TEST_OPTION == TEST_OPTION_OUTPUT
     cout << "\nGermany Routes using vector+forward_list"
          << "\n----------------------------------------" << endl 
          << routes_graph(g) << endl;
+    int x = 0;
 #elif TEST_OPTION == TEST_OPTION_GEN
     ostream_indenter indent;
     cout << endl << indent << "auto ui = begin(vertices(g));" << endl;

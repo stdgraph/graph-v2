@@ -289,26 +289,26 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     int x = 0;
     //Germany Routes using csr_graph
     //----------------------------------------
-    //[0 Frankfürt]
+    //[0 FrankfÃ¼rt]
     //  --> [1 Mannheim] 85km
-    //  --> [4 Würzburg] 217km
+    //  --> [4 WÃ¼rzburg] 217km
     //  --> [6 Kassel] 173km
     //[1 Mannheim]
     //  --> [2 Karlsruhe] 80km
     //[2 Karlsruhe]
     //  --> [3 Augsburg] 250km
     //[3 Augsburg]
-    //  --> [8 München] 84km
-    //[4 Würzburg]
-    //  --> [5 Nürnberg] 103km
+    //  --> [8 MÃ¼nchen] 84km
+    //[4 WÃ¼rzburg]
+    //  --> [5 NÃ¼rnberg] 103km
     //  --> [7 Erfurt] 186km
-    //[5 Nürnberg]
-    //  --> [8 München] 167km
+    //[5 NÃ¼rnberg]
+    //  --> [8 MÃ¼nchen] 167km
     //  --> [9 Stuttgart] 183km
     //[6 Kassel]
-    //  --> [8 München] 502km
+    //  --> [8 MÃ¼nchen] 502km
     //[7 Erfurt]
-    //[8 München]
+    //[8 MÃ¼nchen]
     //[9 Stuttgart]
 #  elif TEST_OPTION == TEST_OPTION_GEN
     ostream_indenter indent;
