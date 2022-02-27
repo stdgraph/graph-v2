@@ -66,16 +66,14 @@ protected:
   using shadow_value_type = pair<vertex_key_type, vertex_type*>;
 
 public:
-  const_adjacency_iterator(const graph_type& g, edge_iterator iter)
-        : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
+  const_adjacency_iterator(const graph_type& g, edge_iterator iter) : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
   const_adjacency_iterator(const graph_type& g, const vertex_type& u)
-        : const_adjacency_iterator(
-                g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
+        : const_adjacency_iterator(g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
 
-  constexpr const_adjacency_iterator()                                       = default;
+  constexpr const_adjacency_iterator()                                = default;
   constexpr const_adjacency_iterator(const const_adjacency_iterator&) = default;
   constexpr const_adjacency_iterator(const_adjacency_iterator&&)      = default;
-  constexpr ~const_adjacency_iterator()                                      = default;
+  constexpr ~const_adjacency_iterator()                               = default;
 
   constexpr const_adjacency_iterator& operator=(const const_adjacency_iterator&) = default;
   constexpr const_adjacency_iterator& operator=(const_adjacency_iterator&&) = default;
@@ -104,9 +102,7 @@ protected:
   graph_type*               g_     = nullptr;
   edge_iterator             iter_;
 
-  friend bool operator==(const edge_iterator& lhs, const const_adjacency_iterator& rhs) {
-    return lhs == rhs.iter_;
-  }
+  friend bool operator==(const edge_iterator& lhs, const const_adjacency_iterator& rhs) { return lhs == rhs.iter_; }
 };
 
 template <class G>
@@ -141,10 +137,10 @@ public:
   adjacency_iterator(graph_type& g, edge_iterator iter) : base_type(g, iter) {}
   adjacency_iterator(graph_type& g, vertex_type& u) : base_type(g, u) {}
 
-  constexpr adjacency_iterator()                                 = default;
+  constexpr adjacency_iterator()                          = default;
   constexpr adjacency_iterator(const adjacency_iterator&) = default;
   constexpr adjacency_iterator(adjacency_iterator&&)      = default;
-  constexpr ~adjacency_iterator()                                = default;
+  constexpr ~adjacency_iterator()                         = default;
 
   constexpr adjacency_iterator& operator=(const adjacency_iterator&) = default;
   constexpr adjacency_iterator& operator=(adjacency_iterator&&) = default;

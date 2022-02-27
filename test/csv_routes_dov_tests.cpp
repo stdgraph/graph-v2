@@ -141,7 +141,7 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     auto vit = find_vertex(g, 4);
     REQUIRE(4 == vit - std::ranges::begin(vertices(g)));
     auto uvit = find_vertex_edge(g, *vit, 7);
-    REQUIRE(edge_value(g,*uvit) == 186.0);
+    REQUIRE(edge_value(g, *uvit) == 186.0);
   }
 
   SECTION("const functions") {

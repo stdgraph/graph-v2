@@ -77,10 +77,10 @@ protected:
         : incidence_iterator_base(
                 g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u))), projection) {}
 
-  incidence_iterator_base()                                      = default;
+  incidence_iterator_base()                               = default;
   incidence_iterator_base(const incidence_iterator_base&) = default;
   incidence_iterator_base(incidence_iterator_base&&)      = default;
-  ~incidence_iterator_base()                                     = default;
+  ~incidence_iterator_base()                              = default;
 
   incidence_iterator_base& operator=(const incidence_iterator_base&) = default;
   incidence_iterator_base& operator=(incidence_iterator_base&&) = default;
@@ -113,16 +113,14 @@ protected:
   using shadow_value_type = targeted_edge<vertex_key_type, edge_type*, void>;
 
 protected:
-  incidence_iterator_base(const graph_type& g, edge_iterator iter)
-        : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
+  incidence_iterator_base(const graph_type& g, edge_iterator iter) : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
   incidence_iterator_base(const graph_type& g, const vertex_type& u)
-        : incidence_iterator_base(
-                g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
+        : incidence_iterator_base(g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
 
-  incidence_iterator_base()                                      = default;
+  incidence_iterator_base()                               = default;
   incidence_iterator_base(const incidence_iterator_base&) = default;
   incidence_iterator_base(incidence_iterator_base&&)      = default;
-  ~incidence_iterator_base()                                     = default;
+  ~incidence_iterator_base()                              = default;
 
   incidence_iterator_base& operator=(const incidence_iterator_base&) = default;
   incidence_iterator_base& operator=(incidence_iterator_base&&) = default;
@@ -160,16 +158,14 @@ protected:
   using shadow_value_type = pair<vertex_key_type, edge_type*>;
 
 public:
-  const_incidence_iterator(const graph_type& g, edge_iterator iter)
-        : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
+  const_incidence_iterator(const graph_type& g, edge_iterator iter) : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
   const_incidence_iterator(const graph_type& g, const vertex_type& u)
-        : const_incidence_iterator(
-                g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
+        : const_incidence_iterator(g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
 
-  constexpr const_incidence_iterator()                                       = default;
+  constexpr const_incidence_iterator()                                = default;
   constexpr const_incidence_iterator(const const_incidence_iterator&) = default;
   constexpr const_incidence_iterator(const_incidence_iterator&&)      = default;
-  constexpr ~const_incidence_iterator()                                      = default;
+  constexpr ~const_incidence_iterator()                               = default;
 
   constexpr const_incidence_iterator& operator=(const const_incidence_iterator&) = default;
   constexpr const_incidence_iterator& operator=(const_incidence_iterator&&) = default;
@@ -198,9 +194,7 @@ protected:
   graph_type*               g_     = nullptr;
   edge_iterator             iter_;
 
-  friend bool operator==(const edge_iterator& lhs, const const_incidence_iterator& rhs) {
-    return lhs == rhs.iter_;
-  }
+  friend bool operator==(const edge_iterator& lhs, const const_incidence_iterator& rhs) { return lhs == rhs.iter_; }
 };
 
 template <class G>
@@ -235,10 +229,10 @@ public:
   incidence_iterator(graph_type& g, edge_iterator iter) : base_type(g, iter) {}
   incidence_iterator(graph_type& g, vertex_type& u) : base_type(g, u) {}
 
-  constexpr incidence_iterator()                                 = default;
+  constexpr incidence_iterator()                          = default;
   constexpr incidence_iterator(const incidence_iterator&) = default;
   constexpr incidence_iterator(incidence_iterator&&)      = default;
-  constexpr ~incidence_iterator()                                = default;
+  constexpr ~incidence_iterator()                         = default;
 
   constexpr incidence_iterator& operator=(const incidence_iterator&) = default;
   constexpr incidence_iterator& operator=(incidence_iterator&&) = default;

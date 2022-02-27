@@ -33,37 +33,37 @@ namespace access {
   TAG_INVOKE_DEF(graph_value); // graph_value(g) -> GV&
 
   // vertex values
-  TAG_INVOKE_DEF(vertex_key);   // vertex_key(g,ui) -> VKey
-                                // default = ui - begin(vertices(g)) for random_access_iterator<ui>
+  TAG_INVOKE_DEF(vertex_key); // vertex_key(g,ui) -> VKey
+                              // default = ui - begin(vertices(g)) for random_access_iterator<ui>
 
   TAG_INVOKE_DEF(vertex_value); // vertex_value(g,u) -> VV&
 
-  TAG_INVOKE_DEF(degree);       // degree(g,u) -> VKey
-                                // default = size(edges(g,u))
+  TAG_INVOKE_DEF(degree); // degree(g,u) -> VKey
+                          // default = size(edges(g,u))
 
   // edge values
   TAG_INVOKE_DEF(target_key); // target_key(g,uv) -> VKey
 
-  TAG_INVOKE_DEF(target);     // target(g,uv) -> v
-                              // default = *(begin(g,vertices(g)) + target_key(g,uv))
-                              // for random_access_range<vertices(g)> and integral<target_key(g,uv))
-                              // uv can be from edges(g,u) or vertices(g,u)
+  TAG_INVOKE_DEF(target); // target(g,uv) -> v
+                          // default = *(begin(g,vertices(g)) + target_key(g,uv))
+                          // for random_access_range<vertices(g)> and integral<target_key(g,uv))
+                          // uv can be from edges(g,u) or vertices(g,u)
 
   TAG_INVOKE_DEF(edge_value); // edge_value(g,uv) -> EV&
 
   // +sourced edge values (only available when source_key is on the edge)
-  TAG_INVOKE_DEF(source_key);   // source_key(g,uv) -> VKey
+  TAG_INVOKE_DEF(source_key); // source_key(g,uv) -> VKey
 
-  TAG_INVOKE_DEF(source);       // source(g,uv) -> u
-                                // default = *(begin(g,vertices(g)) + source_key(g,uv))
-                                // for random_access_range<vertices(g)> and integral<source_key(g,uv))
-                                // uv can be from edges(g,u) or vertices(g,u)
+  TAG_INVOKE_DEF(source); // source(g,uv) -> u
+                          // default = *(begin(g,vertices(g)) + source_key(g,uv))
+                          // for random_access_range<vertices(g)> and integral<source_key(g,uv))
+                          // uv can be from edges(g,u) or vertices(g,u)
 
-  TAG_INVOKE_DEF(edge_key);     // edge_key(g,uv) -> pair<VKey,VKey>
-                                // default = pair(source_key(g,uv),target_key(g,uv))
+  TAG_INVOKE_DEF(edge_key); // edge_key(g,uv) -> pair<VKey,VKey>
+                            // default = pair(source_key(g,uv),target_key(g,uv))
 
-  TAG_INVOKE_DEF(other_key);    // other_key(g,uv,xkey) -> VKey (ukey or vkey)
-                                // default = xkey != target_key(g,uv) ? target_key(g,uv) : source_key(g,uv)
+  TAG_INVOKE_DEF(other_key); // other_key(g,uv,xkey) -> VKey (ukey or vkey)
+                             // default = xkey != target_key(g,uv) ? target_key(g,uv) : source_key(g,uv)
 
   TAG_INVOKE_DEF(other_vertex); // other_vertex(g,uv,x) -> y (u or v)
                                 // default = x != &target(g,uv) ? target(g,uv) : source(g,uv)

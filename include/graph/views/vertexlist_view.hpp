@@ -62,8 +62,10 @@ constexpr auto vertexlist_view(G& g, vertex_iterator_t<G> first, vertex_iterator
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto
-vertexlist_view(const G& g, vertex_iterator_t<const G> first, vertex_iterator_t<const G> last, vertex_key_t<G> start_at) {
+constexpr auto vertexlist_view(const G&                   g,
+                               vertex_iterator_t<const G> first,
+                               vertex_iterator_t<const G> last,
+                               vertex_key_t<G>            start_at) {
   using iter_type     = const_vertexlist_iterator<const G>;
   using sentinal_type = typename iter_type::vertex_iterator_type;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
@@ -108,10 +110,10 @@ public:
   const_vertexlist_iterator(vertex_iterator_type iter, vertex_key_type start_at = 0)
         : value_(start_at, nullptr), iter_(iter) {}
 
-  constexpr const_vertexlist_iterator()                                    = default;
+  constexpr const_vertexlist_iterator()                                 = default;
   constexpr const_vertexlist_iterator(const const_vertexlist_iterator&) = default;
   constexpr const_vertexlist_iterator(const_vertexlist_iterator&&)      = default;
-  constexpr ~const_vertexlist_iterator()                                   = default;
+  constexpr ~const_vertexlist_iterator()                                = default;
 
   constexpr const_vertexlist_iterator& operator=(const const_vertexlist_iterator&) = default;
   constexpr const_vertexlist_iterator& operator=(const_vertexlist_iterator&&) = default;
@@ -175,10 +177,10 @@ public:
   vertexlist_iterator(graph_type& g) : base_type(g) {}
   vertexlist_iterator(vertex_iterator_type iter, vertex_key_type start_at = 0) : base_type(iter, start_at) {}
 
-  constexpr vertexlist_iterator()                              = default;
+  constexpr vertexlist_iterator()                           = default;
   constexpr vertexlist_iterator(const vertexlist_iterator&) = default;
   constexpr vertexlist_iterator(vertexlist_iterator&&)      = default;
-  constexpr ~vertexlist_iterator()                             = default;
+  constexpr ~vertexlist_iterator()                          = default;
 
   constexpr vertexlist_iterator& operator=(const vertexlist_iterator&) = default;
   constexpr vertexlist_iterator& operator=(vertexlist_iterator&&) = default;
@@ -205,9 +207,7 @@ public:
   //constexpr bool operator==(const vertexlist_iterator& rhs) const { return iter_ == rhs; }
 
 protected:
-  friend bool operator==(const vertex_iterator_type& lhs, const vertexlist_iterator& rhs) {
-    return lhs == rhs.iter_;
-  }
+  friend bool operator==(const vertex_iterator_type& lhs, const vertexlist_iterator& rhs) { return lhs == rhs.iter_; }
 };
 
 } // namespace std::graph::views

@@ -77,17 +77,17 @@ public:
         : const_edgelist_iterator(
                 g, vtx_iter, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(*vtx_iter)))) {}
 
-  constexpr const_edgelist_iterator()                                = default;
+  constexpr const_edgelist_iterator()                               = default;
   constexpr const_edgelist_iterator(const const_edgelist_iterator&) = default;
   constexpr const_edgelist_iterator(const_edgelist_iterator&&)      = default;
-  constexpr ~const_edgelist_iterator()                               = default;
+  constexpr ~const_edgelist_iterator()                              = default;
 
   constexpr const_edgelist_iterator& operator=(const const_edgelist_iterator&) = default;
   constexpr const_edgelist_iterator& operator=(const_edgelist_iterator&&) = default;
 
 public:
   constexpr reference operator*() const {
-    value_ = shadow_value_type{vertex_key(g,vtx_iter_), target_key(*g_, *edg_iter_), &*edg_iter_};
+    value_ = shadow_value_type{vertex_key(g, vtx_iter_), target_key(*g_, *edg_iter_), &*edg_iter_};
     return reinterpret_cast<reference>(value_);
   }
 
@@ -101,7 +101,9 @@ public:
     return tmp;
   }
 
-  constexpr bool operator==(const const_edgelist_iterator& rhs) const { return vtx_iter_ == rhs.vtx_iter_ && edg_iter_ == rhs.edg_iter_; }
+  constexpr bool operator==(const const_edgelist_iterator& rhs) const {
+    return vtx_iter_ == rhs.vtx_iter_ && edg_iter_ == rhs.edg_iter_;
+  }
   //constexpr bool operator==(const edgelist_iterator& rhs) const { return edg_iter_ == rhs; }
 protected:
   void find_first_non_empty() {
@@ -164,13 +166,14 @@ protected:
   using base_type::next;
 
 public:
-  edgelist_iterator(graph_type& g, vertex_iterator vtx_iter, edge_iterator edg_iter) : base_type(g, vtx_iter, edg_iter) {}
+  edgelist_iterator(graph_type& g, vertex_iterator vtx_iter, edge_iterator edg_iter)
+        : base_type(g, vtx_iter, edg_iter) {}
   edgelist_iterator(graph_type& g, itertex_iterator vtx_itr) : base_type(g, vtx_iter) {}
 
-  constexpr edgelist_iterator()                          = default;
+  constexpr edgelist_iterator()                         = default;
   constexpr edgelist_iterator(const edgelist_iterator&) = default;
   constexpr edgelist_iterator(edgelist_iterator&&)      = default;
-  constexpr ~edgelist_iterator()                         = default;
+  constexpr ~edgelist_iterator()                        = default;
 
   constexpr edgelist_iterator& operator=(const edgelist_iterator&) = default;
   constexpr edgelist_iterator& operator=(edgelist_iterator&&) = default;
