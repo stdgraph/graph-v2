@@ -60,14 +60,14 @@ TEST_CASE("Germany routes examples", "[csv][vofl][germany][example]") {
   auto frankfurt_key = find_frankfurt_key(g);
 
   SECTION("Incidence iteration") {
-    for (auto&& [ukey, u] : std::graph::views::vertices_view(g)) {
+    for (auto&& [ukey, u] : std::graph::views::vertexlist_view(g)) {
       for (auto&& [vkey, uv] : std::graph::views::edges_view(g, u)) {
       }
     }
   }
 
   SECTION("Adjacency iteration") {
-    for (auto&& [ukey, u] : std::graph::views::vertices_view(g)) {
+    for (auto&& [ukey, u] : std::graph::views::vertexlist_view(g)) {
       for (auto&& [vkey, v] : std::graph::views::adjacency_view(g, u)) {
       }
     }

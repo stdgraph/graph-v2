@@ -247,10 +247,10 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
       REQUIRE(i2b == i2);
     }
 
-    using view_t = decltype(std::graph::views::vertices_view(g2));
+    using view_t = decltype(std::graph::views::vertexlist_view(g2));
     static_assert(forward_range<view_t>);
     size_t cnt = 0;
-    for (auto&& [ukey, u] : std::graph::views::vertices_view(g2)) {
+    for (auto&& [ukey, u] : std::graph::views::vertexlist_view(g2)) {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
@@ -290,7 +290,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [ukey, u] : std::graph::views::vertices_view(g)) {
+    for (auto&& [ukey, u] : std::graph::views::vertexlist_view(g)) {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));

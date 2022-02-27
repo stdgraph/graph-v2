@@ -16,12 +16,12 @@
     - [x] [deprecated] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
   - [ ] Graph Views
     - [ ] **edge_range<graph, vertex_range, vertex_edge_range>**
-    - [x] for([vkey, v] : vertices_view(g,u): vertex_vertex_range<graph, vertex_range, vertex_edge_range>
-    - [x] for([ukey, u] : vertices_view(g))
+    - [x] for([vkey, v] : vertexlist_view(g,u): vertex_vertex_range<graph, vertex_range, vertex_edge_range>
+    - [x] for([ukey, u] : vertexlist_view(g))
     - [x] for([vkey,uv] : edges_view(g,u)) (incidence)
     - [ ] create CPOs
       - [ ] create CPO
-      - [ ] view::vertices_view is the class
+      - [ ] view::vertexlist_view is the class
       - [ ] vertices(g) is the function calling the class
     - [x] Add view types in std::graph::view
       - [ ] Use the types in the view functions
@@ -106,7 +106,7 @@
   - [ ] vertex_key or vertex_id?
 - [ ] Should operator\[\](n) -> vertex& be a requirement for a graph?
 - [ ] Can std::array be used as a basis for a constexpr graph? What would the graph be?
-- [ ] How are CPOs implemented for views in the standard (e.g. view::vertices_view for class & view::vertices for CPO)
+- [ ] How are CPOs implemented for views in the standard (e.g. view::vertexlist_view for class & view::vertices for CPO)
   - [ ] Can tag_invoke still be used
 - [ ] Does a LaTeX document take fewer pages than equivilent in Google Docs?
 - [ ] SG19 Questions
@@ -157,7 +157,7 @@
   - [x] Answer: graph_traits with template specializations for user-defined values. vol_graph renamed to dynamic_graph
 - [x] What is the best dynamic graph to propose for the std? vol, vov? premature. Revisit later
 - [x] Can an edgelist be trivially created by a user? (e.g. vector<pair<target_key,weight>>) yes; need to flush this out in paper
-- [x] Can we drop the vertex_vertex_range in favor of just having vertices_view(g,u) [adjacency view]? yes
+- [x] Can we drop the vertex_vertex_range in favor of just having vertexlist_view(g,u) [adjacency view]? yes
 - [x] Can std::vector be used as a basis for a constexpr graph? No because we can't have variables of vector
 - [x] Should CSR support source_key on edges (Sourced template parameter)? No. Views will be able to provide it so it won't be needed.
 - [x] edge_list_graph (edgelist_edge<VKey,E,EV> view?): edgelist is a view, or projection of a container

@@ -361,7 +361,7 @@ OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
     ++ukey;
   }
 #else
-  for (auto&& [ukey, u] : views::vertices_view(g)) {
+  for (auto&& [ukey, u] : views::vertexlist_view(g)) {
     os << '[' << ukey << ' ' << vertex_value(g, u) << ']' << std::endl;
     //auto vw = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
     for (auto&& uv : edges(g, u)) {
@@ -447,7 +447,7 @@ void output_routes_graphviz(const G& g, std::string_view filename) {
      << "  overlap = scalexy\n"
      << "  splines = curved\n";
 
-  for (auto&& [ukey, u] : views::vertices_view(g)) {
+  for (auto&& [ukey, u] : views::vertexlist_view(g)) {
     of << "  " << ukey << " [shape=oval,label=\"" << vertex_value(g, u) << " [" << ukey << "]\"]\n";
     for (auto&& [vkey, uv] : views::edges_view(g, u)) {
       auto&& v = target(g, uv);

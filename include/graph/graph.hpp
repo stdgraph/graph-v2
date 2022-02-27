@@ -119,8 +119,8 @@ namespace views {
 
   //
   // vertex
-  // for(auto&& [ukey, u, value] : vertices_view(g, [](vertex_reference_t<G> u) { return ...; } )
-  // for(auto&& [ukey, u]        : vertices_view(g))
+  // for(auto&& [ukey, u, value] : vertexlist_view(g, [](vertex_reference_t<G> u) { return ...; } )
+  // for(auto&& [ukey, u]        : vertexlist_view(g))
   //
   template <class VKey, class V, class VV>
   struct vertex {
@@ -230,8 +230,8 @@ namespace views {
   //
   // neighbor
   //
-  // for(auto&& [vkey,v,value] : vertices_view(g, u, [](vertex_reference_t<G> v) { return ...; } )
-  // for(auto&& [vkey,v]       : vertices_view(g, u) )
+  // for(auto&& [vkey,v,value] : vertexlist_view(g, u, [](vertex_reference_t<G> v) { return ...; } )
+  // for(auto&& [vkey,v]       : vertexlist_view(g, u) )
   template <class VKey, class V, class VV>
   struct neighbor {
     VKey target_key;
