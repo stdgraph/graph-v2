@@ -306,6 +306,14 @@ auto load_ordered_graph(csv::string_view        csv_file,
   // Create an empty graph
   graph_type g;
 
+  // load vertices
+  using graph_copyable_vertex = std::graph::views::copyable_vertex_t<vertex_key_type, std::string_view>;
+  auto city_name_getter       = [](lbl_iter& lbl) {
+    graph_copyable_vertex retval{lbl->second, lbl->first};
+    return retval;
+  };
+  g.load_vertices(ordered_cities, city_name_getter);
+
   // load edges
   auto eproj = [&g](csv_row_type& row) {
     using graph_copyable_edge_type = views::copyable_edge_t<vertex_key_type, edge_value_type>;
@@ -314,15 +322,6 @@ auto load_ordered_graph(csv::string_view        csv_file,
     return retval;
   };
   g.load_edges(row_deq, eproj, lbls.size(), row_deq.size());
-
-  // load vertices
-  using graph_copyable_vertex      = std::graph::views::copyable_vertex_t<vertex_key_type, std::string_view>;
-  vertex_key_type key              = 0;
-  auto            city_name_getter = [&key](lbl_iter& lbl) {
-    graph_copyable_vertex retval{key++, lbl->first};
-    return retval;
-  };
-  g.load_vertices(ordered_cities, city_name_getter);
 
   return g;
 }
@@ -413,7 +412,7 @@ private:
   int level_ = 0;
 };
 
-template<class OS>
+template <class OS>
 OS& operator<<(OS& os, const ostream_indenter& indent) {
   for (int i = 0; i < indent.level(); ++i)
     os << "  ";
