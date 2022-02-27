@@ -413,6 +413,13 @@ private:
   int level_ = 0;
 };
 
+template<class OS>
+OS& operator<<(OS& os, const ostream_indenter& indent) {
+  for (int i = 0; i < indent.level(); ++i)
+    os << "  ";
+  return os;
+}
+
 
 template <class G>
 void output_routes_graphviz(const G& g, std::string_view filename) {

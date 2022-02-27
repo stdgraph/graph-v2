@@ -10,7 +10,7 @@
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
 #define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file
 #define TEST_OPTION_TEST (3)   // run unit tests
-#define TEST_OPTION TEST_OPTION_OUTPUT
+#define TEST_OPTION TEST_OPTION_TEST
 
 using std::cout;
 using std::endl;
@@ -287,6 +287,29 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
          << "\n----------------------------------------" << endl
          << routes_graph(g) << endl;
     int x = 0;
+    //Germany Routes using csr_graph
+    //----------------------------------------
+    //[0 Frankfürt]
+    //  --> [1 Mannheim] 85km
+    //  --> [4 Würzburg] 217km
+    //  --> [6 Kassel] 173km
+    //[1 Mannheim]
+    //  --> [2 Karlsruhe] 80km
+    //[2 Karlsruhe]
+    //  --> [3 Augsburg] 250km
+    //[3 Augsburg]
+    //  --> [8 München] 84km
+    //[4 Würzburg]
+    //  --> [5 Nürnberg] 103km
+    //  --> [7 Erfurt] 186km
+    //[5 Nürnberg]
+    //  --> [8 München] 167km
+    //  --> [9 Stuttgart] 183km
+    //[6 Kassel]
+    //  --> [8 München] 502km
+    //[7 Erfurt]
+    //[8 München]
+    //[9 Stuttgart]
 #  elif TEST_OPTION == TEST_OPTION_GEN
     ostream_indenter indent;
     cout << endl << indent << "auto ui = begin(vertices(g));" << endl;
@@ -330,16 +353,66 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     cout << endl
          << indent << "REQUIRE(" << size(vertices(g)) << " == size(vertices(g))); // all vertices visited?" << endl;
 #  elif TEST_OPTION == TEST_OPTION_TEST
-
     auto            ui   = begin(vertices(g));
     vertex_key_t<G> ukey = 0;
     if (ui != end(vertices(g))) {
       REQUIRE(0 == ukey);
+      REQUIRE("Frankf\xc3\xbcrt" == vertex_value(g, *ui));
+
+      auto   uvi    = begin(edges(g, *ui));
+      size_t uv_cnt = 0;
+      REQUIRE(1 == target_key(g, *uvi));
+      REQUIRE("Mannheim" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(85 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
+      REQUIRE(4 == target_key(g, *uvi));
+      REQUIRE("W\xc3\xbcrzburg" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(217 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
+      REQUIRE(6 == target_key(g, *uvi));
+      REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(173 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      REQUIRE(3 == uv_cnt);
+    }
+    if (++ui != end(vertices(g))) {
+      REQUIRE(1 == ++ukey);
+      REQUIRE("Mannheim" == vertex_value(g, *ui));
+
+      auto   uvi    = begin(edges(g, *ui));
+      size_t uv_cnt = 0;
+      REQUIRE(2 == target_key(g, *uvi));
+      REQUIRE("Karlsruhe" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(80 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      REQUIRE(1 == uv_cnt);
+    }
+    if (++ui != end(vertices(g))) {
+      REQUIRE(2 == ++ukey);
+      REQUIRE("Karlsruhe" == vertex_value(g, *ui));
+
+      auto   uvi    = begin(edges(g, *ui));
+      size_t uv_cnt = 0;
+      REQUIRE(3 == target_key(g, *uvi));
+      REQUIRE("Augsburg" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(250 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      REQUIRE(1 == uv_cnt);
+    }
+    if (++ui != end(vertices(g))) {
+      REQUIRE(3 == ++ukey);
       REQUIRE("Augsburg" == vertex_value(g, *ui));
 
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
-      REQUIRE(6 == target_key(g, *uvi));
+      REQUIRE(8 == target_key(g, *uvi));
       REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
       REQUIRE(84 == edge_value(g, *uvi));
       ++uv_cnt;
@@ -347,7 +420,58 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       REQUIRE(1 == uv_cnt);
     }
     if (++ui != end(vertices(g))) {
-      REQUIRE(1 == ++ukey);
+      REQUIRE(4 == ++ukey);
+      REQUIRE("W\xc3\xbcrzburg" == vertex_value(g, *ui));
+
+      auto   uvi    = begin(edges(g, *ui));
+      size_t uv_cnt = 0;
+      REQUIRE(5 == target_key(g, *uvi));
+      REQUIRE("N\xc3\xbcrnberg" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(103 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
+      REQUIRE(7 == target_key(g, *uvi));
+      REQUIRE("Erfurt" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(186 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      REQUIRE(2 == uv_cnt);
+    }
+    if (++ui != end(vertices(g))) {
+      REQUIRE(5 == ++ukey);
+      REQUIRE("N\xc3\xbcrnberg" == vertex_value(g, *ui));
+
+      auto   uvi    = begin(edges(g, *ui));
+      size_t uv_cnt = 0;
+      REQUIRE(8 == target_key(g, *uvi));
+      REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(167 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
+      REQUIRE(9 == target_key(g, *uvi));
+      REQUIRE("Stuttgart" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(183 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      REQUIRE(2 == uv_cnt);
+    }
+    if (++ui != end(vertices(g))) {
+      REQUIRE(6 == ++ukey);
+      REQUIRE("Kassel" == vertex_value(g, *ui));
+
+      auto   uvi    = begin(edges(g, *ui));
+      size_t uv_cnt = 0;
+      REQUIRE(8 == target_key(g, *uvi));
+      REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(502 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      REQUIRE(1 == uv_cnt);
+    }
+    if (++ui != end(vertices(g))) {
+      REQUIRE(7 == ++ukey);
       REQUIRE("Erfurt" == vertex_value(g, *ui));
 
       auto   uvi    = begin(edges(g, *ui));
@@ -356,71 +480,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       REQUIRE(0 == uv_cnt);
     }
     if (++ui != end(vertices(g))) {
-      REQUIRE(2 == ++ukey);
-      REQUIRE("Frankf\xc3\xbcrt" == vertex_value(g, *ui));
-
-      auto   uvi    = begin(edges(g, *ui));
-      size_t uv_cnt = 0;
-      REQUIRE(4 == target_key(g, *uvi));
-      REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(173 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
-      REQUIRE(5 == target_key(g, *uvi));
-      REQUIRE("Mannheim" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(85 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
-      REQUIRE(9 == target_key(g, *uvi));
-      REQUIRE("W\xc3\xbcrzburg" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(217 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      REQUIRE(3 == uv_cnt);
-    }
-    if (++ui != end(vertices(g))) {
-      REQUIRE(3 == ++ukey);
-      REQUIRE("Karlsruhe" == vertex_value(g, *ui));
-
-      auto   uvi    = begin(edges(g, *ui));
-      size_t uv_cnt = 0;
-      REQUIRE(0 == target_key(g, *uvi));
-      REQUIRE("Augsburg" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(250 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      REQUIRE(1 == uv_cnt);
-    }
-    if (++ui != end(vertices(g))) {
-      REQUIRE(4 == ++ukey);
-      REQUIRE("Kassel" == vertex_value(g, *ui));
-
-      auto   uvi    = begin(edges(g, *ui));
-      size_t uv_cnt = 0;
-      REQUIRE(6 == target_key(g, *uvi));
-      REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(502 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      REQUIRE(1 == uv_cnt);
-    }
-    if (++ui != end(vertices(g))) {
-      REQUIRE(5 == ++ukey);
-      REQUIRE("Mannheim" == vertex_value(g, *ui));
-
-      auto   uvi    = begin(edges(g, *ui));
-      size_t uv_cnt = 0;
-      REQUIRE(3 == target_key(g, *uvi));
-      REQUIRE("Karlsruhe" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(80 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      REQUIRE(1 == uv_cnt);
-    }
-    if (++ui != end(vertices(g))) {
-      REQUIRE(6 == ++ukey);
+      REQUIRE(8 == ++ukey);
       REQUIRE("M\xc3\xbcnchen" == vertex_value(g, *ui));
 
       auto   uvi    = begin(edges(g, *ui));
@@ -429,26 +489,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       REQUIRE(0 == uv_cnt);
     }
     if (++ui != end(vertices(g))) {
-      REQUIRE(7 == ++ukey);
-      REQUIRE("N\xc3\xbcrnberg" == vertex_value(g, *ui));
-
-      auto   uvi    = begin(edges(g, *ui));
-      size_t uv_cnt = 0;
-      REQUIRE(6 == target_key(g, *uvi));
-      REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(167 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
-      REQUIRE(8 == target_key(g, *uvi));
-      REQUIRE("Stuttgart" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(183 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      REQUIRE(2 == uv_cnt);
-    }
-    if (++ui != end(vertices(g))) {
-      REQUIRE(8 == ++ukey);
+      REQUIRE(9 == ++ukey);
       REQUIRE("Stuttgart" == vertex_value(g, *ui));
 
       auto   uvi    = begin(edges(g, *ui));
@@ -456,27 +497,8 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
 
       REQUIRE(0 == uv_cnt);
     }
-    if (++ui != end(vertices(g))) {
-      REQUIRE(9 == ++ukey);
-      REQUIRE("W\xc3\xbcrzburg" == vertex_value(g, *ui));
-
-      auto   uvi    = begin(edges(g, *ui));
-      size_t uv_cnt = 0;
-      REQUIRE(1 == target_key(g, *uvi));
-      REQUIRE("Erfurt" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(186 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
-      REQUIRE(7 == target_key(g, *uvi));
-      REQUIRE("N\xc3\xbcrnberg" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(103 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      REQUIRE(2 == uv_cnt);
-    }
 
     REQUIRE(10 == size(vertices(g))); // all vertices visited?
-#  endif
+#endif
   }
 }
