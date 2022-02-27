@@ -245,9 +245,10 @@ auto load_ordered_graph(csv::string_view        csv_file,
   using std::deque;
   using std::move;
   using std::numeric_limits;
-  using graph_type      = G;
-  using vertex_key_type = vertex_key_t<G>;
-  using edge_value_type = edge_value_t<G>; //std::remove_cvref<edge_value_t<G>>;
+  using graph_type        = G;
+  using vertex_key_type   = vertex_key_t<G>;
+  using vertex_value_type = vertex_value_t<G>;
+  using edge_value_type   = edge_value_t<G>; //std::remove_cvref<edge_value_t<G>>;
 
   csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
 
@@ -307,9 +308,10 @@ auto load_ordered_graph(csv::string_view        csv_file,
   graph_type g;
 
   // load vertices
-  using graph_copyable_vertex = std::graph::views::copyable_vertex_t<vertex_key_type, std::string_view>;
-  auto city_name_getter       = [](lbl_iter& lbl) {
-    graph_copyable_vertex retval{lbl->second, lbl->first};
+  using copyable_label = std::remove_reference_t<vertex_value_type>;
+  using graph_copyable_vertex = std::graph::views::copyable_vertex_t<vertex_key_type, copyable_label>;
+  auto city_name_getter = [](lbl_iter& lbl) {
+    graph_copyable_vertex retval{lbl->second, copyable_label(lbl->first)};
     return retval;
   };
   g.load_vertices(ordered_cities, city_name_getter);

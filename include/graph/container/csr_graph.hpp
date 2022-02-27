@@ -144,7 +144,7 @@ public:
     values_.resize(ranges::size(vrng));
 
     for (auto&& vtx : vrng) {
-      auto&& [key, value] = move(projection(vtx));
+      auto&& [key, value] = projection(vtx);
 
       // if an unsized vrng is passed, the caller is responsible to call
       // resize_vertices(n) with enough entries for all the values.
@@ -521,7 +521,7 @@ protected:
       if (ranges::begin(erng) != ranges::end(erng)) {
         auto lastIt = ranges::end(erng);
         --lastIt;
-        auto&& e = move(eprojection(*lastIt)); // copyable_edge
+        auto&& e = eprojection(*lastIt); // copyable_edge
         last_key = max(e.source_key, e.target_key);
       }
     }

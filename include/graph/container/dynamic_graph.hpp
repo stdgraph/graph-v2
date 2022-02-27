@@ -656,19 +656,20 @@ public:
       reserve_vertices(max(vertex_count, ranges::size(vrng)));
     auto add_vertex = push_or_insert(vertices_);
     for (auto&& u : vrng) {
-      views::copyable_vertex_t<VKey, VV> copy_vertex = move(vproj(u));
-      add_vertex(vertex_type(move(copy_vertex.value), vertices_.get_allocator()));
+      auto&& [key, value] = vproj(u); //views::copyable_vertex_t<VKey, VV>
+      add_vertex(vertex_type(value, vertices_.get_allocator()));
     }
   }
 
   template <class VRng, class VProj = identity>
   void load_vertices(VRng&& vrng, VProj vproj = {}, size_type vertex_count = 0) {
-    if (ranges::sized_range<VRng>)
-      reserve_vertices(max(vertex_count, ranges::size(vrng)));
-    auto add_vertex = push_or_insert(vertices_);
-    for (auto&& u : vrng) {
-      views::copyable_vertex_t<VKey, VV> copy_vertex = move(vproj(u));
-      add_vertex(vertex_type(move(copy_vertex.value), vertices_.get_allocator()));
+    if constexpr (ranges::sized_range<VRng> && resizable<vertices_type>)
+      resize_vertices(max(vertex_count, ranges::size(vrng)));
+    auto set_value = assign_or_insert<vertices_type, vertex_key_type>(vertices_);
+    for (auto&& v : vrng) {
+      auto&& [key, value] = vproj(v); //views::copyable_vertex_t<VKey, VV>
+      vertex_type vtx(move(value), vertices_.get_allocator());
+      set_value(static_cast<vertex_key_type>(key), move(vtx));
     }
   }
 
@@ -683,7 +684,7 @@ public:
 
     // add edges
     for (auto&& edge_data : erng) {
-      views::copyable_edge_t<VKey, EV> e = move(eproj(edge_data));
+      auto&& e = eproj(edge_data); //views::copyable_edge_t<VKey, EV>
 
       if (static_cast<size_t>(e.source_key) >= vertices_.size()) {
         assert(false);
@@ -714,7 +715,7 @@ public:
 
     // add edges
     for (auto&& edge_data : erng) {
-      views::copyable_edge_t<VKey, EV> e = move(eproj(edge_data));
+      auto&& e = eproj(edge_data); //views::copyable_edge_t<VKey, EV>
 
       if (static_cast<size_t>(e.source_key) >= vertices_.size()) {
         assert(false);

@@ -46,22 +46,22 @@ template<typename G>
 auto find_frankfurt(G&& g) { return find_city(g, "Frankf\xC3\xBCrt"); }
 
 
-TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vofl][germany][dijkstra][book]") {
-  init_console();
-  using G = routes_volf_graph_type;
-  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
-
-  auto frankfurt     = find_frankfurt(g);
-  auto frankfurt_key = find_frankfurt_key(g);
-  auto weight        = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
-  auto result        = std::graph::dijkstra_book(g, frankfurt_key, weight);
-}
+//TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vofl][germany][dijkstra][book]") {
+//  init_console();
+//  using G = routes_volf_graph_type;
+//  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+//
+//  auto frankfurt     = find_frankfurt(g);
+//  auto frankfurt_key = find_frankfurt_key(g);
+//  auto weight        = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
+//  auto result        = std::graph::dijkstra_book(g, frankfurt_key, weight);
+//}
 
 
 TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
   init_console();
   using G  = routes_volf_graph_type;
-  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::alphabetical);
 
   auto frankfurt     = find_frankfurt(g);
   auto frankfurt_key = find_frankfurt_key(g);

@@ -44,6 +44,11 @@ concept has_insert = requires(C& container, const typename C::value_type& value)
   {container.insert(value)};
 };
 
+template <class C, class Idx>
+concept has_array_operator = requires(C&& container, Idx idx) {
+  {container[idx]}; //->is_lvalue_reference_v;
+};
+
 // return a lambda to push/insert/emplace an element in a container
 template <class C>
 constexpr auto push_or_insert(C& container) {
@@ -69,6 +74,24 @@ constexpr auto push_or_insert(C& container) {
   //              "The container doesn't have emplace_back, push_back, emplace_front, push_front, emplace or insert");
   //}
 #  endif
+}
+
+// return a lambda to assign/insert an element in a container
+// assignment applies to random_access containers that have elements pre-allocated
+// insert     applies to other containers that can insert elements (e.g. map, unordered_map, ...)
+template <class C, class K>
+requires has_array_operator<C, K>
+constexpr auto assign_or_insert(C& container) {
+  if constexpr (ranges::random_access_range<C>) {
+    static_assert(ranges::sized_range<C>, "random_access container is assumed to have size()");
+    return [&container](const K& key, C::value_type&& value) {
+      typename C::size_type k = static_cast<C::size_type>(key);
+      assert(k < container.size());
+      container[k] = move(value);
+    };
+  } else if constexpr (has_array_operator<C, K>) {
+    return [&container](const K& key, C::value_type&& value) { container[key] = move(value); };
+  }
 }
 
 
