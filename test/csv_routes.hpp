@@ -26,7 +26,7 @@
 #endif
 
 #include "graph/graph.hpp"
-#include "graph/views/vertices_view.hpp"
+#include "graph/views/vertexlist_view.hpp"
 #include "graph/views/incidence_view.hpp"
 #include <set>
 #include <map>
