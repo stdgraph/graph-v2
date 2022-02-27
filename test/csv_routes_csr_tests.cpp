@@ -53,7 +53,8 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   init_console();
 
   using G                        = routes_csr_graph_type;
-  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::alphabetical);
+  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
+  // name_order_policy::source_order_found gives best output with least overlap for germany routes
 
   const auto frankfurt     = find_frankfurt(g);
   const auto frankfurt_key = find_frankfurt_key(g);
@@ -63,6 +64,9 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   //cout << "\nUsing CPO functions" << endl;
   //auto frantfurt = germany_routes.frankfurt();
   //REQUIRE(frantfurt != end(germany_routes.cities()));
+
+  // (uncomment to generate a graphviz file)
+  //output_routes_graphviz(g, "d:/dev/g/test/germany_routes.gv");
 
   SECTION("metadata") {
     REQUIRE(10 == std::ranges::size(vertices(g)));
@@ -81,7 +85,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     REQUIRE(total_dist == 2030.0);
   }
 
-#if 1
+#if 0
   SECTION("const_vertices_view") {
     const G& g2 = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);

@@ -27,12 +27,14 @@
 
 #include "graph/graph.hpp"
 #include "graph/views/vertices_view.hpp"
+#include "graph/views/incidence_edge_view.hpp"
 #include <set>
 #include <map>
 #include <deque>
 #include <algorithm>
 #include <string_view>
 #include <iomanip>
+#include <ostream>
 
 void init_console(); // init cout for UTF-8
 
@@ -235,11 +237,14 @@ template <typename G>
 auto load_ordered_graph(csv::string_view        csv_file,
                         const name_order_policy order_policy = name_order_policy::alphabetical) {
   using namespace std::graph;
+  using std::ranges::range_value_t;
+  using std::ranges::iterator_t;
   using std::string_view;
   using std::map;
   using std::vector;
   using std::deque;
   using std::move;
+  using std::numeric_limits;
   using graph_type      = G;
   using vertex_key_type = vertex_key_t<G>;
   using edge_value_type = edge_value_t<G>; //std::remove_cvref<edge_value_t<G>>;
@@ -247,7 +252,7 @@ auto load_ordered_graph(csv::string_view        csv_file,
   csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
 
   using labels_map   = map<string_view, vertex_key_type>; // label, vertex key (also output order, assigned later)
-  using csv_row_type = views::copyable_edge_t<labels_map::iterator, double>;
+  using csv_row_type = views::copyable_edge_t<iterator_t<labels_map>, double>;
   using csv_row_deq  = deque<csv_row_type>;
 
   labels_map  lbls;    // unique labels for both source_key and target_key, ordered
@@ -260,15 +265,15 @@ auto load_ordered_graph(csv::string_view        csv_file,
     string_view target_key = row[1].get_sv();
     double      value      = row[2].get<double>();
     auto&& [source_iter, source_inserted] =
-          lbls.emplace(labels_map::value_type(source_key, std::numeric_limits<vertex_key_type>::max()));
+          lbls.emplace(range_value_t<labels_map>(source_key, numeric_limits<vertex_key_type>::max()));
     auto&& [target_iter, target_inserted] =
-          lbls.emplace(labels_map::value_type(target_key, std::numeric_limits<vertex_key_type>::max()));
+          lbls.emplace(range_value_t<labels_map>(target_key, numeric_limits<vertex_key_type>::max()));
 
     if (order_policy == name_order_policy::order_found || order_policy == name_order_policy::source_order_found) {
-      if (source_iter->second == std::numeric_limits<vertex_key_type>::max())
+      if (source_iter->second == numeric_limits<vertex_key_type>::max())
         source_iter->second = row_order++;
       if (order_policy != name_order_policy::source_order_found &&
-          target_iter->second == std::numeric_limits<vertex_key_type>::max())
+          target_iter->second == numeric_limits<vertex_key_type>::max())
         target_iter->second = row_order++;
     }
 
@@ -407,3 +412,30 @@ public:
 private:
   int level_ = 0;
 };
+
+
+template <class G>
+void output_routes_graphviz(const G& g, std::string_view filename) {
+  using namespace std::graph;
+  std::ofstream of(filename.data());
+  assert(of.is_open());
+  //of << "\xEF\xBB\xBF"; // UTF-8 lead chars for UTF-8 including BOM
+  //of << "\xBB\xBF"; // UTF-8 lead chars for UTF-8
+
+  // nodesep=0.5; doesn't help
+
+  of << "digraph cities {\n"
+     << "  overlap = scalexy\n"
+     << "  splines = curved\n";
+
+  for (auto&& [ukey, u] : views::vertices_view(g)) {
+    of << "  " << ukey << " [shape=oval,label=\"" << vertex_value(g, u) << " [" << ukey << "]\"]\n";
+    for (auto&& [vkey, uv] : views::edges_view(g, u)) {
+      auto&& v = target(g, uv);
+      of << "   " << ukey << " -> " << vkey << " [arrowhead=vee,xlabel=\"" << edge_value(g, uv)
+         << " km\", fontcolor=blue]\n";
+    }
+    of << std::endl;
+  }
+  of << "}\n";
+}
