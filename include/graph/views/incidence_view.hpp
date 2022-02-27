@@ -9,18 +9,18 @@
 namespace std::graph::views {
 
 template <class G>
-class const_vertex_edge_view_iterator;
+class const_incidence_iterator;
 template <class G>
-class vertex_edge_view_iterator;
+class incidence_iterator;
 
 template <class G>
-class const_vertex_edge_view_iterator;
+class const_incidence_iterator;
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(const G& g, vertex_reference_t<const G> u) {
   using vertex_type   = remove_cvref_t<decltype(u)>;
-  using iter_type     = const_vertex_edge_view_iterator<const G>;
+  using iter_type     = const_incidence_iterator<const G>;
   using sentinal_type = typename iter_type::edge_iterator;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
 
@@ -33,7 +33,7 @@ constexpr auto edges_view(const G& g, vertex_reference_t<const G> u) {
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edges_view(G& g, vertex_reference_t<G> u) {
-  using iter_type     = vertex_edge_view_iterator<G>;
+  using iter_type     = incidence_iterator<G>;
   using sentinal_type = typename iter_type::edge_iterator;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
 
@@ -52,7 +52,7 @@ constexpr auto edges_view(G& g, vertex_key_t<G> ukey) { return edges_view(g, *fi
 
 
 template <class G, class Projection>
-class vertex_edge_view_iterator_base {
+class incidence_iterator_base {
 public:
   using graph_type      = remove_cvref_t<G>;
   using vertex_type     = vertex_t<graph_type>;
@@ -71,19 +71,19 @@ protected:
   using shadow_value_type = targeted_edge<vertex_key_type, edge_type*, projection_type>;
 
 protected:
-  vertex_edge_view_iterator_base(const graph_type& g, edge_iterator iter, const projection_fn& projection)
+  incidence_iterator_base(const graph_type& g, edge_iterator iter, const projection_fn& projection)
         : g_(&const_cast<graph_type&>(g)), iter_(iter), projection_(projection) {}
-  vertex_edge_view_iterator_base(const graph_type& g, const vertex_type& u, const projection_fn& projection)
-        : vertex_edge_view_iterator_base(
+  incidence_iterator_base(const graph_type& g, const vertex_type& u, const projection_fn& projection)
+        : incidence_iterator_base(
                 g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u))), projection) {}
 
-  vertex_edge_view_iterator_base()                                      = default;
-  vertex_edge_view_iterator_base(const vertex_edge_view_iterator_base&) = default;
-  vertex_edge_view_iterator_base(vertex_edge_view_iterator_base&&)      = default;
-  ~vertex_edge_view_iterator_base()                                     = default;
+  incidence_iterator_base()                                      = default;
+  incidence_iterator_base(const incidence_iterator_base&) = default;
+  incidence_iterator_base(incidence_iterator_base&&)      = default;
+  ~incidence_iterator_base()                                     = default;
 
-  vertex_edge_view_iterator_base& operator=(const vertex_edge_view_iterator_base&) = default;
-  vertex_edge_view_iterator_base& operator=(vertex_edge_view_iterator_base&&) = default;
+  incidence_iterator_base& operator=(const incidence_iterator_base&) = default;
+  incidence_iterator_base& operator=(incidence_iterator_base&&) = default;
 
   void set_value() { value_ = shadow_value_type{target_key(*g_, *iter_), &*iter_, projection_(*iter_)}; }
 
@@ -95,7 +95,7 @@ protected:
 };
 
 template <class G>
-class vertex_edge_view_iterator_base<G, void> {
+class incidence_iterator_base<G, void> {
 public:
   using graph_type      = remove_cvref_t<G>;
   using vertex_type     = vertex_t<graph_type>;
@@ -113,19 +113,19 @@ protected:
   using shadow_value_type = targeted_edge<vertex_key_type, edge_type*, void>;
 
 protected:
-  vertex_edge_view_iterator_base(const graph_type& g, edge_iterator iter)
+  incidence_iterator_base(const graph_type& g, edge_iterator iter)
         : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
-  vertex_edge_view_iterator_base(const graph_type& g, const vertex_type& u)
-        : vertex_edge_view_iterator_base(
+  incidence_iterator_base(const graph_type& g, const vertex_type& u)
+        : incidence_iterator_base(
                 g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
 
-  vertex_edge_view_iterator_base()                                      = default;
-  vertex_edge_view_iterator_base(const vertex_edge_view_iterator_base&) = default;
-  vertex_edge_view_iterator_base(vertex_edge_view_iterator_base&&)      = default;
-  ~vertex_edge_view_iterator_base()                                     = default;
+  incidence_iterator_base()                                      = default;
+  incidence_iterator_base(const incidence_iterator_base&) = default;
+  incidence_iterator_base(incidence_iterator_base&&)      = default;
+  ~incidence_iterator_base()                                     = default;
 
-  vertex_edge_view_iterator_base& operator=(const vertex_edge_view_iterator_base&) = default;
-  vertex_edge_view_iterator_base& operator=(vertex_edge_view_iterator_base&&) = default;
+  incidence_iterator_base& operator=(const incidence_iterator_base&) = default;
+  incidence_iterator_base& operator=(incidence_iterator_base&&) = default;
 
   void set_value() { value_ = shadow_value_type{target_key(*g_, *iter_), &*iter_}; }
 
@@ -136,7 +136,7 @@ protected:
 };
 
 template <class G>
-class const_vertex_edge_view_iterator {
+class const_incidence_iterator {
 public:
   using graph_type = remove_cvref_t<G>;
 
@@ -160,19 +160,19 @@ protected:
   using shadow_value_type = pair<vertex_key_type, edge_type*>;
 
 public:
-  const_vertex_edge_view_iterator(const graph_type& g, edge_iterator iter)
+  const_incidence_iterator(const graph_type& g, edge_iterator iter)
         : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
-  const_vertex_edge_view_iterator(const graph_type& g, const vertex_type& u)
-        : const_vertex_edge_view_iterator(
+  const_incidence_iterator(const graph_type& g, const vertex_type& u)
+        : const_incidence_iterator(
                 g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
 
-  constexpr const_vertex_edge_view_iterator()                                       = default;
-  constexpr const_vertex_edge_view_iterator(const const_vertex_edge_view_iterator&) = default;
-  constexpr const_vertex_edge_view_iterator(const_vertex_edge_view_iterator&&)      = default;
-  constexpr ~const_vertex_edge_view_iterator()                                      = default;
+  constexpr const_incidence_iterator()                                       = default;
+  constexpr const_incidence_iterator(const const_incidence_iterator&) = default;
+  constexpr const_incidence_iterator(const_incidence_iterator&&)      = default;
+  constexpr ~const_incidence_iterator()                                      = default;
 
-  constexpr const_vertex_edge_view_iterator& operator=(const const_vertex_edge_view_iterator&) = default;
-  constexpr const_vertex_edge_view_iterator& operator=(const_vertex_edge_view_iterator&&) = default;
+  constexpr const_incidence_iterator& operator=(const const_incidence_iterator&) = default;
+  constexpr const_incidence_iterator& operator=(const_incidence_iterator&&) = default;
 
 public:
   constexpr reference operator*() const {
@@ -180,33 +180,33 @@ public:
     return reinterpret_cast<reference>(value_);
   }
 
-  constexpr const_vertex_edge_view_iterator& operator++() {
+  constexpr const_incidence_iterator& operator++() {
     ++iter_;
     return *this;
   }
-  constexpr const_vertex_edge_view_iterator operator++(int) const {
-    const_vertex_edge_view_iterator tmp(*this);
+  constexpr const_incidence_iterator operator++(int) const {
+    const_incidence_iterator tmp(*this);
     ++*this;
     return tmp;
   }
 
-  constexpr bool operator==(const const_vertex_edge_view_iterator& rhs) const { return iter_ == rhs.iter_; }
-  //constexpr bool operator==(const vertex_edge_view_iterator& rhs) const { return iter_ == rhs; }
+  constexpr bool operator==(const const_incidence_iterator& rhs) const { return iter_ == rhs.iter_; }
+  //constexpr bool operator==(const incidence_iterator& rhs) const { return iter_ == rhs; }
 
 protected:
   mutable shadow_value_type value_ = shadow_value_type(vertex_key_type(), nullptr);
   graph_type*               g_     = nullptr;
   edge_iterator             iter_;
 
-  friend bool operator==(const edge_iterator& lhs, const const_vertex_edge_view_iterator& rhs) {
+  friend bool operator==(const edge_iterator& lhs, const const_incidence_iterator& rhs) {
     return lhs == rhs.iter_;
   }
 };
 
 template <class G>
-class vertex_edge_view_iterator : public const_vertex_edge_view_iterator<G> {
+class incidence_iterator : public const_incidence_iterator<G> {
 public:
-  using base_type = const_vertex_edge_view_iterator<G>;
+  using base_type = const_incidence_iterator<G>;
 
   using graph_type = G;
 
@@ -232,16 +232,16 @@ protected:
   using base_type::iter_;
 
 public:
-  vertex_edge_view_iterator(graph_type& g, edge_iterator iter) : base_type(g, iter) {}
-  vertex_edge_view_iterator(graph_type& g, vertex_type& u) : base_type(g, u) {}
+  incidence_iterator(graph_type& g, edge_iterator iter) : base_type(g, iter) {}
+  incidence_iterator(graph_type& g, vertex_type& u) : base_type(g, u) {}
 
-  constexpr vertex_edge_view_iterator()                                 = default;
-  constexpr vertex_edge_view_iterator(const vertex_edge_view_iterator&) = default;
-  constexpr vertex_edge_view_iterator(vertex_edge_view_iterator&&)      = default;
-  constexpr ~vertex_edge_view_iterator()                                = default;
+  constexpr incidence_iterator()                                 = default;
+  constexpr incidence_iterator(const incidence_iterator&) = default;
+  constexpr incidence_iterator(incidence_iterator&&)      = default;
+  constexpr ~incidence_iterator()                                = default;
 
-  constexpr vertex_edge_view_iterator& operator=(const vertex_edge_view_iterator&) = default;
-  constexpr vertex_edge_view_iterator& operator=(vertex_edge_view_iterator&&) = default;
+  constexpr incidence_iterator& operator=(const incidence_iterator&) = default;
+  constexpr incidence_iterator& operator=(incidence_iterator&&) = default;
 
 public:
   constexpr reference operator*() const {
@@ -249,21 +249,21 @@ public:
     return reinterpret_cast<reference>(value_);
   }
 
-  constexpr vertex_edge_view_iterator& operator++() {
+  constexpr incidence_iterator& operator++() {
     ++iter_;
     return *this;
   }
-  constexpr vertex_edge_view_iterator operator++(int) const {
-    vertex_edge_view_iterator tmp(*this);
+  constexpr incidence_iterator operator++(int) const {
+    incidence_iterator tmp(*this);
     ++*this;
     return tmp;
   }
 
-  constexpr bool operator==(const vertex_edge_view_iterator& rhs) const { return iter_ == rhs.iter_; }
-  //constexpr bool operator==(const vertex_edge_view_iterator& rhs) const { return iter_ == rhs; }
+  constexpr bool operator==(const incidence_iterator& rhs) const { return iter_ == rhs.iter_; }
+  //constexpr bool operator==(const incidence_iterator& rhs) const { return iter_ == rhs; }
 
 protected:
-  friend bool operator==(const edge_iterator& lhs, const vertex_edge_view_iterator& rhs) { return lhs == rhs.iter_; }
+  friend bool operator==(const edge_iterator& lhs, const incidence_iterator& rhs) { return lhs == rhs.iter_; }
 };
 
 } // namespace std::graph::views

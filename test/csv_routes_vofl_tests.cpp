@@ -278,11 +278,11 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
   SECTION("const_incidence_edge_view") {
     const G& g2 = g;
 
-    std::graph::views::const_vertex_edge_view_iterator<G> i0; // default construction
+    std::graph::views::const_incidence_iterator<G> i0; // default construction
 
     auto& u             = g2[frankfurt_key];
 
-    std::graph::views::const_vertex_edge_view_iterator<G> i1(g2, u);
+    std::graph::views::const_incidence_iterator<G> i1(g2, u);
     {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
@@ -304,11 +304,11 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
   }
 
   SECTION("incidence_edge_view") {
-    std::graph::views::vertex_edge_view_iterator<G> i0; // default construction
+    std::graph::views::incidence_iterator<G> i0; // default construction
 
     auto& u             = g[frankfurt_key];
 
-    std::graph::views::vertex_edge_view_iterator<G> i1(g, u);
+    std::graph::views::incidence_iterator<G> i1(g, u);
     {
       auto&& [vkey, uv] = *i1;
       static_assert(is_const_v<decltype(vkey)>);
