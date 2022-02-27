@@ -24,8 +24,10 @@ namespace std::graph {
 //
 namespace access {
   // ranges
-  TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices], vertices(g,u) -> [adjacency edges]
-  TAG_INVOKE_DEF(edges);    // edges(g,u) -> [incidence edges]
+  TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices]
+                            // vertices(g,u) -> [adjacency edges]
+
+  TAG_INVOKE_DEF(edges); // edges(g,u) -> [incidence edges]
 
   // graph value
   TAG_INVOKE_DEF(graph_value); // graph_value(g) -> GV&
@@ -33,28 +35,36 @@ namespace access {
   // vertex values
   TAG_INVOKE_DEF(vertex_key);   // vertex_key(g,ui) -> VKey
                                 // default = ui - begin(vertices(g)) for random_access_iterator<ui>
+
   TAG_INVOKE_DEF(vertex_value); // vertex_value(g,u) -> VV&
+
   TAG_INVOKE_DEF(degree);       // degree(g,u) -> VKey
                                 // default = size(edges(g,u))
 
   // edge values
   TAG_INVOKE_DEF(target_key); // target_key(g,uv) -> VKey
+
   TAG_INVOKE_DEF(target);     // target(g,uv) -> v
                               // default = *(begin(g,vertices(g)) + target_key(g,uv))
                               // for random_access_range<vertices(g)> and integral<target_key(g,uv))
                               // uv can be from edges(g,u) or vertices(g,u)
+
   TAG_INVOKE_DEF(edge_value); // edge_value(g,uv) -> EV&
 
   // +sourced edge values (only available when source_key is on the edge)
   TAG_INVOKE_DEF(source_key);   // source_key(g,uv) -> VKey
+
   TAG_INVOKE_DEF(source);       // source(g,uv) -> u
                                 // default = *(begin(g,vertices(g)) + source_key(g,uv))
                                 // for random_access_range<vertices(g)> and integral<source_key(g,uv))
                                 // uv can be from edges(g,u) or vertices(g,u)
+
   TAG_INVOKE_DEF(edge_key);     // edge_key(g,uv) -> pair<VKey,VKey>
                                 // default = pair(source_key(g,uv),target_key(g,uv))
+
   TAG_INVOKE_DEF(other_key);    // other_key(g,uv,xkey) -> VKey (ukey or vkey)
                                 // default = xkey != target_key(g,uv) ? target_key(g,uv) : source_key(g,uv)
+
   TAG_INVOKE_DEF(other_vertex); // other_vertex(g,uv,x) -> y (u or v)
                                 // default = x != &target(g,uv) ? target(g,uv) : source(g,uv)
 
@@ -63,7 +73,8 @@ namespace access {
                                // default = begin(vertices(g)) + ukey, for random_access_range<vertex_range_t<G>>
   TAG_INVOKE_DEF(
         find_vertex_edge); // find_vertex_edge(g,u,vkey) -> uvi; default = find(edges(g,u), [](uv) {target_id(g,uv)==vkey;}
-        // find_vertex_edge(g,ukey,vkey) -> uvi; default = find_vertex_edge(g,*find_vertex(g,ukey),vkey)
+  // find_vertex_edge(g,ukey,vkey) -> uvi; default = find_vertex_edge(g,*find_vertex(g,ukey),vkey)
+
   TAG_INVOKE_DEF(contains_edge); // contains_edge(g,ukey,vkey) -> bool
 } // namespace access
 
@@ -350,7 +361,7 @@ auto find_vertex_edge(G&& g, vertex_reference_t<G> u, vertex_key_t<G> vkey) {
   if constexpr (access::_has_find_vertex_edge_adl<G>)
     return access::find_vertex_edge(g, u, vkey);
   else
-    return ranges::find(edges(g, u), [&g, &vkey](auto&& uv) { return target_key(g, uv) == vkey; });
+    return ranges::find_if(edges(g, u), [&g, &vkey](auto&& uv) { return target_key(g, uv) == vkey; });
 }
 
 template <class G>

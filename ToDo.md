@@ -27,7 +27,7 @@
       - [ ] Use the types in the view functions
       - [ ] Add optional value function object parameters to the functions
       - [ ] combine targeted_edge & sourced_edge; use bool Sourced template parameter to add Sourced key
-      - [ ] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
+      - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -46,29 +46,21 @@
     - [ ] Transitive Closure
     - [ ] copy (g1 --> g2)
 - Graph Containers (data structures)
-    - [ ] csr_graph
-      - [x] Implement graph, vertex, edge
-      - [x] Load from CSV file
-      - [x] Validate with vofl_graph tests
-      - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer lists
-    - [ ] edge_list_graph (edgelist_edge<VKey,E,EV> view?)
-    - [ ] dynamic_graph: vol template params for vertex & edge containers (like stack/queue)
-      - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer 
-    - [ ] directed_adjacency_vector
+    - [x] csr_graph
+    - [ ] dynamic_graph
+      - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
+      - [ ] graph with map-based vertices (requires different algorithm impl)
     - [ ] undirected_adjacency_list
-    - [ ] graph with map-based vertices (requires different algorithm impl)
-    - [ ] edge_value_extractor is a "projection"
-    - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
+    - [ ] directed_adjacency_vector
 - [ ] Testing Patterns
   - [x] Validate content
   - [ ] Validate graph API
-    - [ ] All functions work (with/without defaults)
-    - [ ] Minimal functions functional (sourced/unsourced): vertices(g), edges(g,u), target_key(g,uv), source_key(g,uv)
+    - [x] All functions work (with/without defaults) on existing data structures
     - [ ] Default values same as dynamic graph values
-    - [ ] void & non-void for EV, VV & GV can store & retreive values
+    - [ ] void & non-void for EV, VV & GV can store & retrieve values
+    - [ ] Validate const
+    - [ ] Validate copy and move to set EV, VV & GV values
   - [ ] Validate algorithms
-  - [ ] Validate const
-  - [ ] Validate constexpr (need to use std::array)
   - [ ] Apply to multiple data structures
     - [ ] load_edges() can use copy and move to set EV & VV values
     - [ ] use load_ordered_graph() for all data structures (consistency)
@@ -80,6 +72,7 @@
   - [ ] Generate doxygen output
   - [ ] Validate address sanitizer build
   - [ ] Support Clang (waiting for full concepts support)
+  - [ ] Performance tests
 - Feature & performance comparison
   - [ ] boost::graph
   - [ ] NWGraph
@@ -109,7 +102,7 @@
 - [ ] Are the CSR vertex & edge types different? (requirement of incidence and adjacency concepts)
 - [ ] If we have an access namespace, do we need a container namespace?
 - [ ] SG19 Input
-  - [ ] Core data structures? static graph(CSR), dynamic graph (vol variant), edgelist graph
+  - [ ] Core data structures? static graph(CSR), dynamic graph (vol variant)
   - [ ] vertex_key or vertex_id?
 - [ ] Should operator\[\](n) -> vertex& be a requirement for a graph?
 - [ ] Can std::array be used as a basis for a constexpr graph? What would the graph be?
@@ -119,7 +112,9 @@
 - [ ] SG19 Questions
   - [ ] key vs. id?
 - [ ] Can CSR edges have a void value? (e.g. no v vector)
-- [ ] Should CSR support source_key on edges (Sourced template parameter)?
+- [ ] How easy is it to write a view w/o the graph API?
+- [ ] How to validate constexpr? (need to use std::array)
+- [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VKey. How to adapt existing graphs?
 
 ## Resolved
 ### ToDo Completed
@@ -134,11 +129,16 @@
     - [x] edge_range
 - Algorithms
 - Graph Containers (data structures)
-    - [x] vol_graph_ (vector of forward_list)
+    - [x] dynamic_graph_ (adjustable to different vertex & edge containers)
       - [x] Implement graph, vector, edge
       - [x] Load from CSV file
       - [x] Add \<bool sourced\> template parameter to include source_key
-    - [x] Can std::vector be used as a basis for a constexpr graph? Not really because we can't have variables of vector
+      - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer 
+    - [x] csr_graph
+      - [x] Implement graph, vertex, edge
+      - [x] Load from CSV file
+      - [x] Validate with vofl_graph tests
+      - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer lists
 - C\+\+20 and C\+\+23
   - [x] connection points (e.g. tag_invoke)
 - Tools, Libraries & Infrastructure
@@ -158,3 +158,6 @@
 - [x] What is the best dynamic graph to propose for the std? vol, vov? premature. Revisit later
 - [x] Can an edgelist be trivially created by a user? (e.g. vector<pair<target_key,weight>>) yes; need to flush this out in paper
 - [x] Can we drop the vertex_vertex_range in favor of just having vertices_view(g,u) [adjacency view]? yes
+- [x] Can std::vector be used as a basis for a constexpr graph? No because we can't have variables of vector
+- [x] Should CSR support source_key on edges (Sourced template parameter)? No. Views will be able to provide it so it won't be needed.
+- [x] edge_list_graph (edgelist_edge<VKey,E,EV> view?): edgelist is a view, or projection of a container

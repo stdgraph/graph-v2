@@ -25,15 +25,20 @@ using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
 using std::graph::edge_value_t;
 
+using std::graph::graph_value;
 using std::graph::vertices;
 using std::graph::edges;
+using std::graph::vertex_key;
 using std::graph::vertex_value;
 using std::graph::target_key;
 using std::graph::target;
 using std::graph::edge_value;
+using std::graph::degree;
+using std::graph::find_vertex;
+using std::graph::find_vertex_edge;
 
 
-using routes_csr_graph_type = std::graph::container::csr_graph<double, std::string>;
+using routes_csr_graph_type = std::graph::container::csr_graph<double, std::string, std::string>;
 
 template <typename G>
 constexpr auto find_frankfurt_key(const G& g) {
@@ -61,24 +66,86 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
          {4, 5, 103.0}, {4, 7, 186.0}, {5, 8, 167.0}, {5, 9, 183.0}, {6, 8, 502.0}};
 
   using init_vertex_value             = std::graph::views::copyable_vertex_t<vertex_key_t<G>, std::string>;
-  std::vector<std::string_view> names = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+  std::vector<std::string_view> names = {"Frankfürt", "Mannheim", "Karlsruhe", "Augsburg", "Würzburg",
+                                         "Nürnberg",  "Kassel",   "Erfurt",    "München",  "Stuttgart"};
   g.load_vertices(names, [&names](std::string_view& nm) {
     auto ukey = static_cast<vertex_key_t<G>>(&nm - names.data());
     return init_vertex_value{ukey, std::string(nm)};
   });
 
-  // Do a simple check
-  REQUIRE(10 == std::ranges::size(vertices(g)));
-  size_t edge_cnt   = 0;
-  double total_dist = 0;
-  for (auto&& u : vertices(g)) {
-    for (auto&& uv : edges(g, u)) {
-      ++edge_cnt;
-      total_dist += edge_value(g, uv);
+  graph_value(g) = "Germany Routes";
+
+  SECTION("metadata") {
+    // Do a simple check
+    REQUIRE(10 == std::ranges::size(vertices(g)));
+    size_t edge_cnt   = 0;
+    double total_dist = 0;
+    for (auto&& u : vertices(g)) {
+      for (auto&& uv : edges(g, u)) {
+        ++edge_cnt;
+        total_dist += edge_value(g, uv);
+      }
     }
+    REQUIRE(edge_cnt == 11);
+    REQUIRE(total_dist == 2030.0);
   }
-  REQUIRE(edge_cnt == 11);
-  REQUIRE(total_dist == 2030.0);
+
+  SECTION("functions") {
+    using key_type = uint32_t;
+    auto&& d       = graph_value(g);
+
+    auto uit = std::ranges::begin(vertices(g)) + 2;
+    auto key = vertex_key(g, uit);
+    REQUIRE(key == 2);
+    REQUIRE(std::is_same_v<key_type, decltype(key)>);
+    auto& uval = vertex_value(g, *uit);
+    REQUIRE(std::is_same_v<std::string&, decltype(uval)>);
+    REQUIRE("Karlsruhe" == uval);
+    auto deg = degree(g, *uit);
+    REQUIRE(1 == deg);
+
+    auto&& uu = edges(g, *uit);
+    REQUIRE(1 == std::ranges::size(uu));
+    auto& uv = *std::ranges::begin(uu);
+    REQUIRE(3 == target_key(g, uv));
+    REQUIRE(250.0 == edge_value(g, uv));
+    auto& v = target(g, uv);
+    REQUIRE(vertex_value(g, v) == "Augsburg");
+
+    auto vit = find_vertex(g, 4);
+    REQUIRE(4 == vit - std::ranges::begin(vertices(g)));
+    auto uvit = find_vertex_edge(g, *vit, 7);
+    REQUIRE(edge_value(g, *uvit) == 186.0);
+  }
+
+  SECTION("functions") {
+    const G& g2    = g;
+    using key_type = uint32_t;
+    auto&& d       = graph_value(g2);
+
+    auto uit = std::ranges::begin(vertices(g2)) + 2;
+    auto key = vertex_key(g2, uit);
+    REQUIRE(key == 2);
+    REQUIRE(std::is_same_v<key_type, decltype(key)>);
+    auto& uval = vertex_value(g2, *uit);
+    REQUIRE(std::is_same_v<const std::string&, decltype(uval)>);
+    REQUIRE("Karlsruhe" == uval);
+    auto deg = degree(g2, *uit);
+    REQUIRE(1 == deg);
+
+    auto&& uu = edges(g2, *uit);
+    REQUIRE(1 == std::ranges::size(uu));
+    auto& uv = *std::ranges::begin(uu);
+    REQUIRE(3 == target_key(g2, uv));
+    REQUIRE(250.0 == edge_value(g2, uv));
+    auto& v = target(g2, uv);
+    REQUIRE(vertex_value(g2, v) == "Augsburg");
+
+    auto vit = find_vertex(g2, 4);
+    REQUIRE(4 == vit - std::ranges::begin(vertices(g2)));
+    auto uvit = find_vertex_edge(g2, *vit, 7);
+    REQUIRE(edge_value(g2, *uvit) == 186.0);
+  }
 };
 
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
