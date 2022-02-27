@@ -23,6 +23,7 @@ using std::graph::vertex_t;
 using std::graph::vertex_key_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
+using std::graph::edge_value_t;
 
 using std::graph::vertices;
 using std::graph::edges;
@@ -49,10 +50,41 @@ auto find_frankfurt(G&& g) {
 //  push_back and emplace_back work correctly when adding city names (applies to csr_graph & dynamic_graph)
 
 
+TEST_CASE("CSR graph test", "[csr][capabilities]") {
+  using G = routes_csr_graph_type; // use it because it's easy
+
+  // This is the type the initializer_list is expecting:
+  //using init_edge_value = std::graph::views::copyable_edge_t<vertex_key_t<G>, edge_value_t<G>>;
+
+  // Define the graph. It's the same as the germany routes using source_order_found
+  G g = {{0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, {1, 2, 80.0},  {2, 3, 250.0}, {3, 8, 84.0},
+         {4, 5, 103.0}, {4, 7, 186.0}, {5, 8, 167.0}, {5, 9, 183.0}, {6, 8, 502.0}};
+
+  using init_vertex_value             = std::graph::views::copyable_vertex_t<vertex_key_t<G>, std::string>;
+  std::vector<std::string_view> names = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+  g.load_vertices(names, [&names](std::string_view& nm) {
+    auto ukey = static_cast<vertex_key_t<G>>(&nm - names.data());
+    return init_vertex_value{ukey, std::string(nm)};
+  });
+
+  // Do a simple check
+  REQUIRE(10 == std::ranges::size(vertices(g)));
+  size_t edge_cnt   = 0;
+  double total_dist = 0;
+  for (auto&& u : vertices(g)) {
+    for (auto&& uv : edges(g, u)) {
+      ++edge_cnt;
+      total_dist += edge_value(g, uv);
+    }
+  }
+  REQUIRE(edge_cnt == 11);
+  REQUIRE(total_dist == 2030.0);
+};
+
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   init_console();
 
-  using G                        = routes_csr_graph_type;
+  using G  = routes_csr_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
   // name_order_policy::source_order_found gives best output with least overlap for germany routes
 
@@ -284,9 +316,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   SECTION("content") {
     std::string_view test_name = "Germany Routes using csr_graph";
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-    cout << "\n" << test_name
-         << "\n----------------------------------------" << endl
-         << routes_graph(g) << endl;
+    cout << "\n" << test_name << "\n----------------------------------------" << endl << routes_graph(g) << endl;
     int x = 0; // results are identifcal with csv_routes_dov_tests
 
     //Germany Routes using csr_graph
@@ -312,7 +342,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     //[7 Erfurt]
     //[8 München]
     //[9 Stuttgart]
-#  elif TEST_OPTION == TEST_OPTION_GEN
+#elif TEST_OPTION == TEST_OPTION_GEN
     generate_routes_tests(g, test_name);
     int x = 0;
 #elif TEST_OPTION == TEST_OPTION_TEST

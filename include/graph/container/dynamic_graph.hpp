@@ -649,27 +649,44 @@ public: // Construction/Destruction/Assignment
     load_edges(vertex_count, 0, move(erng), eproj);
   }
 
+  dynamic_graph_base(const initializer_list<views::copyable_edge_t<VKey, EV>>& il,
+                     edge_allocator_type                                       alloc = edge_allocator_type())
+        : vertices_(alloc) {
+    size_t last_key = 0;
+    for (auto&& e : il)
+      last_key = max(last_key, static_cast<size_t>(max(e.source_key, e.target_key)));
+    resize_vertices(last_key + 1);
+    load_edges(il);
+  }
+
 public:
   template <class VRng, class VProj = identity>
   void load_vertices(const VRng& vrng, VProj vproj = {}, size_type vertex_count = 0) {
-    if (ranges::sized_range<VRng>)
-      reserve_vertices(max(vertex_count, ranges::size(vrng)));
-    auto add_vertex = push_or_insert(vertices_);
-    for (auto&& u : vrng) {
-      auto&& [key, value] = vproj(u); //views::copyable_vertex_t<VKey, VV>
-      add_vertex(vertex_type(value, vertices_.get_allocator()));
+    if constexpr (ranges::sized_range<VRng> && resizable<vertices_type>) {
+      vertex_count = max(vertex_count, ranges::size(vertices_));
+      resize_vertices(max(vertex_count, ranges::size(vrng)));
+    }
+    for (auto&& v : vrng) {
+      auto&& [key, value] = vproj(v); //views::copyable_vertex_t<VKey, VV>
+      size_t k            = static_cast<size_t>(key);
+      if constexpr (ranges::random_access_range<vertices_type>)
+        assert(k < vertices_.size());
+      vertices_[k].value() = value;
     }
   }
 
   template <class VRng, class VProj = identity>
   void load_vertices(VRng&& vrng, VProj vproj = {}, size_type vertex_count = 0) {
-    if constexpr (ranges::sized_range<VRng> && resizable<vertices_type>)
+    if constexpr (ranges::sized_range<VRng> && resizable<vertices_type>) {
+      vertex_count = max(vertex_count, ranges::size(vertices_));
       resize_vertices(max(vertex_count, ranges::size(vrng)));
-    auto set_value = assign_or_insert<vertices_type, vertex_key_type>(vertices_);
+    }
     for (auto&& v : vrng) {
       auto&& [key, value] = vproj(v); //views::copyable_vertex_t<VKey, VV>
-      vertex_type vtx(move(value), vertices_.get_allocator());
-      set_value(static_cast<vertex_key_type>(key), move(vtx));
+      size_t k            = static_cast<size_t>(key);
+      if constexpr (ranges::random_access_range<vertices_type>)
+        assert(k < vertices_.size());
+      vertices_[k].value() = move(value);
     }
   }
 
@@ -828,6 +845,10 @@ public:
   using value_type      = GV;
   using allocator_type  = typename Traits::vertices_type::allocator_type;
 
+  using edges_type          = typename Traits::edges_type;
+  using edge_allocator_type = typename edges_type::allocator_type;
+  using edge_type           = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
+
   dynamic_graph()                     = default;
   dynamic_graph(const dynamic_graph&) = default;
   dynamic_graph(dynamic_graph&&)      = default;
@@ -915,6 +936,11 @@ public:
   dynamic_graph(GV&& gv, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, eproj, alloc), value_(move(gv)) {}
 
+
+  dynamic_graph(const initializer_list<views::copyable_edge_t<VKey, EV>>& il,
+                edge_allocator_type                                       alloc = edge_allocator_type())
+        : base_type(il, alloc) {}
+
 public:
   constexpr value_type&       value() { return value_; }
   constexpr const value_type& value() const { return value_; }
@@ -942,6 +968,10 @@ public:
   using allocator_type  = typename Traits::vertices_type::allocator_type;
   using base_type::vertices_type;
 
+  using edges_type          = typename Traits::edges_type;
+  using edge_allocator_type = typename edges_type::allocator_type;
+  using edge_type           = dynamic_edge<EV, VV, void, Sourced, VKey, Traits>;
+
   dynamic_graph()                     = default;
   dynamic_graph(const dynamic_graph&) = default;
   dynamic_graph(dynamic_graph&&)      = default;
@@ -964,6 +994,11 @@ public:
   //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph(ERng& erng, VRng& vrng, EProj eproj = {}, VProj vproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc) {}
+
+  dynamic_graph(const initializer_list<views::copyable_edge_t<VKey, EV>>& il,
+                edge_allocator_type                                       alloc = edge_allocator_type())
+        : base_type(il, alloc) {}
 };
+
 
 } // namespace std::graph::container

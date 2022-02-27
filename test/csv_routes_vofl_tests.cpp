@@ -23,6 +23,7 @@ using std::is_const_v;
 
 using std::graph::vertex_t;
 using std::graph::vertex_key_t;
+using std::graph::vertex_value_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
 
@@ -37,13 +38,15 @@ using std::graph::edge_value;
 using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 
-template<typename G>
+template <typename G>
 constexpr auto find_frankfurt_key(const G& g) {
   return find_city_key(g, "Frankf\xC3\xBCrt");
 }
 
-template<typename G>
-auto find_frankfurt(G&& g) { return find_city(g, "Frankf\xC3\xBCrt"); }
+template <typename G>
+auto find_frankfurt(G&& g) {
+  return find_city(g, "Frankf\xC3\xBCrt");
+}
 
 
 //TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vofl][germany][dijkstra][book]") {
@@ -58,7 +61,39 @@ auto find_frankfurt(G&& g) { return find_city(g, "Frankf\xC3\xBCrt"); }
 //}
 
 
-TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
+TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
+  using G = routes_volf_graph_type; // use it because it's easy
+
+  // This is the type the initializer_list is expecting:
+  //using init_edge_value = std::graph::views::copyable_edge_t<routes_volf_graph_traits::vertex_key_type,
+  //                                                           routes_volf_graph_traits::edge_value_type>;
+
+  // Define the graph. It's the same as the germany routes using source_order_found
+  G g = {{0, 6, 173.0}, {0, 4, 217.0}, {0, 1, 85.0},  {1, 2, 80.0},  {2, 3, 250.0}, {3, 8, 84.0},
+         {4, 7, 186.0}, {4, 5, 103.0}, {5, 9, 183.0}, {5, 8, 167.0}, {6, 8, 502.0}};
+
+  using init_vertex_value             = std::graph::views::copyable_vertex_t<vertex_key_t<G>, std::string>;
+  std::vector<std::string_view> names = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+  g.load_vertices(names, [&names](std::string_view& nm) {
+    auto ukey = static_cast<vertex_key_t<G>>(&nm - names.data());
+    return init_vertex_value{ukey, std::string(nm)};
+  });
+
+  // Do a simple check
+  REQUIRE(10 == std::ranges::size(vertices(g)));
+  size_t edge_cnt   = 0;
+  double total_dist = 0;
+  for (auto&& u : vertices(g)) {
+    for (auto&& uv : edges(g, u)) {
+      ++edge_cnt; // forward_list doesn't have size()
+      total_dist += edge_value(g, uv);
+    }
+  }
+  REQUIRE(edge_cnt == 11);
+  REQUIRE(total_dist == 2030.0);
+};
+
+TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
   init_console();
   using G  = routes_volf_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
@@ -285,9 +320,7 @@ TEST_CASE("Germany routes CSV+vol test", "[csv][vofl][germany]") {
   SECTION("content") {
     std::string_view test_name = "Germany Routes using vector+forward_list";
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-    cout << "\n" << test_name
-         << "\n----------------------------------------" << endl
-         << routes_graph(g) << endl;
+    cout << "\n" << test_name << "\n----------------------------------------" << endl << routes_graph(g) << endl;
     int x = 0; // results have edges in reverse order from other tests because forward_list can only push_front
 
     //Germany Routes using vector+forward_list

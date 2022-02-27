@@ -44,16 +44,16 @@
     - [ ] Biconnected Components
     - [ ] Articulation Points
     - [ ] Transitive Closure
+    - [ ] copy (g1 --> g2)
 - Graph Containers (data structures)
     - [ ] csr_graph
       - [x] Implement graph, vertex, edge
       - [x] Load from CSV file
       - [x] Validate with vofl_graph tests
       - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer lists
-      - [ ] clean up naming
     - [ ] edge_list_graph (edgelist_edge<VKey,E,EV> view?)
     - [ ] dynamic_graph: vol template params for vertex & edge containers (like stack/queue)
-      - [ ] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer 
+      - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer 
     - [ ] directed_adjacency_vector
     - [ ] undirected_adjacency_list
     - [ ] graph with map-based vertices (requires different algorithm impl)

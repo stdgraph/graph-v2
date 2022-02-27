@@ -512,5 +512,4 @@ void generate_routes_tests(const G& g, std::string_view name) {
 
   cout << endl
        << indent << "REQUIRE(" << size(vertices(g)) << " == size(vertices(g))); // all vertices visited?" << endl;
-  int x = 0;
 }

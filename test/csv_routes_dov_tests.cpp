@@ -76,6 +76,37 @@ auto find_frankfurt(G&& g) {
 //  auto result        = std::graph::dijkstra_book(g, frankfurt_key, weight);
 //}
 
+TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
+  using G = routes_dov_graph_type; // use it because it's easy
+
+  // This is the type the initializer_list is expecting:
+  //using init_edge_value = std::graph::views::copyable_edge_t<routes_dov_graph_traits::vertex_key_type,
+  //                                                           routes_dov_graph_traits::edge_value_type>;
+
+  // Define the graph. It's the same as the germany routes using source_order_found
+  G g = {{0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, {1, 2, 80.0},  {2, 3, 250.0}, {3, 8, 84.0},
+         {4, 5, 103.0}, {4, 7, 186.0}, {5, 8, 167.0}, {5, 9, 183.0}, {6, 8, 502.0}};
+
+  using init_vertex_value             = std::graph::views::copyable_vertex_t<vertex_key_t<G>, std::string>;
+  std::vector<std::string_view> names = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+  g.load_vertices(names, [&names](std::string_view& nm) {
+    auto ukey = static_cast<vertex_key_t<G>>(&nm - names.data());
+    return init_vertex_value{ukey, std::string(nm)};
+  });
+
+  // Do a simple check
+  REQUIRE(10 == std::ranges::size(vertices(g)));
+  size_t edge_cnt   = 0;
+  double total_dist = 0;
+  for (auto&& u : vertices(g)) {
+    for (auto&& uv : edges(g, u)) {
+      ++edge_cnt;
+      total_dist += edge_value(g, uv);
+    }
+  }
+  REQUIRE(edge_cnt == 11);
+  REQUIRE(total_dist == 2030.0);
+};
 
 TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
   init_console();

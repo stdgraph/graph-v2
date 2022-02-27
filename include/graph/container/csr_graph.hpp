@@ -85,10 +85,11 @@ struct csr_col {
 /// If is_void_v<VV> then the class is empty with a single
 /// constructor that accepts (and ignores) an allocator.
 /// </summary>
-/// <typeparam name="EV"></typeparam>
-/// <typeparam name="VV"></typeparam>
-/// <typeparam name="GV"></typeparam>
-/// <typeparam name="Alloc"></typeparam>
+/// <typeparam name="EV">Edge Value type, or void if there is none</typeparam>
+/// <typeparam name="VV">Vertex Value type, or void if there is none</typeparam>
+/// <typeparam name="GV">Graph Value type, or void if there is none</typeparam>
+/// <typeparam name="VKey">Vertex Key type. This must be large enough for the total edges and the total vertices.</typeparam>
+/// <typeparam name="Alloc">Allocator type</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
 class csr_row_values {
 public:
@@ -108,7 +109,7 @@ public:
 
   using size_type = ranges::range_size_t<row_values_type>;
 
-  constexpr csr_row_values(Alloc& alloc) : values_(alloc) {}
+  constexpr csr_row_values(const Alloc& alloc) : values_(alloc) {}
 
   constexpr csr_row_values()                      = default;
   constexpr csr_row_values(const csr_row_values&) = default;
@@ -176,7 +177,7 @@ public:
   using size_type         = size_t;
   using vertex_value_type = void;
 
-  constexpr csr_row_values(Alloc& alloc) {}
+  constexpr csr_row_values(const Alloc& alloc) {}
 
   constexpr csr_row_values()                      = default;
   constexpr csr_row_values(const csr_row_values&) = default;
@@ -202,9 +203,6 @@ public:
   constexpr void load_values(VRng&& vrng, VProj projection, size_type vertex_count) {
     // do nothing when VV=void
   }
-
-  //constexpr reference_type       value(vertex_key_type key) {}
-  //constexpr const_reference_type value(vertex_key_type key) const {}
 };
 
 
@@ -312,7 +310,9 @@ public: // Construction/Destruction
   /// <param name="alloc">Allocator to use for internal containers</param>
   constexpr csr_graph_base(const initializer_list<views::copyable_edge_t<VKey, EV>>& ilist,
                            const Alloc&                                              alloc = Alloc())
-        : csr_graph_base(ilist, identity(), alloc) {}
+        : row_index_(alloc), col_index_(alloc), v_(alloc), row_value_(alloc) {
+    load_edges(ilist, identity());
+  }
 
 public:
 public: // Operations
