@@ -189,8 +189,8 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     const G& g2 = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
 
-    std::graph::views::const_vertices_view_iterator<G> i0; // default construction
-    std::graph::views::const_vertices_view_iterator<G> i1(g);
+    std::graph::views::const_vertexlist_iterator<G> i0; // default construction
+    std::graph::views::const_vertexlist_iterator<G> i1(g);
     {
       auto&& [ukey, u] = *i1;
       static_assert(is_const_v<decltype(ukey)>);
@@ -204,7 +204,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::const_vertices_view_iterator<G> i2(g2);
+    std::graph::views::const_vertexlist_iterator<G> i2(g2);
     {
       auto&& [ukey, u] = *i2;
       static_assert(is_const_v<decltype(ukey)>);
@@ -231,8 +231,8 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     static_assert(!std::is_const_v<std::remove_reference_t<decltype(g)>>);
     static_assert(!std::is_const_v<G>);
 
-    std::graph::views::vertices_view_iterator<G> i0; // default construction
-    std::graph::views::vertices_view_iterator<G> i1(g);
+    std::graph::views::vertexlist_iterator<G> i0; // default construction
+    std::graph::views::vertexlist_iterator<G> i1(g);
     {
       auto&& [ukey, u] = *i1;
       static_assert(is_const_v<decltype(ukey)>);
@@ -246,7 +246,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::vertices_view_iterator<G> i2(g);
+    std::graph::views::vertexlist_iterator<G> i2(g);
     {
       auto&& [ukey, u] = *i2;
       static_assert(is_const_v<decltype(ukey)>);
@@ -266,7 +266,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     }
     REQUIRE(cnt == size(vertices(g)));
 
-    std::graph::views::const_vertices_view_iterator<const G> j0;
+    std::graph::views::const_vertexlist_iterator<const G> j0;
     //j0 = i0;
     //i0 == j0;
   }
