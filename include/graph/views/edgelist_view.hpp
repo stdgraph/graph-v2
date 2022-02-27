@@ -3,9 +3,9 @@
 #include <tuple>
 
 //
-// edges_view(g):
+// edgelist_view(g):
 //
-// enable: for([ukey, vkey, uv] : edges_view(g)
+// enable: for([ukey, vkey, uv] : edgelist_view(g)
 //
 namespace std::graph::views {
 
@@ -17,7 +17,7 @@ class edge_view_iterator;
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edges_view(const G& g) {
+constexpr auto edgelist_view(const G& g) {
   using vertex_type   = remove_cvref_t<decltype(u)>;
   using iter_type     = const_edge_view_iterator<const G>;
   using sentinal_type = typename iter_type::edge_iterator;
@@ -31,7 +31,7 @@ constexpr auto edges_view(const G& g) {
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edges_view(G& g) {
+constexpr auto edgelist_view(G& g) {
   using iter_type     = edge_view_iterator<G>;
   using sentinal_type = typename iter_type::edge_iterator;
   using SR            = ranges::subrange<iter_type, sentinal_type>;

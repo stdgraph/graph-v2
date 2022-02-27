@@ -5,7 +5,7 @@
 #include "graph/views/vertices_view.hpp"
 #include "graph/views/incidence_view.hpp"
 #include "graph/views/adjacency_edge_view.hpp"
-//#include "graph/view/edge_view.hpp"
+//#include "graph/view/edgelist_view.hpp"
 #include "graph/container/dynamic_graph.hpp"
 #include <cassert>
 
