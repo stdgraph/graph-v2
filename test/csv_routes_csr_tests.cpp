@@ -347,7 +347,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [vkey, v] : std::graph::views::edges_view(g, u)) {
+    for (auto&& [vkey, v] : std::graph::views::adjacency_view(g, u)) {
       ++cnt;
     }
     REQUIRE(cnt == 3);
@@ -373,7 +373,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [vkey, v] : std::graph::views::edges_view(g, u)) {
+    for (auto&& [vkey, v] : std::graph::views::adjacency_view(g, u)) {
       ++cnt;
     }
     REQUIRE(cnt == 3);

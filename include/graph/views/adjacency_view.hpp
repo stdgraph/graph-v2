@@ -2,9 +2,9 @@
 #include "graph/graph.hpp"
 
 //
-// vertices_view(g,u) -> pair<VKey,vertex_t<G>>:
+// adjacency_view(g,u) -> pair<VKey,vertex_t<G>>:
 //
-// enable: for([vkey, v] : vertices_view(g,u)
+// enable: for([vkey, v] : adjacency_view(g,u)
 //
 namespace std::graph::views {
 
@@ -16,7 +16,7 @@ class vertex_vertex_view_iterator;
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertices_view(const G& g, vertex_reference_t<const G> u) {
+constexpr auto adjacency_view(const G& g, vertex_reference_t<const G> u) {
   using vertex_type   = remove_cvref_t<decltype(u)>;
   using iter_type     = const_vertex_vertex_view_iterator<const G>;
   using sentinal_type = typename iter_type::edge_iterator;
@@ -30,7 +30,7 @@ constexpr auto vertices_view(const G& g, vertex_reference_t<const G> u) {
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertices_view(G& g, vertex_reference_t<G> u) {
+constexpr auto adjacency_view(G& g, vertex_reference_t<G> u) {
   using iter_type     = vertex_vertex_view_iterator<G>;
   using sentinal_type = typename iter_type::edge_iterator;
   using SR            = ranges::subrange<iter_type, sentinal_type>;

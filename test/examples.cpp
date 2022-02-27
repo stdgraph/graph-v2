@@ -66,9 +66,9 @@ TEST_CASE("Germany routes examples", "[csv][vofl][germany][example]") {
     }
   }
 
-  SECTION("Incidence iteration") {
+  SECTION("Adjacency iteration") {
     for (auto&& [ukey, u] : std::graph::views::vertices_view(g)) {
-      for (auto&& [vkey, v] : std::graph::views::vertices_view(g, u)) {
+      for (auto&& [vkey, v] : std::graph::views::adjacency_view(g, u)) {
       }
     }
   }
