@@ -9,16 +9,16 @@
 namespace std::graph::views {
 
 template <class G>
-class const_vertex_vertex_view_iterator;
+class const_adjacency_iterator;
 template <class G>
-class vertex_vertex_view_iterator;
+class adjacency_iterator;
 
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto adjacency_view(const G& g, vertex_reference_t<const G> u) {
   using vertex_type   = remove_cvref_t<decltype(u)>;
-  using iter_type     = const_vertex_vertex_view_iterator<const G>;
+  using iter_type     = const_adjacency_iterator<const G>;
   using sentinal_type = typename iter_type::edge_iterator;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
 
@@ -31,7 +31,7 @@ constexpr auto adjacency_view(const G& g, vertex_reference_t<const G> u) {
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto adjacency_view(G& g, vertex_reference_t<G> u) {
-  using iter_type     = vertex_vertex_view_iterator<G>;
+  using iter_type     = adjacency_iterator<G>;
   using sentinal_type = typename iter_type::edge_iterator;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
 
@@ -42,7 +42,7 @@ constexpr auto adjacency_view(G& g, vertex_reference_t<G> u) {
 
 
 template <class G>
-class const_vertex_vertex_view_iterator {
+class const_adjacency_iterator {
 public:
   using graph_type = remove_cvref_t<G>;
 
@@ -66,19 +66,19 @@ protected:
   using shadow_value_type = pair<vertex_key_type, vertex_type*>;
 
 public:
-  const_vertex_vertex_view_iterator(const graph_type& g, edge_iterator iter)
+  const_adjacency_iterator(const graph_type& g, edge_iterator iter)
         : g_(&const_cast<graph_type&>(g)), iter_(iter) {}
-  const_vertex_vertex_view_iterator(const graph_type& g, const vertex_type& u)
-        : const_vertex_vertex_view_iterator(
+  const_adjacency_iterator(const graph_type& g, const vertex_type& u)
+        : const_adjacency_iterator(
                 g, ranges::begin(edges(const_cast<graph_type&>(g), const_cast<vertex_type&>(u)))) {}
 
-  constexpr const_vertex_vertex_view_iterator()                                       = default;
-  constexpr const_vertex_vertex_view_iterator(const const_vertex_vertex_view_iterator&) = default;
-  constexpr const_vertex_vertex_view_iterator(const_vertex_vertex_view_iterator&&)      = default;
-  constexpr ~const_vertex_vertex_view_iterator()                                      = default;
+  constexpr const_adjacency_iterator()                                       = default;
+  constexpr const_adjacency_iterator(const const_adjacency_iterator&) = default;
+  constexpr const_adjacency_iterator(const_adjacency_iterator&&)      = default;
+  constexpr ~const_adjacency_iterator()                                      = default;
 
-  constexpr const_vertex_vertex_view_iterator& operator=(const const_vertex_vertex_view_iterator&) = default;
-  constexpr const_vertex_vertex_view_iterator& operator=(const_vertex_vertex_view_iterator&&) = default;
+  constexpr const_adjacency_iterator& operator=(const const_adjacency_iterator&) = default;
+  constexpr const_adjacency_iterator& operator=(const_adjacency_iterator&&) = default;
 
 public:
   constexpr reference operator*() const {
@@ -86,33 +86,33 @@ public:
     return reinterpret_cast<reference>(value_);
   }
 
-  constexpr const_vertex_vertex_view_iterator& operator++() {
+  constexpr const_adjacency_iterator& operator++() {
     ++iter_;
     return *this;
   }
-  constexpr const_vertex_vertex_view_iterator operator++(int) const {
-    const_vertex_vertex_view_iterator tmp(*this);
+  constexpr const_adjacency_iterator operator++(int) const {
+    const_adjacency_iterator tmp(*this);
     ++*this;
     return tmp;
   }
 
-  constexpr bool operator==(const const_vertex_vertex_view_iterator& rhs) const { return iter_ == rhs.iter_; }
-  //constexpr bool operator==(const vertex_vertex_view_iterator& rhs) const { return iter_ == rhs; }
+  constexpr bool operator==(const const_adjacency_iterator& rhs) const { return iter_ == rhs.iter_; }
+  //constexpr bool operator==(const adjacency_iterator& rhs) const { return iter_ == rhs; }
 
 protected:
   mutable shadow_value_type value_ = shadow_value_type(vertex_key_type(), nullptr);
   graph_type*               g_     = nullptr;
   edge_iterator             iter_;
 
-  friend bool operator==(const edge_iterator& lhs, const const_vertex_vertex_view_iterator& rhs) {
+  friend bool operator==(const edge_iterator& lhs, const const_adjacency_iterator& rhs) {
     return lhs == rhs.iter_;
   }
 };
 
 template <class G>
-class vertex_vertex_view_iterator : public const_vertex_vertex_view_iterator<G> {
+class adjacency_iterator : public const_adjacency_iterator<G> {
 public:
-  using base_type = const_vertex_vertex_view_iterator<G>;
+  using base_type = const_adjacency_iterator<G>;
 
   using graph_type = G;
 
@@ -138,16 +138,16 @@ protected:
   using base_type::iter_;
 
 public:
-  vertex_vertex_view_iterator(graph_type& g, edge_iterator iter) : base_type(g, iter) {}
-  vertex_vertex_view_iterator(graph_type& g, vertex_type& u) : base_type(g, u) {}
+  adjacency_iterator(graph_type& g, edge_iterator iter) : base_type(g, iter) {}
+  adjacency_iterator(graph_type& g, vertex_type& u) : base_type(g, u) {}
 
-  constexpr vertex_vertex_view_iterator()                                 = default;
-  constexpr vertex_vertex_view_iterator(const vertex_vertex_view_iterator&) = default;
-  constexpr vertex_vertex_view_iterator(vertex_vertex_view_iterator&&)      = default;
-  constexpr ~vertex_vertex_view_iterator()                                = default;
+  constexpr adjacency_iterator()                                 = default;
+  constexpr adjacency_iterator(const adjacency_iterator&) = default;
+  constexpr adjacency_iterator(adjacency_iterator&&)      = default;
+  constexpr ~adjacency_iterator()                                = default;
 
-  constexpr vertex_vertex_view_iterator& operator=(const vertex_vertex_view_iterator&) = default;
-  constexpr vertex_vertex_view_iterator& operator=(vertex_vertex_view_iterator&&) = default;
+  constexpr adjacency_iterator& operator=(const adjacency_iterator&) = default;
+  constexpr adjacency_iterator& operator=(adjacency_iterator&&) = default;
 
 public:
   constexpr reference operator*() const {
@@ -155,21 +155,21 @@ public:
     return reinterpret_cast<reference>(value_);
   }
 
-  constexpr vertex_vertex_view_iterator& operator++() {
+  constexpr adjacency_iterator& operator++() {
     ++iter_;
     return *this;
   }
-  constexpr vertex_vertex_view_iterator operator++(int) const {
-    vertex_vertex_view_iterator tmp(*this);
+  constexpr adjacency_iterator operator++(int) const {
+    adjacency_iterator tmp(*this);
     ++*this;
     return tmp;
   }
 
-  constexpr bool operator==(const vertex_vertex_view_iterator& rhs) const { return iter_ == rhs.iter_; }
-  //constexpr bool operator==(const vertex_vertex_view_iterator& rhs) const { return iter_ == rhs; }
+  constexpr bool operator==(const adjacency_iterator& rhs) const { return iter_ == rhs.iter_; }
+  //constexpr bool operator==(const adjacency_iterator& rhs) const { return iter_ == rhs; }
 
 protected:
-  friend bool operator==(const edge_iterator& lhs, const vertex_vertex_view_iterator& rhs) { return lhs == rhs.iter_; }
+  friend bool operator==(const edge_iterator& lhs, const adjacency_iterator& rhs) { return lhs == rhs.iter_; }
 };
 
 } // namespace std::graph::views
