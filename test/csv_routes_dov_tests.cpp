@@ -313,53 +313,37 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
 #endif
 
   SECTION("content") {
+    std::string_view test_name = "Germany Routes using deque+vector";
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-    cout << "\nGermany Routes using deque+vector"
-         << "\n---------------------------------" << endl
-         << routes_graph(g) << endl;
-    int x = 0;
+    cout << "\n" << test_name << "\n---------------------------------" << endl << routes_graph(g) << endl;
+    int x = 0; // results are identifcal with csv_routes_csr_tests
+
+    //Germany Routes using deque+vector
+    //---------------------------------
+    //[0 Frankfürt]
+    //  --> [1 Mannheim] 85km
+    //  --> [4 Würzburg] 217km
+    //  --> [6 Kassel] 173km
+    //[1 Mannheim]
+    //  --> [2 Karlsruhe] 80km
+    //[2 Karlsruhe]
+    //  --> [3 Augsburg] 250km
+    //[3 Augsburg]
+    //  --> [8 München] 84km
+    //[4 Würzburg]
+    //  --> [5 Nürnberg] 103km
+    //  --> [7 Erfurt] 186km
+    //[5 Nürnberg]
+    //  --> [8 München] 167km
+    //  --> [9 Stuttgart] 183km
+    //[6 Kassel]
+    //  --> [8 München] 502km
+    //[7 Erfurt]
+    //[8 München]
+    //[9 Stuttgart]
 #elif TEST_OPTION == TEST_OPTION_GEN
-    ostream_indenter indent;
-    cout << endl << indent << "auto ui = begin(vertices(g));" << endl;
-    cout << indent << "vertex_key_t<G> ukey = 0;" << endl;
-    for (vertex_key_t<G> ukey = 0; auto&& u : vertices(g)) {
-
-      if (ukey > 0) {
-        cout << indent << "if(++ui != end(vertices(g))) {" << endl;
-      } else {
-        cout << indent << "if(ui != end(vertices(g))) {" << endl;
-      }
-      ++indent;
-      {
-        if (ukey > 0)
-          cout << indent << "REQUIRE(" << ukey << " == ++ukey);" << endl;
-        else
-          cout << indent << "REQUIRE(" << ukey << " == ukey);" << endl;
-
-        size_t uv_cnt = 0;
-        cout << indent << "REQUIRE(\"" << quoted_utf8(vertex_value(g, u)) << "\" == vertex_value(g,*ui));" << endl;
-        cout << endl << indent << "auto uvi = begin(edges(g, *ui)); size_t uv_cnt = 0;" << endl;
-        for (auto&& uv : edges(g, u)) {
-          if (uv_cnt > 0) {
-            cout << endl << indent << "++uvi;" << endl;
-          }
-          auto&& v = target(g, uv);
-          cout << indent << "REQUIRE(" << target_key(g, uv) << " == target_key(g, *uvi));\n";
-          cout << indent << "REQUIRE(\"" << quoted_utf8(vertex_value(g, target(g, uv)))
-               << "\" == vertex_value(g, target(g, *uvi)));\n";
-          cout << indent << "REQUIRE(" << edge_value(g, uv) << " == edge_value(g,*uvi));\n";
-          cout << indent << "++uv_cnt;" << endl;
-          ++uv_cnt;
-        }
-        cout << endl << indent << "REQUIRE(" << uv_cnt << " == uv_cnt);" << endl;
-      }
-      cout << "}" << endl;
-      --indent;
-      ++ukey;
-    }
-
-    cout << endl
-         << indent << "REQUIRE(" << size(vertices(g)) << " == size(vertices(g))); // all vertices visited?" << endl;
+    generate_routes_tests(g, test_name);
+    int x = 0;
 #elif TEST_OPTION == TEST_OPTION_TEST
     auto            ui   = begin(vertices(g));
     vertex_key_t<G> ukey = 0;

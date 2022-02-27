@@ -308,9 +308,9 @@ auto load_ordered_graph(csv::string_view        csv_file,
   graph_type g;
 
   // load vertices
-  using copyable_label = std::remove_reference_t<vertex_value_type>;
+  using copyable_label        = std::remove_reference_t<vertex_value_type>;
   using graph_copyable_vertex = std::graph::views::copyable_vertex_t<vertex_key_type, copyable_label>;
-  auto city_name_getter = [](lbl_iter& lbl) {
+  auto city_name_getter       = [](lbl_iter& lbl) {
     graph_copyable_vertex retval{lbl->second, copyable_label(lbl->first)};
     return retval;
   };
@@ -422,6 +422,17 @@ OS& operator<<(OS& os, const ostream_indenter& indent) {
 }
 
 
+/// <summary>
+/// Outputs a graphviz file for the routes graph passed.
+///
+/// Example command line to generate image files for file "routes.gv"
+/// dot -Tpdf -O routes.gv
+/// dot -Tpng -O routes.gv
+/// neato -Tpng -O routes.gv
+/// </summary>
+/// <typeparam name="G">Graph type</typeparam>
+/// <param name="g">Grape instance</param>
+/// <param name="filename">Graphviz filename to output</param>
 template <class G>
 void output_routes_graphviz(const G& g, std::string_view filename) {
   using namespace std::graph;
@@ -432,7 +443,7 @@ void output_routes_graphviz(const G& g, std::string_view filename) {
 
   // nodesep=0.5; doesn't help
 
-  of << "digraph cities {\n"
+  of << "digraph routes {\n"
      << "  overlap = scalexy\n"
      << "  splines = curved\n";
 
@@ -446,4 +457,60 @@ void output_routes_graphviz(const G& g, std::string_view filename) {
     of << std::endl;
   }
   of << "}\n";
+}
+
+
+/// <summary>
+/// Generates code that can be used for unit tests to validate graph contents haven't changed.
+/// </summary>
+/// <typeparam name="G">Graph type</typeparam>
+/// <param name="g">Graph instance</param>
+/// <param name="name">Descriptive name of the graph</param>
+template <class G>
+void generate_routes_tests(const G& g, std::string_view name) {
+  using namespace std::graph;
+  using std::cout;
+  using std::endl;
+  ostream_indenter indent;
+  cout << endl << indent << "auto ui = begin(vertices(g));" << endl;
+  cout << indent << "vertex_key_t<G> ukey = 0;" << endl;
+  for (vertex_key_t<G> ukey = 0; auto&& u : vertices(g)) {
+
+    if (ukey > 0) {
+      cout << indent << "if(++ui != end(vertices(g))) {" << endl;
+    } else {
+      cout << indent << "if(ui != end(vertices(g))) {" << endl;
+    }
+    ++indent;
+    {
+      if (ukey > 0)
+        cout << indent << "REQUIRE(" << ukey << " == ++ukey);" << endl;
+      else
+        cout << indent << "REQUIRE(" << ukey << " == ukey);" << endl;
+
+      size_t uv_cnt = 0;
+      cout << indent << "REQUIRE(\"" << quoted_utf8(vertex_value(g, u)) << "\" == vertex_value(g,*ui));" << endl;
+      cout << endl << indent << "auto uvi = begin(edges(g, *ui)); size_t uv_cnt = 0;" << endl;
+      for (auto&& uv : edges(g, u)) {
+        if (uv_cnt > 0) {
+          cout << endl << indent << "++uvi;" << endl;
+        }
+        auto&& v = target(g, uv);
+        cout << indent << "REQUIRE(" << target_key(g, uv) << " == target_key(g, *uvi));\n";
+        cout << indent << "REQUIRE(\"" << quoted_utf8(vertex_value(g, target(g, uv)))
+             << "\" == vertex_value(g, target(g, *uvi)));\n";
+        cout << indent << "REQUIRE(" << edge_value(g, uv) << " == edge_value(g,*uvi));\n";
+        cout << indent << "++uv_cnt;" << endl;
+        ++uv_cnt;
+      }
+      cout << endl << indent << "REQUIRE(" << uv_cnt << " == uv_cnt);" << endl;
+    }
+    cout << "}" << endl;
+    --indent;
+    ++ukey;
+  }
+
+  cout << endl
+       << indent << "REQUIRE(" << size(vertices(g)) << " == size(vertices(g))); // all vertices visited?" << endl;
+  int x = 0;
 }
