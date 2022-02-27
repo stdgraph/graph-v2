@@ -118,82 +118,82 @@ namespace views {
   // experimental
 
   //
-  // vertex
+  // vertex_view
   // for(auto&& [ukey, u, value] : vertexlist_view(g, [](vertex_reference_t<G> u) { return ...; } )
   // for(auto&& [ukey, u]        : vertexlist_view(g))
   //
   template <class VKey, class V, class VV>
-  struct vertex {
+  struct vertex_view {
     VKey key;
-    V    vertex;
+    V    vertex_view;
     VV   value;
   };
   template <class VKey, class V>
-  struct vertex<VKey, V, void> {
+  struct vertex_view<VKey, V, void> {
     VKey key;
-    V    vertex;
+    V    vertex_view;
   };
   template <class VKey, class VV>
-  struct vertex<VKey, void, VV> {
+  struct vertex_view<VKey, void, VV> {
     VKey key;
     VV   value;
   };
   template <class VKey>
-  struct vertex<VKey, void, void> {
+  struct vertex_view<VKey, void, void> {
     VKey key;
   };
 
   template <class VKey, class VV>
-  using copyable_vertex_t = vertex<VKey, void, VV>; // {key, value}
+  using copyable_vertex_t = vertex_view<VKey, void, VV>; // {key, value}
 
   //
-  // edge
+  // edge_view
   //
   template <class VKey, bool Sourced, class E, class EV>
-  struct edge {
+  struct edge_view {
     VKey source_key;
     VKey target_key;
-    E    edge;
+    E    edge_view;
     EV   value;
   };
 
   template <class VKey, class E>
-  struct edge<VKey, true, E, void> {
+  struct edge_view<VKey, true, E, void> {
     VKey source_key;
     VKey target_key;
-    E    edge;
+    E    edge_view;
   };
   template <class VKey>
-  struct edge<VKey, true, void, void> {
+  struct edge_view<VKey, true, void, void> {
     VKey source_key;
     VKey target_key;
   };
   template <class VKey, class EV>
-  struct edge<VKey, true, void, EV> {
+  struct edge_view<VKey, true, void, EV> {
     VKey source_key;
     VKey target_key;
     EV   value;
   };
 
   template <class VKey, class E, class EV>
-  struct edge<VKey, false, E, EV> {
+  struct edge_view<VKey, false, E, EV> {
     VKey target_key;
-    E    edge;
+    E    edge_view;
     EV   value;
   };
   template <class VKey, class E>
-  struct edge<VKey, false, E, void> {
+  struct edge_view<VKey, false, E, void> {
     VKey target_key;
-    E    edge;
+    E    edge_view;
   };
 
   template <class VKey, class EV>
-  struct edge<VKey, false, void, EV> {
+  struct edge_view<VKey, false, void, EV> {
     VKey target_key;
     EV   value;
   };
   template <class VKey>
-  struct edge<VKey, false, void, void> {
+  struct edge_view<VKey, false, void, void> {
     VKey target_key;
   };
 
@@ -203,7 +203,7 @@ namespace views {
   // for(auto&& [vkey,uv]       : edges_view(g, u) )
   //
   template <class VKey, class E, class EV>
-  using targeted_edge = edge<VKey, false, E, EV>; // {target_key, edge, [, value]}
+  using targeted_edge = edge_view<VKey, false, E, EV>; // {target_key, edge_view, [, value]}
 
   //
   // sourced_edge
@@ -211,7 +211,7 @@ namespace views {
   // for(auto&& [ukey,vkey,uv]       : sourced_edges_view(g, u) )
   //
   template <class VKey, class V, class E, class EV>
-  using sourced_edge = edge<VKey, true, E, EV>; // {source_key, target_key, edge, [, value]}
+  using sourced_edge = edge_view<VKey, true, E, EV>; // {source_key, target_key, edge_view, [, value]}
 
   //
   // edgelist_edge
@@ -219,30 +219,13 @@ namespace views {
   // for(auto&& [ukey,vkey,uv]       : edges_view(g) )
   //
   template <class VKey, class E, class EV>
-  using edgelist_edge = edge<VKey, true, E, EV>; // {source_key, target_key, edge, [, value]}
+  using edgelist_edge = edge_view<VKey, true, E, EV>; // {source_key, target_key, edge_view, [, value]}
 
   //
   // copyable_edge
   //
   template <class VKey, class EV>
-  using copyable_edge_t = edge<VKey, true, void, EV>; // {source_key, target_key [, value]}
-
-  //
-  // neighbor
-  //
-  // for(auto&& [vkey,v,value] : vertexlist_view(g, u, [](vertex_reference_t<G> v) { return ...; } )
-  // for(auto&& [vkey,v]       : vertexlist_view(g, u) )
-  template <class VKey, class V, class VV>
-  struct neighbor {
-    VKey target_key;
-    V    target;
-    VV   target_value;
-  };
-  template <class VKey, class V>
-  struct neighbor<VKey, V, void> {
-    VKey target_key;
-    V    target;
-  };
+  using copyable_edge_t = edge_view<VKey, true, void, EV>; // {source_key, target_key [, value]}
 
   //
   // view concepts

@@ -275,7 +275,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
     //i0 == j0;
   }
 
-  SECTION("const_incidence_edge_view") {
+  SECTION("const_incidence_view") {
     const G& g2 = g;
 
     std::graph::views::const_incidence_iterator<G> i0; // default construction
@@ -303,7 +303,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
     REQUIRE(cnt == 3);
   }
 
-  SECTION("incidence_edge_view") {
+  SECTION("incidence_view") {
     std::graph::views::incidence_iterator<G> i0; // default construction
 
     auto& u             = g[frankfurt_key];
@@ -329,7 +329,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
     REQUIRE(cnt == 3);
   }
 
-  SECTION("const_adjacency_edge_view") {
+  SECTION("const_adjacency_view") {
     const G& g2 = g;
 
     std::graph::views::const_adjacency_iterator<G> i0; // default construction
@@ -357,7 +357,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
     REQUIRE(cnt == 3);
   }
 
-  SECTION("adjacency_edge_view") {
+  SECTION("adjacency_view") {
     std::graph::views::adjacency_iterator<G> i0; // default construction
 
     auto& u             = g[frankfurt_key];

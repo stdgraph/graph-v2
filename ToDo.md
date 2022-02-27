@@ -7,7 +7,7 @@
   - [ ] Common
     - [ ] template --> class in template definitions
   - [ ] Ranges
-    - [x] Deprecate vertex_vertex_range_t (and related types and functions) in favor of adjacency_edge_view
+    - [x] Deprecate vertex_vertex_range_t (and related types and functions) in favor of adjacency_view
     - [x] Deprecate edge_range_t (and related types and functions) in favor of edge_view
   - [ ] Concepts and type_traits
   - [ ] Accessor functions
@@ -47,7 +47,9 @@
     - [ ] copy (g1 --> g2)
 - Graph Containers (data structures)
     - [x] csr_graph
+      - [ ] Enable concepts
     - [ ] dynamic_graph
+      - [ ] Enable concepts
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
       - [ ] graph with map-based vertices (requires different algorithm impl)
     - [ ] undirected_adjacency_list
