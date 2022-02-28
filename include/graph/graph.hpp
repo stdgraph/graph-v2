@@ -125,13 +125,13 @@ namespace views {
   template <class VKey, class V, class VV>
   struct vertex_view {
     VKey key;
-    V    vertex_view;
+    V    vertex;
     VV   value;
   };
   template <class VKey, class V>
   struct vertex_view<VKey, V, void> {
     VKey key;
-    V    vertex_view;
+    V    vertex;
   };
   template <class VKey, class VV>
   struct vertex_view<VKey, void, VV> {
@@ -146,6 +146,11 @@ namespace views {
   template <class VKey, class VV>
   using copyable_vertex_t = vertex_view<VKey, void, VV>; // {key, value}
 
+  template <class G, class VV = vertex_value_t<G>>
+  using vertex_iterator_view = vertex_view<vertex_key_t<add_const<G>>, add_lvalue_reference<remove_reference<vertex_t<G>>>, VV>;
+  template <class G, class VV = vertex_value_t<G>>
+  using _shadow_vertex_iterator_view = vertex_view<vertex_key_t<remove_const<G>>, remove_const<add_pointer<remove_reference<vertex_t<remove_const<G>>>>>, VV>;
+
   //
   // edge_view
   //
@@ -153,7 +158,7 @@ namespace views {
   struct edge_view {
     VKey source_key;
     VKey target_key;
-    E    edge_view;
+    E    edge;
     EV   value;
   };
 
@@ -161,7 +166,7 @@ namespace views {
   struct edge_view<VKey, true, E, void> {
     VKey source_key;
     VKey target_key;
-    E    edge_view;
+    E    edge;
   };
   template <class VKey>
   struct edge_view<VKey, true, void, void> {
@@ -178,13 +183,13 @@ namespace views {
   template <class VKey, class E, class EV>
   struct edge_view<VKey, false, E, EV> {
     VKey target_key;
-    E    edge_view;
+    E    edge;
     EV   value;
   };
   template <class VKey, class E>
   struct edge_view<VKey, false, E, void> {
     VKey target_key;
-    E    edge_view;
+    E    edge;
   };
 
   template <class VKey, class EV>
@@ -226,6 +231,14 @@ namespace views {
   //
   template <class VKey, class EV>
   using copyable_edge_t = edge_view<VKey, true, void, EV>; // {source_key, target_key [, value]}
+
+  //
+  // graph_edge_view
+  //
+  template <class G, class EV=edge_value_t<G>, bool Sourced = false>
+  using edge_iterator_view = edge_view<vertex_key_t<add_const<G>>, Sourced, add_lvalue_reference<remove_reference<edge_t<G>>>, EV>;
+  template <class G, class EV = edge_value_t<G>, bool Sourced = false>
+  using _shadow_edge_iterator_view = edge_view<vertex_key_t<remove_const<G>>, Sourced, add_pointer<remove_reference<edge_t<remove_const<G>>>>, EV>;
 
   //
   // view concepts
