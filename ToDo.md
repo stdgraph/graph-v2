@@ -44,10 +44,13 @@
     - [ ] Biconnected Components
     - [ ] Articulation Points
     - [ ] Transitive Closure
+    - [ ] Maximal Independent Set (edgelist)
+    - [ ] Union Find (edgelist)
     - [ ] copy (g1 --> g2)
 - Graph Containers (data structures)
     - [x] csr_graph
       - [ ] Enable concepts
+      - [ ] Support VV=void
     - [ ] dynamic_graph
       - [ ] Enable concepts
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
@@ -75,6 +78,7 @@
   - [ ] Validate address sanitizer build
   - [ ] Support Clang (waiting for full concepts support)
   - [ ] Performance tests
+  - [ ] **Push to github** for Andrew
 - Feature & performance comparison
   - [ ] boost::graph
   - [ ] NWGraph
@@ -82,10 +86,10 @@
   - [ ] modules
   - [ ] coroutines (simplify DFS, BFS & TopoSort?)
 - Documentation
-  - [ ] REAME.md
+  - [ ] README.md
     - [ ] Add general description
     - [ ] Add link to paper
-    - [ ] Add instructions for building
+    - [ ] Add Getting Started
   - [ ] P1709
     - [ ] Google Doc --> LaTex
 - Feedback
