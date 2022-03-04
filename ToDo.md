@@ -14,20 +14,23 @@
     - [x] as CPO
     - [x] default implementations (e.g. degree==size)
     - [x] [deprecated] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
-  - [ ] Graph Views
-    - [ ] **edge_range<graph, vertex_range, vertex_edge_range>**
-    - [x] for([vkey, v] : vertexlist(g,u): vertex_vertex_range<graph, vertex_range, vertex_edge_range>
+- [ ] Views
+  - [ ] vertexlist
     - [x] for([ukey, u] : vertexlist(g))
-    - [x] for([vkey,uv] : edges_view(g,u)) (incidence)
-    - [ ] create CPOs
-      - [ ] create CPO
-      - [ ] view::vertexlist is the class
-      - [ ] vertices(g) is the function calling the class
-    - [x] Add view types in std::graph::view
-      - [ ] Use the types in the view functions
-      - [ ] Add optional value function object parameters to the functions
-      - [ ] combine targeted_edge & sourced_edge; use bool Sourced template parameter to add Sourced key
-      - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
+    - [ ] for([ukey, u, val] : vertexlist(g,fn(u))
+    - [ ] create CPO & vertexlist_view class
+  - [ ] incidence
+    - [x] for([vkey,uv] : incidence(g,u))
+    - [ ] for([vkey,uv, val] : incidence(g,u,fn(uv))
+    - [ ] create CPO & incidence_view class
+  - [ ] adjacency
+    - [x] for([vkey, v] : adjacency(g,u)
+    - [ ] for([vkey, v, val] : adjacency(g,u,fn(v))
+    - [ ] create CPO & adjacency_view class
+  - [ ] edgelist
+    - [ ] for([ukey,vkey,uv]: edgelist(g))
+    - [ ] for([ukey,vkey,uv,val]: edgelist(g,fn(uv))
+    - [ ] create CPO & edgelist_view class
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -47,14 +50,16 @@
     - [ ] Maximal Independent Set (edgelist)
     - [ ] Union Find (edgelist)
     - [ ] copy (g1 --> g2)
-- Graph Containers (data structures)
-    - [x] csr_graph
+- Containers (data structures)
+    - [x] csr_graph (for P1709)
       - [ ] Enable concepts
       - [ ] Support VV=void
+      - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] dynamic_graph
       - [ ] Enable concepts
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
       - [ ] graph with map-based vertices (requires different algorithm impl)
+      - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] undirected_adjacency_list
     - [ ] directed_adjacency_vector
 - [ ] Testing Patterns
