@@ -2,84 +2,45 @@
 #include "graph/graph.hpp"
 
 //
-// vertexlist_view(g) -> pair<vertex_key_t<G>, vertex_reference_t<G>>:
+// vertexlist(g) -> vertex_iterator_view<vertex_key_t<G>, vertex_reference_t<G>>:
 //
-// enable: for(auto&& [ukey, u] : vertexlist_view(g))
+// enable: for(auto&& [ukey, u] : vertexlist(g))
 //
 namespace std::graph::views {
 
-template <class G>
-class const_vertexlist_iterator;
-template <class G>
-class vertexlist_iterator;
 
+template <class G, class VVF>
+class vertexlist_iterator_base {
+public:
+  using graph_type        = G;
+  using vertex_type       = vertex_t<graph_type>;
+  using vertex_value_func = VVF;
+  using vertex_value_type = decltype(vertex_value_func(declval<vertex_type>()));
 
-template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertexlist_view(const G& g) {
-  using iter_type     = const_vertexlist_iterator<const G>;
-  using sentinal_type = typename iter_type::vertex_iterator_type;
-  using SR            = ranges::subrange<iter_type, sentinal_type>;
+public:
+  vertexlist_iterator_base(const vertex_value_func& value_fn) : value_fn_(value_fn) {}
+  vertexlist_iterator_base(vertex_value_func&& value_fn) : value_fn_(move(value_fn)) {}
 
-  auto first = iter_type(ranges::begin(vertices(const_cast<G&>(g))));
-  auto last  = sentinal_type(ranges::end(vertices(const_cast<G&>(g))));
-  return SR(first, last);
-}
+  vertexlist_iterator_base()                                = default;
+  vertexlist_iterator_base(vertexlist_iterator_base const&) = default;
+  vertexlist_iterator_base(vertexlist_iterator_base&&)      = default;
+  ~vertexlist_iterator_base()                               = default;
 
-template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertexlist_view(G& g) {
-  using iter_type     = vertexlist_iterator<G>;
-  using sentinal_type = typename iter_type::vertex_iterator_type;
-  using SR            = ranges::subrange<iter_type, sentinal_type>;
+  vertexlist_iterator_base& operator=(const vertexlist_iterator_base&) = default;
+  vertexlist_iterator_base& operator=(vertexlist_iterator_base&&) = default;
 
-  auto first = iter_type(ranges::begin(vertices(g)));
-  auto last  = sentinal_type(ranges::end(vertices(g)));
-  return SR(first, last);
-}
-
+protected:
+  vertex_value_func value_fn_;
+};
 
 template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertexlist_view(const G& g, vertex_iterator_t<const G> first, vertex_iterator_t<const G> last) {
-  using iter_type          = const_vertexlist_iterator<const G>;
-  using sentinal_type      = typename iter_type::vertex_iterator_type;
-  using SR                 = ranges::subrange<iter_type, sentinal_type>;
-  vertex_key_t<G> start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)));
-  return SR(iter_type(first, start_at), last);
-}
-
-template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertexlist_view(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
-  using iter_type          = const_vertexlist_iterator<G>;
-  using sentinal_type      = typename iter_type::vertex_iterator_type;
-  using SR                 = ranges::subrange<iter_type, sentinal_type>;
-  vertex_key_t<G> start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)));
-  return SR(iter_type(first, start_at), last);
-}
-
-
-template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertexlist_view(const G&                   g,
-                               vertex_iterator_t<const G> first,
-                               vertex_iterator_t<const G> last,
-                               vertex_key_t<G>            start_at) {
-  using iter_type     = const_vertexlist_iterator<const G>;
-  using sentinal_type = typename iter_type::vertex_iterator_type;
-  using SR            = ranges::subrange<iter_type, sentinal_type>;
-  return SR(iter_type(first, start_at), last);
-}
-
-template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto vertexlist_view(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, vertex_key_t<G> start_at) {
-  using iter_type     = const_vertexlist_iterator<G>;
-  using sentinal_type = typename iter_type::vertex_iterator_type;
-  using SR            = ranges::subrange<iter_type, sentinal_type>;
-  return SR(iter_type(first, start_at), last);
-}
+class vertexlist_iterator_base<G,void> {
+public:
+  using graph_type        = G;
+  using vertex_type       = vertex_t<graph_type>;
+  using vertex_value_func = void;
+  using vertex_value_type = void;
+};
 
 
 template <class G>
@@ -94,7 +55,7 @@ public:
   using vertex_pointer_type   = vertex_type*;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = pair<const vertex_key_type, const vertex_type&>;
+  using value_type        = vertex_iterator_view<G, void>;
   using difference_type   = ranges::range_difference_t<vertex_range_type>;
   using pointer           = const value_type*;
   using const_pointer     = const value_type*;
@@ -103,7 +64,7 @@ public:
 
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
-  using shadow_value_type = pair<vertex_key_type, vertex_pointer_type>;
+  using shadow_value_type = _shadow_vertex_iterator_view<G, void>;
 
 public:
   const_vertexlist_iterator(const graph_type& g) : iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
@@ -120,13 +81,13 @@ public:
 
 public:
   constexpr reference operator*() const {
-    value_.second = &*iter_;
+    value_.vertex = &*iter_;
     return reinterpret_cast<reference>(value_);
   }
 
   constexpr const_vertexlist_iterator& operator++() {
     ++iter_;
-    ++value_.first;
+    ++value_.key;
     // leave value_.second (vertex) as-is to avoid dereferencing iter_ when it's at end()
     return *this;
   }
@@ -161,7 +122,7 @@ public:
   using vertex_pointer_type   = vertex_type*;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = pair<const vertex_key_type, vertex_type&>;
+  using value_type        = vertex_iterator_view<G, void>;
   using difference_type   = ranges::range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = value_type*;
@@ -169,7 +130,7 @@ public:
   using const_reference   = value_type&;
 
 protected:
-  using shadow_value_type = pair<vertex_key_type, vertex_pointer_type>;
+  using shadow_value_type = _shadow_vertex_iterator_view<G, void>;
   using base_type::value_;
   using base_type::iter_;
 
@@ -187,13 +148,13 @@ public:
 
 public:
   constexpr reference operator*() const {
-    value_.second = &*iter_;
+    value_.vertex = &*iter_;
     return reinterpret_cast<reference>(value_);
   }
 
   constexpr vertexlist_iterator& operator++() {
     ++iter_;
-    ++value_.first;
+    ++value_.key;
     // leave value_.second (vertex) as-is to avoid dereferencing iter_ when it's at end()
     return *this;
   }
@@ -209,5 +170,76 @@ public:
 protected:
   friend bool operator==(const vertex_iterator_type& lhs, const vertexlist_iterator& rhs) { return lhs == rhs.iter_; }
 };
+
+
+template <class G, class VV = void>
+class vertexlist_view {};
+
+
+template <class G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertexlist(const G& g) {
+  using iter_type     = const_vertexlist_iterator<const G>;
+  using sentinal_type = typename iter_type::vertex_iterator_type;
+  using SR            = ranges::subrange<iter_type, sentinal_type>;
+
+  auto first = iter_type(ranges::begin(vertices(const_cast<G&>(g))));
+  auto last  = sentinal_type(ranges::end(vertices(const_cast<G&>(g))));
+  return SR(first, last);
+}
+
+template <class G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertexlist(G& g) {
+  using iter_type     = vertexlist_iterator<G>;
+  using sentinal_type = typename iter_type::vertex_iterator_type;
+  using SR            = ranges::subrange<iter_type, sentinal_type>;
+
+  auto first = iter_type(ranges::begin(vertices(g)));
+  auto last  = sentinal_type(ranges::end(vertices(g)));
+  return SR(first, last);
+}
+
+
+template <class G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertexlist(const G& g, vertex_iterator_t<const G> first, vertex_iterator_t<const G> last) {
+  using iter_type          = const_vertexlist_iterator<const G>;
+  using sentinal_type      = typename iter_type::vertex_iterator_type;
+  using SR                 = ranges::subrange<iter_type, sentinal_type>;
+  vertex_key_t<G> start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)));
+  return SR(iter_type(first, start_at), last);
+}
+
+template <class G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertexlist(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
+  using iter_type          = const_vertexlist_iterator<G>;
+  using sentinal_type      = typename iter_type::vertex_iterator_type;
+  using SR                 = ranges::subrange<iter_type, sentinal_type>;
+  vertex_key_t<G> start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)));
+  return SR(iter_type(first, start_at), last);
+}
+
+
+template <class G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto
+vertexlist(const G& g, vertex_iterator_t<const G> first, vertex_iterator_t<const G> last, vertex_key_t<G> start_at) {
+  using iter_type     = const_vertexlist_iterator<const G>;
+  using sentinal_type = typename iter_type::vertex_iterator_type;
+  using SR            = ranges::subrange<iter_type, sentinal_type>;
+  return SR(iter_type(first, start_at), last);
+}
+
+template <class G>
+requires ranges::forward_range<vertex_range_t<G>>
+constexpr auto vertexlist(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, vertex_key_t<G> start_at) {
+  using iter_type     = const_vertexlist_iterator<G>;
+  using sentinal_type = typename iter_type::vertex_iterator_type;
+  using SR            = ranges::subrange<iter_type, sentinal_type>;
+  return SR(iter_type(first, start_at), last);
+}
+
 
 } // namespace std::graph::views

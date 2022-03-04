@@ -2,7 +2,7 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/algorithm/dijkstra_book.hpp"
-#include "graph/views/vertexlist_view.hpp"
+#include "graph/views/vertexlist.hpp"
 #include "graph/views/incidence_view.hpp"
 #include "graph/views/adjacency_view.hpp"
 //#include "graph/view/edgelist_view.hpp"
@@ -222,10 +222,10 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(i2b == i2);
     }
 
-    using view_t = decltype(std::graph::views::vertexlist_view(g2));
+    using view_t = decltype(std::graph::views::vertexlist(g2));
     static_assert(forward_range<view_t>);
     size_t cnt = 0;
-    for (auto&& [ukey, u] : std::graph::views::vertexlist_view(g2)) {
+    for (auto&& [ukey, u] : std::graph::views::vertexlist(g2)) {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
@@ -265,7 +265,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
     }
 
     size_t cnt = 0;
-    for (auto&& [ukey, u] : std::graph::views::vertexlist_view(g)) {
+    for (auto&& [ukey, u] : std::graph::views::vertexlist(g)) {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));

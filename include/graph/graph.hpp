@@ -119,8 +119,8 @@ namespace views {
 
   //
   // vertex_view
-  // for(auto&& [ukey, u, value] : vertexlist_view(g, [](vertex_reference_t<G> u) { return ...; } )
-  // for(auto&& [ukey, u]        : vertexlist_view(g))
+  // for(auto&& [ukey, u, value] : vertexlist(g, [](vertex_reference_t<G> u) { return ...; } )
+  // for(auto&& [ukey, u]        : vertexlist(g))
   //
   template <class VKey, class V, class VV>
   struct vertex_view {
@@ -147,9 +147,9 @@ namespace views {
   using copyable_vertex_t = vertex_view<VKey, void, VV>; // {key, value}
 
   template <class G, class VV = vertex_value_t<G>>
-  using vertex_iterator_view = vertex_view<vertex_key_t<add_const<G>>, add_lvalue_reference<remove_reference<vertex_t<G>>>, VV>;
+  using vertex_iterator_view = vertex_view<vertex_key_t<G>, vertex_t<G>&, VV>;
   template <class G, class VV = vertex_value_t<G>>
-  using _shadow_vertex_iterator_view = vertex_view<vertex_key_t<remove_const<G>>, remove_const<add_pointer<remove_reference<vertex_t<remove_const<G>>>>>, VV>;
+  using _shadow_vertex_iterator_view = vertex_view<vertex_key_t<G>, vertex_t<G>*, VV>;
 
   //
   // edge_view

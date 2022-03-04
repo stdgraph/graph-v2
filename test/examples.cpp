@@ -2,7 +2,7 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/algorithm/dijkstra_book.hpp"
-#include "graph/views/vertexlist_view.hpp"
+#include "graph/views/vertexlist.hpp"
 #include "graph/views/incidence_view.hpp"
 #include "graph/views/adjacency_view.hpp"
 //#include "graph/view/edgelist_view.hpp"
@@ -60,14 +60,14 @@ TEST_CASE("Germany routes examples", "[csv][vofl][germany][example]") {
   auto frankfurt_key = find_frankfurt_key(g);
 
   SECTION("Incidence iteration") {
-    for (auto&& [ukey, u] : std::graph::views::vertexlist_view(g)) {
+    for (auto&& [ukey, u] : std::graph::views::vertexlist(g)) {
       for (auto&& [vkey, uv] : std::graph::views::edges_view(g, u)) {
       }
     }
   }
 
   SECTION("Adjacency iteration") {
-    for (auto&& [ukey, u] : std::graph::views::vertexlist_view(g)) {
+    for (auto&& [ukey, u] : std::graph::views::vertexlist(g)) {
       for (auto&& [vkey, v] : std::graph::views::adjacency_view(g, u)) {
       }
     }

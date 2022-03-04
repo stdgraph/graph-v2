@@ -70,7 +70,7 @@ void vertex_key_example(G&& g) {
   auto ui   = begin(vertices(g));
   auto key = vertex_key(g,ui);
 
-  for (auto&& [ukey, u] : views::vertexlist_view(g)) { //
+  for (auto&& [ukey, u] : views::vertexlist(g)) { //
   }
 }
 
