@@ -60,6 +60,7 @@
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
       - [ ] graph with map-based vertices (requires different algorithm impl)
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
+    - [ ] bipartite_graph<V1,V2,V3>
     - [ ] undirected_adjacency_list
     - [ ] directed_adjacency_vector
 - [ ] Testing Patterns
@@ -91,6 +92,7 @@
   - [ ] modules
   - [ ] coroutines (simplify DFS, BFS & TopoSort?)
 - Documentation
+  - [x] Decprecate original "graph" repository
   - [ ] README.md
     - [ ] Add general description
     - [ ] Add link to paper
@@ -126,6 +128,27 @@
 - [ ] How easy is it to write a view w/o the graph API?
 - [ ] How to validate constexpr? (need to use std::array)
 - [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VKey. How to adapt existing graphs?
+- [ ] Can transform_view be used in place of the projections in the graph views?
+- [ ] How to support bipartite graphs using differnt vertex types? (thought experiment)
+  - [ ] 2 or more types of vertices
+  - [ ] using C++ types to distinguish them is invasive to the design
+  - [ ] Need to be able to iterate through the set of vertex types (use tuple?)
+  - [ ] How are vertices distinguished? Their value_type? enum? ...
+  - [ ] Should a vertex be able to have targets with different types?
+  - [ ] view structures
+    - [ ] vertex_view is focused on a single vertex type; I assume we don't need to worry about diff types at that level
+    - [ ] edge_view may need to be extended with a target_type (template parameter) so we can get the target vertex
+    - [ ] neighbor_view can be used as-is because it only includes the target vertex type
+  - [ ] views
+    - [ ] vertexlist needs to be expanded to identify the vertex type to iterate thru
+    - [ ] edgelist needs to be expanded to identify source and/or target types to iterate thru
+  - [ ] graph API
+    - [ ] functions
+      - [ ] vertices(g) would need to expand to identify a specific graph type to iterate through
+      - [ ] vertices<V>(g) or vertices<N>(g) (thinking of tuples & variants)
+    - [ ] types
+      - [ ] vertex_t<G,V> and vertex_t<G,N> for different vertex types (is vertex_t<G,V> recursive dependency?)
+      - [ ] edge_t<G,U,V> to distinguish between source & target types
 
 ## Resolved
 ### ToDo Completed
@@ -139,7 +162,7 @@
     - [x] vertex_vertex_range
     - [x] edge_range
 - Algorithms
-- Graph Containers (data structures)
+- Containers (data structures)
     - [x] dynamic_graph_ (adjustable to different vertex & edge containers)
       - [x] Implement graph, vector, edge
       - [x] Load from CSV file
