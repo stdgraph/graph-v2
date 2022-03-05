@@ -241,6 +241,37 @@ namespace views {
   using _shadow_edge_iterator_view = edge_view<vertex_key_t<remove_const<G>>, Sourced, add_pointer<remove_reference<edge_t<remove_const<G>>>>, EV>;
 
   //
+  // neighbor_view (for adjacency)
+  //
+  template <class VKey, bool Sourced, class V, class VV>
+  struct neighbor_view {
+    VKey source_key;
+    VKey target_key;
+    V    neighbor;
+    VV   value;
+  };
+
+  template <class VKey, class V, class VV>
+  struct neighbor_view<VKey, false, V, VV> {
+    VKey target_key;
+    V    neighbor;
+    VV   value;
+  };
+
+  template <class VKey, class V>
+  struct neighbor_view<VKey, false, V, void> {
+    VKey target_key;
+    V    neighbor;
+  };
+
+  template <class VKey, class V>
+  struct neighbor_view<VKey, true, V, void> {
+    VKey target_key;
+    V    neighbor;
+  };
+
+
+  //
   // view concepts
   //
   template <class T, class VKey, class VV>
@@ -248,6 +279,7 @@ namespace views {
 
   template <class T, class VKey, class EV>
   concept copyable_edge = convertible_to<T, copyable_edge_t<VKey, EV>>;
+
 
 } // namespace views
 

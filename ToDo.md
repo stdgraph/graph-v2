@@ -129,26 +129,32 @@
 - [ ] How to validate constexpr? (need to use std::array)
 - [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VKey. How to adapt existing graphs?
 - [ ] Can transform_view be used in place of the projections in the graph views?
-- [ ] How to support bipartite graphs using differnt vertex types? (thought experiment)
-  - [ ] 2 or more types of vertices
-  - [ ] using C++ types to distinguish them is invasive to the design
-  - [ ] Need to be able to iterate through the set of vertex types (use tuple?)
-  - [ ] How are vertices distinguished? Their value_type? enum? ...
-  - [ ] Should a vertex be able to have targets with different types?
-  - [ ] view structures
-    - [ ] vertex_view is focused on a single vertex type; I assume we don't need to worry about diff types at that level
-    - [ ] edge_view may need to be extended with a target_type (template parameter) so we can get the target vertex
-    - [ ] neighbor_view can be used as-is because it only includes the target vertex type
-  - [ ] views
-    - [ ] vertexlist needs to be expanded to identify the vertex type to iterate thru
-    - [ ] edgelist needs to be expanded to identify source and/or target types to iterate thru
-  - [ ] graph API
-    - [ ] functions
-      - [ ] vertices(g) would need to expand to identify a specific graph type to iterate through
-      - [ ] vertices<V>(g) or vertices<N>(g) (thinking of tuples & variants)
-    - [ ] types
-      - [ ] vertex_t<G,V> and vertex_t<G,N> for different vertex types (is vertex_t<G,V> recursive dependency?)
-      - [ ] edge_t<G,U,V> to distinguish between source & target types
+- [ ] How to support bipartite graphs using differnt vertex types?
+  - [ ] Requires definition of 2+ types of vertices. How to define vertex type?
+    - [ ] vertices are stored as a range of range of vertices, where the outer range is the type of vertex
+  - [ ] Need proof-of-concept graph data structure to demonstrate
+  - [ ] Option 1: extend API & Views with the type (or hidden if not used)
+    - [ ] keeps uniformity of vertex type
+    - [ ] may require use of variant for vertex_value type
+    - [ ] API extensions
+      - [ ] vertices(g,type)
+      - [ ] find_vertex(g,type,key)
+      - [ ] vertex_type(g,u), or vertex_type(g,ui) (like vertex_key)
+      - [ ] target_type(g,uv), source_type(g,uv), other_type(g,uv)
+    - [ ] View exensions
+      - [ ] vertex_view would need to include vertex type
+      - [ ] edge_view would need to include target & source vertex type (with the key)
+      - [ ] neighbor_view would need to include target vertex type
+      - [ ] These extensions could be a template parameter based on the underlying type of graph; they would be absent if not needed
+      - [ ] How to efficiently iterate through vertices of a specific type?
+  - [ ] Option 2: use existing vertex_key to be a pair<vtx_type,vtx_key>
+    - [ ] Can the existing design adapt to this? (Best option if it can be made to work)
+    - [ ] keeps uniformity of vertex type
+    - [ ] may require use of variant for vertex_value type
+    - [ ] How well would it adapt to existing bipartite graphs?
+  - [ ] Option 3: use C++ types to distinguish vertex types
+    - [ ] invasive to the existing design and would make it significantly more complicated
+    - [ ] would delay existing design by months and there's no guarantee to be successful
 
 ## Resolved
 ### ToDo Completed
