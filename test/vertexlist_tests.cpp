@@ -13,6 +13,7 @@ using std::input_iterator;
 
 using std::graph::vertex_t;
 using std::graph::vertex_key_t;
+using std::graph::vertex_value_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
 using std::graph::edge_value_t;
@@ -135,7 +136,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
     }
   }
 
-  SECTION("non-const vertexlist") { 
+  SECTION("non-const vertexlist") {
     using view_t = decltype(std::graph::views::vertexlist(g));
     static_assert(forward_range<view_t>, "vertexlist(g) is not a forward_range");
     size_t cnt = 0;
@@ -146,14 +147,30 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
   }
 
   SECTION("non-const vertexlist") {
-    using G2 = const G;
-    G2& g2   = g;
+    using G2     = const G;
+    G2& g2       = g;
     using view_t = decltype(std::graph::views::vertexlist(g2));
     static_assert(forward_range<view_t>, "vertexlist(g) is not a forward_range");
     size_t cnt = 0;
     for (auto&& [ukey, u] : std::graph::views::vertexlist(g2)) {
       ++cnt;
     }
+    REQUIRE(cnt == size(vertices(g)));
+  }
+
+  SECTION("non-const vertexlist with vertex_fn") {
+    size_t cnt = 0;
+    for (auto&& [ukey, u, val] :
+         std::graph::views::vertexlist(g, [](G& gg, vertex_t<G>&u) -> std::string& { return vertex_value(gg, u); })) {
+      ++cnt;
+    }
+    REQUIRE(cnt == size(vertices(g)));
+
+    //using fn_t = std::function<vertex_value_t<G>(G&, vertex_t<G>&)>;
+    //cnt = 0;
+    //for (auto&& [ukey, u, val] : std::graph::views::vertexlist(g, std::function < vertex_value(G&, vertex_t<G>& >))) {
+    //  ++cnt;
+    //}
     REQUIRE(cnt == size(vertices(g)));
   }
 }
