@@ -247,27 +247,27 @@ namespace views {
   struct neighbor_view {
     VKey source_key;
     VKey target_key;
-    V    neighbor;
+    V    target;
     VV   value;
   };
 
   template <class VKey, class V, class VV>
   struct neighbor_view<VKey, false, V, VV> {
     VKey target_key;
-    V    neighbor;
+    V    target;
     VV   value;
   };
 
   template <class VKey, class V>
   struct neighbor_view<VKey, false, V, void> {
     VKey target_key;
-    V    neighbor;
+    V    target;
   };
 
   template <class VKey, class V>
   struct neighbor_view<VKey, true, V, void> {
     VKey target_key;
-    V    neighbor;
+    V    target;
   };
 
 

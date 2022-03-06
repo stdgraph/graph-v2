@@ -54,16 +54,16 @@ auto find_frankfurt(G&& g) {
 }
 
 
-//TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vofl][germany][dijkstra][book]") {
-//  init_console();
-//  using G = routes_volf_graph_type;
-//  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
-//
-//  auto frankfurt     = find_frankfurt(g);
-//  auto frankfurt_key = find_frankfurt_key(g);
-//  auto weight        = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
-//  auto result        = std::graph::dijkstra_book(g, frankfurt_key, weight);
-//}
+TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vofl][germany][dijkstra][book]") {
+  init_console();
+  using G = routes_volf_graph_type;
+  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+
+  auto frankfurt     = find_frankfurt(g);
+  auto frankfurt_key = find_frankfurt_key(g);
+  auto weight        = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
+  auto result        = std::graph::dijkstra_book(g, frankfurt_key, weight);
+}
 
 
 TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
@@ -188,7 +188,6 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
     REQUIRE(total_dist == 2030.0);
   }
 
-#if 0
   SECTION("const_vertices_view") {
     const G& g2 = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
@@ -275,6 +274,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
     //i0 == j0;
   }
 
+#if 0
   SECTION("const_incidence_view") {
     const G& g2 = g;
 

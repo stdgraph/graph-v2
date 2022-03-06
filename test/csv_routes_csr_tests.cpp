@@ -184,7 +184,6 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     REQUIRE(total_dist == 2030.0);
   }
 
-#if 0
   SECTION("const_vertices_view") {
     const G& g2 = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>);
@@ -271,6 +270,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     //i0 == j0;
   }
 
+#if 0
   SECTION("const_incidence_view") {
     const G& g2 = g;
 

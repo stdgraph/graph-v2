@@ -124,6 +124,7 @@
 - [ ] Does a LaTeX document take fewer pages than equivilent in Google Docs?
 - [ ] SG19 Questions
   - [ ] key vs. id?
+  - [ ] use of subrange instead of explicit definition of vertexlist_view class?
 - [ ] Can CSR edges have a void value? (e.g. no v vector)
 - [ ] How easy is it to write a view w/o the graph API?
 - [ ] How to validate constexpr? (need to use std::array)
