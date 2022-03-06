@@ -62,6 +62,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
 
     std::graph::views::vertexlist_iterator<G> i0; // default construction
     std::graph::views::vertexlist_iterator<G> i1(g);
+    static_assert(std::forward_iterator<decltype(i1)>, "vertexlist_iterator must be a forward_iterator");
     {
       auto&& [ukey, u] = *i1;
       static_assert(is_const_v<decltype(ukey)>, "vertex key must be const");
@@ -90,15 +91,6 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       REQUIRE(i2b == i2);
     }
 
-    static_assert(std::forward_iterator<decltype(i1)>, "vertexlist_iterator must be a forward_iterator");
-
-    using view_t = decltype(std::graph::views::vertexlist(g));
-    static_assert(forward_range<view_t>, "vertexlist(g) is not returning a forward_range");
-    size_t cnt = 0;
-    for (auto&& [ukey, u] : std::graph::views::vertexlist(g)) {
-      ++cnt;
-    }
-    REQUIRE(cnt == size(vertices(g)));
 
     //std::graph::views::vertexlist_iterator<const G> j0;
     //j0 = i0;
@@ -112,6 +104,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
 
     //std::graph::views::vertexlist_iterator<G2> i0; // default construction
     std::graph::views::vertexlist_iterator<G2> i1(g2);
+    static_assert(std::forward_iterator<decltype(i1)>, "vertexlist_iterator must be a forward_iterator");
     {
       auto&& [ukey, u] = *i1;
 
@@ -140,11 +133,23 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       auto i2b = i2;
       REQUIRE(i2b == i2);
     }
+  }
 
-    static_assert(std::forward_iterator<decltype(i1)>, "vertexlist_iterator must be a forward_iterator");
+  SECTION("non-const vertexlist") { 
+    using view_t = decltype(std::graph::views::vertexlist(g));
+    static_assert(forward_range<view_t>, "vertexlist(g) is not a forward_range");
+    size_t cnt = 0;
+    for (auto&& [ukey, u] : std::graph::views::vertexlist(g)) {
+      ++cnt;
+    }
+    REQUIRE(cnt == size(vertices(g)));
+  }
 
+  SECTION("non-const vertexlist") {
+    using G2 = const G;
+    G2& g2   = g;
     using view_t = decltype(std::graph::views::vertexlist(g2));
-    static_assert(forward_range<view_t>, "vertexlist(g) is not returning a forward_range");
+    static_assert(forward_range<view_t>, "vertexlist(g) is not a forward_range");
     size_t cnt = 0;
     for (auto&& [ukey, u] : std::graph::views::vertexlist(g2)) {
       ++cnt;
