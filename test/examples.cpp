@@ -59,6 +59,7 @@ TEST_CASE("Germany routes examples", "[csv][vofl][germany][example]") {
   auto frankfurt     = find_frankfurt(g);
   auto frankfurt_key = find_frankfurt_key(g);
 
+#if 0
   SECTION("Incidence iteration") {
     for (auto&& [ukey, u] : std::graph::views::vertexlist(g)) {
       for (auto&& [vkey, uv] : std::graph::views::edges_view(g, u)) {
@@ -72,6 +73,7 @@ TEST_CASE("Germany routes examples", "[csv][vofl][germany][example]") {
       }
     }
   }
+#endif
 
 #if 0
   SECTION("Edgelist iteration") {
