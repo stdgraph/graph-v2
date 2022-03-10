@@ -18,7 +18,7 @@ class const_incidence_iterator;
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edges_view(const G& g, vertex_reference_t<const G> u) {
+constexpr auto incidence(const G& g, vertex_reference_t<const G> u) {
   using vertex_type   = remove_cvref_t<decltype(u)>;
   using iter_type     = const_incidence_iterator<const G>;
   using sentinal_type = typename iter_type::edge_iterator;
@@ -32,7 +32,7 @@ constexpr auto edges_view(const G& g, vertex_reference_t<const G> u) {
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edges_view(G& g, vertex_reference_t<G> u) {
+constexpr auto incidence(G& g, vertex_reference_t<G> u) {
   using iter_type     = incidence_iterator<G>;
   using sentinal_type = typename iter_type::edge_iterator;
   using SR            = ranges::subrange<iter_type, sentinal_type>;
@@ -44,11 +44,11 @@ constexpr auto edges_view(G& g, vertex_reference_t<G> u) {
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edges_view(const G& g, vertex_key_t<const G> ukey) { return edges_view(g, *find_vertex(g, ukey)); }
+constexpr auto incidence(const G& g, vertex_key_t<const G> ukey) { return incidence(g, *find_vertex(g, ukey)); }
 
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edges_view(G& g, vertex_key_t<G> ukey) { return edges_view(g, *find_vertex(g, ukey)); }
+constexpr auto incidence(G& g, vertex_key_t<G> ukey) { return incidence(g, *find_vertex(g, ukey)); }
 
 
 template <class G, class Projection>

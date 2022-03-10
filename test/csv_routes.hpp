@@ -449,7 +449,7 @@ void output_routes_graphviz(const G& g, std::string_view filename) {
 
   for (auto&& [ukey, u] : views::vertexlist(g)) {
     of << "  " << ukey << " [shape=oval,label=\"" << vertex_value(g, u) << " [" << ukey << "]\"]\n";
-    for (auto&& [vkey, uv] : views::edges_view(g, u)) {
+    for (auto&& [vkey, uv] : views::incidence(g, u)) {
       auto&& v = target(g, uv);
       of << "   " << ukey << " -> " << vkey << " [arrowhead=vee,xlabel=\"" << edge_value(g, uv)
          << " km\", fontcolor=blue]\n";

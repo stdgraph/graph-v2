@@ -15,9 +15,9 @@ class vertexlist_iterator;
 
 // converts reference to pointer for internal storage in class to allow easy copying
 // pointers and values are stored as-is, but references become pointers
-template<class T>
+template <class T>
 struct ref_to_ptr {
-  T value;
+  T  value;
   T& operator=(T& rhs) {
     value = rhs;
     return value;
@@ -34,15 +34,14 @@ struct ref_to_ptr<T&> {
 
 
 template <class G, class VVF>
-class vertexlist_iterator_base : public input_iterator_tag {
+class vertexlist_iterator_base {
 public:
   using graph_type        = G;
   using vertex_type       = vertex_t<graph_type>;
-  using vertex_value_func = VVF;
   using vertex_value_type = invoke_result_t<VVF, G&, vertex_type&>;
 
 public:
-  vertexlist_iterator_base(graph_type& g, VVF&& value_fn) : g_(&g), value_fn_(move(value_fn)) {}
+  vertexlist_iterator_base(graph_type& g, const VVF& value_fn) : g_(&g), value_fn_(value_fn) {}
 
   vertexlist_iterator_base()                                = default;
   vertexlist_iterator_base(vertexlist_iterator_base const&) = default;
@@ -53,9 +52,10 @@ public:
   vertexlist_iterator_base& operator=(vertexlist_iterator_base&&) = default;
 
 protected:
-  graph_type*       g_ = nullptr;
-  vertex_value_func value_fn_;
+  graph_type*                  g_        = nullptr;
+  reference_wrapper<const VVF> value_fn_ = nullptr;
 };
+
 
 template <class G>
 class vertexlist_iterator_base<G, void> {
@@ -65,6 +65,7 @@ public:
   using vertex_value_func = void;
   using vertex_value_type = void;
 };
+
 
 template <class G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_key_t<G>>
@@ -95,8 +96,8 @@ protected:
   using shadow_value_type  = vertex_view<vertex_key_t<graph_type>, shadow_vertex_type*, ref_to_ptr<vertex_value_type>>;
 
 public:
-  vertexlist_iterator(graph_type& g, VVF&& value_fn, vertex_iterator_type iter, vertex_key_type start_at = 0)
-        : base_type(g, move(value_fn)), value_{start_at, nullptr, nullptr}, iter_(iter) {}
+  vertexlist_iterator(graph_type& g, const VVF& value_fn, vertex_iterator_type iter, vertex_key_type start_at = 0)
+        : base_type(g, value_fn), value_{start_at, nullptr, nullptr}, iter_(iter) {}
 
   constexpr vertexlist_iterator()                           = default;
   constexpr vertexlist_iterator(const vertexlist_iterator&) = default;
@@ -221,10 +222,10 @@ constexpr auto vertexlist(G& g) {
 }
 
 template <class G, class VVF>
-requires invocable<VVF, G&, vertex_t<G>&>
-constexpr auto vertexlist(G& g, VVF value_fn) {
-  using iterator_type     = vertexlist_iterator<G, VVF>;
-  return vertexlist_view<G, VVF>(iterator_type(g, move(value_fn), begin(vertices(g))), end(vertices(g)));
+requires invocable < VVF, G&, vertex_t<G>
+& > constexpr auto vertexlist(G& g, const VVF& value_fn) {
+  using iterator_type = vertexlist_iterator<G, VVF>;
+  return vertexlist_view<G, VVF>(iterator_type(g, value_fn, begin(vertices(g))), end(vertices(g)));
 
   //using iter_type     = vertexlist_iterator<G, VVF>;
   //using sentinal_type = typename iter_type::vertex_iterator_type;
@@ -251,10 +252,10 @@ constexpr auto vertexlist(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G>
 }
 
 template <class G, class VVF>
-requires ranges::random_access_range<vertex_range_t<G>> && invocable<VVF, G&, vertex_t<G>&>
-constexpr auto vertexlist(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, VVF value_fn) {
+requires ranges::random_access_range<vertex_range_t<G>> && invocable < VVF, G&, vertex_t<G>
+& > constexpr auto vertexlist(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
-  return vertexlist_view<G, VVF>(iterator_type(g,value_fn,first), last, (first - begin(vertices(g))));
+  return vertexlist_view<G, VVF>(iterator_type(g, value_fn, first), last, (first - begin(vertices(g))));
   //using iter_type          = vertexlist_iterator<G, VVF>;
   //using sentinal_type      = typename iter_type::vertex_iterator_type;
   //using rng                = ranges::subrange<iter_type, sentinal_type>;

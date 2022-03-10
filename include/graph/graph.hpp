@@ -146,11 +146,6 @@ namespace views {
   template <class VKey, class VV>
   using copyable_vertex_t = vertex_view<VKey, void, VV>; // {key, value}
 
-  template <class G, class VV = vertex_value_t<G>>
-  using vertex_iterator_view = vertex_view<vertex_key_t<G>, vertex_t<G>&, VV>;
-  template <class G, class VV = vertex_value_t<G>>
-  using _shadow_vertex_iterator_view = vertex_view<vertex_key_t<G>, vertex_t<G>*, VV>;
-
   //
   // edge_view
   //
@@ -231,14 +226,6 @@ namespace views {
   //
   template <class VKey, class EV>
   using copyable_edge_t = edge_view<VKey, true, void, EV>; // {source_key, target_key [, value]}
-
-  //
-  // graph_edge_view
-  //
-  template <class G, class EV=edge_value_t<G>, bool Sourced = false>
-  using edge_iterator_view = edge_view<vertex_key_t<add_const<G>>, Sourced, add_lvalue_reference<remove_reference<edge_t<G>>>, EV>;
-  template <class G, class EV = edge_value_t<G>, bool Sourced = false>
-  using _shadow_edge_iterator_view = edge_view<vertex_key_t<remove_const<G>>, Sourced, add_pointer<remove_reference<edge_t<remove_const<G>>>>, EV>;
 
   //
   // neighbor_view (for adjacency)

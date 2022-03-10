@@ -51,9 +51,9 @@ auto dijkstra_book(
     //  auto        vkey = target_key(g, uv);
     //
     //extension:
-    //for (auto&& [vkey, uv, w] : std::graph::edges_view(g, u, weight)) {
+    //for (auto&& [vkey, uv, w] : std::graph::incidence(g, u, weight)) {
     //
-    for (auto&& [vkey, uv] : views::edges_view(g, ukey)) { // see zip
+    for (auto&& [vkey, uv] : views::incidence(g, ukey)) { // see zip
       weight_type w = weight(uv);
       if (distance[ukey] + w < distance[vkey]) {
         distance[vkey] = distance[ukey] + w;
