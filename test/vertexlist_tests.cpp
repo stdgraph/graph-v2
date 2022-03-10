@@ -169,7 +169,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
   SECTION("non-const vertexlist with vertex_fn") {
     size_t cnt = 0;
     for (auto&& [ukey, u, val] :
-         std::graph::views::vertexlist(g, [](G&g, vertex_t<G>&u) -> std::string& { return vertex_value(g, u); })) {
+         std::graph::views::vertexlist(g, [&g](vertex_t<G>&u) -> std::string& { return vertex_value(g, u); })) {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));

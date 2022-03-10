@@ -38,7 +38,7 @@ class vertexlist_iterator_base {
 public:
   using graph_type        = G;
   using vertex_type       = vertex_t<graph_type>;
-  using vertex_value_type = invoke_result_t<VVF, G&, vertex_type&>;
+  using vertex_value_type = invoke_result_t<VVF, vertex_type&>;
 
 public:
   vertexlist_iterator_base(graph_type& g, const VVF& value_fn) : g_(&g), value_fn_(value_fn) {}
@@ -111,7 +111,7 @@ public:
   constexpr reference operator*() const {
     value_.vertex = &*iter_;
     if constexpr (!is_void_v<vertex_value_type>)
-      value_.value = invoke(this->value_fn_, *this->g_, *iter_);
+      value_.value = invoke(this->value_fn_, *iter_);
     return reinterpret_cast<reference>(value_);
   }
 
@@ -222,7 +222,7 @@ constexpr auto vertexlist(G& g) {
 }
 
 template <class G, class VVF>
-requires invocable < VVF, G&, vertex_t<G>
+requires invocable < VVF, vertex_t<G>
 & > constexpr auto vertexlist(G& g, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
   return vertexlist_view<G, VVF>(iterator_type(g, value_fn, begin(vertices(g))), end(vertices(g)));
@@ -252,7 +252,7 @@ constexpr auto vertexlist(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G>
 }
 
 template <class G, class VVF>
-requires ranges::random_access_range<vertex_range_t<G>> && invocable < VVF, G&, vertex_t<G>
+requires ranges::random_access_range<vertex_range_t<G>> && invocable < VVF, vertex_t<G>
 & > constexpr auto vertexlist(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
   return vertexlist_view<G, VVF>(iterator_type(g, value_fn, first), last, (first - begin(vertices(g))));
