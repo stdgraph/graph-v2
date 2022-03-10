@@ -208,7 +208,7 @@ namespace views {
   // for(auto&& [vkey,uv]       : edges_view(g, u) )
   //
   template <class VKey, class E, class EV>
-  using targeted_edge = edge_view<VKey, false, E, EV>; // {target_key, edge_view, [, value]}
+  using targeted_edge = edge_view<VKey, false, E, EV>; // {target_key, edge, [, value]}
 
   //
   // sourced_edge
@@ -216,7 +216,7 @@ namespace views {
   // for(auto&& [ukey,vkey,uv]       : sourced_edges_view(g, u) )
   //
   template <class VKey, class V, class E, class EV>
-  using sourced_edge = edge_view<VKey, true, E, EV>; // {source_key, target_key, edge_view, [, value]}
+  using sourced_edge = edge_view<VKey, true, E, EV>; // {source_key, target_key, edge, [, value]}
 
   //
   // edgelist_edge
@@ -224,7 +224,7 @@ namespace views {
   // for(auto&& [ukey,vkey,uv]       : edges_view(g) )
   //
   template <class VKey, class E, class EV>
-  using edgelist_edge = edge_view<VKey, true, E, EV>; // {source_key, target_key, edge_view, [, value]}
+  using edgelist_edge = edge_view<VKey, true, E, EV>; // {source_key, target_key [, edge] [, value]}
 
   //
   // copyable_edge
@@ -270,6 +270,10 @@ namespace views {
     V    target;
   };
 
+  template <class VKey>
+  struct neighbor_view<VKey, true, void, void> {
+    VKey target_key;
+  };
 
   //
   // view concepts

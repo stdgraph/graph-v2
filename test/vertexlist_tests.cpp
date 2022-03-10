@@ -92,6 +92,14 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       REQUIRE(i2b == i2);
     }
 
+    static_assert(std::input_or_output_iterator<decltype(i1)>);
+    using _It = std::graph::views::vertexlist_iterator<G>;
+    using _Se = std::graph::vertex_iterator_t<G>;
+    bool yy   = std::sentinel_for<_Se, _It>;
+    bool xx   = std::sized_sentinel_for<_Se, _It>;
+    static_assert(std::sized_sentinel_for<_Se, _It> == false);
+    auto _Ki =
+          std::sized_sentinel_for<_Se, _It> ? std::ranges::subrange_kind::sized : std::ranges::subrange_kind::unsized;
 
     //std::graph::views::vertexlist_iterator<const G> j0;
     //j0 = i0;
@@ -160,17 +168,53 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
 
   SECTION("non-const vertexlist with vertex_fn") {
     size_t cnt = 0;
-    for (auto&& [ukey, u, val] :
-         std::graph::views::vertexlist(g, [](G& gg, vertex_t<G>&u) -> std::string& { return vertex_value(gg, u); })) {
-      ++cnt;
+    auto*  gg  = &g;
+    //auto   vvf = [&gg](G& g, vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
+    //for (auto&& [ukey, u, val] : std::graph::views::vertexlist(g, std::move(vvf))) {
+    //  ++cnt;
+    //}
+    //REQUIRE(cnt == size(vertices(g)));
+
+
+    {
+          auto vvf            = [](G& g, vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
+          using VVF           = decltype(vvf);
+          using iterator_type = std::graph::views::vertexlist_iterator<G, VVF>;
+          //static_assert(!std::sized_sentinel_for<iterator_type, std::graph::vertex_iterator_t<G>>);
+          using VLW = std::graph::views::vertexlist_view<G>;
+
+          static_assert(std::movable<VVF>);
+          static_assert(std::movable<iterator_type>);
+          static_assert(std::weakly_incrementable<iterator_type>);
+          static_assert(std::input_or_output_iterator<iterator_type>);
+
+          //VLW vlw(iterator_type(g, vvf, begin(std::graph::vertices(g))), end(std::graph::vertices(g)));
+          //iterator_type first(g, vvf, begin(std::graph::vertices(g)));
     }
-    REQUIRE(cnt == size(vertices(g)));
+
+    {
+      //int        i   = 42;
+      //int&       i1  = i;
+      //const int& i2  = i;
+      //int&&      i1a = std::move(i);
+      //auto&&     i2a = i2;
+
+      //auto vvf            = [](G& g, vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
+      //using VVF           = decltype(vvf);
+      //using VVFW          = std::reference_wrapper<VVF>;
+      //using iterator_type = std::graph::views::vertexlist_iterator<G, VVFW>;
+      ////static_assert(!std::sized_sentinel_for<iterator_type, std::graph::vertex_iterator_t<G>>);
+      //using VLW = std::graph::views::vertexlist_view<G>;
+
+      //VVFW vvfw(vvf);
+      //static_assert(std::movable<VVFW>);
+    }
 
     //using fn_t = std::function<vertex_value_t<G>(G&, vertex_t<G>&)>;
     //cnt = 0;
     //for (auto&& [ukey, u, val] : std::graph::views::vertexlist(g, std::function < vertex_value(G&, vertex_t<G>& >))) {
     //  ++cnt;
     //}
-    REQUIRE(cnt == size(vertices(g)));
+    //REQUIRE(cnt == size(vertices(g)));
   }
 }
