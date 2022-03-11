@@ -101,6 +101,29 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
     auto _Ki =
           std::sized_sentinel_for<_Se, _It> ? std::ranges::subrange_kind::sized : std::ranges::subrange_kind::unsized;
 
+    auto vvf  = [&g](vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
+    using VVF = decltype(vvf);
+    std::graph::views::vertexlist_iterator<G, VVF> i3(g, vvf, begin(vertices(g)));
+    {
+      // The following asserts are used to isolate problem with failing input_or_output_iterator concept for vertexlist_iterator
+      static_assert(std::movable<decltype(i3)>, "vertexlist_iterator<G,VVF> is NOT movable");
+      static_assert(std::default_initializable<decltype(i3)>,
+                    "vertexlist_iterator<G,VVF> is NOT default_initializable");
+      //static_assert(std::__detail::__is_signed_integer_like<std::iter_difference_t<decltype(i3)>>, "vertexlist_iterator<G,VVF> is NOT __is_signed_integer_like");
+      static_assert(std::weakly_incrementable<decltype(i3)>, "vertexlist_iterator<G,VVF> is NOT weakly_incrementable");
+      static_assert(std::input_or_output_iterator<decltype(i3)>,
+                    "vertexlist_iterator<G,VVF> is NOT an input_or_output_iterator");
+
+      auto&& [ukey, u, name] = *i3;
+      REQUIRE(ukey == 0);
+      REQUIRE(name == "Frankf\xC3\xBCrt");
+    }
+    {
+      auto&& [ukey, u, name] = *++i3;
+      REQUIRE(ukey == 1);
+      REQUIRE(name == "Mannheim");
+    }
+
     //std::graph::views::vertexlist_iterator<const G> j0;
     //j0 = i0;
     //i0 == j0;
@@ -142,6 +165,20 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       auto i2b = i2;
       REQUIRE(i2b == i2);
     }
+
+    auto vvf  = [&g](vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
+    using VVF = decltype(vvf);
+    std::graph::views::vertexlist_iterator<G, VVF> i3(g, vvf, begin(vertices(g)));
+    {
+      auto&& [ukey, u, name] = *i3;
+      REQUIRE(ukey == 0);
+      REQUIRE(name == "Frankf\xC3\xBCrt");
+    }
+    {
+      auto&& [ukey, u, name] = *++i3;
+      REQUIRE(ukey == 1);
+      REQUIRE(name == "Mannheim");
+    }
   }
 
   SECTION("non-const vertexlist") {
@@ -152,9 +189,15 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
+
+    cnt = 0;
+    for (auto&& [ukey, u] : std::graph::views::vertexlist(g, begin(vertices(g)), end(vertices(g)))) {
+      ++cnt;
+    }
+    REQUIRE(cnt == size(vertices(g)));
   }
 
-  SECTION("non-const vertexlist") {
+  SECTION("const vertexlist") {
     using G2     = const G;
     G2& g2       = g;
     using view_t = decltype(std::graph::views::vertexlist(g2));
@@ -164,12 +207,30 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
+
+    cnt = 0;
+    for (auto&& [ukey, u] : std::graph::views::vertexlist(g2, begin(vertices(g2)), end(vertices(g2)))) {
+      ++cnt;
+    }
+    REQUIRE(cnt == size(vertices(g)));
   }
 
   SECTION("non-const vertexlist with vertex_fn") {
+    // Note: must include trailing return type on lambda
+    size_t cnt       = 0;
+    auto   vertex_fn = [&g](vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
+    for (auto&& [ukey, u, val] : std::graph::views::vertexlist(g, vertex_fn)) {
+      ++cnt;
+    }
+    REQUIRE(cnt == size(vertices(g)));
+  }
+  SECTION("const vertexlist with vertex_fn") {
+    // Note: must include trailing return type on lambda
+    using G2   = const G;
+    G2&    g2  = g;
     size_t cnt = 0;
-    for (auto&& [ukey, u, val] :
-         std::graph::views::vertexlist(g, [&g](vertex_t<G>&u) -> std::string& { return vertex_value(g, u); })) {
+    for (auto&& [ukey, u, val] : std::graph::views::vertexlist(
+               g2, [&g2](const vertex_t<G>& u) -> const std::string& { return vertex_value(g2, u); })) {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));

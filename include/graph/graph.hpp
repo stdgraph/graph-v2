@@ -114,6 +114,29 @@ concept has_contains_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G
   { contains_edge(g, ukey, vkey) } -> convertible_to<bool>;
 };
 
+//
+// ref_to_ptr
+// converts reference to pointer for internal storage in class to allow easy copying
+// pointers and values are stored as-is, but references become pointers
+//
+template <class T>
+struct ref_to_ptr {
+  T  value;
+  T& operator=(T& rhs) {
+    value = rhs;
+    return value;
+  }
+};
+template <class T>
+struct ref_to_ptr<T&> {
+  T* value;
+  T* operator=(T& rhs) {
+    value = &rhs;
+    return value;
+  }
+};
+
+
 namespace views {
   // experimental
 

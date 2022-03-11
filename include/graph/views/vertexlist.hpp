@@ -5,32 +5,15 @@
 // vertexlist(g) -> [key, vertex& [,value]]
 //
 // enable: for(auto&& [ukey, u]      : vertexlist(g))
-//    and: for(auto&& [ukey, u, val] : vertexlist(g,vertex_value)
+//    and: for(auto&& [ukey, u, val] : vertexlist(g,[&g](vertex_t<G>& u) -> decl_type(vertex_value(g)) { return vertex_value(g,u);})
+//
+// Note: trailing return type is required
 //
 namespace std::graph::views {
 
 template <class G, class VVF = void>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_key_t<G>>
 class vertexlist_iterator;
-
-// converts reference to pointer for internal storage in class to allow easy copying
-// pointers and values are stored as-is, but references become pointers
-template <class T>
-struct ref_to_ptr {
-  T  value;
-  T& operator=(T& rhs) {
-    value = rhs;
-    return value;
-  }
-};
-template <class T>
-struct ref_to_ptr<T&> {
-  T* value;
-  T* operator=(T& rhs) {
-    value = &rhs;
-    return value;
-  }
-};
 
 
 template <class G, class VVF>
@@ -41,7 +24,7 @@ public:
   using vertex_value_type = invoke_result_t<VVF, vertex_type&>;
 
 public:
-  vertexlist_iterator_base(graph_type& g, const VVF& value_fn) : g_(&g), value_fn_(value_fn) {}
+  vertexlist_iterator_base(graph_type& g, const VVF& value_fn) : value_fn_(&value_fn) {}
 
   vertexlist_iterator_base()                                = default;
   vertexlist_iterator_base(vertexlist_iterator_base const&) = default;
@@ -52,8 +35,7 @@ public:
   vertexlist_iterator_base& operator=(vertexlist_iterator_base&&) = default;
 
 protected:
-  graph_type*                  g_        = nullptr;
-  reference_wrapper<const VVF> value_fn_ = nullptr;
+  const VVF* value_fn_ = nullptr;
 };
 
 
@@ -90,7 +72,7 @@ public:
   using const_reference   = const value_type&;
 
 protected:
-  // avoid difficulty in undefined vertex reference value in value_type
+  // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type  = vertex_view<vertex_key_t<graph_type>, shadow_vertex_type*, ref_to_ptr<vertex_value_type>>;
@@ -111,7 +93,7 @@ public:
   constexpr reference operator*() const {
     value_.vertex = &*iter_;
     if constexpr (!is_void_v<vertex_value_type>)
-      value_.value = invoke(this->value_fn_, *iter_);
+      value_.value = invoke(*this->value_fn_, *iter_);
     return reinterpret_cast<reference>(value_);
   }
 
@@ -216,51 +198,34 @@ using vertexlist_view = ranges::subrange<vertexlist_iterator<G, VVF>, vertex_ite
 // vertexlist(g [,proj])
 //
 template <class G>
-constexpr auto vertexlist(G& g) {
-  return vertexlist_view<G>(vertices(g));
-  //return vertexlist_view<G>(begin(vertices(g)), ranges::end(vertices(g)));
+constexpr auto vertexlist(G&& g) {
+  return vertexlist_view<G>(vertices(forward<G>(g)));
 }
 
 template <class G, class VVF>
 requires invocable < VVF, vertex_t<G>
-& > constexpr auto vertexlist(G& g, const VVF& value_fn) {
+& > constexpr auto vertexlist(G&& g, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
-  return vertexlist_view<G, VVF>(iterator_type(g, value_fn, begin(vertices(g))), end(vertices(g)));
-
-  //using iter_type     = vertexlist_iterator<G, VVF>;
-  //using sentinal_type = typename iter_type::vertex_iterator_type;
-  //using rng           = ranges::subrange<iter_type, sentinal_type>;
-
-  //auto first = iter_type(ranges::begin(vertices(g)), proj);
-  //auto last  = sentinal_type(ranges::end(vertices(g)));
-  //return rng(move(first), move(last));
+  return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, begin(vertices(forward<G>(g)))),
+                                 end(vertices(forward<G>(g))));
 }
-
 
 //
 // vertexlist(g, first, last [,proj])
 //
 template <class G>
 requires ranges::random_access_range<vertex_range_t<G>>
-constexpr auto vertexlist(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
-  return vertexlist_view<G>(first, last, (first - begin(vertices(g))));
-  //using iter_type          = vertexlist_iterator<G, void>;
-  //using sentinal_type      = typename iter_type::vertex_iterator_type;
-  //using rng                = ranges::subrange<iter_type, sentinal_type>;
-  //vertex_key_t<G> start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)));
-  //return rng(iter_type(first, start_at), move(last));
+constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
+  using iterator_type = vertexlist_iterator<G>;
+  return vertexlist_view<G>(iterator_type(first, static_cast<vertex_key_t<G>>(first - begin(vertices(g)))), last);
 }
 
 template <class G, class VVF>
 requires ranges::random_access_range<vertex_range_t<G>> && invocable < VVF, vertex_t<G>
-& > constexpr auto vertexlist(G& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
+& > constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
-  return vertexlist_view<G, VVF>(iterator_type(g, value_fn, first), last, (first - begin(vertices(g))));
-  //using iter_type          = vertexlist_iterator<G, VVF>;
-  //using sentinal_type      = typename iter_type::vertex_iterator_type;
-  //using rng                = ranges::subrange<iter_type, sentinal_type>;
-  //vertex_key_t<G> start_at = static_cast<vertex_key_t<G>>(first - begin(vertices(g)));
-  //return rng(iter_type(first, start_at), move(last), proj);
+  return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, first), last,
+                                 (first - begin(vertices(forward<G>(g)))));
 }
 
 
