@@ -143,31 +143,6 @@ concept has_contains_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G
   { contains_edge(g, ukey, vkey) } -> convertible_to<bool>;
 };
 
-//
-// ref_to_ptr
-// converts reference to pointer for internal storage in class to allow easy copying
-// pointers and values are stored as-is, but references become pointers
-//
-template <class T>
-struct ref_to_ptr {
-  T  value   = {};
-  T& operator=(T& rhs) {
-    value = rhs;
-    return value;
-  }
-};
-template <class T>
-struct ref_to_ptr<T&> {
-  T* value     = nullptr;
-  ref_to_ptr() = default;
-  ref_to_ptr(T& rhs) : value(&rhs) {}
-  ~ref_to_ptr() = default;
-  T* operator   =(T& rhs) {
-    value = &rhs;
-    return value;
-  }
-};
-
 namespace views {
   // experimental
 
@@ -342,6 +317,38 @@ namespace views {
   inline constexpr bool is_sourced_v<neighbor_view<VKey, true, V, VV>> = true;
 
 } // namespace views
+
+
+/// <summary>
+/// ref_to_ptr changes a reference to a pointer and stores it as a pointer in value. 
+/// Pointers and values are stored as-is.
+/// 
+/// ref_to_ptr has similarities to reference_wrapper but there are some important
+/// differences when used in a view iterator implementation that are used by
+/// subrange including default constructible, movable and copyable.
+/// </summary>
+/// <typeparam name="T">The type to store</typeparam>
+namespace _detail {
+  template <class T>
+  struct ref_to_ptr {
+    T  value   = {};
+    T& operator=(T& rhs) {
+      value = rhs;
+      return value;
+    }
+  };
+  template <class T>
+  struct ref_to_ptr<T&> {
+    T* value     = nullptr;
+    ref_to_ptr() = default;
+    ref_to_ptr(T& rhs) : value(&rhs) {}
+    ~ref_to_ptr() = default;
+    T* operator   =(T& rhs) {
+      value = &rhs;
+      return value;
+    }
+  };
+} // namespace _detail
 
 } // namespace std::graph
 

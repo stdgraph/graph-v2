@@ -78,9 +78,9 @@ protected:
   //friend bool operator==(const edge_iterator& lhs, const derived_iterator& rhs) { return lhs == rhs.iter_; }
 
 protected:
-  mutable shadow_value_type value_ = {};
-  ref_to_ptr<graph_type>    g_;
-  edge_iterator             iter_;
+  mutable shadow_value_type       value_ = {};
+  _detail::ref_to_ptr<graph_type> g_;
+  edge_iterator                   iter_;
 };
 
 template <class G, bool Sourced, class EVF>
@@ -248,7 +248,6 @@ constexpr auto incidence(G&& g, vertex_reference_t<G> u) {
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_key_t<G> ukey) { return incidence(g, *find_vertex(g, ukey)); }
-
 
 
 } // namespace std::graph::views
