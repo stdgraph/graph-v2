@@ -1,7 +1,7 @@
 #pragma once
 
 #include "graph/graph.hpp"
-#include "graph/views/incidence_view.hpp"
+#include "graph/views/incidence.hpp"
 #include <queue>
 
 namespace std::graph {

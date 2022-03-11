@@ -2,7 +2,7 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
-#include "graph/views/incidence_view.hpp"
+#include "graph/views/incidence.hpp"
 #include "graph/views/adjacency_view.hpp"
 #include "graph/container/csr_graph.hpp"
 #include <cassert>

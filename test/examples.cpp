@@ -3,7 +3,7 @@
 #include "graph/graph.hpp"
 #include "graph/algorithm/dijkstra_book.hpp"
 #include "graph/views/vertexlist.hpp"
-#include "graph/views/incidence_view.hpp"
+#include "graph/views/incidence.hpp"
 #include "graph/views/adjacency_view.hpp"
 //#include "graph/view/edgelist_view.hpp"
 #include "graph/container/dynamic_graph.hpp"

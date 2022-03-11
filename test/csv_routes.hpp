@@ -27,7 +27,7 @@
 
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
-#include "graph/views/incidence_view.hpp"
+#include "graph/views/incidence.hpp"
 #include <set>
 #include <map>
 #include <deque>
