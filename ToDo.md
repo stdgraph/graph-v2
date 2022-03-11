@@ -15,10 +15,10 @@
     - [x] default implementations (e.g. degree==size)
     - [x] [deprecated] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
 - [ ] Views
-  - [ ] vertexlist
+  - [x] vertexlist
     - [x] for([ukey, u] : vertexlist(g))
-    - [ ] for([ukey, u, val] : vertexlist(g,fn(u))
-    - [ ] create CPO & vertexlist_view class
+    - [x] for([ukey, u, val] : vertexlist(g,fn(u))
+    - [x] create CPO & vertexlist_view class
   - [ ] incidence
     - [x] for([vkey,uv] : incidence(g,u))
     - [ ] for([vkey,uv, val] : incidence(g,u,fn(uv))
@@ -63,6 +63,7 @@
     - [ ] bipartite_graph<V1,V2,V3>
     - [ ] undirected_adjacency_list
     - [ ] directed_adjacency_vector
+    - [ ] constexpr graph (based on std::array)
 - [ ] Testing Patterns
   - [x] Validate content
   - [ ] Validate graph API

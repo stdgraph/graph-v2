@@ -193,21 +193,60 @@ protected:
 template <class G, class VVF = void>
 using vertexlist_view = ranges::subrange<vertexlist_iterator<G, VVF>, vertex_iterator_t<G>>;
 
+namespace access {
+  // ranges
+  TAG_INVOKE_DEF(vertexlist); // vertexlist(g)               -> vertices[ukey,u]
+                              // vertexlist(g,fn)            -> vertices[ukey,u,value]
+                              // vertexlist(g,first,last)    -> vertices[ukey,u]
+                              // vertexlist(g,first,last,fn) -> vertices[ukey,u,value]
+
+  template <class G>
+  concept _has_vertexlist_g_adl = vertex_range<G> && requires(G&& g) {
+    {vertexlist(g)};
+  };
+
+  template <class G, class VVF>
+  concept _has_vertexlist_g_fn_adl = vertex_range<G> && requires(G&& g, const VVF& fn) {
+    invocable<VVF, vertex_reference_t<G>>;
+    {vertexlist(g, fn)};
+  };
+
+  template <class G>
+  concept _has_vertexlist_i_i_adl = vertex_range<G> &&
+        requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi) {
+    {vertexlist(g, ui, vi)};
+  };
+
+  template <class G, class VVF>
+  concept _has_vertexlist_i_i_fn_adl = vertex_range<G> &&
+        requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi, const VVF& fn) {
+    invocable<VVF, vertex_reference_t<G>>;
+    {vertexlist(g, ui, vi, fn)};
+  };
+
+
+} // namespace access
 
 //
 // vertexlist(g [,proj])
 //
 template <class G>
 constexpr auto vertexlist(G&& g) {
-  return vertexlist_view<G>(vertices(forward<G>(g)));
+  if constexpr (access::_has_vertexlist_g_adl<G>)
+    return access::vertexlist(g);
+  else
+    return vertexlist_view<G>(vertices(forward<G>(g)));
 }
 
 template <class G, class VVF>
-requires invocable < VVF, vertex_t<G>
-& > constexpr auto vertexlist(G&& g, const VVF& value_fn) {
+requires invocable<VVF, vertex_reference_t<G>>
+constexpr auto vertexlist(G&& g, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
-  return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, begin(vertices(forward<G>(g)))),
-                                 end(vertices(forward<G>(g))));
+  if constexpr (access::_has_vertexlist_g_fn_adl<G, VVF>)
+    return access::vertexlist(forward<G>(g), value_fn);
+  else
+    return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, begin(vertices(forward<G>(g)))),
+                                   end(vertices(forward<G>(g))));
 }
 
 //
@@ -217,15 +256,21 @@ template <class G>
 requires ranges::random_access_range<vertex_range_t<G>>
 constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
   using iterator_type = vertexlist_iterator<G>;
-  return vertexlist_view<G>(iterator_type(first, static_cast<vertex_key_t<G>>(first - begin(vertices(g)))), last);
+  if constexpr (access::_has_vertexlist_i_i_adl<G>)
+    return access::vertexlist(g, first, last);
+  else
+    return vertexlist_view<G>(iterator_type(first, static_cast<vertex_key_t<G>>(first - begin(vertices(g)))), last);
 }
 
 template <class G, class VVF>
-requires ranges::random_access_range<vertex_range_t<G>> && invocable < VVF, vertex_t<G>
-& > constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
+requires ranges::random_access_range<vertex_range_t<G>> && invocable<VVF, vertex_reference_t<G>>
+constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
-  return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, first), last,
-                                 (first - begin(vertices(forward<G>(g)))));
+  if constexpr (access::_has_vertexlist_i_i_fn_adl<G, VVF>)
+    return access::vertexlist(g, first, last, value_fn);
+  else
+    return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, first), last,
+                                   (first - begin(vertices(forward<G>(g)))));
 }
 
 
