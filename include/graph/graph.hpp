@@ -121,7 +121,7 @@ concept has_contains_edge = requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G
 //
 template <class T>
 struct ref_to_ptr {
-  T  value;
+  T  value   = {};
   T& operator=(T& rhs) {
     value = rhs;
     return value;
@@ -129,13 +129,15 @@ struct ref_to_ptr {
 };
 template <class T>
 struct ref_to_ptr<T&> {
-  T* value;
+  T* value = nullptr;
+  ref_to_ptr() = default;
+  ref_to_ptr(T& rhs) : value(&rhs) {}
+  ~ref_to_ptr() = default;
   T* operator=(T& rhs) {
     value = &rhs;
     return value;
   }
 };
-
 
 namespace views {
   // experimental
@@ -294,6 +296,15 @@ namespace views {
   template <class T, class VKey, class EV>
   concept copyable_edge = convertible_to<T, copyable_edge_t<VKey, EV>>;
 
+  //
+  // is_sourced<G>
+  //
+  template <class T>
+  inline constexpr bool is_sourced_v = false;
+  template <class VKey, class V, class VV>
+  inline constexpr bool is_sourced_v<edge_view<VKey, true, V, VV>> = true;
+  template <class VKey, class V, class VV>
+  inline constexpr bool is_sourced_v<neighbor_view<VKey, true, V, VV>> = true;
 
 } // namespace views
 

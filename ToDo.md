@@ -23,6 +23,10 @@
     - [x] for([vkey,uv] : incidence(g,u))
     - [ ] for([vkey,uv, val] : incidence(g,u,fn(uv))
     - [ ] create CPO & incidence_view class
+  - [ ] sourced_incidence
+    - [x] for([ukey,vkey,uv] : sourced_incidence(g,u))
+    - [ ] for([ukey,vkey,uv, val] : sourced__incidence(g,u,fn(uv))
+    - [ ] create CPO & sourced_incidence_view class
   - [ ] adjacency
     - [x] for([vkey, v] : adjacency(g,u)
     - [ ] for([vkey, v, val] : adjacency(g,u,fn(v))

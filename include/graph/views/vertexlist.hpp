@@ -79,7 +79,9 @@ protected:
 
 public:
   vertexlist_iterator(graph_type& g, const VVF& value_fn, vertex_iterator_type iter, vertex_key_type start_at = 0)
-        : base_type(g, value_fn), value_{start_at, nullptr, nullptr}, iter_(iter) {}
+        : base_type(g, value_fn), iter_(iter) {
+    value_.key = start_at;
+  }
 
   constexpr vertexlist_iterator()                           = default;
   constexpr vertexlist_iterator(const vertexlist_iterator&) = default;
@@ -133,7 +135,7 @@ public:
   using vertex_value_type     = typename base_type::vertex_value_type;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = vertex_view<const vertex_key_t<graph_type>, vertex_reference_type, void>;
+  using value_type        = vertex_view<const vertex_key_type, vertex_reference_type, void>;
   using difference_type   = ranges::range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -145,7 +147,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
-  using shadow_value_type  = vertex_view<vertex_key_t<graph_type>, shadow_vertex_type*, void>;
+  using shadow_value_type  = vertex_view<vertex_key_type, shadow_vertex_type*, void>;
 
 public:
   vertexlist_iterator(graph_type& g) : base_type(), iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
