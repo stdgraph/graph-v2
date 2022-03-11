@@ -12,11 +12,15 @@
 
 namespace std::graph {
 // Template parameters:
-// G  - Graph
-// EV - Edge Value (user-defined or void)
-// VV - Vertex Value (user-defined or void)
-// GV - Graph Value (user-defined or void)
-// ER - Edge Range
+// G    - Graph
+// GV   - Graph Value (user-defined or void)
+// V    - Vertex type
+// VKey - Vertex Key type
+// VV   - Vertex Value (user-defined or void)
+// VR   - Vertex Range
+// E    - Edge type
+// EV   - Edge Value (user-defined or void)
+// ER   - Edge Range
 //
 // Parameters:
 // g         - graph reference
@@ -29,6 +33,45 @@ namespace std::graph {
 // edge value types
 template <class G>
 using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_t<G>>()));
+
+/// <summary>
+/// Override for an edge type where source and target are unordered
+/// For instance, given:
+///      vertex_iterator_t<G> ui = ...;
+///      for(auto&& uv : edges(g,*ui)) ...
+/// if(source_key(g,u) != vertex_key(ui)) then target_key(g,u) == vertex_key(ui)
+///
+/// Example:
+///  namespace my_namespace {
+///      template<class X>
+///      class my_graph { ... };
+///  }
+///  namespace std::graph {
+///     template<class X>
+///     inline constexpr bool is_unordered_edge_v<edge_t<my_namespace::my_graph<X>>> = true;
+///  }
+/// </summary>
+/// <typeparam name="E">The edge type with unordered source and target</typeparam>
+template <class E>
+inline constexpr bool is_unordered_edge_v = false;
+
+/// <summary>
+/// Override for a graph type where edges are defined densely in a matrix to allow for
+/// optimized algorithms can take advantage of the memory layout.
+///
+/// Example:
+///  namespace my_namespace {
+///      template<class X>
+///      class my_graph { ... };
+///  }
+///  namespace std::graph {
+///     template<class X>
+///     inline constexpr bool is_adjacency_matrix_v<my_namespace::my_graph<X>> = true;
+///  }
+/// </summary>
+/// <typeparam name="G"></typeparam>
+template <class G>
+inline constexpr bool is_adjacency_matrix_v = false;
 
 //
 // graph concepts
@@ -52,8 +95,10 @@ concept sourced_edge_range =
   source_key(g, uv);
   source(g, uv);
   edge_key(g, uv);
+#  ifdef ENABLE_OTHER_FNC
   other_key(g, uv, ukey);
   other_vertex(g, uv, u);
+#  endif
 };
 
 template <class G>
@@ -66,26 +111,10 @@ template <class G>
 concept sourced_incidence_graph = incidence_graph<G> && sourced_edge_range<G, vertex_edge_range_t<G>>;
 
 template <class G>
-concept adjacency_matrix = false; // tag algorithms that can take advantage of matrix layout
+concept unordered_incidence_graph = sourced_incidence_graph<G> && is_unordered_edge_v<edge_t<G>>;
 
-#  ifdef FUTURE
-// use other_key & other_vertex existence to identify a graph as unordered?
-// overridable per graph to direct algorithm
-template <class G, class ER>
-using is_ordered = false_type;
-template <class G, class ER>
-inline constexpr bool is_ordered_v = is_ordered<G, ER>::value;
-
-template <class G, class ER>
-using is_unordered = false_type;
-template <class G, class ER>
-inline constexpr bool is_unordered_v = is_unordered<G, ER>::value;
-
-template <class G, class ER>
-using is_undefined_order = bool_constant<!is_ordered_v<G, ER> && !is_unordered_v<G, ER>>;
-template <class G, class ER>
-inline constexpr bool is_undefined_order_v = is_undefined_order_v<G, ER>;
-#  endif //FUTURE
+template <class G>
+concept adjacency_matrix = is_adjacency_matrix_v<G>;
 
 //
 // property concepts
@@ -129,11 +158,11 @@ struct ref_to_ptr {
 };
 template <class T>
 struct ref_to_ptr<T&> {
-  T* value = nullptr;
+  T* value     = nullptr;
   ref_to_ptr() = default;
   ref_to_ptr(T& rhs) : value(&rhs) {}
   ~ref_to_ptr() = default;
-  T* operator=(T& rhs) {
+  T* operator   =(T& rhs) {
     value = &rhs;
     return value;
   }
@@ -144,8 +173,8 @@ namespace views {
 
   //
   // vertex_view
-  // for(auto&& [ukey, u, value] : vertexlist(g, [](vertex_reference_t<G> u) { return ...; } )
   // for(auto&& [ukey, u]        : vertexlist(g))
+  // for(auto&& [ukey, u, value] : vertexlist(g, [](vertex_reference_t<G> u) { return ...; } )
   //
   template <class VKey, class V, class VV>
   struct vertex_view {
@@ -173,6 +202,12 @@ namespace views {
 
   //
   // edge_view
+  //
+  // for(auto&& [target_key, uv]        : incidence(g,u))
+  // for(auto&& [target_key, uv, value] : incidence(g,u, [](edge_reference_t<G> uv) { return ...; })
+  //
+  // for(auto&& [source_key, target_key, uv]        : incidence(g,u))
+  // for(auto&& [source_key, target_key, uv, value] : incidence(g,u, [](edge_reference_t<G> uv) { return ...; })
   //
   template <class VKey, bool Sourced, class E, class EV>
   struct edge_view {

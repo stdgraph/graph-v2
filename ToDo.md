@@ -15,21 +15,30 @@
     - [x] default implementations (e.g. degree==size)
     - [x] [deprecated] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
 - [ ] Views
-  - [x] vertexlist
+  - [ ] vertexlist
     - [x] for([ukey, u] : vertexlist(g))
     - [x] for([ukey, u, val] : vertexlist(g,fn(u))
     - [x] create CPO & vertexlist_view class
-  - [ ] incidence
+    - [ ] refactor to have similar structure as incidence w/ base_vertexlist_iterator holding common values
+  - [ ] **incidence**
     - [x] for([vkey,uv] : incidence(g,u))
     - [ ] for([vkey,uv, val] : incidence(g,u,fn(uv))
+    - [ ] support unordered graph
     - [ ] create CPO & incidence_view class
-  - [ ] sourced_incidence
+  - [ ] **sourced_incidence**
     - [x] for([ukey,vkey,uv] : sourced_incidence(g,u))
     - [ ] for([ukey,vkey,uv, val] : sourced__incidence(g,u,fn(uv))
+    - [ ] support unordered graph
     - [ ] create CPO & sourced_incidence_view class
   - [ ] adjacency
     - [x] for([vkey, v] : adjacency(g,u)
     - [ ] for([vkey, v, val] : adjacency(g,u,fn(v))
+    - [ ] support unordered graph
+    - [ ] create CPO & adjacency_view class
+  - [ ] sourced_adjacency
+    - [x] for([vkey, v] : adjacency(g,u)
+    - [ ] for([vkey, v, val] : adjacency(g,u,fn(v))
+    - [ ] support unordered graph
     - [ ] create CPO & adjacency_view class
   - [ ] edgelist
     - [ ] for([ukey,vkey,uv]: edgelist(g))
@@ -57,17 +66,17 @@
 - Containers (data structures)
     - [x] csr_graph (for P1709)
       - [ ] Enable concepts
-      - [ ] Support VV=void
+      - [ ] **Support VV=void**
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] dynamic_graph
       - [ ] Enable concepts
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
       - [ ] graph with map-based vertices (requires different algorithm impl)
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
+    - [ ] constexpr graph based on std::array
     - [ ] bipartite_graph<V1,V2,V3>
     - [ ] undirected_adjacency_list
     - [ ] directed_adjacency_vector
-    - [ ] constexpr graph (based on std::array)
 - [ ] Testing Patterns
   - [x] Validate content
   - [ ] Validate graph API
@@ -89,7 +98,7 @@
   - [ ] Validate address sanitizer build
   - [ ] Support Clang (waiting for full concepts support)
   - [ ] Performance tests
-  - [ ] **Push to github** for Andrew
+  - [ ] Make graph-v2 public
 - Feature & performance comparison
   - [ ] boost::graph
   - [ ] NWGraph
@@ -103,7 +112,8 @@
     - [ ] Add link to paper
     - [ ] Add Getting Started
   - [ ] P1709
-    - [ ] Google Doc --> LaTex
+    - [x] Google Doc --> LaTex
+    - [ ] Add sections
 - Feedback
 - Readiness
   - [ ] Feb-2025 deadline for C++26
@@ -129,7 +139,6 @@
 - [ ] Does a LaTeX document take fewer pages than equivilent in Google Docs?
 - [ ] SG19 Questions
   - [ ] key vs. id?
-  - [ ] use of subrange instead of explicit definition of vertexlist_view class?
 - [ ] Can CSR edges have a void value? (e.g. no v vector)
 - [ ] How easy is it to write a view w/o the graph API?
 - [ ] How to validate constexpr? (need to use std::array)
@@ -161,6 +170,7 @@
   - [ ] Option 3: use C++ types to distinguish vertex types
     - [ ] invasive to the existing design and would make it significantly more complicated
     - [ ] would delay existing design by months and there's no guarantee to be successful
+- [ ] Should we worry about row-major & column-major ordering of adjacency_matrix? always assume row-major?
 
 ## Resolved
 ### ToDo Completed
@@ -171,11 +181,11 @@
   - [x] ranges
     - [x] vertex_range
     - [x] vertex_edge_range
-    - [x] vertex_vertex_range
-    - [x] edge_range
+  - [x] add overridable is_undirected_edge_v<E> & undirected_incidence_graph<G> concept
+  - [x] add overridable is_adjacencey_matrix_v<G>
 - Algorithms
 - Containers (data structures)
-    - [x] dynamic_graph_ (adjustable to different vertex & edge containers)
+    - [x] dynamic_graph (adjustable to different vertex & edge containers)
       - [x] Implement graph, vector, edge
       - [x] Load from CSV file
       - [x] Add \<bool sourced\> template parameter to include source_key
@@ -191,6 +201,7 @@
   - [x] Use CMake Presets; must work with both VS & VSCode
   - [x] Use conan for libraries when possible: catch2, fmt, spdlog, range-v3
   - [x] Include csv_parser library
+  - [x] Create graph-v2 repository in github
 - Documentation
 - Feedback
 

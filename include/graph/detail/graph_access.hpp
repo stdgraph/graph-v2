@@ -1,5 +1,8 @@
 #pragma once
 
+// "other" functions not needed if we can swap source/target in views when needed for undirected_incidence_graph?
+//#define ENABLE_OTHER_FNC
+
 // (included from graph.hpp)
 #include "tag_invoke.hpp"
 
@@ -62,11 +65,13 @@ namespace access {
   TAG_INVOKE_DEF(edge_key); // edge_key(g,uv) -> pair<VKey,VKey>
                             // default = pair(source_key(g,uv),target_key(g,uv))
 
+#  ifdef ENABLE_OTHER_FNC
   TAG_INVOKE_DEF(other_key); // other_key(g,uv,xkey) -> VKey (ukey or vkey)
                              // default = xkey != target_key(g,uv) ? target_key(g,uv) : source_key(g,uv)
 
   TAG_INVOKE_DEF(other_vertex); // other_vertex(g,uv,x) -> y (u or v)
                                 // default = x != &target(g,uv) ? target(g,uv) : source(g,uv)
+#  endif
 
   // find
   TAG_INVOKE_DEF(find_vertex); // find_vertex(g,ukey) -> ui
@@ -78,7 +83,7 @@ namespace access {
   TAG_INVOKE_DEF(contains_edge); // contains_edge(g,ukey,vkey) -> bool
 } // namespace access
 
-// Additional functions to consider
+// Additional functions to consider for future
 //  reserve_vertices(g,n) - noop if n/a
 //  reserve_edges(g,n)    - noop if n/a
 //
@@ -277,6 +282,7 @@ auto edge_key(G&& g, edge_reference_t<G> uv) {
     return pair(source_key(g, uv), target_key(g, uv));
 }
 
+#  ifdef ENABLE_OTHER_FNC
 // other_key
 //
 namespace access {
@@ -322,6 +328,7 @@ auto&& other_vertex(G&& g, edge_reference_t<G> uv, vertex_reference_t<G> x) {
   else if constexpr (_can_eval_other_vertex<G, vertex_edge_range_t<G>>)
     return &x != &target(g, uv) ? target(g, uv) : source(g, uv);
 }
+#  endif //ENABLE_OTHER_FNC
 
 // find_vertex
 //
