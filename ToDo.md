@@ -26,12 +26,9 @@
     - [x] for([vkey,uv, val] : incidence(g,u,fn(uv))
     - [x] for([ukey, vkey,uv] : sourced_incidence(g,u))
     - [x] for([ukey, vkey,uv, val] : sourced_incidence(g,u,fn(uv))
-    - [x] design
-      - [x] impl operator++ in base class? no
-      - [x] merge base & derived? yes
-      - [x] compare ref_to_ptr impl to reference_wrapper for completeness
     - [ ] support unordered graph
     - [ ] create CPO & incidence_view class
+      - [ ] replace use of EVF with Fnc Signature
   - [ ] **sourced_incidence**
     - [x] for([ukey,vkey,uv] : sourced_incidence(g,u))
     - [ ] for([ukey,vkey,uv, val] : sourced__incidence(g,u,fn(uv))
