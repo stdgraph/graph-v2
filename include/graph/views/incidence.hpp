@@ -12,12 +12,9 @@
 namespace std::graph::views {
 
 
-template <class G, bool Sourced, class EVFResult, class Derived>
-class incidence_iterator_base;
-
 template <class G, bool Sourced = false, class EVF = void>
 requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
-class incidence_iterator;
+      class incidence_iterator;
 
 
 /// <summary>
@@ -27,7 +24,7 @@ class incidence_iterator;
 /// <typeparam name="EVF">Edge Value Function</typeparam>
 template <class G, bool Sourced, class EVF>
 requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
-class incidence_iterator {
+      class incidence_iterator {
 public:
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
@@ -101,10 +98,9 @@ private: // member variables
 };
 
 
-
 template <class G, bool Sourced>
-requires(!Sourced || (Sourced && sourced_incidence_graph<G>))  //
-class incidence_iterator<G, Sourced, void> {
+requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
+      class incidence_iterator<G, Sourced, void> {
 public:
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
@@ -175,23 +171,18 @@ private: // member variables
 };
 
 
+template <class G, bool Sourced, class EVF>
+using incidence_view = ranges::subrange<incidence_iterator<G, Sourced, EVF>, vertex_edge_iterator_t<G>>;
+
 //
 // incidence(g,u)
 // incidence(g,ukey)
-// 
+//
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_reference_t<G> u) {
-  using iter_type     = incidence_iterator<G>;
-  using sentinal_type = typename iter_type::edge_iterator;
-
-  static_assert(input_or_output_iterator<iter_type>);
-
-  using SR = ranges::subrange<iter_type, sentinal_type>;
-
-  auto first = iter_type(g, ranges::begin(edges(g, u)));
-  auto last  = sentinal_type(ranges::end(edges(g, u)));
-  return SR(first, last);
+  using iterator_type = incidence_iterator<G, false, void>;
+  return incidence_view<G, false, void>(iterator_type(g, ranges::begin(edges(g, u))), ranges::end(edges(g, u)));
 }
 
 template <class G>
@@ -206,16 +197,8 @@ constexpr auto incidence(G&& g, vertex_key_t<G> ukey) { return incidence(g, *fin
 template <class G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_reference_t<G> u, const EVF& evf) {
-  using iter_type     = incidence_iterator<G, false, EVF>;
-  using sentinal_type = typename iter_type::edge_iterator;
-
-  static_assert(input_or_output_iterator<iter_type>);
-
-  using SR = ranges::subrange<iter_type, sentinal_type>;
-
-  auto first = iter_type(g, ranges::begin(edges(g, u)), evf);
-  auto last  = sentinal_type(ranges::end(edges(g, u)));
-  return SR(first, last);
+  using iterator_type = incidence_iterator<G, false, EVF>;
+  return incidence_view<G, false, EVF>(iterator_type(g, ranges::begin(edges(g, u)), evf), ranges::end(edges(g, u)));
 }
 
 template <class G, class EVF>
@@ -232,16 +215,8 @@ constexpr auto incidence(G&& g, vertex_key_t<G> ukey, const EVF& evf) {
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_incidence(G&& g, vertex_reference_t<G> u) {
-  using iter_type     = incidence_iterator<G,true>;
-  using sentinal_type = typename iter_type::edge_iterator;
-
-  static_assert(input_or_output_iterator<iter_type>);
-
-  using SR = ranges::subrange<iter_type, sentinal_type>;
-
-  auto first = iter_type(g, ranges::begin(edges(g, u)));
-  auto last  = sentinal_type(ranges::end(edges(g, u)));
-  return SR(first, last);
+  using iterator_type = incidence_iterator<G, true, void>;
+  return incidence_view<G, true, void>(iterator_type(g, ranges::begin(edges(g, u))), ranges::end(edges(g, u)));
 }
 
 template <class G>
@@ -256,16 +231,8 @@ constexpr auto sourced_incidence(G&& g, vertex_key_t<G> ukey) { return sourced_i
 template <class G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_incidence(G&& g, vertex_reference_t<G> u, const EVF& evf) {
-  using iter_type     = incidence_iterator<G, true, EVF>;
-  using sentinal_type = typename iter_type::edge_iterator;
-
-  static_assert(input_or_output_iterator<iter_type>);
-
-  using SR = ranges::subrange<iter_type, sentinal_type>;
-
-  auto first = iter_type(g, ranges::begin(edges(g, u)), evf);
-  auto last  = sentinal_type(ranges::end(edges(g, u)));
-  return SR(first, last);
+  using iterator_type = incidence_iterator<G, true, EVF>;
+  return incidence_view<G, true, EVF>(iterator_type(g, ranges::begin(edges(g, u)), evf), ranges::end(edges(g, u)));
 }
 
 template <class G, class EVF>
