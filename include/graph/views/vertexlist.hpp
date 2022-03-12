@@ -17,51 +17,17 @@ class vertexlist_iterator;
 
 
 template <class G, class VVF>
-class vertexlist_iterator_base {
-public:
-  using graph_type        = G;
-  using vertex_type       = vertex_t<graph_type>;
-  using vertex_value_type = invoke_result_t<VVF, vertex_type&>;
-
-public:
-  vertexlist_iterator_base(graph_type& g, const VVF& value_fn) : value_fn_(&value_fn) {}
-
-  vertexlist_iterator_base()                                = default;
-  vertexlist_iterator_base(vertexlist_iterator_base const&) = default;
-  vertexlist_iterator_base(vertexlist_iterator_base&&)      = default;
-  ~vertexlist_iterator_base()                               = default;
-
-  vertexlist_iterator_base& operator=(const vertexlist_iterator_base&) = default;
-  vertexlist_iterator_base& operator=(vertexlist_iterator_base&&) = default;
-
-protected:
-  const VVF* value_fn_ = nullptr;
-};
-
-
-template <class G>
-class vertexlist_iterator_base<G, void> {
-public:
-  using graph_type        = G;
-  using vertex_type       = vertex_t<graph_type>;
-  using vertex_value_func = void;
-  using vertex_value_type = void;
-};
-
-
-template <class G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_key_t<G>>
-class vertexlist_iterator : public vertexlist_iterator_base<G, VVF> {
+class vertexlist_iterator  {
 public:
   using graph_type            = G;
-  using base_type             = vertexlist_iterator_base<graph_type, VVF>;
   using vertex_key_type       = vertex_key_t<graph_type>;
   using vertex_range_type     = vertex_range_t<graph_type>;
   using vertex_iterator_type  = ranges::iterator_t<vertex_range_type>;
   using vertex_type           = vertex_t<graph_type>;
   using vertex_reference_type = ranges::range_reference_t<vertex_range_type>;
-  using vertex_value_func     = typename base_type::vertex_value_type;
-  using vertex_value_type     = typename base_type::vertex_value_type;
+  using vertex_value_func     = VVF;
+  using vertex_value_type     = invoke_result_t<VVF, vertex_type&>;
 
   using iterator_category = forward_iterator_tag;
   using value_type        = vertex_view<const vertex_key_t<graph_type>, vertex_reference_type, vertex_value_type>;
@@ -79,7 +45,7 @@ protected:
 
 public:
   vertexlist_iterator(graph_type& g, const VVF& value_fn, vertex_iterator_type iter, vertex_key_type start_at = 0)
-        : base_type(g, value_fn), iter_(iter) {
+        : iter_(iter), value_fn_(&value_fn) {
     value_.key = start_at;
   }
 
@@ -116,23 +82,24 @@ public:
 protected:
   mutable shadow_value_type value_ = {};
   vertex_iterator_type      iter_;
+  const VVF*                value_fn_ = nullptr;
 
   friend bool operator==(const vertex_iterator_type& lhs, const vertexlist_iterator& rhs) { return lhs == rhs.iter_; }
 };
 
+
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_key_t<G>>
-class vertexlist_iterator<G, void> : public vertexlist_iterator_base<G, void> {
+class vertexlist_iterator<G, void> {
 public:
   using graph_type            = G;
-  using base_type             = vertexlist_iterator_base<graph_type, void>;
   using vertex_key_type       = vertex_key_t<graph_type>;
   using vertex_range_type     = vertex_range_t<graph_type>;
   using vertex_iterator_type  = ranges::iterator_t<vertex_range_type>;
   using vertex_type           = vertex_t<graph_type>;
   using vertex_reference_type = ranges::range_reference_t<vertex_range_type>;
-  using vertex_value_func     = typename base_type::vertex_value_type;
-  using vertex_value_type     = typename base_type::vertex_value_type;
+  using vertex_value_func     = void;
+  using vertex_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
   using value_type        = vertex_view<const vertex_key_type, vertex_reference_type, void>;
@@ -150,9 +117,9 @@ protected:
   using shadow_value_type  = vertex_view<vertex_key_type, shadow_vertex_type*, void>;
 
 public:
-  vertexlist_iterator(graph_type& g) : base_type(), iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
+  vertexlist_iterator(graph_type& g) : iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
   vertexlist_iterator(vertex_iterator_type iter, vertex_key_type start_at = 0)
-        : base_type(), value_{start_at, nullptr}, iter_(iter) {}
+        : value_{start_at, nullptr}, iter_(iter) {}
 
   constexpr vertexlist_iterator()                           = default;
   constexpr vertexlist_iterator(const vertexlist_iterator&) = default;

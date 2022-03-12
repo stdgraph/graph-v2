@@ -23,7 +23,13 @@
     - [ ] refactor to have similar structure as incidence w/ base_vertexlist_iterator holding common values
   - [ ] **incidence**
     - [x] for([vkey,uv] : incidence(g,u))
-    - [ ] for([vkey,uv, val] : incidence(g,u,fn(uv))
+    - [x] for([vkey,uv, val] : incidence(g,u,fn(uv))
+    - [x] for([ukey, vkey,uv] : sourced_incidence(g,u))
+    - [x] for([ukey, vkey,uv, val] : sourced_incidence(g,u,fn(uv))
+    - [ ] design
+      - [ ] impl operator++ in base class?
+      - [x] merge base & derived?
+      - [x] compare ref_to_ptr impl to reference_wrapper for completeness
     - [ ] support unordered graph
     - [ ] create CPO & incidence_view class
   - [ ] **sourced_incidence**

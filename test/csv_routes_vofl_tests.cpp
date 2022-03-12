@@ -54,7 +54,7 @@ auto find_frankfurt(G&& g) {
 }
 
 
-TEST_CASE("Germany routes CSV+vol dijkstra_book", "[csv][vofl][germany][dijkstra][book]") {
+TEST_CASE("Germany routes CSV+vofl dijkstra_book", "[csv][vofl][germany][dijkstra][book]") {
   init_console();
   using G = routes_volf_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");

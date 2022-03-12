@@ -120,9 +120,9 @@ class dynamic_edge_target {
 public:
   using vertex_key_type = VKey;
   using value_type      = EV;
-  using graph_type      = dynamic_graph<EV, VV, GV, false, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<EV, VV, GV, false, VKey, Traits>;
-  using edge_type       = dynamic_edge<EV, VV, GV, false, VKey, Traits>;
+  using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
+  using vertex_type     = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
+  using edge_type       = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
 
 public:
   constexpr dynamic_edge_target(vertex_key_type target_key) : target_key_(target_key) {}
@@ -157,9 +157,6 @@ private:
   }
 };
 
-template <class VV, class GV, bool Sourced, class VKey, class Traits>
-class dynamic_edge_target<void, VV, GV, Sourced, VKey, Traits> {};
-
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge_source
 //
@@ -168,9 +165,9 @@ class dynamic_edge_source {
 public:
   using vertex_key_type = VKey;
   using value_type      = EV;
-  using graph_type      = dynamic_graph<EV, VV, GV, false, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<EV, VV, GV, false, VKey, Traits>;
-  using edge_type       = dynamic_edge<EV, VV, GV, false, VKey, Traits>;
+  using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
+  using vertex_type     = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
+  using edge_type       = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
 
 public:
   constexpr dynamic_edge_source(vertex_key_type source_key) : source_key_(source_key) {}
@@ -205,8 +202,8 @@ private:
   }
 };
 
-template <class VV, class GV, bool Sourced, class VKey, class Traits>
-class dynamic_edge_source<void, VV, GV, Sourced, VKey, Traits> {};
+template <class EV, class VV, class GV, class VKey, class Traits>
+class dynamic_edge_source<EV, VV, GV, false, VKey, Traits> {};
 
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge_value
@@ -273,11 +270,11 @@ public:
   using edge_type       = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
 
 public:
-  constexpr dynamic_edge(vertex_key_type target_key, vertex_key_type source_key)
+  constexpr dynamic_edge(vertex_key_type source_key, vertex_key_type target_key)
         : base_target_type(target_key), base_source_type(source_key) {}
-  constexpr dynamic_edge(vertex_key_type target_key, vertex_key_type source_key, const value_type& val)
+  constexpr dynamic_edge(vertex_key_type source_key, vertex_key_type target_key, const value_type& val)
         : base_target_type(target_key), base_source_type(source_key), base_value_type(val) {}
-  constexpr dynamic_edge(vertex_key_type target_key, vertex_key_type source_key, value_type&& val)
+  constexpr dynamic_edge(vertex_key_type source_key, vertex_key_type target_key, value_type&& val)
         : base_target_type(target_key), base_source_type(source_key), base_value_type(move(val)) {}
 
   constexpr dynamic_edge()                    = default;
@@ -306,7 +303,7 @@ public:
   using edge_type       = dynamic_edge<void, VV, GV, true, VKey, Traits>;
 
 public:
-  constexpr dynamic_edge(vertex_key_type target_key, vertex_key_type source_key)
+  constexpr dynamic_edge(vertex_key_type source_key, vertex_key_type target_key)
         : base_target_type(target_key), base_source_type(source_key) {}
 
   constexpr dynamic_edge()                    = default;
@@ -713,10 +710,18 @@ public:
       }
 
       auto&& edge_adder = push_or_insert(vertices_[e.source_key].edges());
-      if constexpr (is_void_v<EV>) {
-        edge_adder(edge_type(move(e.target_key)));
+      if constexpr (Sourced) {
+        if constexpr (is_void_v<EV>) {
+          edge_adder(edge_type(move(e.source_key), move(e.target_key)));
+        } else {
+          edge_adder(edge_type(move(e.source_key), move(e.target_key), move(e.value)));
+        }
       } else {
-        edge_adder(edge_type(move(e.target_key), move(e.value)));
+        if constexpr (is_void_v<EV>) {
+          edge_adder(edge_type(move(e.target_key)));
+        } else {
+          edge_adder(edge_type(move(e.target_key), move(e.value)));
+        }
       }
     }
   }
@@ -744,10 +749,18 @@ public:
       }
 
       auto&& edge_adder = push_or_insert(vertices_[e.source_key].edges());
-      if constexpr (is_void_v<EV>) {
-        edge_adder(edge_type(move(e.target_key)));
+      if constexpr (Sourced) {
+        if constexpr (is_void_v<EV>) {
+          edge_adder(edge_type(move(e.source_key), move(e.target_key)));
+        } else {
+          edge_adder(edge_type(move(e.source_key), move(e.target_key), move(e.value)));
+        }
       } else {
-        edge_adder(edge_type(move(e.target_key), move(e.value)));
+        if constexpr (is_void_v<EV>) {
+          edge_adder(edge_type(move(e.target_key)));
+        } else {
+          edge_adder(edge_type(move(e.target_key), move(e.value)));
+        }
       }
     }
   }
@@ -848,6 +861,9 @@ public:
   using edges_type          = typename Traits::edges_type;
   using edge_allocator_type = typename edges_type::allocator_type;
   using edge_type           = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
+
+  constexpr inline const static bool sourced = Sourced;
+
 
   dynamic_graph()                     = default;
   dynamic_graph(const dynamic_graph&) = default;
