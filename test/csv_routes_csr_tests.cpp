@@ -2,8 +2,7 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
-#include "graph/views/incidence.hpp"
-#include "graph/views/adjacency_view.hpp"
+#include "graph/views/neighbors.hpp"
 #include "graph/container/csr_graph.hpp"
 #include <cassert>
 
@@ -185,60 +184,6 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   }
 
 #if 0
-  SECTION("const_incidence_view") {
-    const G& g2 = g;
-
-    std::graph::views::const_incidence_iterator<G> i0; // default construction
-
-    auto& u = g2[frankfurt_key];
-
-    std::graph::views::const_incidence_iterator<G> i1(g2, u);
-    {
-      auto&& [vkey, uv] = *i1;
-      static_assert(is_const_v<decltype(vkey)>);
-      static_assert(is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 4);
-    }
-    {
-      auto&& [vkey, uv] = *++i1;
-      REQUIRE(vkey == 5);
-      auto i1b = i1;
-      REQUIRE(i1b == i1);
-    }
-
-    size_t cnt = 0;
-    for (auto&& [vkey, uv] : std::graph::views::edges_view(g, u)) {
-      ++cnt;
-    }
-    REQUIRE(cnt == 3);
-  }
-
-  SECTION("incidence_view") {
-    std::graph::views::incidence_iterator<G> i0; // default construction
-
-    auto& u = g[frankfurt_key];
-
-    std::graph::views::incidence_iterator<G> i1(g, u);
-    {
-      auto&& [vkey, uv] = *i1;
-      static_assert(is_const_v<decltype(vkey)>);
-      static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 4);
-    }
-    {
-      auto&& [vkey, uv] = *++i1;
-      REQUIRE(vkey == 5);
-      auto i1b = i1;
-      REQUIRE(i1b == i1);
-    }
-
-    size_t cnt = 0;
-    for (auto&& [vkey, uv] : std::graph::views::edges_view(g, u)) {
-      ++cnt;
-    }
-    REQUIRE(cnt == 3);
-  }
-
   SECTION("const_adjacency_view") {
     const G& g2 = g;
 

@@ -5,9 +5,14 @@
 // incidence(g,u) -> edge_view<VKey,Sourced,E,EV>:
 //
 // enable: for([vkey, uv]        : incidence(g,u))
-//         for([vkey, uv, value] : incidence(g,u,fn))
+//         for([vkey, uv]        : incidence(g,ukey))
+//         for([vkey, uv, value] : incidence(g,u,   fn))
+//         for([vkey, uv, value] : incidence(g,ukey,fn))
+//
 //         for([ukey, vkey, uv]        : sourced_incidence(g,u))
-//         for([ukey, vkey, uv, value] : sourced_incidence(g,u,fn))
+//         for([ukey, vkey, uv]        : sourced_incidence(g,ukey))
+//         for([ukey, vkey, uv, value] : sourced_incidence(g,u,   fn))
+//         for([ukey, vkey, uv, value] : sourced_incidence(g,ukey,fn))
 //
 namespace std::graph::views {
 
@@ -176,10 +181,10 @@ using incidence_view = ranges::subrange<incidence_iterator<G, Sourced, EVF>, ver
 
 namespace access {
   // ranges
-  TAG_INVOKE_DEF(incidence); // incidence(g,u)               -> edges[vkey,uv]
-                             // incidence(g,ukey)            -> edges[vkey,uv]
-                             // incidence(g,u,   fn)         -> edges[vkey,uv,value]
-                             // incidence(g,ukey,fn)         -> edges[vkey,uv,value]
+  TAG_INVOKE_DEF(incidence); // incidence(g,u)               -> edges[vkey,v]
+                             // incidence(g,ukey)            -> edges[vkey,v]
+                             // incidence(g,u,   fn)         -> edges[vkey,v,value]
+                             // incidence(g,ukey,fn)         -> edges[vkey,v,value]
 
   template <class G>
   concept _has_incidence_g_u_adl = vertex_range<G> && requires(G&& g, vertex_reference_t<G> u) {
@@ -198,10 +203,10 @@ namespace access {
     {incidence(g, ukey, evf)};
   };
 
-  TAG_INVOKE_DEF(sourced_incidence); // sourced_incidence(g,u)       -> edges[ukey,vkey,uv]
-                                     // sourced_incidence(g,ukey)    -> edges[ukey,vkey,uv]
-                                     // sourced_incidence(g,u,   fn) -> edges[ukey,vkey,uv,value]
-                                     // sourced_incidence(g,ukey,fn) -> edges[ukey,vkey,uv,value]
+  TAG_INVOKE_DEF(sourced_incidence); // sourced_incidence(g,u)       -> edges[ukey,vkey,v]
+                                     // sourced_incidence(g,ukey)    -> edges[ukey,vkey,v]
+                                     // sourced_incidence(g,u,   fn) -> edges[ukey,vkey,v,value]
+                                     // sourced_incidence(g,ukey,fn) -> edges[ukey,vkey,v,value]
 
   template <class G>
   concept _has_sourced_incidence_g_u_adl = vertex_range<G> && requires(G&& g, vertex_reference_t<G> u) {

@@ -27,13 +27,12 @@
     - [x] for([ukey, vkey,uv] : sourced_incidence(g,u))
     - [x] for([ukey, vkey,uv, val] : sourced_incidence(g,u,fn(uv))
     - [ ] support unordered graph
-    - [ ] create CPO & incidence_view class
-      - [ ] replace use of EVF with Fnc Signature
+    - [x] create CPO & incidence_view class
   - [ ] **sourced_incidence**
     - [x] for([ukey,vkey,uv] : sourced_incidence(g,u))
     - [ ] for([ukey,vkey,uv, val] : sourced__incidence(g,u,fn(uv))
     - [ ] support unordered graph
-    - [ ] create CPO & sourced_incidence_view class
+    - [x] create CPO & sourced_incidence_view class
   - [ ] adjacency
     - [x] for([vkey, v] : adjacency(g,u)
     - [ ] for([vkey, v, val] : adjacency(g,u,fn(v))
@@ -48,6 +47,11 @@
     - [ ] for([ukey,vkey,uv]: edgelist(g))
     - [ ] for([ukey,vkey,uv,val]: edgelist(g,fn(uv))
     - [ ] create CPO & edgelist_view class
+  - [ ] Replace VVF & EVF in CPO signatures with generic function matcher in CPO check fnc
+    - [ ] vertexlist
+    - [ ] incidence & sourced_incidence
+    - [ ] adjacency & sourced_adjacency
+    - [ ] edgelist
 - Algorithms
   - [ ] Common
   - [ ] Ranges

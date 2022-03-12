@@ -18,9 +18,11 @@ namespace std::graph {
 // VKey - Vertex Key type
 // VV   - Vertex Value (user-defined or void)
 // VR   - Vertex Range
+// VVF  - Vertex Value Function: vvf(u) -> value
 // E    - Edge type
 // EV   - Edge Value (user-defined or void)
 // ER   - Edge Range
+// EVF  - Edge Value Function: evf(uv) -> value
 //
 // Parameters:
 // g         - graph reference
