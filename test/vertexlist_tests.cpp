@@ -3,6 +3,7 @@
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/container/csr_graph.hpp"
+#include <concepts>
 
 using std::ranges::forward_range;
 using std::remove_reference_t;

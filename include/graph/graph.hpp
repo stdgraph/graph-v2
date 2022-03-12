@@ -322,30 +322,109 @@ namespace views {
 /// ref_to_ptr changes a reference to a pointer and stores it as a pointer in value.
 /// Pointers and values are stored as-is.
 ///
-/// ref_to_ptr has similarities to reference_wrapper but there are some important
-/// differences when used in a view iterator implementation that is used by
-/// subrange including default constructible, movable and copyable.
+/// ref_to_ptr is similar to reference_wrapper but there are a couple of
+/// differences when used in a view iterator that are important:
+/// 1.  It is default constructible, as long as the value being stored is default
+///     constructible.
+/// 2.  It stores a copy of the value if not a reference or a pointer.
 /// </summary>
 /// <typeparam name="T">The type to store</typeparam>
 namespace _detail {
   template <class T>
-  struct ref_to_ptr {
-    T  value   = {};
-    T& operator=(T& rhs) {
+  class ref_to_ptr {
+  public:
+    static_assert(is_object_v<T> || is_function_v<T>,
+                  "ref_to_ptr<T> requires T to be an object type or a function type.");
+
+    using type = T;
+
+    constexpr ref_to_ptr() = default;
+    constexpr ref_to_ptr(const T& rhs) : value(rhs) {}
+    constexpr ~ref_to_ptr() = default;
+
+    constexpr ref_to_ptr& operator=(const T& rhs) {
       value = rhs;
-      return value;
+      return *this;
     }
+
+    constexpr operator bool() const noexcept { return true; }
+
+    constexpr T*       get() noexcept { return &value; }
+    constexpr const T* get() const noexcept { return &value; }
+
+    constexpr operator T&() noexcept { return value; }
+    constexpr operator const T&() const noexcept { return value; }
+
+  private:
+    T value = {};
   };
+
   template <class T>
-  struct ref_to_ptr<T&> {
-    T* value     = nullptr;
-    ref_to_ptr() = default;
-    ref_to_ptr(T& rhs) : value(&rhs) {}
-    ~ref_to_ptr() = default;
-    T* operator   =(T& rhs) {
+  class ref_to_ptr<T&> {
+  public:
+    static_assert(is_object_v<T> || is_function_v<T>,
+                  "ref_to_ptr<T> requires T to be an object type or a function type.");
+    using type = T;
+
+    constexpr ref_to_ptr() = default;
+    constexpr ref_to_ptr(T& rhs) noexcept : value(&rhs) {}
+    constexpr ~ref_to_ptr() = default;
+
+    ref_to_ptr& operator=(T& rhs) noexcept {
       value = &rhs;
-      return value;
+      return *this;
     }
+
+    constexpr T*       get() noexcept { return value; }
+    constexpr const T* get() const noexcept { return value; }
+
+    constexpr operator bool() const noexcept { return value != nullptr; }
+
+    constexpr operator T&() noexcept {
+      assert(value);
+      return *value;
+    }
+    constexpr operator const T&() const noexcept {
+      assert(value);
+      return *value;
+    }
+
+  private:
+    T* value = nullptr;
+  };
+
+  template <class T>
+  class ref_to_ptr<T*> {
+  public:
+    static_assert(is_object_v<T> || is_function_v<T>,
+                  "ref_to_ptr<T> requires T to be an object type or a function type.");
+    using type = T;
+
+    constexpr ref_to_ptr() = default;
+    constexpr ref_to_ptr(T* rhs) noexcept : value(rhs) {}
+    constexpr ~ref_to_ptr() = default;
+
+    constexpr ref_to_ptr& operator=(T* rhs) noexcept {
+      value = rhs;
+      return *this;
+    }
+
+    constexpr T*       get() noexcept { return value; }
+    constexpr const T* get() const noexcept { return value; }
+
+    constexpr operator bool() const noexcept { return value != nullptr; }
+
+    constexpr operator T&() noexcept {
+      assert(value);
+      return *value;
+    }
+    constexpr operator const T&() const noexcept {
+      assert(value);
+      return *value;
+    }
+
+  private:
+    T* value = nullptr;
   };
 
 } // namespace _detail

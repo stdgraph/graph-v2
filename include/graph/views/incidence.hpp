@@ -72,9 +72,9 @@ protected:
 public:
   constexpr reference operator*() const {
     if constexpr (Sourced && sourced_incidence_graph<G>)
-      value_ = {source_key(*g_.value, *iter_), target_key(*g_.value, *iter_), &*iter_, invoke(*value_fn_, *iter_)};
+      value_ = {source_key(g_, *iter_), target_key(g_, *iter_), &*iter_, invoke(*value_fn_, *iter_)};
     else
-      value_ = {target_key(*g_.value, *iter_), &*iter_, invoke(*value_fn_, *iter_)};
+      value_ = {target_key(g_, *iter_), &*iter_, invoke(*value_fn_, *iter_)};
     return reinterpret_cast<reference>(value_);
   }
 
@@ -146,9 +146,9 @@ public:
 public:
   constexpr reference operator*() const {
     if constexpr (Sourced && sourced_incidence_graph<G>)
-      value_ = {source_key(*g_.value, *iter_), target_key(*g_.value, *iter_), &*iter_};
+      value_ = {source_key(g_, *iter_), target_key(g_, *iter_), &*iter_};
     else {
-      value_ = {target_key(*g_.value, *iter_), &*iter_};
+      value_ = {target_key(g_, *iter_), &*iter_};
     }
     return reinterpret_cast<reference>(value_);
   }
