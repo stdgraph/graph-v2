@@ -109,7 +109,7 @@ template <class G>
 using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
 
 //
-// Vertex-edge range (incidence) & directly related types
+// Vertex-edge range (incidence range) & directly related types
 //
 template <class G>
 auto edges(G&& g, vertex_reference_t<G> u) -> decltype(access::edges(g, u)) {
@@ -282,54 +282,6 @@ auto edge_key(G&& g, edge_reference_t<G> uv) {
     return pair(source_key(g, uv), target_key(g, uv));
 }
 
-#  ifdef ENABLE_OTHER_FNC
-// other_key
-//
-namespace access {
-  template <class G, class ER>
-  concept _has_other_key_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-    {other_key(g, uv)};
-  };
-} // namespace access
-template <class G, class ER>
-concept _can_eval_other_key = requires(G&& g, ranges::range_reference_t<ER> uv) {
-  {target_key(g, uv)};
-  {source_key(g, uv)};
-};
-
-template <class G>
-requires access::_has_other_key_adl<G, vertex_edge_range_t<G>> || _can_eval_other_key<G, vertex_edge_range_t<G>>
-auto other_key(G&& g, edge_reference_t<G> uv, vertex_key_t<G> xkey) {
-  if constexpr (access::_has_other_key_adl<G, vertex_edge_range_t<G>>)
-    return access::other_key(g, uv, xkey);
-  else if constexpr (_can_eval_other_key<G, vertex_edge_range_t<G>>)
-    return xkey != target_key(g, uv) ? target_key(g, uv) : source_key(g, uv);
-}
-
-// other_vertex
-//
-namespace access {
-  template <class G, class ER>
-  concept _has_other_vertex_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-    {other_vertex(g, uv)};
-  };
-} // namespace access
-template <class G, class ER>
-concept _can_eval_other_vertex = requires(G&& g, ranges::range_reference_t<ER> uv) {
-  {target(g, uv)};
-  {source(g, uv)};
-};
-
-template <class G>
-requires access::_has_other_vertex_adl<G, vertex_edge_range_t<G>> || _can_eval_other_vertex<G, vertex_edge_range_t<G>>
-auto&& other_vertex(G&& g, edge_reference_t<G> uv, vertex_reference_t<G> x) {
-  if constexpr (access::_has_other_vertex_adl<G, vertex_edge_range_t<G>>)
-    return access::other_vertex(g, uv, x);
-  else if constexpr (_can_eval_other_vertex<G, vertex_edge_range_t<G>>)
-    return &x != &target(g, uv) ? target(g, uv) : source(g, uv);
-}
-#  endif //ENABLE_OTHER_FNC
-
 // find_vertex
 //
 namespace access {
@@ -396,6 +348,55 @@ auto&& graph_value(G&& g) {
 }
 template <class G>
 using graph_value_t = decltype(graph_value(declval<G&&>()));
+
+
+#  ifdef ENABLE_OTHER_FNC
+// other_key
+//
+namespace access {
+  template <class G, class ER>
+  concept _has_other_key_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
+    {other_key(g, uv)};
+  };
+} // namespace access
+template <class G, class ER>
+concept _can_eval_other_key = requires(G&& g, ranges::range_reference_t<ER> uv) {
+  {target_key(g, uv)};
+  {source_key(g, uv)};
+};
+
+template <class G>
+requires access::_has_other_key_adl<G, vertex_edge_range_t<G>> || _can_eval_other_key<G, vertex_edge_range_t<G>>
+auto other_key(G&& g, edge_reference_t<G> uv, vertex_key_t<G> xkey) {
+  if constexpr (access::_has_other_key_adl<G, vertex_edge_range_t<G>>)
+    return access::other_key(g, uv, xkey);
+  else if constexpr (_can_eval_other_key<G, vertex_edge_range_t<G>>)
+    return xkey != target_key(g, uv) ? target_key(g, uv) : source_key(g, uv);
+}
+
+// other_vertex
+//
+namespace access {
+  template <class G, class ER>
+  concept _has_other_vertex_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
+    {other_vertex(g, uv)};
+  };
+} // namespace access
+template <class G, class ER>
+concept _can_eval_other_vertex = requires(G&& g, ranges::range_reference_t<ER> uv) {
+  {target(g, uv)};
+  {source(g, uv)};
+};
+
+template <class G>
+requires access::_has_other_vertex_adl<G, vertex_edge_range_t<G>> || _can_eval_other_vertex<G, vertex_edge_range_t<G>>
+auto&& other_vertex(G&& g, edge_reference_t<G> uv, vertex_reference_t<G> x) {
+  if constexpr (access::_has_other_vertex_adl<G, vertex_edge_range_t<G>>)
+    return access::other_vertex(g, uv, x);
+  else if constexpr (_can_eval_other_vertex<G, vertex_edge_range_t<G>>)
+    return &x != &target(g, uv) ? target(g, uv) : source(g, uv);
+}
+#  endif //ENABLE_OTHER_FNC
 
 
 } // namespace std::graph

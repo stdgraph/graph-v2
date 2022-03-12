@@ -102,8 +102,7 @@ concept sourced_edge_range =
 };
 
 template <class G>
-concept incidence_graph = ranges::range<vertex_range_t<G>> && ranges::range<vertex_edge_range_t<G>> &&
-      edge_range<G, vertex_edge_range_t<G>>;
+concept incidence_graph = vertex_range<G> && edge_range<G, vertex_edge_range_t<G>>;
 //!is_same_v<vertex_edge_range_t<G>, vertex_range_t<G>> &&
 // CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
@@ -320,11 +319,11 @@ namespace views {
 
 
 /// <summary>
-/// ref_to_ptr changes a reference to a pointer and stores it as a pointer in value. 
+/// ref_to_ptr changes a reference to a pointer and stores it as a pointer in value.
 /// Pointers and values are stored as-is.
-/// 
+///
 /// ref_to_ptr has similarities to reference_wrapper but there are some important
-/// differences when used in a view iterator implementation that are used by
+/// differences when used in a view iterator implementation that is used by
 /// subrange including default constructible, movable and copyable.
 /// </summary>
 /// <typeparam name="T">The type to store</typeparam>
@@ -348,6 +347,7 @@ namespace _detail {
       return value;
     }
   };
+
 } // namespace _detail
 
 } // namespace std::graph

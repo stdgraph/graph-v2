@@ -14,6 +14,7 @@
     - [x] as CPO
     - [x] default implementations (e.g. degree==size)
     - [x] [deprecated] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
+    - [ ] add edges(g,ukey)
 - [ ] Views
   - [ ] vertexlist
     - [x] for([ukey, u] : vertexlist(g))
@@ -171,6 +172,7 @@
     - [ ] invasive to the existing design and would make it significantly more complicated
     - [ ] would delay existing design by months and there's no guarantee to be successful
 - [ ] Should we worry about row-major & column-major ordering of adjacency_matrix? always assume row-major?
+- [ ] Do we need a run-time function to check for undirectedness, in addition to is_undirected_edge_v<EV>? Is it a run-time property for some graphs?
 
 ## Resolved
 ### ToDo Completed
