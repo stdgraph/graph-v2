@@ -28,9 +28,9 @@ namespace std::graph {
 namespace access {
   // ranges
   TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices]
-                            // vertices(g,u) -> [adjacency edges]
 
   TAG_INVOKE_DEF(edges); // edges(g,u) -> [incidence edges]
+                         // edges(g,ukey) -> [incidence edges]
 
   // graph value
   TAG_INVOKE_DEF(graph_value); // graph_value(g) -> GV&
@@ -76,9 +76,11 @@ namespace access {
   // find
   TAG_INVOKE_DEF(find_vertex); // find_vertex(g,ukey) -> ui
                                // default = begin(vertices(g)) + ukey, for random_access_range<vertex_range_t<G>>
-  TAG_INVOKE_DEF(
-        find_vertex_edge); // find_vertex_edge(g,u,vkey) -> uvi; default = find(edges(g,u), [](uv) {target_id(g,uv)==vkey;}
-  // find_vertex_edge(g,ukey,vkey) -> uvi; default = find_vertex_edge(g,*find_vertex(g,ukey),vkey)
+
+  TAG_INVOKE_DEF(find_vertex_edge); // find_vertex_edge(g,u,vkey) -> uvi
+                                    //        default = find(edges(g,u), [](uv) {target_id(g,uv)==vkey;}
+                                    // find_vertex_edge(g,ukey,vkey) -> uvi
+                                    //        default = find_vertex_edge(g,*find_vertex(g,ukey),vkey)
 
   TAG_INVOKE_DEF(contains_edge); // contains_edge(g,ukey,vkey) -> bool
 } // namespace access
@@ -108,12 +110,80 @@ using vertex_t = ranges::range_value_t<vertex_range_t<G>>;
 template <class G>
 using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
 
+//vertex_key(g,ui)
+//
+namespace access {
+  template <class G>
+  concept _has_vertex_key_adl = requires(G&& g, vertex_iterator_t<G> ui) {
+    {vertex_key(g, ui)};
+  };
+} // namespace access
+template <class G>
+requires access::_has_vertex_key_adl<G> || random_access_iterator<vertex_iterator_t<G>>
+auto vertex_key(G&& g, vertex_iterator_t<G> ui) {
+  if constexpr (access::_has_vertex_key_adl<G>)
+    return access::vertex_key(g, ui);
+  else if constexpr (random_access_iterator<vertex_iterator_t<G>>)
+    return ui - ranges::begin(vertices(g));
+}
+
+template <class G>
+using vertex_key_t = decltype(vertex_key(declval<G&&>(), declval<vertex_iterator_t<G>>()));
+
+
+// find_vertex
+//
+namespace access {
+  template <class G>
+  concept _has_find_vertex_adl = requires(G&& g, vertex_key_t<G> ukey) {
+    {find_vertex(g, ukey)};
+  };
+} // namespace access
+
+template <class G>
+requires access::_has_find_vertex_adl<G> || ranges::random_access_range<vertex_range_t<G>>
+auto find_vertex(G&& g, vertex_key_t<G> ukey) {
+  if constexpr (access::_has_find_vertex_adl<G>)
+    return access::find_vertex(g, ukey);
+  else if constexpr (ranges::random_access_range<vertex_range_t<G>>)
+    return begin(vertices(g)) + ukey;
+}
+
+//vertex_value(g,u)
+//
+template <class G>
+auto vertex_value(G&& g, vertex_reference_t<G> u) -> decltype(access::vertex_value(g, u)) {
+  return access::vertex_value(g, u);
+}
+template <class G>
+using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_reference_t<G>>()));
+
 //
 // Vertex-edge range (incidence range) & directly related types
 //
+namespace access {
+  template <class G>
+  concept _has_edges_vtxref_adl = requires(G&& g, vertex_reference_t<G> u) {
+    {edges(g, u)};
+  };
+
+  template <class G>
+  concept _has_edges_vtxkey_adl = requires(G&& g, vertex_key_t<G> ukey) {
+    {edges(g, ukey)};
+  };
+} // namespace access
+
 template <class G>
+requires access::_has_edges_vtxref_adl<G>
 auto edges(G&& g, vertex_reference_t<G> u) -> decltype(access::edges(g, u)) {
-  return access::edges(g, u);
+  return access::edges(g, u); // graph author must define
+}
+template <class G>
+auto edges(G&& g, vertex_key_t<G> ukey) -> decltype(access::edges(g, ukey)) {
+  if constexpr (access::_has_edges_vtxkey_adl<G>)
+    return access::edges(g, ukey);
+  else
+    return edges(g, *find_vertex(g, ukey));
 }
 
 template <class G>
@@ -136,36 +206,6 @@ using edge_key_t = decltype(edge_key(declval<G&&>(),
 //
 // Vertex properties
 //
-
-//vertex_key(g,ui)
-//
-namespace access {
-  template <class G>
-  concept _has_vertex_key_adl = requires(G&& g, vertex_iterator_t<G> ui) {
-    {vertex_key(g, ui)};
-  };
-} // namespace access
-template <class G>
-requires access::_has_vertex_key_adl<G> || random_access_iterator<vertex_iterator_t<G>>
-auto vertex_key(G&& g, vertex_iterator_t<G> ui) {
-  if constexpr (access::_has_vertex_key_adl<G>)
-    return access::vertex_key(g, ui);
-  else if constexpr (random_access_iterator<vertex_iterator_t<G>>)
-    return ui - ranges::begin(vertices(g));
-}
-
-template <class G>
-using vertex_key_t = decltype(vertex_key(declval<G&&>(), declval<vertex_iterator_t<G>>()));
-
-
-//vertex_value(g,u)
-//
-template <class G>
-auto vertex_value(G&& g, vertex_reference_t<G> u) -> decltype(access::vertex_value(g, u)) {
-  return access::vertex_value(g, u);
-}
-template <class G>
-using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_reference_t<G>>()));
 
 // degree - number of outgoing edges (e.g. neighbors)
 //
@@ -280,24 +320,6 @@ auto edge_key(G&& g, edge_reference_t<G> uv) {
     return access::edge_key(g, uv);
   else if constexpr (_can_eval_edge_key<G, vertex_edge_range_t<G>>)
     return pair(source_key(g, uv), target_key(g, uv));
-}
-
-// find_vertex
-//
-namespace access {
-  template <class G>
-  concept _has_find_vertex_adl = requires(G&& g, vertex_key_t<G> ukey) {
-    {find_vertex(g, ukey)};
-  };
-} // namespace access
-
-template <class G>
-requires access::_has_find_vertex_adl<G> || ranges::random_access_range<vertex_range_t<G>>
-auto find_vertex(G&& g, vertex_key_t<G> ukey) {
-  if constexpr (access::_has_find_vertex_adl<G>)
-    return access::find_vertex(g, ukey);
-  else if constexpr (ranges::random_access_range<vertex_range_t<G>>)
-    return begin(vertices(g)) + ukey;
 }
 
 // find_vertex_edge

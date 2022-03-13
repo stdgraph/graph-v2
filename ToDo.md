@@ -176,6 +176,7 @@
 - [ ] Should we worry about row-major & column-major ordering of adjacency_matrix? always assume row-major?
 - [ ] Do we need a run-time function to check for undirectedness, in addition to is_undirected_edge_v<EV>? Is it a run-time property for some graphs?
 - [ ] Is there a way for EVF to take both edge_value and fnc obj? (same for VVF & vertex_value)
+- [ ] The default for edges(g,ukey) CPO isn't being found by msvc or gcc
 
 ## Resolved
 ### ToDo Completed

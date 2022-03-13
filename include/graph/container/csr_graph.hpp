@@ -595,6 +595,21 @@ private: // tag_invoke properties
     return const_edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
   }
 
+  friend constexpr edges_type tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, const vertex_key_type ukey) {
+    assert(static_cast<size_t>(ukey + 1) < g.row_index_.size());                      // in row_index_ bounds?
+    assert(static_cast<size_t>(g.row_index_[ukey + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
+    return edges_type(g.col_index_.begin() + g.row_index_[ukey].index,
+                      g.col_index_.begin() + g.row_index_[ukey + 1].index);
+  }
+  friend constexpr const_edges_type
+  tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_key_type ukey) {
+    assert(static_cast<size_t>(ukey + 1) < g.row_index_.size());                      // in row_index_ bounds?
+    assert(static_cast<size_t>(g.row_index_[ukey + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
+    return const_edges_type(g.col_index_.begin() + g.row_index_[ukey].index,
+                            g.col_index_.begin() + g.row_index_[ukey + 1].index);
+  }
+
+
   // target_key(g,uv), target(g,uv)
   friend constexpr vertex_key_type
   tag_invoke(::std::graph::access::target_key_fn_t, const graph_type& g, const edge_type& uv) noexcept {

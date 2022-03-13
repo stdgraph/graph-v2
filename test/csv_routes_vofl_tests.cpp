@@ -89,15 +89,20 @@ TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
   SECTION("metadata") {
     // Do a simple check
     REQUIRE(10 == std::ranges::size(vertices(g)));
-    size_t edge_cnt   = 0;
+    size_t edge_cnt = 0, edge_cnt2 = 0;
     double total_dist = 0;
-    for (auto&& u : vertices(g)) {
+    for (vertex_key_t<G> ukey = 0; auto&& u : vertices(g)) {
       for (auto&& uv : edges(g, u)) {
         ++edge_cnt;
         total_dist += edge_value(g, uv);
       }
+      for (auto&& uv : edges(g, ukey)) {
+        ++edge_cnt2;
+      }
+      ++ukey;
     }
     REQUIRE(edge_cnt == 11);
+    REQUIRE(edge_cnt2 == 11);
     REQUIRE(total_dist == 2030.0);
   }
 

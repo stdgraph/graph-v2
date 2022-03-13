@@ -833,6 +833,14 @@ private: // tag_invoke properties
   tag_invoke(::std::graph::access::vertex_key_fn_t, const dynamic_graph_base& g, vertices_type::const_iterator ui) {
     return static_cast<vertex_key_type>(ui - g.vertices_.begin());
   }
+
+  friend constexpr edges_type& tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, const vertex_key_type ukey) {
+    return g.vertices_[ukey].edges();
+  }
+  friend constexpr const edges_type&
+  tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_key_type ukey) {
+    return g.vertices_[ukey].edges();
+  }
 };
 
 /// <summary>
