@@ -21,13 +21,13 @@
     - [x] for([vkey,uv, val] : incidence(g,u,fn(uv))
     - [x] for([ukey, vkey,uv] : sourced_incidence(g,u))
     - [x] for([ukey, vkey,uv, val] : sourced_incidence(g,u,fn(uv))
-    - [ ] support unordered graph
+    - [x] support unordered graph
     - [x] create CPO & incidence_view class
   - [ ] sourced_incidence
     - [x] for([ukey,vkey,uv] : sourced_incidence(g,u))
     - [x] for([ukey,vkey,uv, val] : sourced__incidence(g,u,fn(uv))
-    - [ ] support unordered graph
-    - [ ] support unsourced graph
+    - [x] support unordered graph
+    - [x] support Source for incident_graph
     - [x] create CPO & sourced_incidence_view class
   - [ ] neighbors
     - [x] for([vkey, v] : adjacency(g,u)
@@ -37,8 +37,8 @@
   - [ ] sourced_adjacency
     - [x] for([vkey, v] : adjacency(g,u)
     - [x] for([vkey, v, val] : adjacency(g,u,fn(v))
-    - [ ] support unordered graph
-    - [ ] support unsourced graph
+    - [x] support unordered graph
+    - [x] support Source for incident_graph
     - [x] create CPO & adjacency_view class
 - Algorithms
   - [ ] Common

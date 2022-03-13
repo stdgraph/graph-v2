@@ -71,11 +71,28 @@ protected:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (Sourced && sourced_incidence_graph<G>)
-      value_.source_key = source_key(g_, *iter_);
-    value_.target_key = target_key(g_, *iter_);
-    value_.edge       = &*iter_;
-    value_.value      = invoke(*value_fn_, *iter_);
+    if constexpr (unordered_incidence_graph<G>) {
+      static_assert(sourced_incidence_graph<G>);
+      if (target_key(g_, *iter_) != this->source_vertex_key()) {
+        value_.source_key = source_key(g_.*iter_);
+        value_.target_key = target_key(g_, *iter_);
+      } else {
+        value_.source_key = target_key(g_.*iter_);
+        value_.target_key = source_key(g_, *iter_);
+      }
+    } else if constexpr (Sourced) {
+      if constexpr (sourced_incidence_graph<G>) {
+        value_.source_key = source_key(g_, *iter_);
+        value_.target_key = target_key(g_, *iter_);
+      } else {
+        value_.source_key = this->source_vertex_key();
+        value_.target_key = target_key(g_, *iter_);
+      }
+    } else {
+      value_.target_key = target_key(g_, *iter_);
+    }
+    value_.edge  = &*iter_;
+    value_.value = invoke(*value_fn_, *iter_);
     return reinterpret_cast<reference>(value_);
   }
 
@@ -150,10 +167,27 @@ public:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (Sourced && sourced_incidence_graph<G>)
-      value_.source_key = source_key(g_, *iter_);
-    value_.target_key = target_key(g_, *iter_);
-    value_.edge       = &*iter_;
+    if constexpr (unordered_incidence_graph<G>) {
+      static_assert(sourced_incidence_graph<G>);
+      if (target_key(g_, *iter_) != this->source_vertex_key()) {
+        value_.source_key = source_key(g_.*iter_);
+        value_.target_key = target_key(g_, *iter_);
+      } else {
+        value_.source_key = target_key(g_.*iter_);
+        value_.target_key = source_key(g_, *iter_);
+      }
+    } else if constexpr (Sourced) {
+      if constexpr (sourced_incidence_graph<G>) {
+        value_.source_key = source_key(g_, *iter_);
+        value_.target_key = target_key(g_, *iter_);
+      } else {
+        value_.source_key = this->source_vertex_key();
+        value_.target_key = target_key(g_, *iter_);
+      }
+    } else {
+      value_.target_key = target_key(g_, *iter_);
+    }
+    value_.edge = &*iter_;
     return reinterpret_cast<reference>(value_);
   }
 
