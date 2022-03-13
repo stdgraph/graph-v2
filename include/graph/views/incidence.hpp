@@ -4,22 +4,47 @@
 //
 // incidence(g,u) -> edge_view<VKey,Sourced,E,EV>:
 //
-// enable: for([vkey, uv]        : incidence(g,u))
-//         for([vkey, uv]        : incidence(g,ukey))
-//         for([vkey, uv, value] : incidence(g,u,   fn))
+// enable: for([vkey, uv]        : incidence(g,ukey))
 //         for([vkey, uv, value] : incidence(g,ukey,fn))
 //
-//         for([ukey, vkey, uv]        : sourced_incidence(g,u))
 //         for([ukey, vkey, uv]        : sourced_incidence(g,ukey))
-//         for([ukey, vkey, uv, value] : sourced_incidence(g,u,   fn))
 //         for([ukey, vkey, uv, value] : sourced_incidence(g,ukey,fn))
 //
 namespace std::graph::views {
 
 
 template <class G, bool Sourced = false, class EVF = void>
-requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
-      class incidence_iterator;
+class incidence_iterator;
+
+template <class G, bool Sourced>
+class source_vertex {
+public:
+  using vertex_key_type = vertex_key_t<G>;
+
+  source_vertex(vertex_key_type key) : key_(key) {}
+
+  source_vertex()                         = default;
+  source_vertex(const source_vertex& rhs) = default;
+  source_vertex(source_vertex&&)          = default;
+  ~source_vertex()                        = default;
+
+  source_vertex& operator=(const source_vertex&) = default;
+  source_vertex& operator=(source_vertex&&) = default;
+
+  constexpr vertex_key_type source_vertex_key() const noexcept { return key_; }
+
+protected:
+  vertex_key_type key_ = 0;
+};
+
+template <class G>
+class source_vertex<G, false> {
+public:
+  using vertex_key_type = vertex_key_t<G>;
+
+  source_vertex(vertex_key_type key) {}
+  source_vertex() = default;
+};
 
 
 /// <summary>
@@ -28,12 +53,15 @@ requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
 /// <typeparam name="G">Graph type</typeparam>
 /// <typeparam name="EVF">Edge Value Function</typeparam>
 template <class G, bool Sourced, class EVF>
-requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
-      class incidence_iterator {
+class incidence_iterator
+      : source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)> {
 public:
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)>;
+
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
   using vertex_key_type = vertex_key_t<graph_type>;
+  using vertex_iterator = vertex_iterator_t<graph_type>;
 
   using edge_range          = vertex_edge_range_t<graph_type>;
   using edge_iterator       = vertex_edge_iterator_t<graph_type>;
@@ -51,10 +79,10 @@ public:
   using rvalue_reference  = value_type&&;
 
 public:
-  incidence_iterator(graph_type& g, edge_iterator iter, const EVF& value_fn)
-        : g_(g), iter_(iter), value_fn_(&value_fn) {}
-  incidence_iterator(graph_type& g, vertex_type& u, const EVF& value_fn)
-        : incidence_iterator(g, ranges::begin(edges(g, u)), value_fn) {}
+  incidence_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter, const EVF& value_fn)
+        : base_type(vertex_key(g, ui)), g_(g), iter_(iter), value_fn_(&value_fn) {}
+  incidence_iterator(graph_type& g, vertex_key_type ukey, const EVF& value_fn)
+        : base_type(ukey), g_(g), iter_(ranges::begin(edges(g, *find_vertex(g, ukey)))), value_fn_(&value_fn) {}
 
   constexpr incidence_iterator()                          = default;
   constexpr incidence_iterator(const incidence_iterator&) = default;
@@ -74,9 +102,10 @@ protected:
 public:
   constexpr reference operator*() const {
     if constexpr (Sourced && sourced_incidence_graph<G>)
-      value_ = {source_key(g_, *iter_), target_key(g_, *iter_), &*iter_, invoke(*value_fn_, *iter_)};
-    else
-      value_ = {target_key(g_, *iter_), &*iter_, invoke(*value_fn_, *iter_)};
+      value_.source_key = source_key(g_, *iter_);
+    value_.target_key = target_key(g_, *iter_);
+    value_.edge       = &*iter_;
+    value_.value      = invoke(*value_fn_, *iter_);
     return reinterpret_cast<reference>(value_);
   }
 
@@ -104,12 +133,15 @@ private: // member variables
 
 
 template <class G, bool Sourced>
-requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
-      class incidence_iterator<G, Sourced, void> {
+class incidence_iterator<G, Sourced, void>
+      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)> {
 public:
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)>;
+
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
   using vertex_key_type = vertex_key_t<graph_type>;
+  using vertex_iterator = vertex_iterator_t<graph_type>;
 
   using edge_range          = vertex_edge_range_t<graph_type>;
   using edge_iterator       = vertex_edge_iterator_t<graph_type>;
@@ -133,8 +165,10 @@ protected:
   using shadow_value_type = edge_view<vertex_key_type, Sourced, shadow_edge_type*, edge_value_type>;
 
 public:
-  incidence_iterator(graph_type& g, edge_iterator iter) : g_(g), iter_(iter) {}
-  incidence_iterator(graph_type& g, vertex_type& u) : incidence_iterator(g, ranges::begin(edges(g, u))) {}
+  incidence_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter)
+        : base_type(vertex_key(g, ui)), g_(g), iter_(iter) {}
+  incidence_iterator(graph_type& g, vertex_key_type ukey)
+        : base_type(ukey), g_(g), iter_(ranges::begin(edges(g, *find_vertex(g, ukey)))) {}
 
   constexpr incidence_iterator()                          = default;
   constexpr incidence_iterator(const incidence_iterator&) = default;
@@ -147,10 +181,9 @@ public:
 public:
   constexpr reference operator*() const {
     if constexpr (Sourced && sourced_incidence_graph<G>)
-      value_ = {source_key(g_, *iter_), target_key(g_, *iter_), &*iter_};
-    else {
-      value_ = {target_key(g_, *iter_), &*iter_};
-    }
+      value_.source_key = source_key(g_, *iter_);
+    value_.target_key = target_key(g_, *iter_);
+    value_.edge       = &*iter_;
     return reinterpret_cast<reference>(value_);
   }
 
@@ -181,45 +214,24 @@ using incidence_view = ranges::subrange<incidence_iterator<G, Sourced, EVF>, ver
 
 namespace access {
   // ranges
-  TAG_INVOKE_DEF(incidence); // incidence(g,u)               -> edges[vkey,v]
-                             // incidence(g,ukey)            -> edges[vkey,v]
-                             // incidence(g,u,   fn)         -> edges[vkey,v,value]
+  TAG_INVOKE_DEF(incidence); // incidence(g,ukey)            -> edges[vkey,v]
                              // incidence(g,ukey,fn)         -> edges[vkey,v,value]
 
   template <class G>
-  concept _has_incidence_g_u_adl = vertex_range<G> && requires(G&& g, vertex_reference_t<G> u) {
-    {incidence(g, u)};
-  };
-  template <class G>
   concept _has_incidence_g_ukey_adl = vertex_range<G> && requires(G&& g, vertex_key_t<G> ukey) {
     {incidence(g, ukey)};
-  };
-  template <class G, class EVF>
-  concept _has_incidence_g_u_evf_adl = vertex_range<G> && requires(G&& g, vertex_reference_t<G> u, const EVF& evf) {
-    {incidence(g, u, evf)};
   };
   template <class G, class EVF>
   concept _has_incidence_g_ukey_evf_adl = vertex_range<G> && requires(G&& g, vertex_key_t<G> ukey, const EVF& evf) {
     {incidence(g, ukey, evf)};
   };
 
-  TAG_INVOKE_DEF(sourced_incidence); // sourced_incidence(g,u)       -> edges[ukey,vkey,v]
-                                     // sourced_incidence(g,ukey)    -> edges[ukey,vkey,v]
-                                     // sourced_incidence(g,u,   fn) -> edges[ukey,vkey,v,value]
+  TAG_INVOKE_DEF(sourced_incidence); // sourced_incidence(g,ukey)    -> edges[ukey,vkey,v]
                                      // sourced_incidence(g,ukey,fn) -> edges[ukey,vkey,v,value]
 
   template <class G>
-  concept _has_sourced_incidence_g_u_adl = vertex_range<G> && requires(G&& g, vertex_reference_t<G> u) {
-    {sourced_incidence(g, u)};
-  };
-  template <class G>
   concept _has_sourced_incidence_g_ukey_adl = vertex_range<G> && requires(G&& g, vertex_key_t<G> ukey) {
     {sourced_incidence(g, ukey)};
-  };
-  template <class G, class EVF>
-  concept _has_sourced_incidence_g_u_evf_adl = vertex_range<G> &&
-        requires(G&& g, vertex_reference_t<G> u, const EVF& evf) {
-    {sourced_incidence(g, u, evf)};
   };
   template <class G, class EVF>
   concept _has_sourced_incidence_g_ukey_evf_adl = vertex_range<G> &&
@@ -235,47 +247,26 @@ namespace access {
 //
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto incidence(G&& g, vertex_reference_t<G> u) {
-  if constexpr (access::_has_incidence_g_u_adl<G>) {
-    return access::incidence(g, u);
-  } else {
-    using iterator_type = incidence_iterator<G, false, void>;
-    return incidence_view<G, false, void>(iterator_type(g, ranges::begin(edges(g, u))), ranges::end(edges(g, u)));
-  }
-}
-
-template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_incidence_g_ukey_adl<G>)
     return access::incidence(g, ukey);
   else
-    return incidence(g, *find_vertex(g, ukey));
+    return incidence_view<G, false, void>(incidence_iterator<G, false, void>(g, ukey),
+                                          ranges::end(edges(g, *find_vertex(g, ukey))));
 }
 
 
 //
-// incidence(g,u,evf)
 // incidence(g,ukey,evf)
 //
-template <class G, class EVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto incidence(G&& g, vertex_reference_t<G> u, const EVF& evf) {
-  if constexpr (access::_has_incidence_g_u_evf_adl<G, EVF>) {
-    return access::incidence(g, u, evf);
-  } else {
-    using iterator_type = incidence_iterator<G, false, EVF>;
-    return incidence_view<G, false, EVF>(iterator_type(g, ranges::begin(edges(g, u)), evf), ranges::end(edges(g, u)));
-  }
-}
-
 template <class G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_key_t<G> ukey, const EVF& evf) {
   if constexpr (access::_has_incidence_g_ukey_evf_adl<G, EVF>)
     return access::incidence(g, ukey, evf);
   else
-    return incidence(g, *find_vertex(g, ukey), evf);
+    return incidence_view<G, false, EVF>(incidence_iterator<G, false, EVF>(g, ukey, evf),
+                                         ranges::end(edges(g, *find_vertex(g, ukey))));
 }
 
 
@@ -285,47 +276,26 @@ constexpr auto incidence(G&& g, vertex_key_t<G> ukey, const EVF& evf) {
 //
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto sourced_incidence(G&& g, vertex_reference_t<G> u) {
-  if constexpr (access::_has_sourced_incidence_g_u_adl<G>)
-    return access::sourced_incidence(g, u);
-  else {
-    using iterator_type = incidence_iterator<G, true, void>;
-    return incidence_view<G, true, void>(iterator_type(g, ranges::begin(edges(g, u))), ranges::end(edges(g, u)));
-  }
-}
-
-template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_incidence(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_sourced_incidence_g_ukey_adl<G>)
     return access::sourced_incidence(g, ukey);
   else
-    return sourced_incidence(g, *find_vertex(g, ukey));
+    return incidence_view<G, true, void>(incidence_iterator<G, true, void>(g, ukey),
+                                         ranges::end(edges(g, *find_vertex(g, ukey))));
 }
 
 
 //
-// sourced_incidence(g,u,evf)
 // sourced_incidence(g,ukey,evf)
 //
-template <class G, class EVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto sourced_incidence(G&& g, vertex_reference_t<G> u, const EVF& evf) {
-  if constexpr (access::_has_sourced_incidence_g_u_evf_adl<G, EVF>) {
-    return access::sourced_incidence(g, u, evf);
-  } else {
-    using iterator_type = incidence_iterator<G, true, EVF>;
-    return incidence_view<G, true, EVF>(iterator_type(g, ranges::begin(edges(g, u)), evf), ranges::end(edges(g, u)));
-  }
-}
-
 template <class G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_incidence(G&& g, vertex_key_t<G> ukey, const EVF& evf) {
   if constexpr (access::_has_sourced_incidence_g_ukey_evf_adl<G, EVF>)
     return access::sourced_incidence(g, ukey, evf);
   else
-    return sourced_incidence(g, *find_vertex(g, ukey), evf);
+    return incidence_view<G, true, EVF>(incidence_iterator<G, true, EVF>(g, ukey, evf),
+                                        ranges::end(edges(g, *find_vertex(g, ukey))));
 }
 
 

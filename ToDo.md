@@ -16,11 +16,6 @@
     - [x] [deprecated] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
     - [ ] add edges(g,ukey)
 - [ ] Views
-  - [ ] vertexlist
-    - [x] for([ukey, u] : vertexlist(g))
-    - [x] for([ukey, u, val] : vertexlist(g,fn(u))
-    - [x] create CPO & vertexlist_view class
-    - [ ] refactor to have similar structure as incidence w/ base_vertexlist_iterator holding common values
   - [ ] incidence
     - [x] for([vkey,uv] : incidence(g,u))
     - [x] for([vkey,uv, val] : incidence(g,u,fn(uv))
@@ -194,6 +189,7 @@
   - [x] add overridable is_undirected_edge_v<E> & undirected_incidence_graph<G> concept
   - [x] add overridable is_adjacencey_matrix_v<G>
 - Views
+  - [x] vertexlist
   - [x] edgelist
 - Algorithms
 - Containers (data structures)

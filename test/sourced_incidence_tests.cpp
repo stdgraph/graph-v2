@@ -72,10 +72,11 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
     static_assert(!std::is_const_v<G>);
 
     REQUIRE(frankfurt);
-    vertex_t<G>& u = **frankfurt;
+    vertex_reference_t<G> u    = **frankfurt;
+    vertex_key_t<G>       ukey = frankfurt_key;
 
     std::graph::views::incidence_iterator<G> i0; // default construction
-    std::graph::views::incidence_iterator<G> i1(g, u);
+    std::graph::views::incidence_iterator<G> i1(g, ukey);
     static_assert(std::forward_iterator<decltype(i1)>, "incidence_iterator must be a forward_iterator");
     static_assert(std::is_move_assignable_v<decltype(i0)>, "incidence_iterator must be move_assignable");
     static_assert(std::is_copy_assignable_v<decltype(i0)>, "incidence_iterator must be copy_assignable");
@@ -92,7 +93,7 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::incidence_iterator<G> i2(g, u);
+    std::graph::views::incidence_iterator<G> i2(g, ukey);
     {
       auto&& [vkey, uv] = *i2;
       static_assert(is_const_v<decltype(vkey)>, "vertex key must be const");
@@ -119,7 +120,7 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
     auto evf  = [&g](edge_t<G>& uv) -> double& { return edge_value(g, uv); };
     using EVF = decltype(evf);
 
-    std::graph::views::incidence_iterator<G, false, EVF> i3(g, begin(edges(g, u)), evf);
+    std::graph::views::incidence_iterator<G, false, EVF> i3(g, ukey, evf);
     {
       // The following asserts are used to isolate problem with failing input_or_output_iterator concept for incidence_iterator
       static_assert(std::movable<decltype(i3)>, "incidence_iterator<G,EVF> is NOT movable");
@@ -149,10 +150,11 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
     G2& g2   = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>, "graph must be const");
 
-    vertex_t<G2>& u = **frankfurt;
+    vertex_reference_t<G> u    = **frankfurt;
+    vertex_key_t<G>       ukey = frankfurt_key;
 
     //std::graph::views::incidence_iterator<G2> i0; // default construction
-    std::graph::views::incidence_iterator<G2, false> i1(g2, u);
+    std::graph::views::incidence_iterator<G2, false> i1(g2, ukey);
     static_assert(std::forward_iterator<decltype(i1)>, "incidence_iterator must be a forward_iterator");
     {
       auto&& [vkey, uv] = *i1;
@@ -172,7 +174,7 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::incidence_iterator<G2, false> i2(g2, u);
+    std::graph::views::incidence_iterator<G2, false> i2(g2, ukey);
     {
       auto&& [vkey, uv] = *i2;
       static_assert(is_const_v<decltype(vkey)>, "key must be const");
@@ -188,7 +190,7 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
 
     auto evf  = [&g2](edge_reference_t<G2> uv) -> const double& { return edge_value(g2, uv); };
     using EVF = decltype(evf);
-    std::graph::views::incidence_iterator<G2, false, EVF> i3(g2, begin(edges(g2, u)), evf);
+    std::graph::views::incidence_iterator<G2, false, EVF> i3(g2, ukey, evf);
     {
       auto&& [vkey, uv, km] = *i3;
       REQUIRE(vkey == 1);
@@ -206,40 +208,40 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
     static_assert(!std::is_const_v<G>);
 
     REQUIRE(frankfurt);
-    vertex_reference_t<G> u   = **frankfurt;
-    vertex_key_t<G>       key = frankfurt_key;
+    vertex_reference_t<G> u    = **frankfurt;
+    vertex_key_t<G>       ukey = frankfurt_key;
 
     std::graph::views::incidence_iterator<G, true> i0; // default construction
-    std::graph::views::incidence_iterator<G, true> i1(g, u);
+    std::graph::views::incidence_iterator<G, true> i1(g, ukey);
     static_assert(std::forward_iterator<decltype(i1)>, "incidence_iterator must be a forward_iterator");
     {
-      auto&& [ukey, vkey, uv] = *i1;
-      static_assert(is_const_v<decltype(ukey)>, "vertex key must be const");
+      auto&& [uukey, vkey, uv] = *i1;
+      static_assert(is_const_v<decltype(uukey)>, "vertex key must be const");
       static_assert(is_const_v<decltype(vkey)>, "vertex key must be const");
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>, "edge must be non-const");
-      REQUIRE(ukey == key);
+      REQUIRE(uukey == ukey);
       REQUIRE(vkey == 1);
     }
     {
-      auto&& [ukey, vkey, uv] = *++i1;
-      REQUIRE(ukey == key);
+      auto&& [uukey, vkey, uv] = *++i1;
+      REQUIRE(uukey == ukey);
       REQUIRE(vkey == 4);
       auto i1b = i1;
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::incidence_iterator<G, true> i2(g, u);
+    std::graph::views::incidence_iterator<G, true> i2(g, ukey);
     {
-      auto&& [ukey, vkey, uv] = *i2;
+      auto&& [uukey, vkey, uv] = *i2;
       static_assert(is_const_v<decltype(vkey)>, "vertex key must be const");
       static_assert(is_lvalue_reference_v<decltype(uv)>, "edge must be lvalue reference");
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>, "edge must be non-const");
-      REQUIRE(ukey == key);
+      REQUIRE(uukey == ukey);
       REQUIRE(vkey == 1);
     }
     {
-      auto&& [ukey, vkey, uv] = *++i2;
-      REQUIRE(ukey == key);
+      auto&& [uukey, vkey, uv] = *++i2;
+      REQUIRE(uukey == ukey);
       REQUIRE(vkey == 4);
       auto i2b = i2;
       REQUIRE(i2b == i2);
@@ -257,7 +259,7 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
     auto evf  = [&g](edge_t<G>& uv) -> double& { return edge_value(g, uv); };
     using EVF = decltype(evf);
 
-    std::graph::views::incidence_iterator<G, true, EVF> i3(g, begin(edges(g, u)), evf);
+    std::graph::views::incidence_iterator<G, true, EVF> i3(g, ukey, evf);
     {
       // The following asserts are used to isolate problem with failing input_or_output_iterator concept for incidence_iterator
       static_assert(std::movable<decltype(i3)>, "incidence_iterator<G,EVF> is NOT movable");
@@ -267,39 +269,41 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
       static_assert(std::input_or_output_iterator<decltype(i3)>,
                     "incidence_iterator<G,EVF> is NOT an input_or_output_iterator");
 
-      auto&& [ukey, vkey, uv, km] = *i3;
-      REQUIRE(ukey == key);
+      auto&& [uukey, vkey, uv, km] = *i3;
+      REQUIRE(uukey == ukey);
       REQUIRE(vkey == 1);
       REQUIRE(km == 85.0);
     }
     {
-      auto&& [ukey, vkey, uv, km] = *++i3;
-      REQUIRE(ukey == key);
+      auto&& [uukey, vkey, uv, km] = *++i3;
+      REQUIRE(uukey == ukey);
       REQUIRE(vkey == 4);
       REQUIRE(km == 217.0);
     }
   }
 
   SECTION("non-const incidence") {
-    vertex_t<G>& u = **frankfurt;
-    using view_t   = decltype(std::graph::views::incidence(g, u));
+    vertex_reference_t<G> u    = **frankfurt;
+    vertex_key_t<G>       ukey = frankfurt_key;
+    using view_t               = decltype(std::graph::views::incidence(g, ukey));
     static_assert(forward_range<view_t>, "incidence(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [vkey, uv] : std::graph::views::incidence(g, u)) {
+    for (auto&& [vkey, uv] : std::graph::views::incidence(g, ukey)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
   }
 
   SECTION("const incidence") {
-    using G2                  = const G;
-    G2&                    g2 = g;
-    vertex_reference_t<G2> u  = **frankfurt;
+    using G2                   = const G;
+    G2&                   g2   = g;
+    vertex_reference_t<G> u    = **frankfurt;
+    vertex_key_t<G>       ukey = frankfurt_key;
 
-    using view_t = decltype(std::graph::views::incidence(g2, u));
+    using view_t = decltype(std::graph::views::incidence(g2, ukey));
     static_assert(forward_range<view_t>, "incidence(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [vkey, uv] : std::graph::views::incidence(g2, u)) {
+    for (auto&& [vkey, uv] : std::graph::views::incidence(g2, ukey)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));
@@ -308,46 +312,50 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
   SECTION("non-const incidence with vertex_fn") {
     // Note: must include trailing return type on lambda
     vertex_reference_t<G> u       = **frankfurt;
+    vertex_key_t<G>       ukey    = frankfurt_key;
     size_t                cnt     = 0;
     auto                  edge_fn = [&g](edge_reference_t<G> uv) -> double& { return edge_value(g, uv); };
-    for (auto&& [vkey, uv, val] : std::graph::views::incidence(g, u, edge_fn)) {
+    for (auto&& [vkey, uv, val] : std::graph::views::incidence(g, ukey, edge_fn)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
   }
   SECTION("const incidence with vertex_fn") {
     // Note: must include trailing return type on lambda
-    using G2                       = const G;
-    G2&                    g2      = g;
-    vertex_reference_t<G2> u       = **frankfurt;
-    auto                   edge_fn = [&g2](edge_reference_t<G2> uv) -> const double& { return edge_value(g2, uv); };
-    size_t                 cnt     = 0;
-    for (auto&& [vkey, uv, val] : std::graph::views::incidence(g2, u, edge_fn)) {
+    using G2                      = const G;
+    G2&                   g2      = g;
+    vertex_reference_t<G> u       = **frankfurt;
+    vertex_key_t<G>       ukey    = frankfurt_key;
+    auto                  edge_fn = [&g2](edge_reference_t<G2> uv) -> const double& { return edge_value(g2, uv); };
+    size_t                cnt     = 0;
+    for (auto&& [vkey, uv, val] : std::graph::views::incidence(g2, ukey, edge_fn)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));
   }
 
   SECTION("non-const sourced_incidence") {
-    vertex_t<G>& u = **frankfurt;
-    using view_t   = decltype(std::graph::views::sourced_incidence(g, u));
+    vertex_reference_t<G> u    = **frankfurt;
+    vertex_key_t<G>       ukey = frankfurt_key;
+    using view_t               = decltype(std::graph::views::sourced_incidence(g, ukey));
     static_assert(forward_range<view_t>, "incidence(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [ukey, vkey, uv] : std::graph::views::sourced_incidence(g, u)) {
+    for (auto&& [uukey, vkey, uv] : std::graph::views::sourced_incidence(g, ukey)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
   }
 
   SECTION("const sourced_incidence") {
-    using G2                  = const G;
-    G2&                    g2 = g;
-    vertex_reference_t<G2> u  = **frankfurt;
+    using G2                   = const G;
+    G2&                   g2   = g;
+    vertex_reference_t<G> u    = **frankfurt;
+    vertex_key_t<G>       ukey = frankfurt_key;
 
-    using view_t = decltype(std::graph::views::sourced_incidence(g2, u));
+    using view_t = decltype(std::graph::views::sourced_incidence(g2, ukey));
     static_assert(forward_range<view_t>, "sourced_incidence(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [ukey, vkey, uv] : std::graph::views::sourced_incidence(g2, u)) {
+    for (auto&& [uukey, vkey, uv] : std::graph::views::sourced_incidence(g2, ukey)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));
@@ -356,21 +364,23 @@ TEST_CASE("sourced incidence test", "[vol][incidence][sourced]") {
   SECTION("non-const sourced_incidence with vertex_fn") {
     // Note: must include trailing return type on lambda
     vertex_reference_t<G> u       = **frankfurt;
+    vertex_key_t<G>       ukey    = frankfurt_key;
     size_t                cnt     = 0;
     auto                  edge_fn = [&g](edge_reference_t<G> uv) -> double& { return edge_value(g, uv); };
-    for (auto&& [ukey, vkey, uv, val] : std::graph::views::sourced_incidence(g, u, edge_fn)) {
+    for (auto&& [uukey, vkey, uv, val] : std::graph::views::sourced_incidence(g, ukey, edge_fn)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
   }
   SECTION("const sourced_incidence with vertex_fn") {
     // Note: must include trailing return type on lambda
-    using G2                       = const G;
-    G2&                    g2      = g;
-    vertex_reference_t<G2> u       = **frankfurt;
-    auto                   edge_fn = [&g2](edge_reference_t<G2> uv) -> const double& { return edge_value(g2, uv); };
-    size_t                 cnt     = 0;
-    for (auto&& [ukey, vkey, uv, val] : std::graph::views::sourced_incidence(g2, u, edge_fn)) {
+    using G2                      = const G;
+    G2&                   g2      = g;
+    vertex_reference_t<G> u       = **frankfurt;
+    vertex_key_t<G>       ukey    = frankfurt_key;
+    auto                  edge_fn = [&g2](edge_reference_t<G2> uv) -> const double& { return edge_value(g2, uv); };
+    size_t                cnt     = 0;
+    for (auto&& [uukey, vkey, uv, val] : std::graph::views::sourced_incidence(g2, ukey, edge_fn)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));
