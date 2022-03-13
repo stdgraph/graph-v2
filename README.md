@@ -8,14 +8,36 @@ or compilers may or may not work. (At the time of this writing Clang doesn't hav
 been used.)
 
 ### Prerequesites
-C++20 compliant compiler that fully supports concepts and ranges.
-
-CMake 20 or later
-
-Python3 with the conan package manager installed
+1. C++20 compliant compiler that fully supports concepts and ranges. 
+   gcc 11 and the latest version of MSVC have been used for development. 
+   Others may also work but haven't been tested.
+2. CMake 20 or later (needed for CMake Presets)
+3. Python3
+4. Conan package manager (Python: pip install conan)
 
 ### Cloning & Building
 
+```C++
+git clone https://github.com/pratzl/graph-v2.git
+cd graph-v2
+mkdir build
+cd build
+cmake ../???
+make
+```
+
+You'll need to assure CMake Presets are enabled in your IDE or other development tool. 
+See https://docs.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170 for configuring Microsoft tools.
+
+The following libraries will automatically be installed by Conan
+
+1. Catch2 unit test framework
+2. fmt library
+3. spdlog
+
+Other Useful Tools
+
+1. clang-format
 
 
 ## Thanks to:
