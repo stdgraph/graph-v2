@@ -45,10 +45,6 @@
     - [ ] support unordered graph
     - [ ] support unsourced graph
     - [x] create CPO & adjacency_view class
-  - [ ] **edgelist**
-    - [ ] for([ukey,vkey,uv]: edgelist(g))
-    - [ ] for([ukey,vkey,uv,val]: edgelist(g,fn(uv))
-    - [ ] create CPO & edgelist_view class
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -184,6 +180,7 @@
     - [ ] would delay existing design by months and there's no guarantee to be successful
 - [ ] Should we worry about row-major & column-major ordering of adjacency_matrix? always assume row-major?
 - [ ] Do we need a run-time function to check for undirectedness, in addition to is_undirected_edge_v<EV>? Is it a run-time property for some graphs?
+- [ ] Is there a way for EVF to take both edge_value and fnc obj? (same for VVF & vertex_value)
 
 ## Resolved
 ### ToDo Completed
@@ -197,6 +194,7 @@
   - [x] add overridable is_undirected_edge_v<E> & undirected_incidence_graph<G> concept
   - [x] add overridable is_adjacencey_matrix_v<G>
 - Views
+  - [x] edgelist
 - Algorithms
 - Containers (data structures)
     - [x] dynamic_graph (adjustable to different vertex & edge containers)

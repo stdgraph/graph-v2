@@ -212,62 +212,6 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     REQUIRE(total_dist == 2030.0);
   }
 
-#if 0
-  SECTION("const_adjacency_view") {
-    const G& g2 = g;
-
-    std::graph::views::const_adjacency_iterator<G> i0; // default construction
-
-    auto& u = g2[frankfurt_key];
-
-    std::graph::views::const_adjacency_iterator<G> i1(g2, u);
-    {
-      auto&& [vkey, v] = *i1;
-      static_assert(is_const_v<decltype(vkey)>);
-      static_assert(is_const_v<remove_reference_t<decltype(v)>>);
-      REQUIRE(vkey == 5);
-    }
-    {
-      auto&& [vkey, v] = *++i1;
-      REQUIRE(vkey == 9);
-      auto i1b = i1;
-      REQUIRE(i1b == i1);
-    }
-
-    size_t cnt = 0;
-    for (auto&& [vkey, v] : std::graph::views::adjacency_view(g, u)) {
-      ++cnt;
-    }
-    REQUIRE(cnt == 3);
-  }
-
-  SECTION("adjacency_view") {
-    std::graph::views::adjacency_iterator<G> i0; // default construction
-
-    auto& u = g[frankfurt_key];
-
-    std::graph::views::adjacency_iterator<G> i1(g, u);
-    {
-      auto&& [vkey, uv] = *i1;
-      static_assert(is_const_v<decltype(vkey)>);
-      static_assert(!is_const_v<remove_reference_t<decltype(uv)>>);
-      REQUIRE(vkey == 5);
-    }
-    {
-      auto&& [vkey, v] = *++i1;
-      REQUIRE(vkey == 9);
-      auto i1b = i1;
-      REQUIRE(i1b == i1);
-    }
-
-    size_t cnt = 0;
-    for (auto&& [vkey, v] : std::graph::views::adjacency_view(g, u)) {
-      ++cnt;
-    }
-    REQUIRE(cnt == 3);
-  }
-#endif
-
   SECTION("content") {
     std::string_view test_name = "Germany Routes using deque+vector";
 #if TEST_OPTION == TEST_OPTION_OUTPUT

@@ -68,7 +68,7 @@ public:
   constexpr vertexlist_iterator& operator++() {
     ++iter_;
     ++value_.key;
-    // leave value_.second (vertex) as-is to avoid dereferencing iter_ when it's at end()
+    // leave value_.vertex as-is to avoid dereferencing iter_ when it's at end()
     return *this;
   }
   constexpr vertexlist_iterator operator++(int) const {
@@ -140,7 +140,7 @@ public:
   constexpr vertexlist_iterator& operator++() {
     ++iter_;
     ++value_.key;
-    // leave value_.second (vertex) as-is to avoid dereferencing iter_ to get value_.vertex when it's at end()
+    // leave value_.vertex as-is to avoid dereferencing iter_ to get value_.vertex when it's at end()
     return *this;
   }
   constexpr vertexlist_iterator operator++(int) const {
