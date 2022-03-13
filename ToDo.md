@@ -4,42 +4,11 @@
 
 ### ToDo 
 - API
-  - [ ] Common
-    - [ ] template --> class in template definitions
-  - [ ] Ranges
-    - [x] Deprecate vertex_vertex_range_t (and related types and functions) in favor of adjacency_view
-    - [x] Deprecate edge_range_t (and related types and functions) in favor of edge_view
+  - [x] Common
+  - [x] Ranges
   - [ ] Concepts and type_traits
-  - [ ] Accessor functions
-    - [x] as CPO
-    - [x] default implementations (e.g. degree==size)
-    - [x] [deprecated] check for vertex_vertex_t == vertex_edge_t on overloaded functions for both
-    - [ ] add edges(g,ukey)
-- [ ] Views
-  - [ ] incidence
-    - [x] for([vkey,uv] : incidence(g,u))
-    - [x] for([vkey,uv, val] : incidence(g,u,fn(uv))
-    - [x] for([ukey, vkey,uv] : sourced_incidence(g,u))
-    - [x] for([ukey, vkey,uv, val] : sourced_incidence(g,u,fn(uv))
-    - [x] support unordered graph
-    - [x] create CPO & incidence_view class
-  - [ ] sourced_incidence
-    - [x] for([ukey,vkey,uv] : sourced_incidence(g,u))
-    - [x] for([ukey,vkey,uv, val] : sourced__incidence(g,u,fn(uv))
-    - [x] support unordered graph
-    - [x] support Source for incident_graph
-    - [x] create CPO & sourced_incidence_view class
-  - [ ] neighbors
-    - [x] for([vkey, v] : adjacency(g,u)
-    - [x] for([vkey, v, val] : adjacency(g,u,fn(v))
-    - [ ] support unordered graph
-    - [x] create CPO & adjacency_view class
-  - [ ] sourced_adjacency
-    - [x] for([vkey, v] : adjacency(g,u)
-    - [x] for([vkey, v, val] : adjacency(g,u,fn(v))
-    - [x] support unordered graph
-    - [x] support Source for incident_graph
-    - [x] create CPO & adjacency_view class
+  - [x] Accessor functions
+  - [x] Views
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -94,7 +63,9 @@
   - [ ] Validate address sanitizer build
   - [ ] Support Clang (waiting for full concepts support)
   - [ ] Performance tests
+- github - graph-v2
   - [ ] Make graph-v2 public
+  - [ ] Add processes to build & run unit tests on checkin
 - Feature & performance comparison
   - [ ] boost::graph
   - [ ] NWGraph
@@ -105,20 +76,17 @@
   - [x] Decprecate original "graph" repository
   - [ ] README.md
     - [ ] Add general description
-    - [ ] Add link to paper
     - [ ] Add Getting Started
   - [ ] P1709
     - [x] Google Doc --> LaTex
+    - [ ] Add overview/goal
     - [ ] Add sections
 - Feedback
 - Code Review
-  - [ ] views iterator design
-    - Use of subrange
-    - Storing values in iterator
-    - Shadow struct
-    - Setting values in operator*()
+  - [ ] views iterator design: use of subrange, storing values in iterator, shadow struct, setting values in operator*()
 - Readiness
   - [ ] Sep-2022 CppCon
+  - [ ] Oct-2022 WG21 Kona
   - [ ] Feb-2025 deadline for C++26
 
 ### Issues
@@ -137,8 +105,6 @@
   - [ ] vertex_key or vertex_id?
 - [ ] Should operator\[\](n) -> vertex& be a requirement for a graph?
 - [ ] Can std::array be used as a basis for a constexpr graph? What would the graph be?
-- [ ] How are CPOs implemented for views in the standard (e.g. view::vertexlist for class & view::vertices for CPO)
-  - [ ] Can tag_invoke still be used
 - [ ] Does a LaTeX document take fewer pages than equivilent in Google Docs?
 - [ ] SG19 Questions
   - [ ] key vs. id?
@@ -147,13 +113,13 @@
 - [ ] How to validate constexpr? (need to use std::array)
 - [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VKey. How to adapt existing graphs?
 - [ ] Can transform_view be used in place of the projections in the graph views?
-- [ ] How to support bipartite graphs using differnt vertex types?
+- [ ] How to support bipartite graphs using different vertex types?
   - [ ] Requires definition of 2+ types of vertices. How to define vertex type?
     - [ ] vertices are stored as a range of range of vertices, where the outer range is the type of vertex
   - [ ] Need proof-of-concept graph data structure to demonstrate
   - [ ] Option 1: extend API & Views with the type (or hidden if not used)
     - [ ] keeps uniformity of vertex type
-    - [ ] may require use of variant for vertex_value type
+    - [ ] may require use of variant for vertex_value type (having a unique value__type per vertex type significantly increases API complexity)
     - [ ] API extensions
       - [ ] vertices(g,type)
       - [ ] find_vertex(g,type,key)
@@ -192,6 +158,10 @@
 - Views
   - [x] vertexlist
   - [x] edgelist
+  - [x] incidence
+  - [x] sourced_incidence
+  - [x] neighbors
+  - [x] sourced_neighbors
 - Algorithms
 - Containers (data structures)
     - [x] dynamic_graph (adjustable to different vertex & edge containers)
@@ -227,3 +197,4 @@
 - [x] Can std::vector be used as a basis for a constexpr graph? No because we can't have variables of vector
 - [x] Should CSR support source_key on edges (Sourced template parameter)? No. Views will be able to provide it so it won't be needed.
 - [x] edge_list_graph (edgelist_edge<VKey,E,EV> view?): edgelist is a view, or projection of a container
+- [x] Are there any issues with using tag_invoke? It appears not. Others are using it in papers.
