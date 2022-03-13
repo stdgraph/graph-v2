@@ -1,20 +1,20 @@
 #pragma once
 #include "graph/graph.hpp"
+#include "views_utility.hpp"
 
 //
 // neighbors(g,u) -> neighbor_view<VKey,Sourced,E,EV>:
 //
-// enable: for([vkey, uv]        : neighbors(g,u))
-//         for([vkey, uv, value] : neighbors(g,u,fn))
-//         for([ukey, vkey, uv]        : sourced_neighbors(g,u))
-//         for([ukey, vkey, uv, value] : sourced_neighbors(g,u,fn))
+// enable: for([vkey, uv]              : neighbors(g,ukey))
+//         for([vkey, uv, value]       : neighbors(g,ukey,fn))
+//         for([ukey, vkey, uv]        : sourced_neighbors(g,ukey))
+//         for([ukey, vkey, uv, value] : sourced_neighbors(g,ukey,fn))
 //
 namespace std::graph::views {
 
 
 template <class G, bool Sourced = false, class VVF = void>
-requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
-      class neighbor_iterator;
+class neighbor_iterator;
 
 
 /// <summary>
@@ -23,20 +23,21 @@ requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
 /// <typeparam name="G">Graph type</typeparam>
 /// <typeparam name="VVF">Edge Value Function</typeparam>
 template <class G, bool Sourced, class VVF>
-requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
-      class neighbor_iterator {
+class neighbor_iterator
+      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)> {
 public:
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)>;
+
   using graph_type            = G;
   using vertex_type           = vertex_t<graph_type>;
   using vertex_key_type       = vertex_key_t<graph_type>;
   using vertex_reference_type = vertex_reference_t<G>;
   using vertex_value_type     = invoke_result_t<VVF, vertex_reference_type>;
+  using vertex_iterator       = vertex_iterator_t<G>;
 
   using edge_range    = vertex_edge_range_t<graph_type>;
   using edge_iterator = vertex_edge_iterator_t<graph_type>;
   using edge_type     = edge_t<graph_type>;
-  //using edge_reference_type = edge_reference_t<graph_type>;
-  //using edge_value_type     = invoke_result_t<VVF, edge_reference_type>;
 
   using iterator_category = forward_iterator_tag;
   using value_type        = neighbor_view<const vertex_key_type, Sourced, vertex_reference_type, vertex_value_type>;
@@ -48,10 +49,10 @@ public:
   using rvalue_reference  = value_type&&;
 
 public:
-  neighbor_iterator(graph_type& g, edge_iterator iter, const VVF& value_fn)
-        : g_(g), iter_(iter), value_fn_(&value_fn) {}
-  neighbor_iterator(graph_type& g, vertex_reference_type u, const VVF& value_fn)
-        : neighbor_iterator(g, ranges::begin(edges(g, u)), value_fn) {}
+  neighbor_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter, const VVF& value_fn)
+        : base_type(vertex_key(g, ui)), g_(g), iter_(iter), value_fn_(&value_fn) {}
+  neighbor_iterator(graph_type& g, vertex_key_type ukey, const VVF& value_fn)
+        : base_type(ukey), g_(g), iter_(ranges::begin(edges(g, ukey))), value_fn_(&value_fn) {}
 
   constexpr neighbor_iterator()                         = default;
   constexpr neighbor_iterator(const neighbor_iterator&) = default;
@@ -70,13 +71,34 @@ protected:
 
 public:
   constexpr reference operator*() const {
-    // const in this functions signature causes the const version of target(), which isn't always what we want
+    // const in this functions signature causes target() to always return a const value, which isn't always what we want
     // shadow_vertex_type has correct constness based on the G template parameter
-    shadow_vertex_type* v = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
-    if constexpr (Sourced && sourced_incidence_graph<G>)
-      value_ = {source_key(g_, *iter_), target_key(g_, *iter_), v, invoke(*value_fn_, *v)};
-    else
-      value_ = {target_key(g_, *iter_), v, invoke(*value_fn_, *v)};
+
+    if constexpr (unordered_incidence_graph<G>) {
+      static_assert(sourced_incidence_graph<G>);
+      if (target_key(g_, *iter_) != this->source_vertex_key()) {
+        value_.source_key = source_key(g_.*iter_);
+        value_.target_key = target_key(g_, *iter_);
+        value_.target     = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+      } else {
+        value_.source_key = target_key(g_.*iter_);
+        value_.target_key = source_key(g_, *iter_);
+        value_.target     = const_cast<shadow_vertex_type*>(&source(g_, *iter_));
+      }
+    } else if constexpr (Sourced) {
+      if constexpr (sourced_incidence_graph<G>) {
+        value_.source_key = source_key(g_, *iter_);
+        value_.target_key = target_key(g_, *iter_);
+      } else {
+        value_.source_key = this->source_vertex_key();
+        value_.target_key = target_key(g_, *iter_);
+      }
+      value_.target = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+    } else {
+      value_.target_key = target_key(g_, *iter_);
+      value_.target     = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+    }
+    value_.value = invoke(*value_fn_, *value_.target); // 'value' undeclared identifier (.value not in struct?)
     return reinterpret_cast<reference>(value_);
   }
 
@@ -104,20 +126,21 @@ private: // member variables
 
 
 template <class G, bool Sourced>
-requires(!Sourced || (Sourced && sourced_incidence_graph<G>)) //
-      class neighbor_iterator<G, Sourced, void> {
+class neighbor_iterator<G, Sourced, void>
+      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)> {
 public:
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)>;
+
   using graph_type            = G;
   using vertex_type           = vertex_t<graph_type>;
   using vertex_key_type       = vertex_key_t<graph_type>;
   using vertex_reference_type = vertex_reference_t<G>;
   using vertex_value_type     = void;
+  using vertex_iterator       = vertex_iterator_t<G>;
 
   using edge_range    = vertex_edge_range_t<graph_type>;
   using edge_iterator = vertex_edge_iterator_t<graph_type>;
   using edge_type     = edge_t<graph_type>;
-  //using edge_reference_type = edge_reference_t<graph_type>;
-  //using edge_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
   using value_type        = neighbor_view<const vertex_key_type, Sourced, vertex_reference_type, vertex_value_type>;
@@ -135,8 +158,10 @@ protected:
   using shadow_value_type  = neighbor_view<vertex_key_type, Sourced, shadow_vertex_type*, vertex_value_type>;
 
 public:
-  neighbor_iterator(graph_type& g, edge_iterator iter) : g_(g), iter_(iter) {}
-  neighbor_iterator(graph_type& g, vertex_reference_type u) : neighbor_iterator(g, ranges::begin(edges(g, u))) {}
+  neighbor_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter)
+        : base_type(vertex_key(g, ui)), g_(g), iter_(iter) {}
+  neighbor_iterator(graph_type& g, vertex_key_type ukey)
+        : base_type(ukey), g_(g), iter_(ranges::begin(edges(g, ukey))) {}
 
   constexpr neighbor_iterator()                         = default;
   constexpr neighbor_iterator(const neighbor_iterator&) = default;
@@ -148,13 +173,32 @@ public:
 
 public:
   constexpr reference operator*() const {
-    // const in this functions signature causes the const version of target(), which isn't always what we want
+    // const in this functions signature causes target() to always return a const value, which isn't always what we want
     // shadow_vertex_type has correct constness based on the G template parameter
-    shadow_vertex_type* v = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
-    if constexpr (Sourced && sourced_incidence_graph<G>)
-      value_ = {source_key(g_, *iter_), target_key(g_, *iter_), v};
-    else {
-      value_ = {target_key(g_, *iter_), v};
+
+    if constexpr (unordered_incidence_graph<G>) {
+      static_assert(sourced_incidence_graph<G>);
+      if (target_key(g_, *iter_) != this->source_vertex_key()) {
+        value_.source_key = source_key(g_.*iter_);
+        value_.target_key = target_key(g_, *iter_);
+        value_.target     = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+      } else {
+        value_.source_key = target_key(g_.*iter_);
+        value_.target_key = source_key(g_, *iter_);
+        value_.target     = const_cast<shadow_vertex_type*>(&source(g_, *iter_));
+      }
+    } else if constexpr (Sourced) {
+      if constexpr (sourced_incidence_graph<G>) {
+        value_.source_key = source_key(g_, *iter_);
+        value_.target_key = target_key(g_, *iter_);
+      } else {
+        value_.source_key = this->source_vertex_key();
+        value_.target_key = target_key(g_, *iter_);
+      }
+      value_.target = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+    } else {
+      value_.target_key = target_key(g_, *iter_);
+      value_.target     = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
     }
     return reinterpret_cast<reference>(value_);
   }
@@ -186,45 +230,24 @@ using neighbors_view = ranges::subrange<neighbor_iterator<G, Sourced, VVF>, vert
 
 namespace access {
   // ranges
-  TAG_INVOKE_DEF(neighbors); // neighbors(g,u)               -> edges[vkey,uv]
-                             // neighbors(g,ukey)            -> edges[vkey,uv]
-                             // neighbors(g,u,   fn)         -> edges[vkey,uv,value]
+  TAG_INVOKE_DEF(neighbors); // neighbors(g,ukey)            -> edges[vkey,uv]
                              // neighbors(g,ukey,fn)         -> edges[vkey,uv,value]
 
   template <class G>
-  concept _has_neighbors_g_u_adl = vertex_range<G> && requires(G&& g, vertex_reference_t<G> u) {
-    {neighbors(g, u)};
-  };
-  template <class G>
   concept _has_neighbors_g_ukey_adl = vertex_range<G> && requires(G&& g, vertex_key_t<G> ukey) {
     {neighbors(g, ukey)};
-  };
-  template <class G, class VVF>
-  concept _has_neighbors_g_u_evf_adl = vertex_range<G> && requires(G&& g, vertex_reference_t<G> u, const VVF& vvf) {
-    {neighbors(g, u, vvf)};
   };
   template <class G, class VVF>
   concept _has_neighbors_g_ukey_evf_adl = vertex_range<G> && requires(G&& g, vertex_key_t<G> ukey, const VVF& vvf) {
     {neighbors(g, ukey, vvf)};
   };
 
-  TAG_INVOKE_DEF(sourced_neighbors); // sourced_neighbors(g,u)       -> edges[ukey,vkey,uv]
-                                     // sourced_neighbors(g,ukey)    -> edges[ukey,vkey,uv]
-                                     // sourced_neighbors(g,u,   fn) -> edges[ukey,vkey,uv,value]
+  TAG_INVOKE_DEF(sourced_neighbors); // sourced_neighbors(g,ukey)    -> edges[ukey,vkey,uv]
                                      // sourced_neighbors(g,ukey,fn) -> edges[ukey,vkey,uv,value]
 
   template <class G>
-  concept _has_sourced_neighbors_g_u_adl = vertex_range<G> && requires(G&& g, vertex_reference_t<G> u) {
-    {sourced_neighbors(g, u)};
-  };
-  template <class G>
   concept _has_sourced_neighbors_g_ukey_adl = vertex_range<G> && requires(G&& g, vertex_key_t<G> ukey) {
     {sourced_neighbors(g, ukey)};
-  };
-  template <class G, class VVF>
-  concept _has_sourced_neighbors_g_u_evf_adl = vertex_range<G> &&
-        requires(G&& g, vertex_reference_t<G> u, const VVF& vvf) {
-    {sourced_neighbors(g, u, vvf)};
   };
   template <class G, class VVF>
   concept _has_sourced_neighbors_g_ukey_evf_adl = vertex_range<G> &&
@@ -235,102 +258,61 @@ namespace access {
 } // namespace access
 
 //
-// neighbors(g,u)
 // neighbors(g,ukey)
 //
-template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto neighbors(G&& g, vertex_reference_t<G> u) {
-  if constexpr (access::_has_neighbors_g_u_adl<G>) {
-    return access::neighbors(g, u);
-  } else {
-    using iterator_type = neighbor_iterator<G, false, void>;
-    return neighbors_view<G, false, void>(iterator_type(g, ranges::begin(edges(g, u))), ranges::end(edges(g, u)));
-  }
-}
-
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_neighbors_g_ukey_adl<G>)
     return access::neighbors(g, ukey);
-  else
-    return neighbors(g, *find_vertex(g, ukey));
-}
-
-
-//
-// neighbors(g,u,vvf)
-// neighbors(g,ukey,vvf)
-//
-template <class G, class VVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto neighbors(G&& g, vertex_reference_t<G> u, const VVF& vvf) {
-  if constexpr (access::_has_neighbors_g_u_evf_adl<G, VVF>) {
-    return access::neighbors(g, u, vvf);
-  } else {
-    using iterator_type = neighbor_iterator<G, false, VVF>;
-    return neighbors_view<G, false, VVF>(iterator_type(g, ranges::begin(edges(g, u)), vvf), ranges::end(edges(g, u)));
+  else {
+    using iterator_type = neighbor_iterator<G, false, void>;
+    return neighbors_view<G, false, void>(iterator_type(g, ukey), ranges::end(edges(g, ukey)));
   }
 }
 
+
+//
+// neighbors(g,ukey,vvf)
+//
 template <class G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_key_t<G> ukey, const VVF& vvf) {
   if constexpr (access::_has_neighbors_g_ukey_evf_adl<G, VVF>)
     return access::neighbors(g, ukey, vvf);
-  else
-    return neighbors(g, *find_vertex(g, ukey), vvf);
-}
-
-
-//
-// sourced_neighbors(g,u)
-// sourced_neighbors(g,ukey)
-//
-template <class G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto sourced_neighbors(G&& g, vertex_reference_t<G> u) {
-  if constexpr (access::_has_sourced_neighbors_g_u_adl<G>)
-    return access::sourced_neighbors(g, u);
   else {
-    using iterator_type = neighbor_iterator<G, true, void>;
-    return neighbors_view<G, true, void>(iterator_type(g, ranges::begin(edges(g, u))), ranges::end(edges(g, u)));
+    using iterator_type = neighbor_iterator<G, false, VVF>;
+    return neighbors_view<G, false, VVF>(iterator_type(g, ukey, vvf), ranges::end(edges(g, ukey)));
   }
 }
 
+//
+// sourced_neighbors(g,ukey)
+//
 template <class G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_neighbors(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_sourced_neighbors_g_ukey_adl<G>)
     return access::sourced_neighbors(g, ukey);
-  else
-    return sourced_neighbors(g, *find_vertex(g, ukey));
-}
-
-
-//
-// sourced_neighbors(g,u,vvf)
-// sourced_neighbors(g,ukey,vvf)
-//
-template <class G, class VVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto sourced_neighbors(G&& g, vertex_reference_t<G> u, const VVF& vvf) {
-  if constexpr (access::_has_sourced_neighbors_g_u_evf_adl<G, VVF>) {
-    return access::sourced_neighbors(g, u, vvf);
-  } else {
-    using iterator_type = neighbor_iterator<G, true, VVF>;
-    return neighbors_view<G, true, VVF>(iterator_type(g, ranges::begin(edges(g, u)), vvf), ranges::end(edges(g, u)));
+  else {
+    using iterator_type = neighbor_iterator<G, true, void>;
+    return neighbors_view<G, true, void>(iterator_type(g, ukey), ranges::end(edges(g, ukey)));
   }
 }
 
+
+//
+// sourced_neighbors(g,ukey,vvf)
+//
 template <class G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_neighbors(G&& g, vertex_key_t<G> ukey, const VVF& vvf) {
   if constexpr (access::_has_sourced_neighbors_g_ukey_evf_adl<G, VVF>)
     return access::sourced_neighbors(g, ukey, vvf);
-  else
-    return sourced_neighbors(g, *find_vertex(g, ukey), vvf);
+  else {
+    using iterator_type = neighbor_iterator<G, true, VVF>;
+    return neighbors_view<G, true, VVF>(iterator_type(g, ukey, vvf), ranges::end(edges(g, ukey)));
+  }
 }
 
 
