@@ -21,37 +21,34 @@
     - [x] for([ukey, u, val] : vertexlist(g,fn(u))
     - [x] create CPO & vertexlist_view class
     - [ ] refactor to have similar structure as incidence w/ base_vertexlist_iterator holding common values
-  - [ ] **incidence**
+  - [ ] incidence
     - [x] for([vkey,uv] : incidence(g,u))
     - [x] for([vkey,uv, val] : incidence(g,u,fn(uv))
     - [x] for([ukey, vkey,uv] : sourced_incidence(g,u))
     - [x] for([ukey, vkey,uv, val] : sourced_incidence(g,u,fn(uv))
     - [ ] support unordered graph
     - [x] create CPO & incidence_view class
-  - [ ] **sourced_incidence**
+  - [ ] sourced_incidence
     - [x] for([ukey,vkey,uv] : sourced_incidence(g,u))
-    - [ ] for([ukey,vkey,uv, val] : sourced__incidence(g,u,fn(uv))
+    - [x] for([ukey,vkey,uv, val] : sourced__incidence(g,u,fn(uv))
     - [ ] support unordered graph
+    - [ ] support unsourced graph
     - [x] create CPO & sourced_incidence_view class
-  - [ ] adjacency
+  - [ ] neighbors
     - [x] for([vkey, v] : adjacency(g,u)
-    - [ ] for([vkey, v, val] : adjacency(g,u,fn(v))
+    - [x] for([vkey, v, val] : adjacency(g,u,fn(v))
     - [ ] support unordered graph
-    - [ ] create CPO & adjacency_view class
+    - [x] create CPO & adjacency_view class
   - [ ] sourced_adjacency
     - [x] for([vkey, v] : adjacency(g,u)
-    - [ ] for([vkey, v, val] : adjacency(g,u,fn(v))
+    - [x] for([vkey, v, val] : adjacency(g,u,fn(v))
     - [ ] support unordered graph
-    - [ ] create CPO & adjacency_view class
-  - [ ] edgelist
+    - [ ] support unsourced graph
+    - [x] create CPO & adjacency_view class
+  - [ ] **edgelist**
     - [ ] for([ukey,vkey,uv]: edgelist(g))
     - [ ] for([ukey,vkey,uv,val]: edgelist(g,fn(uv))
     - [ ] create CPO & edgelist_view class
-  - [ ] Replace VVF & EVF in CPO signatures with generic function matcher in CPO check fnc
-    - [ ] vertexlist
-    - [ ] incidence & sourced_incidence
-    - [ ] adjacency & sourced_adjacency
-    - [ ] edgelist
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -123,7 +120,14 @@
     - [x] Google Doc --> LaTex
     - [ ] Add sections
 - Feedback
+- Code Review
+  - [ ] views iterator design
+    - Use of subrange
+    - Storing values in iterator
+    - Shadow struct
+    - Setting values in operator*()
 - Readiness
+  - [ ] Sep-2022 CppCon
   - [ ] Feb-2025 deadline for C++26
 
 ### Issues
@@ -192,6 +196,7 @@
     - [x] vertex_edge_range
   - [x] add overridable is_undirected_edge_v<E> & undirected_incidence_graph<G> concept
   - [x] add overridable is_adjacencey_matrix_v<G>
+- Views
 - Algorithms
 - Containers (data structures)
     - [x] dynamic_graph (adjustable to different vertex & edge containers)
