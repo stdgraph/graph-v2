@@ -287,14 +287,28 @@ namespace views {
     V    target;
   };
 
+  template <class VKey>
+  struct neighbor_view<VKey, false, void, void> {
+    VKey target_key;
+  };
+
   template <class VKey, class V>
   struct neighbor_view<VKey, true, V, void> {
+    VKey source_key;
     VKey target_key;
     V    target;
   };
 
+  template <class VKey, class VV>
+  struct neighbor_view<VKey, true, void, VV> {
+    VKey source_key;
+    VKey target_key;
+    VV   value;
+  };
+
   template <class VKey>
   struct neighbor_view<VKey, true, void, void> {
+    VKey source_key;
     VKey target_key;
   };
 
