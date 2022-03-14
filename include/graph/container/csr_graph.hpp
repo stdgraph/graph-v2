@@ -86,7 +86,7 @@ public: // types
   using vector_type    = vector<T, allocator_type>;
 
   using value_type      = T;
-  using size_type       = VKey;
+  using size_type       = size_t; //VKey;
   using difference_type = typename vector_type::difference_type;
   using reference       = value_type&;
   using const_reference = const value_type&;
@@ -171,8 +171,14 @@ public: // Operations
 /// <typeparam name="VKey">Vertex Key type. This must be large enough for the total edges and the total vertices.</typeparam>
 /// <typeparam name="Alloc">Allocator type</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
-class csr_row_values {
+class csr_row_values : public value_vector<VV, VKey, Alloc, 1> {
 public:
+  using base_type = value_vector<VV, VKey, Alloc, 1>;
+  using base_type::size;
+  using base_type::resize;
+  using base_type::reserve;
+  using base_type::operator[];
+
   using graph_type = csr_graph<EV, VV, GV, VKey, Alloc>;
 
   using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
@@ -189,7 +195,7 @@ public:
 
   using size_type = ranges::range_size_t<row_values_type>;
 
-  constexpr csr_row_values(const Alloc& alloc) : values_(alloc) {}
+  constexpr csr_row_values(const Alloc& alloc) : base_type(alloc) {}
 
   constexpr csr_row_values()                      = default;
   constexpr csr_row_values(const csr_row_values&) = default;
@@ -199,21 +205,22 @@ public:
   constexpr csr_row_values& operator=(const csr_row_values&) = default;
   constexpr csr_row_values& operator=(csr_row_values&&) = default;
 
+
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_row_values(const VRng& vrng, VProj projection, size_type vertex_count) {
     if constexpr (ranges::sized_range<VRng>)
       vertex_count = max(vertex_count, ranges::size(vrng));
-    values_.resize(ranges::size(vrng));
+    resize(ranges::size(vrng));
 
     for (auto&& vtx : vrng) {
       const auto& [key, value] = move(projection(vtx));
 
       // if an unsized vrng is passed, the caller is responsible to call
       // resize_vertices(n) with enough entries for all the values.
-      assert(static_cast<size_t>(key) < values_.size());
+      assert(static_cast<size_t>(key) < size());
 
-      values_[key] = value;
+      (*this)[key] = value;
     }
   }
 
@@ -222,35 +229,36 @@ public:
   constexpr void load_row_values(VRng&& vrng, VProj projection, size_type vertex_count) {
     if constexpr (ranges::sized_range<VRng>)
       vertex_count = max(vertex_count, ranges::size(vrng));
-    values_.resize(ranges::size(vrng));
+    resize(ranges::size(vrng));
 
     for (auto&& vtx : vrng) {
       auto&& [key, value] = projection(vtx);
 
       // if an unsized vrng is passed, the caller is responsible to call
       // resize_vertices(n) with enough entries for all the values.
-      assert(static_cast<size_t>(key) < values_.size());
+      assert(static_cast<size_t>(key) < size());
 
-      values_[key] = move(value);
+      (*this)[key] = move(value);
     }
   }
 
-  constexpr size_type row_values_size() const noexcept { return values_.size(); }
+  constexpr size_type row_values_size() const noexcept { return size(); }
 
-  constexpr void row_values_reserve(size_type new_cap) { values_.reserve(new_cap); }
-  constexpr void row_values_resize(size_type n) { values_.resize(n); }
+  constexpr void row_values_reserve(size_type new_cap) { reserve(new_cap); }
+  constexpr void row_values_resize(size_type n) { resize(n); }
 
   constexpr reference_type row_value(size_t key) { //
-    return values_[key];
+    return (*this)[key];
   }
   constexpr const_reference_type row_value(size_t key) const { //
-    return values_[key];
+    return (*this)[key];
   }
 
 private: // Member variables
-  row_values_type values_;
+  //row_values_type values_;
 };
 
+#if 0
 template <class EV, class GV, integral VKey, class Alloc>
 class csr_row_values<EV, void, GV, VKey, Alloc> {
 public:
@@ -284,7 +292,7 @@ public:
     // do nothing when VV=void
   }
 };
-
+#endif
 
 /// <summary>
 /// csr_graph_base - base class for compressed sparse row adjacency graph
