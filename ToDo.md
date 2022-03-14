@@ -20,11 +20,15 @@
       - [x] Dijkstra (book, impl from AndrewL)
       - [ ] Dijkstra
       - [ ] Bellman-Ford
-    - [ ] Connected Components
-    - [ ] Strongly Connected Components
-    - [ ] Biconnected Components
-    - [ ] Articulation Points
+    - [ ] Components
+      - [ ] Connected Components
+      - [ ] Strongly Connected Components
+      - [ ] Biconnected Components
+      - [ ] Articulation Points
     - [ ] Transitive Closure
+      - [ ] dfs_transitive_closure
+      - [ ] warshall_transitive_closure
+      - [ ] warshall_transitive_closure (parallel)
     - [ ] Maximal Independent Set (edgelist)
     - [ ] Union Find (edgelist)
     - [ ] copy (g1 --> g2)
@@ -84,6 +88,7 @@
 - Feedback
 - Code Review
   - [ ] views iterator design: use of subrange, storing values in iterator, shadow struct, setting values in operator*()
+  - [ ] tag_invoke design & use (namespaces, tag names, etc.)
 - Readiness
   - [ ] Sep-2022 CppCon
   - [ ] Oct-2022 WG21 Kona

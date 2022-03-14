@@ -19,9 +19,9 @@ requires edge_weight_function<G, WF> &&
 auto dijkstra_book(
       G&&             g,      //
       vertex_key_t<G> source, //
-      WF              weight = [&g](ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return 1; }) {
+      WF              weight = [&g](edge_reference_t<G> uv) { return 1; }) {
   using key_type    = vertex_key_t<G>;
-  using weight_type = decltype(weight(std::declval<ranges::range_reference_t<vertex_edge_range_t<G>>>()));
+  using weight_type = decltype(weight(std::declval<edge_reference_t<G>>()));
 
   size_t N(size(vertices(g)));
   assert(source < N);
@@ -51,7 +51,7 @@ auto dijkstra_book(
     //  auto        vkey = target_key(g, uv);
     //
     //extension:
-    //for (auto&& [vkey, uv, w] : std::graph::views::incidence(g, ukey, weight)) {
+    //for (auto&& [vkey, uv, w] : views::incidence(g, ukey, weight)) {
     //
     for (auto&& [vkey, uv] : views::incidence(g, ukey)) {
       weight_type w = weight(uv);
@@ -67,8 +67,8 @@ auto dijkstra_book(
 
 template <incidence_graph G>
 void vertex_key_example(G&& g) {
-  auto ui   = begin(vertices(g));
-  auto key = vertex_key(g,ui);
+  auto ui  = begin(vertices(g));
+  auto key = vertex_key(g, ui);
 
   for (auto&& [ukey, u] : views::vertexlist(g)) { //
   }
