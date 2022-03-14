@@ -79,6 +79,86 @@ struct csr_col {
   vertex_key_type index = 0;
 };
 
+template <typename T, integral VKey, class Alloc, size_t Identifier = 0>
+class value_vector {
+public: // types
+  using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<T>;
+  using vector_type    = vector<T, allocator_type>;
+
+  using value_type      = T;
+  using size_type       = VKey;
+  using difference_type = typename vector_type::difference_type;
+  using reference       = value_type&;
+  using const_reference = const value_type&;
+  using pointer         = typename vector_type::pointer;
+  using const_pointer   = typename vector_type::const_pointer;
+  using iterator        = typename vector_type::iterator;
+  using const_iterator  = typename vector_type::const_iterator;
+
+public: // ctor/dtor/assign
+  value_vector(allocator_type alloc) : v_(alloc) {}
+
+  value_vector()                   = default;
+  value_vector(const value_vector&) = default;
+  value_vector(value_vector&&)      = default;
+  ~value_vector()                  = default;
+
+  value_vector& operator=(const value_vector&) = default;
+  value_vector& operator=(value_vector&&) = default;
+
+public: // Properties
+  [[nodiscard]] constexpr size_type size() const noexcept { return static_cast<size_type>(v_.size()); }
+  [[nodiscard]] constexpr bool      empty() const noexcept { return v_.empty(); }
+  [[nodiscard]] constexpr size_type capacity() const noexcept { return static_cast<size_type>(v_.size()); }
+
+public: // Operations
+  constexpr void reserve(size_type new_cap) { v_.reserve(new_cap); }
+  constexpr void resize(size_type new_size) { v_.resize(new_size); }
+
+  constexpr void clear() noexcept { v_.clear(); }
+  constexpr void push_back(T&& value) { v_.push_back(forward<T>(value)); }
+  constexpr void emplace_back(T&& value) { v_.emplace_back(forward<T>(value)); }
+
+  constexpr void swap(value_vector& other) noexcept { swap(v_, other.v_); }
+
+public:
+  constexpr reference       operator[](size_type pos) { return v_[pos]; }
+  constexpr const_reference operator[](size_type pos) const { return v_[pos]; }
+
+private:
+  vector_type v_;
+};
+
+template <integral VKey, class Alloc, size_t Identifier>
+class value_vector<void, VKey, Alloc, Identifier> {
+public: // types
+  using size_type = VKey;
+
+public: // ctor/dtor/assign
+  value_vector(Alloc alloc) {}
+
+  value_vector()                   = default;
+  value_vector(const value_vector&) = default;
+  value_vector(value_vector&&)      = default;
+  ~value_vector()                  = default;
+
+  value_vector& operator=(const value_vector&) = default;
+  value_vector& operator=(value_vector&&) = default;
+
+public: // Properties
+  [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
+  [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
+  [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
+
+public: // Operations
+  constexpr void reserve(size_type new_cap) {}
+  constexpr void resize(size_type new_size) {}
+
+  constexpr void clear() noexcept {}
+  constexpr void swap(value_vector& other) noexcept {}
+};
+
+
 
 /// <summary>
 /// Class to hold vertex values in a vector that is the same size as row_index_.
@@ -217,7 +297,7 @@ public:
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
 class csr_graph_base : private csr_row_values<EV, VV, GV, VKey, Alloc> {
-  using row_values_base        = csr_row_values<EV, VV, GV, VKey, Alloc>;
+  using row_values_base = csr_row_values<EV, VV, GV, VKey, Alloc>;
   using row_values_base::row_value;
   using row_values_base::row_values_size;
   using row_values_base::row_values_resize;
@@ -267,7 +347,7 @@ public: // Construction/Destruction
   constexpr csr_graph_base& operator=(csr_graph_base&&) = default;
 
   constexpr csr_graph_base(const Alloc& alloc)
-        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc)  {}
+        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {}
 
   /// <summary>
   /// Constructor that takes a edge range to create the CSR graph.
@@ -280,7 +360,7 @@ public: // Construction/Destruction
   template <ranges::forward_range ERng, class EProj = identity>
   requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
   constexpr csr_graph_base(const ERng& erng, EProj eprojection = {}, const Alloc& alloc = Alloc())
-        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc)  {
+        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
 
     load_edges(erng, eprojection);
   }
@@ -305,7 +385,7 @@ public: // Construction/Destruction
                            EProj        eprojection = {},
                            VProj        vprojection = {},
                            const Alloc& alloc       = Alloc())
-        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc)  {
+        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
 
     load(erng, vrng, eprojection, vprojection);
   }
@@ -318,7 +398,7 @@ public: // Construction/Destruction
   /// <param name="alloc">Allocator to use for internal containers</param>
   constexpr csr_graph_base(const initializer_list<views::copyable_edge_t<VKey, EV>>& ilist,
                            const Alloc&                                              alloc = Alloc())
-        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc)  {
+        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
     load_edges(ilist, identity());
   }
 
