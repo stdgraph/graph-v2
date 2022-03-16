@@ -24,9 +24,9 @@ class incidence_iterator;
 /// <typeparam name="EVF">Edge Value Function</typeparam>
 template <class G, bool Sourced, class EVF>
 class incidence_iterator
-      : source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)> {
+      : source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)>;
 
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
@@ -71,7 +71,7 @@ protected:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (unordered_incidence_graph<G>) {
+    if constexpr (undirected_incidence_graph<G>) {
       static_assert(sourced_incidence_graph<G>);
       if (target_key(g_, *iter_) != this->source_vertex_key()) {
         value_.source_key = source_key(g_.*iter_);
@@ -121,9 +121,9 @@ private: // member variables
 
 template <class G, bool Sourced>
 class incidence_iterator<G, Sourced, void>
-      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)> {
+      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_incidence_graph<G>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)>;
 
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
@@ -167,7 +167,7 @@ public:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (unordered_incidence_graph<G>) {
+    if constexpr (undirected_incidence_graph<G>) {
       static_assert(sourced_incidence_graph<G>);
       if (target_key(g_, *iter_) != this->source_vertex_key()) {
         value_.source_key = source_key(g_.*iter_);

@@ -27,9 +27,9 @@
       - [ ] Articulation Points
     - [ ] Transitive Closure
       - [ ] dfs_transitive_closure
-      - [ ] warshall_transitive_closure
+      - [x] warshall_transitive_closure
       - [ ] warshall_transitive_closure (parallel)
-    - [ ] Maximal Independent Set (edgelist)
+    - [ ] Maximal Independent Set (edgelist) (from NWGraph --> Matt)
     - [ ] Union Find (edgelist)
     - [ ] copy (g1 --> g2)
 - Containers (data structures)

@@ -50,12 +50,12 @@ using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_
 ///  }
 ///  namespace std::graph {
 ///     template<class X>
-///     inline constexpr bool is_unordered_edge_v<edge_t<my_namespace::my_graph<X>>> = true;
+///     inline constexpr bool is_undirected_edge_v<edge_t<my_namespace::my_graph<X>>> = true;
 ///  }
 /// </summary>
 /// <typeparam name="E">The edge type with unordered source and target</typeparam>
 template <class E>
-inline constexpr bool is_unordered_edge_v = false;
+inline constexpr bool is_undirected_edge_v = false;
 
 /// <summary>
 /// Override for a graph type where edges are defined densely in a matrix to allow for
@@ -112,7 +112,10 @@ template <class G>
 concept sourced_incidence_graph = incidence_graph<G> && sourced_edge_range<G, vertex_edge_range_t<G>>;
 
 template <class G>
-concept unordered_incidence_graph = sourced_incidence_graph<G> && is_unordered_edge_v<edge_t<G>>;
+concept undirected_incidence_graph = sourced_incidence_graph<G> && is_undirected_edge_v<edge_t<G>>;
+
+template <class G>
+concept directed_incidence_graph = !undirected_incidence_graph<G>;
 
 template <class G>
 concept adjacency_matrix = is_adjacency_matrix_v<G>;

@@ -98,10 +98,10 @@ public: // types
 public: // ctor/dtor/assign
   value_vector(allocator_type alloc) : v_(alloc) {}
 
-  value_vector()                   = default;
+  value_vector()                    = default;
   value_vector(const value_vector&) = default;
   value_vector(value_vector&&)      = default;
-  ~value_vector()                  = default;
+  ~value_vector()                   = default;
 
   value_vector& operator=(const value_vector&) = default;
   value_vector& operator=(value_vector&&) = default;
@@ -137,10 +137,10 @@ public: // types
 public: // ctor/dtor/assign
   value_vector(Alloc alloc) {}
 
-  value_vector()                   = default;
+  value_vector()                    = default;
   value_vector(const value_vector&) = default;
   value_vector(value_vector&&)      = default;
-  ~value_vector()                  = default;
+  ~value_vector()                   = default;
 
   value_vector& operator=(const value_vector&) = default;
   value_vector& operator=(value_vector&&) = default;
@@ -157,7 +157,6 @@ public: // Operations
   constexpr void clear() noexcept {}
   constexpr void swap(value_vector& other) noexcept {}
 };
-
 
 
 /// <summary>
@@ -241,58 +240,8 @@ public:
       (*this)[key] = move(value);
     }
   }
-
-  constexpr size_type row_values_size() const noexcept { return size(); }
-
-  constexpr void row_values_reserve(size_type new_cap) { reserve(new_cap); }
-  constexpr void row_values_resize(size_type n) { resize(n); }
-
-  constexpr reference_type row_value(size_t key) { //
-    return (*this)[key];
-  }
-  constexpr const_reference_type row_value(size_t key) const { //
-    return (*this)[key];
-  }
-
-private: // Member variables
-  //row_values_type values_;
 };
 
-#if 0
-template <class EV, class GV, integral VKey, class Alloc>
-class csr_row_values<EV, void, GV, VKey, Alloc> {
-public:
-  using size_type         = size_t;
-  using vertex_value_type = void;
-
-  constexpr csr_row_values(const Alloc& alloc) {}
-
-  constexpr csr_row_values()                      = default;
-  constexpr csr_row_values(const csr_row_values&) = default;
-  constexpr csr_row_values(csr_row_values&&)      = default;
-  constexpr ~csr_row_values()                     = default;
-
-  constexpr csr_row_values& operator=(const csr_row_values&) = default;
-  constexpr csr_row_values& operator=(csr_row_values&&) = default;
-
-  constexpr size_type row_values_size() const noexcept { return 0; }
-
-  constexpr void row_values_reserve(size_type new_cap) {}
-  constexpr void row_values_resize(size_type n) {}
-
-  template <ranges::forward_range VRng, class VProj = identity>
-  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_row_values(const VRng& vrng, VProj projection, size_type vertex_count) {
-    // do nothing when VV=void
-  }
-
-  template <ranges::forward_range VRng, class VProj = identity>
-  //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
-  constexpr void load_row_values(VRng&& vrng, VProj projection, size_type vertex_count) {
-    // do nothing when VV=void
-  }
-};
-#endif
 
 /// <summary>
 /// csr_graph_base - base class for compressed sparse row adjacency graph
@@ -306,11 +255,6 @@ public:
 template <class EV, class VV, class GV, integral VKey, class Alloc>
 class csr_graph_base : private csr_row_values<EV, VV, GV, VKey, Alloc> {
   using row_values_base = csr_row_values<EV, VV, GV, VKey, Alloc>;
-  using row_values_base::row_value;
-  using row_values_base::row_values_size;
-  using row_values_base::row_values_resize;
-  using row_values_base::row_values_reserve;
-  using row_values_base::load_row_values;
 
   using row_type           = csr_row<VKey>; // index into col_index_
   using row_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<row_type>;
@@ -414,7 +358,7 @@ public:
 public: // Operations
   void reserve_vertices(size_type count) {
     row_index_.reserve(count + 1); // +1 for terminating row
-    row_values_reserve(count);
+    row_values_base::reserve(count);
   }
   void reserve_edges(size_type count) {
     col_index_.reserve(count);
@@ -443,7 +387,7 @@ public: // Operations
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_vertices(const VRng& vrng, VProj vprojection, size_type vertex_count = 0) {
-    load_row_values(max(vrng, vprojection, vertex_count, ranges::size(vrng)));
+    row_values_base::load_row_values(max(vrng, vprojection, vertex_count, ranges::size(vrng)));
   }
 
   /// <summary>
@@ -459,7 +403,7 @@ public: // Operations
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
   constexpr void load_vertices(VRng& vrng, VProj vprojection = {}, size_type vertex_count = 0) {
-    load_row_values(vrng, vprojection, max(vertex_count, ranges::size(vrng)));
+    row_values_base::load_row_values(vrng, vprojection, max(vertex_count, ranges::size(vrng)));
   }
 
   /// <summary>
@@ -537,8 +481,8 @@ public: // Operations
     // If load_vertices(vrng,vproj) has been called but it doesn't have enough values for all
     // the vertices then we extend the size to remove possibility of out-of-bounds occuring when
     // getting a value for a row.
-    if (row_values_size() > 1 && row_values_size() < vertex_count)
-      row_values_resize(vertex_count);
+    if (row_values_base::size() > 1 && row_values_base::size() < vertex_count)
+      row_values_base::resize(vertex_count);
   }
 
   // The only diff with this and ERng&& is v_.push_back vs. v_.emplace_back
@@ -587,8 +531,8 @@ public: // Operations
     // If load_vertices(vrng,vproj) has been called but it doesn't have enough values for all
     // the vertices then we extend the size to remove possibility of out-of-bounds occuring when
     // getting a value for a row.
-    if (row_values_size() > 0 && row_values_size() < vertex_count)
-      row_values_resize(vertex_count);
+    if (row_values_base::size() > 0 && row_values_base::size() < vertex_count)
+      row_values_base::resize(vertex_count);
   }
 
   /// <summary>
@@ -663,14 +607,16 @@ private: // tag_invoke properties
   friend constexpr vertex_value_type&
   tag_invoke(::std::graph::access::vertex_value_fn_t, graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
-    auto uidx = &u - g.row_index_.data();
-    return g.row_value(static_cast<size_t>(uidx));
+    auto uidx = static_cast<size_t>(&u - g.row_index_.data());
+    row_values_base& row_vals = g;
+    return row_vals[uidx];
   }
   friend constexpr const vertex_value_type&
   tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
-    auto uidx = &u - g.row_index_.data();
-    return g.row_value(static_cast<size_t>(uidx));
+    auto uidx = static_cast<size_t>(&u - g.row_index_.data());
+    const row_values_base& row_vals = g;
+    return row_vals[uidx];
   }
 
   friend constexpr edges_type tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {
