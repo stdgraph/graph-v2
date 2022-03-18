@@ -12,11 +12,11 @@
 namespace std::graph::views {
 
 
-template <class G, class EVF = void>
+template <incidence_graph G, class EVF = void>
 class edgelist_iterator;
 
 
-template <class G>
+template <incidence_graph G>
 class edgelist_iterator_base {
   using vertex_iterator = vertex_iterator_t<G>;
   using edge_iterator   = vertex_edge_iterator_t<G>;
@@ -62,7 +62,7 @@ protected:
 /// </summary>
 /// <typeparam name="G">Graph type</typeparam>
 /// <typeparam name="EVF">Edge Value Function</typeparam>
-template <class G, class EVF>
+template <incidence_graph G, class EVF>
 class edgelist_iterator : public edgelist_iterator_base<G> {
 public:
   using base_type = edgelist_iterator_base<G>;
@@ -138,7 +138,7 @@ private: // member variables
 };
 
 
-template <class G>
+template <incidence_graph G>
 class edgelist_iterator<G, void> : public edgelist_iterator_base<G> {
 public:
   using base_type = edgelist_iterator_base<G>;
@@ -246,7 +246,7 @@ namespace access {
 // edgelist(g)
 // edgelist(g,ukey,vkey)
 //
-template <class G>
+template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g) {
   if constexpr (access::_has_edgelist_g_adl<G>) {
@@ -257,7 +257,7 @@ constexpr auto edgelist(G&& g) {
   }
 }
 
-template <class G>
+template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g, vertex_key_t<G> first, vertex_key_t<G> last) {
   assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));
@@ -274,7 +274,7 @@ constexpr auto edgelist(G&& g, vertex_key_t<G> first, vertex_key_t<G> last) {
 // edgelist(g,u,evf)
 // edgelist(g,ukey,evf)
 //
-template <class G, class EVF>
+template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g, const EVF& evf) {
   if constexpr (access::_has_edgelist_g_evf_adl<G, EVF>) {
@@ -285,7 +285,7 @@ constexpr auto edgelist(G&& g, const EVF& evf) {
   }
 }
 
-template <class G, class EVF>
+template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g, vertex_key_t<G> first, vertex_key_t<G> last, const EVF& evf) {
   assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));

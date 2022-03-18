@@ -1,5 +1,6 @@
 #pragma once
 #include "graph/graph.hpp"
+#include "graph/views/views_utility.hpp"
 
 //
 // vertexlist(g) -> [key, vertex& [,value]]
@@ -11,12 +12,12 @@
 //
 namespace std::graph::views {
 
-template <class G, class VVF = void>
+template <incidence_graph G, class VVF = void>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_key_t<G>>
 class vertexlist_iterator;
 
 
-template <class G, class VVF>
+template <incidence_graph G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_key_t<G>>
 class vertexlist_iterator  {
 public:
@@ -88,7 +89,7 @@ protected:
 };
 
 
-template <class G>
+template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_key_t<G>>
 class vertexlist_iterator<G, void> {
 public:
@@ -159,7 +160,7 @@ protected:
 };
 
 
-template <class G, class VVF = void>
+template <incidence_graph G, class VVF = void>
 using vertexlist_view = ranges::subrange<vertexlist_iterator<G, VVF>, vertex_iterator_t<G>>;
 
 namespace access {
@@ -199,7 +200,7 @@ namespace access {
 //
 // vertexlist(g [,proj])
 //
-template <class G>
+template <incidence_graph G>
 constexpr auto vertexlist(G&& g) {
   if constexpr (access::_has_vertexlist_g_adl<G>)
     return access::vertexlist(g);
@@ -207,7 +208,7 @@ constexpr auto vertexlist(G&& g) {
     return vertexlist_view<G>(vertices(forward<G>(g)));
 }
 
-template <class G, class VVF>
+template <incidence_graph G, class VVF>
 requires invocable<VVF, vertex_reference_t<G>>
 constexpr auto vertexlist(G&& g, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
@@ -221,7 +222,7 @@ constexpr auto vertexlist(G&& g, const VVF& value_fn) {
 //
 // vertexlist(g, first, last [,proj])
 //
-template <class G>
+template <incidence_graph G>
 requires ranges::random_access_range<vertex_range_t<G>>
 constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
   using iterator_type = vertexlist_iterator<G>;
@@ -231,7 +232,7 @@ constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G
     return vertexlist_view<G>(iterator_type(first, static_cast<vertex_key_t<G>>(first - begin(vertices(g)))), last);
 }
 
-template <class G, class VVF>
+template <incidence_graph G, class VVF>
 requires ranges::random_access_range<vertex_range_t<G>> && invocable<VVF, vertex_reference_t<G>>
 constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;

@@ -13,7 +13,7 @@
 namespace std::graph::views {
 
 
-template <class G, bool Sourced = false, class VVF = void>
+template <incidence_graph G, bool Sourced = false, class VVF = void>
 class neighbor_iterator;
 
 
@@ -22,7 +22,7 @@ class neighbor_iterator;
 /// </summary>
 /// <typeparam name="G">Graph type</typeparam>
 /// <typeparam name="VVF">Edge Value Function</typeparam>
-template <class G, bool Sourced, class VVF>
+template <incidence_graph G, bool Sourced, class VVF>
 class neighbor_iterator
       : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
 public:
@@ -125,7 +125,7 @@ private: // member variables
 };
 
 
-template <class G, bool Sourced>
+template <incidence_graph G, bool Sourced>
 class neighbor_iterator<G, Sourced, void>
       : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
 public:
@@ -225,7 +225,7 @@ private: // member variables
 };
 
 
-template <class G, bool Sourced, class VVF>
+template <incidence_graph G, bool Sourced, class VVF>
 using neighbors_view = ranges::subrange<neighbor_iterator<G, Sourced, VVF>, vertex_edge_iterator_t<G>>;
 
 namespace access {
@@ -260,7 +260,7 @@ namespace access {
 //
 // neighbors(g,ukey)
 //
-template <class G>
+template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_neighbors_g_ukey_adl<G>)
@@ -275,7 +275,7 @@ constexpr auto neighbors(G&& g, vertex_key_t<G> ukey) {
 //
 // neighbors(g,ukey,vvf)
 //
-template <class G, class VVF>
+template <incidence_graph G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_key_t<G> ukey, const VVF& vvf) {
   if constexpr (access::_has_neighbors_g_ukey_evf_adl<G, VVF>)
@@ -289,7 +289,7 @@ constexpr auto neighbors(G&& g, vertex_key_t<G> ukey, const VVF& vvf) {
 //
 // sourced_neighbors(g,ukey)
 //
-template <class G>
+template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_neighbors(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_sourced_neighbors_g_ukey_adl<G>)
@@ -304,7 +304,7 @@ constexpr auto sourced_neighbors(G&& g, vertex_key_t<G> ukey) {
 //
 // sourced_neighbors(g,ukey,vvf)
 //
-template <class G, class VVF>
+template <incidence_graph G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_neighbors(G&& g, vertex_key_t<G> ukey, const VVF& vvf) {
   if constexpr (access::_has_sourced_neighbors_g_ukey_evf_adl<G, VVF>)

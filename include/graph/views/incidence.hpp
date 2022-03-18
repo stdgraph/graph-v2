@@ -14,7 +14,7 @@
 namespace std::graph::views {
 
 
-template <class G, bool Sourced = false, class EVF = void>
+template <incidence_graph G, bool Sourced = false, class EVF = void>
 class incidence_iterator;
 
 /// <summary>
@@ -22,7 +22,7 @@ class incidence_iterator;
 /// </summary>
 /// <typeparam name="G">Graph type</typeparam>
 /// <typeparam name="EVF">Edge Value Function</typeparam>
-template <class G, bool Sourced, class EVF>
+template <incidence_graph G, bool Sourced, class EVF>
 class incidence_iterator
       : source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
 public:
@@ -119,7 +119,7 @@ private: // member variables
 };
 
 
-template <class G, bool Sourced>
+template <incidence_graph G, bool Sourced>
 class incidence_iterator<G, Sourced, void>
       : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
 public:
@@ -249,7 +249,7 @@ namespace access {
 // incidence(g,u)
 // incidence(g,ukey)
 //
-template <class G>
+template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_incidence_g_ukey_adl<G>)
@@ -262,7 +262,7 @@ constexpr auto incidence(G&& g, vertex_key_t<G> ukey) {
 //
 // incidence(g,ukey,evf)
 //
-template <class G, class EVF>
+template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_key_t<G> ukey, const EVF& evf) {
   if constexpr (access::_has_incidence_g_ukey_evf_adl<G, EVF>)
@@ -276,7 +276,7 @@ constexpr auto incidence(G&& g, vertex_key_t<G> ukey, const EVF& evf) {
 // sourced_incidence(g,u)
 // sourced_incidence(g,ukey)
 //
-template <class G>
+template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_incidence(G&& g, vertex_key_t<G> ukey) {
   if constexpr (access::_has_sourced_incidence_g_ukey_adl<G>)
@@ -289,7 +289,7 @@ constexpr auto sourced_incidence(G&& g, vertex_key_t<G> ukey) {
 //
 // sourced_incidence(g,ukey,evf)
 //
-template <class G, class EVF>
+template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_incidence(G&& g, vertex_key_t<G> ukey, const EVF& evf) {
   if constexpr (access::_has_sourced_incidence_g_ukey_evf_adl<G, EVF>)
