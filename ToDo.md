@@ -4,41 +4,54 @@
 
 ### ToDo 
 - API
-  - [x] Common
+  - [ ] Common
   - [x] Ranges
   - [ ] Concepts and type_traits
+    - [x] graph: incidence_graph, sourced_incidence_graph, adjacency_matrix, undirected_incidence_graph
+    - [ ] views: vertex_view, edge_view, neighbor_view
+    - [ ] functions: VVF, EVF
   - [x] Accessor functions
-  - [x] Views
+  - [ ] Views
+    - [ ] incidence
+      - [ ] unit tests for Sourced edges (sourced and unsourced graph)
+      - [ ] unit tests for undirected_graph<G>
+    - [ ] neighbors
+      - [ ] unit tests for Sourced edges (sourced and unsourced graph)
+      - [ ] unit tests for undirected_graph<G>
+    - [ ] edgelist
+      - [ ] unit tests for undirected_graph<G>
 - Algorithms
   - [ ] Common
   - [ ] Ranges
-    - [ ] BFS
-    - [ ] DFS
-    - [ ] Toplogical Sort
+    - [ ] bfs_vertex_range
+    - [ ] bfs_edge_range
+    - [ ] dfs_vertex_range
+    - [ ] dfs_edge_range
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
-      - [x] Dijkstra (book, impl from AndrewL)
-      - [ ] Dijkstra
-      - [ ] Bellman-Ford
+      - [x] Dijkstra book (impl from AndrewL)
+      - [ ] dijkstra_shortest_paths
+      - [ ] bellman_ford_shortest paths
     - [ ] Components
-      - [ ] Connected Components
-      - [ ] Strongly Connected Components
-      - [ ] Biconnected Components
-      - [ ] Articulation Points
+      - [ ] connected_components
+      - [ ] strongly_connected_components
+      - [ ] biconnected_components
+      - [ ] articulation_points
     - [ ] Transitive Closure
       - [ ] dfs_transitive_closure
       - [x] warshall_transitive_closure
       - [ ] warshall_transitive_closure (parallel)
-    - [ ] Maximal Independent Set (edgelist) (from NWGraph --> Matt)
-    - [ ] Union Find (edgelist)
-    - [ ] copy (g1 --> g2)
+    - [ ] Edgelist algorithms (prove design; not for P1709)
+      - [ ] Maximal Independent Set (edgelist) (from NWGraph --> Matt)
+      - [ ] Union Find (edgelist)
+    - [ ] copy (g1 --> g2) (not for P1709)
 - Containers (data structures)
     - [x] csr_graph (for P1709)
-      - [ ] Enable concepts
+      - [ ] Use concepts for load, load_edges, load_vertices, ctors
       - [x] Support VV=void
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] dynamic_graph
-      - [ ] Enable concepts
+      - [ ] Use concepts for load, load_edges, load_vertices, ctors
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
       - [ ] graph with map-based vertices (requires different algorithm impl)
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
@@ -68,11 +81,14 @@
   - [ ] Support Clang (waiting for full concepts support)
   - [ ] Performance tests
 - github - graph-v2
-  - [ ] Make graph-v2 public
   - [ ] Add processes to build & run unit tests on checkin
+  - [ ] Make graph-v2 public. Requirements
+    - [ ] 2+ algorithms implemented
+    - [ ] README.md with Description + Getting Started
 - Feature & performance comparison
   - [ ] boost::graph
   - [ ] NWGraph
+  - [ ] Lemon
 - C\+\+20 and C\+\+23
   - [ ] modules
   - [ ] coroutines (simplify DFS, BFS & TopoSort?)
@@ -80,14 +96,20 @@
   - [x] Decprecate original "graph" repository
   - [ ] README.md
     - [ ] Add general description
-    - [ ] Add Getting Started
+    - [x] Add Getting Started
   - [ ] P1709
     - [x] Google Doc --> LaTex
     - [ ] Add overview/goal
     - [ ] Add sections
 - Feedback
 - Code Review
-  - [ ] views iterator design: use of subrange, storing values in iterator, shadow struct, setting values in operator*()
+  - [ ] graph concepts
+  - [ ] undirected_graph<G> concept + source/target swapping in views
+  - [ ] views iterator design: 
+    - [ ] use of subrange
+    - [ ] storing values in iterator: shadow struct, setting values in operator*(), mutable value, ref_to_ptr
+    - [ ] fnc obj as ptr vs. value?
+    - [ ] vs. NWGraph (returning references vs. values)
   - [ ] tag_invoke design & use (namespaces, tag names, etc.)
 - Readiness
   - [ ] Sep-2022 CppCon
