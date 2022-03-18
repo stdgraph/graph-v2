@@ -79,85 +79,6 @@ struct csr_col {
   vertex_key_type index = 0;
 };
 
-template <typename T, integral VKey, class Alloc, size_t Identifier = 0>
-class value_vector {
-public: // types
-  using allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<T>;
-  using vector_type    = vector<T, allocator_type>;
-
-  using value_type      = T;
-  using size_type       = size_t; //VKey;
-  using difference_type = typename vector_type::difference_type;
-  using reference       = value_type&;
-  using const_reference = const value_type&;
-  using pointer         = typename vector_type::pointer;
-  using const_pointer   = typename vector_type::const_pointer;
-  using iterator        = typename vector_type::iterator;
-  using const_iterator  = typename vector_type::const_iterator;
-
-public: // ctor/dtor/assign
-  value_vector(allocator_type alloc) : v_(alloc) {}
-
-  value_vector()                    = default;
-  value_vector(const value_vector&) = default;
-  value_vector(value_vector&&)      = default;
-  ~value_vector()                   = default;
-
-  value_vector& operator=(const value_vector&) = default;
-  value_vector& operator=(value_vector&&) = default;
-
-public: // Properties
-  [[nodiscard]] constexpr size_type size() const noexcept { return static_cast<size_type>(v_.size()); }
-  [[nodiscard]] constexpr bool      empty() const noexcept { return v_.empty(); }
-  [[nodiscard]] constexpr size_type capacity() const noexcept { return static_cast<size_type>(v_.size()); }
-
-public: // Operations
-  constexpr void reserve(size_type new_cap) { v_.reserve(new_cap); }
-  constexpr void resize(size_type new_size) { v_.resize(new_size); }
-
-  constexpr void clear() noexcept { v_.clear(); }
-  constexpr void push_back(T&& value) { v_.push_back(forward<T>(value)); }
-  constexpr void emplace_back(T&& value) { v_.emplace_back(forward<T>(value)); }
-
-  constexpr void swap(value_vector& other) noexcept { swap(v_, other.v_); }
-
-public:
-  constexpr reference       operator[](size_type pos) { return v_[pos]; }
-  constexpr const_reference operator[](size_type pos) const { return v_[pos]; }
-
-private:
-  vector_type v_;
-};
-
-template <integral VKey, class Alloc, size_t Identifier>
-class value_vector<void, VKey, Alloc, Identifier> {
-public: // types
-  using size_type = VKey;
-
-public: // ctor/dtor/assign
-  value_vector(Alloc alloc) {}
-
-  value_vector()                    = default;
-  value_vector(const value_vector&) = default;
-  value_vector(value_vector&&)      = default;
-  ~value_vector()                   = default;
-
-  value_vector& operator=(const value_vector&) = default;
-  value_vector& operator=(value_vector&&) = default;
-
-public: // Properties
-  [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
-  [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
-  [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
-
-public: // Operations
-  constexpr void reserve(size_type new_cap) {}
-  constexpr void resize(size_type new_size) {}
-
-  constexpr void clear() noexcept {}
-  constexpr void swap(value_vector& other) noexcept {}
-};
-
 
 /// <summary>
 /// Class to hold vertex values in a vector that is the same size as row_index_.
@@ -170,31 +91,24 @@ public: // Operations
 /// <typeparam name="VKey">Vertex Key type. This must be large enough for the total edges and the total vertices.</typeparam>
 /// <typeparam name="Alloc">Allocator type</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
-class csr_row_values : public value_vector<VV, VKey, Alloc, 1> {
+class csr_row_values {
 public:
-  using base_type = value_vector<VV, VKey, Alloc, 1>;
-  using base_type::size;
-  using base_type::resize;
-  using base_type::reserve;
-  using base_type::operator[];
+  using graph_type        = csr_graph<EV, VV, GV, VKey, Alloc>;
+  using vertex_value_type = VV;
+  using allocator_type    = typename allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
+  using vector_type       = vector<vertex_value_type, allocator_type>;
 
-  using graph_type = csr_graph<EV, VV, GV, VKey, Alloc>;
+  using value_type      = VV;
+  using size_type       = size_t; //VKey;
+  using difference_type = typename vector_type::difference_type;
+  using reference       = value_type&;
+  using const_reference = const value_type&;
+  using pointer         = typename vector_type::pointer;
+  using const_pointer   = typename vector_type::const_pointer;
+  using iterator        = typename vector_type::iterator;
+  using const_iterator  = typename vector_type::const_iterator;
 
-  using index_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<VKey>;
-  using index_vector_type    = std::vector<VKey, index_allocator_type>;
-
-  using vertex_key_type             = VKey;
-  using vertex_type                 = vertex_key_type;
-  using vertex_value_type           = VV;
-  using vertex_value_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
-  using reference_type              = vertex_value_type&;
-  using const_reference_type        = const vertex_value_type&;
-
-  using row_values_type = vector<vertex_value_type, vertex_value_allocator_type>;
-
-  using size_type = ranges::range_size_t<row_values_type>;
-
-  constexpr csr_row_values(const Alloc& alloc) : base_type(alloc) {}
+  constexpr csr_row_values(const Alloc& alloc) : v_(alloc) {}
 
   constexpr csr_row_values()                      = default;
   constexpr csr_row_values(const csr_row_values&) = default;
@@ -204,6 +118,21 @@ public:
   constexpr csr_row_values& operator=(const csr_row_values&) = default;
   constexpr csr_row_values& operator=(csr_row_values&&) = default;
 
+
+public: // Properties
+  [[nodiscard]] constexpr size_type size() const noexcept { return static_cast<size_type>(v_.size()); }
+  [[nodiscard]] constexpr bool      empty() const noexcept { return v_.empty(); }
+  [[nodiscard]] constexpr size_type capacity() const noexcept { return static_cast<size_type>(v_.size()); }
+
+public: // Operations
+  constexpr void reserve(size_type new_cap) { v_.reserve(new_cap); }
+  constexpr void resize(size_type new_size) { v_.resize(new_size); }
+
+  constexpr void clear() noexcept { v_.clear(); }
+  constexpr void push_back(const value_type& value) { v_.push_back(value); }
+  constexpr void emplace_back(value_type&& value) { v_.emplace_back(forward<value_type>(value)); }
+
+  constexpr void swap(csr_row_values& other) noexcept { swap(v_, other.v_); }
 
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VKey, VV>
@@ -240,6 +169,120 @@ public:
       (*this)[key] = move(value);
     }
   }
+
+public:
+  constexpr reference       operator[](size_type pos) { return v_[pos]; }
+  constexpr const_reference operator[](size_type pos) const { return v_[pos]; }
+
+private:
+  vector_type v_;
+};
+
+template <class EV, class GV, integral VKey, class Alloc>
+class csr_row_values<EV, void, GV, VKey, Alloc> {
+public:
+  constexpr csr_row_values(const Alloc& alloc) {}
+  constexpr csr_row_values() = default;
+
+  using value_type = void;
+  using size_type  = size_t; //VKey;
+
+public: // Properties
+  [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
+  [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
+  [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
+
+public: // Operations
+  constexpr void reserve(size_type new_cap) {}
+  constexpr void resize(size_type new_size) {}
+
+  constexpr void clear() noexcept {}
+  constexpr void swap(csr_row_values& other) noexcept {}
+};
+
+
+/// <summary>
+/// Class to hold vertex values in a vector that is the same size as col_index_.
+/// If is_void_v<EV> then the class is empty with a single
+/// constructor that accepts (and ignores) an allocator.
+/// </summary>
+/// <typeparam name="EV">Edge Value type, or void if there is none</typeparam>
+/// <typeparam name="VV">Vertex Value type, or void if there is none</typeparam>
+/// <typeparam name="GV">Graph Value type, or void if there is none</typeparam>
+/// <typeparam name="VKey">Vertex Key type. This must be large enough for the total edges and the total vertices.</typeparam>
+/// <typeparam name="Alloc">Allocator type</typeparam>
+template <class EV, class VV, class GV, integral VKey, class Alloc>
+class csr_col_values {
+public:
+  using graph_type      = csr_graph<EV, EV, GV, VKey, Alloc>;
+  using edge_value_type = EV;
+  using allocator_type  = typename allocator_traits<Alloc>::template rebind_alloc<edge_value_type>;
+  using vector_type     = vector<edge_value_type, allocator_type>;
+
+  using value_type      = EV;
+  using size_type       = size_t; //VKey;
+  using difference_type = typename vector_type::difference_type;
+  using reference       = value_type&;
+  using const_reference = const value_type&;
+  using pointer         = typename vector_type::pointer;
+  using const_pointer   = typename vector_type::const_pointer;
+  using iterator        = typename vector_type::iterator;
+  using const_iterator  = typename vector_type::const_iterator;
+
+  constexpr csr_col_values(const Alloc& alloc) : v_(alloc) {}
+
+  constexpr csr_col_values()                      = default;
+  constexpr csr_col_values(const csr_col_values&) = default;
+  constexpr csr_col_values(csr_col_values&&)      = default;
+  constexpr ~csr_col_values()                     = default;
+
+  constexpr csr_col_values& operator=(const csr_col_values&) = default;
+  constexpr csr_col_values& operator=(csr_col_values&&) = default;
+
+
+public: // Properties
+  [[nodiscard]] constexpr size_type size() const noexcept { return static_cast<size_type>(v_.size()); }
+  [[nodiscard]] constexpr bool      empty() const noexcept { return v_.empty(); }
+  [[nodiscard]] constexpr size_type capacity() const noexcept { return static_cast<size_type>(v_.size()); }
+
+public: // Operations
+  constexpr void reserve(size_type new_cap) { v_.reserve(new_cap); }
+  constexpr void resize(size_type new_size) { v_.resize(new_size); }
+
+  constexpr void clear() noexcept { v_.clear(); }
+  constexpr void push_back(const value_type& value) { v_.push_back(value); }
+  constexpr void emplace_back(value_type&& value) { v_.emplace_back(forward<value_type>(value)); }
+
+  constexpr void swap(csr_col_values& other) noexcept { swap(v_, other.v_); }
+
+public:
+  constexpr reference       operator[](size_type pos) { return v_[pos]; }
+  constexpr const_reference operator[](size_type pos) const { return v_[pos]; }
+
+private:
+  vector_type v_;
+};
+
+template <class VV, class GV, integral VKey, class Alloc>
+class csr_col_values<void, VV, GV, VKey, Alloc> {
+public:
+  constexpr csr_col_values(const Alloc& alloc) {}
+  constexpr csr_col_values() = default;
+
+  using value_type = void;
+  using size_type  = size_t; //VKey;
+
+public: // Properties
+  [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
+  [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
+  [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
+
+public: // Operations
+  constexpr void reserve(size_type new_cap) {}
+  constexpr void resize(size_type new_size) {}
+
+  constexpr void clear() noexcept {}
+  constexpr void swap(csr_col_values& other) noexcept {}
 };
 
 
@@ -253,8 +296,11 @@ public:
 /// <typeparam name="VKey">Vertex Key type. This must be large enough for the total edges and the total vertices.</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VKey, class Alloc>
-class csr_graph_base : private csr_row_values<EV, VV, GV, VKey, Alloc> {
+class csr_graph_base
+      : public csr_row_values<EV, VV, GV, VKey, Alloc>
+      , public csr_col_values<EV, VV, GV, VKey, Alloc> {
   using row_values_base = csr_row_values<EV, VV, GV, VKey, Alloc>;
+  using col_values_base = csr_col_values<EV, VV, GV, VKey, Alloc>;
 
   using row_type           = csr_row<VKey>; // index into col_index_
   using row_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<row_type>;
@@ -263,12 +309,6 @@ class csr_graph_base : private csr_row_values<EV, VV, GV, VKey, Alloc> {
   using col_type           = csr_col<VKey>; // target_key
   using col_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<col_type>;
   using col_index_vector   = vector<col_type, col_allocator_type>;
-
-  using v_value_type     = EV;
-  using v_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<v_value_type>;
-  using v_vector_type    = std::vector<v_value_type, v_allocator_type>;
-
-  //using row_values_type = csr_row_values<EV, VV, GV, VKey, Alloc>;
 
 public: // Types
   using graph_type = csr_graph_base<EV, VV, GV, VKey, Alloc>;
@@ -299,7 +339,7 @@ public: // Construction/Destruction
   constexpr csr_graph_base& operator=(csr_graph_base&&) = default;
 
   constexpr csr_graph_base(const Alloc& alloc)
-        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {}
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {}
 
   /// <summary>
   /// Constructor that takes a edge range to create the CSR graph.
@@ -312,7 +352,7 @@ public: // Construction/Destruction
   template <ranges::forward_range ERng, class EProj = identity>
   requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
   constexpr csr_graph_base(const ERng& erng, EProj eprojection = {}, const Alloc& alloc = Alloc())
-        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
 
     load_edges(erng, eprojection);
   }
@@ -337,7 +377,7 @@ public: // Construction/Destruction
                            EProj        eprojection = {},
                            VProj        vprojection = {},
                            const Alloc& alloc       = Alloc())
-        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
 
     load(erng, vrng, eprojection, vprojection);
   }
@@ -350,7 +390,7 @@ public: // Construction/Destruction
   /// <param name="alloc">Allocator to use for internal containers</param>
   constexpr csr_graph_base(const initializer_list<views::copyable_edge_t<VKey, EV>>& ilist,
                            const Alloc&                                              alloc = Alloc())
-        : row_values_base(alloc), row_index_(alloc), col_index_(alloc), v_(alloc) {
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
     load_edges(ilist, identity());
   }
 
@@ -362,7 +402,7 @@ public: // Operations
   }
   void reserve_edges(size_type count) {
     col_index_.reserve(count);
-    v_.reserve(count);
+    static_cast<col_values_base&>(*this).reserve(count);
   }
 
   void resize_vertices(size_type count) {
@@ -371,7 +411,7 @@ public: // Operations
   }
   void resize_edges(size_type count) {
     col_index_.reserve(count);
-    v_.reserve(count);
+    static_cast<col_values_base&>(*this).reserve(count);
   }
 
   /// <summary>
@@ -441,7 +481,8 @@ public: // Operations
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VKey, EV>
   constexpr void load_edges(ERng&& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
     // should only be loading into an empty graph
-    assert(row_index_.empty() && col_index_.empty() && v_.empty());
+    static_assert(!is_void_v<EV>);
+    assert(row_index_.empty() && col_index_.empty() && static_cast<col_values_base&>(*this).empty());
 
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng)) {
@@ -463,20 +504,23 @@ public: // Operations
     // Add edges
     vertex_key_type last_ukey = 0, max_vkey = 0;
     for (auto&& edge_data : erng) {
-      auto&& [ukey, vkey, value] = eprojection(edge_data); // csr_graph requires EV!=void
-      assert(ukey >= last_ukey);                           // ordered by ukey? (requirement)
-      row_index_.resize(static_cast<size_t>(ukey) + 1, vertex_type{static_cast<vertex_key_type>(v_.size())});
-      col_index_.push_back(edge_type{vkey});
-      v_.emplace_back(std::move(value));
-      last_ukey = ukey;
-      max_vkey  = max(max_vkey, vkey);
+      auto&& edge = eprojection(edge_data); // csr_graph requires EV!=void
+      assert(edge.source_key >= last_ukey); // ordered by ukey? (requirement)
+      row_index_.resize(static_cast<size_t>(edge.source_key) + 1,
+                        vertex_type{static_cast<vertex_key_type>(static_cast<col_values_base&>(*this).size())});
+      col_index_.push_back(edge_type{edge.target_key});
+      if (!is_void_v<EV>)
+        static_cast<col_values_base&>(*this).emplace_back(std::move(edge.value));
+      last_ukey = edge.source_key;
+      max_vkey  = max(max_vkey, edge.target_key);
     }
 
     // ukey and vkey may refer to rows that exceed the value evaluated for vertex_count (if any)
     vertex_count = max(vertex_count, max(row_index_.size(), static_cast<size_type>(max_vkey + 1)));
 
     // add any rows that haven't been added yet, and (+1) terminating row
-    row_index_.resize(vertex_count + 1, vertex_type{static_cast<vertex_key_type>(v_.size())});
+    row_index_.resize(vertex_count + 1,
+                      vertex_type{static_cast<vertex_key_type>(static_cast<col_values_base&>(*this).size())});
 
     // If load_vertices(vrng,vproj) has been called but it doesn't have enough values for all
     // the vertices then we extend the size to remove possibility of out-of-bounds occuring when
@@ -491,7 +535,7 @@ public: // Operations
   constexpr void
   load_edges(const ERng& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
     // should only be loading into an empty graph
-    assert(row_index_.empty() && col_index_.empty() && v_.empty());
+    assert(row_index_.empty() && col_index_.empty() && static_cast<col_values_base&>(*this).empty());
 
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng)) {
@@ -513,20 +557,23 @@ public: // Operations
     // Add edges
     vertex_key_type last_ukey = 0, max_vkey = 0;
     for (auto&& edge_data : erng) {
-      auto&& [ukey, vkey, value] = eprojection(edge_data); // csr_graph requires EV!=void
-      assert(ukey >= last_ukey);                           // ordered by ukey? (requirement)
-      row_index_.resize(static_cast<size_t>(ukey) + 1, vertex_type{static_cast<vertex_key_type>(v_.size())});
-      col_index_.push_back(edge_type{vkey});
-      v_.push_back(value);
-      last_ukey = ukey;
-      max_vkey  = max(max_vkey, vkey);
+      auto&& edge = eprojection(edge_data); // csr_graph requires EV!=void
+      assert(edge.source_key >= last_ukey); // ordered by ukey? (requirement)
+      row_index_.resize(static_cast<size_t>(edge.source_key) + 1,
+                        vertex_type{static_cast<vertex_key_type>(static_cast<col_values_base&>(*this).size())});
+      col_index_.push_back(edge_type{edge.target_key});
+      if (!is_void_v<EV>)
+        static_cast<col_values_base&>(*this).push_back(edge.value);
+      last_ukey = edge.source_key;
+      max_vkey  = max(max_vkey, edge.target_key);
     }
 
     // ukey and vkey may refer to rows that exceed the value evaluated for vertex_count (if any)
     vertex_count = max(vertex_count, max(row_index_.size(), static_cast<size_type>(max_vkey + 1)));
 
     // add any rows that haven't been added yet, and (+1) terminating row
-    row_index_.resize(vertex_count + 1, vertex_type{static_cast<vertex_key_type>(v_.size())});
+    row_index_.resize(vertex_count + 1,
+                      vertex_type{static_cast<vertex_key_type>(static_cast<col_values_base&>(*this).size())});
 
     // If load_vertices(vrng,vproj) has been called but it doesn't have enough values for all
     // the vertices then we extend the size to remove possibility of out-of-bounds occuring when
@@ -583,7 +630,7 @@ public: // Operators
 private:                       // Member variables
   row_index_vector row_index_; // starting index into col_index_ and v_; holds +1 extra terminating row
   col_index_vector col_index_; // col_index_[n] holds the column index (aka target)
-  v_vector_type    v_;         // v_[n]         holds the edge value for col_index_[n]
+  //v_vector_type    v_;         // v_[n]         holds the edge value for col_index_[n]
   //row_values_type  row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
 
 private: // tag_invoke properties
@@ -607,14 +654,14 @@ private: // tag_invoke properties
   friend constexpr vertex_value_type&
   tag_invoke(::std::graph::access::vertex_value_fn_t, graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
-    auto uidx = static_cast<size_t>(&u - g.row_index_.data());
+    auto             uidx     = static_cast<size_t>(&u - g.row_index_.data());
     row_values_base& row_vals = g;
     return row_vals[uidx];
   }
   friend constexpr const vertex_value_type&
   tag_invoke(::std::graph::access::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
-    auto uidx = static_cast<size_t>(&u - g.row_index_.data());
+    auto                   uidx     = static_cast<size_t>(&u - g.row_index_.data());
     const row_values_base& row_vals = g;
     return row_vals[uidx];
   }
@@ -669,12 +716,12 @@ private: // tag_invoke properties
   friend constexpr edge_value_type&
   tag_invoke(::std::graph::access::edge_value_fn_t, graph_type& g, edge_type& uv) noexcept {
     size_t uv_idx = static_cast<size_t>(&uv - g.col_index_.data());
-    return g.v_[uv_idx];
+    return static_cast<col_values_base&>(g)[uv_idx];
   }
   friend constexpr const edge_value_type&
   tag_invoke(::std::graph::access::edge_value_fn_t, const graph_type& g, const edge_type& uv) noexcept {
     size_t uv_idx = static_cast<size_t>(&uv - g.col_index_.data());
-    return g.v_[uv_idx];
+    return static_cast<const col_values_base&>(g)[uv_idx];
   }
 };
 

@@ -35,7 +35,7 @@
 - Containers (data structures)
     - [x] csr_graph (for P1709)
       - [ ] Enable concepts
-      - [ ] **Support VV=void**
+      - [x] Support VV=void
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] dynamic_graph
       - [ ] Enable concepts
@@ -119,7 +119,7 @@
 - [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VKey. How to adapt existing graphs?
 - [ ] Can transform_view be used in place of the projections in the graph views?
 - [ ] How to support bipartite graphs using different vertex types?
-  - [ ] Requires definition of 2+ types of vertices. How to define vertex type?
+  - [ ] Requires definition of 2+ types of vertices. How to define vertex type: compile-time vs. run-time?
     - [ ] vertices are stored as a range of range of vertices, where the outer range is the type of vertex
   - [ ] Need proof-of-concept graph data structure to demonstrate
   - [ ] Option 1: extend API & Views with the type (or hidden if not used)
