@@ -80,36 +80,43 @@ inline constexpr bool is_adjacency_matrix_v = false;
 //
 template <class G>
 concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized_range<vertex_range_t<G>> &&
-      requires(G&& g, ranges::iterator_t<vertex_range_t<G>> ui) {
+      requires(G&& g, vertex_iterator_t<G> ui) {
   { vertices(g) } -> ranges::forward_range;
-  {vertex_key(g, ui)};
+  vertex_key(g, ui);
 };
 
 template <class G, class ER>
-concept edge_range = ranges::forward_range<ER> && requires(G&& g, ranges::range_reference_t<ER> uv) {
+concept targeted_edge = ranges::forward_range<ER> &&
+      requires(G&& g, ranges::range_reference_t<ER> uv) {
   target_key(g, uv);
   target(g, uv);
 };
 
 template <class G, class ER>
-concept sourced_edge_range =
-      requires(G&& g, ranges::range_reference_t<ER> uv, vertex_key_t<G> ukey, vertex_reference_t<G> u) {
+concept sourced_edge =
+      requires(G&& g, ranges::range_reference_t<ER> uv) {
   source_key(g, uv);
   source(g, uv);
+};
+
+template <class G>
+concept incidence_graph = vertex_range<G> && targeted_edge<G, vertex_edge_range_t<G>> && requires(
+      G&& g, vertex_reference_t<G> u, vertex_key_t<G> ukey, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
+  { edges(g, u) } -> ranges::forward_range;
+  { edges(g, ukey) } -> ranges::forward_range;
+};
+// !is_same_v<vertex_range_t<G>, vertex_edge_range_t<G>>
+//      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
+
+template <class G>
+concept sourced_incidence_graph = incidence_graph<G> && sourced_edge<G, vertex_edge_range_t<G>> &&
+      requires(G&& g, edge_reference_t<G> uv) {
   edge_key(g, uv);
 #  ifdef ENABLE_OTHER_FNC
   other_key(g, uv, ukey);
   other_vertex(g, uv, u);
 #  endif
 };
-
-template <class G>
-concept incidence_graph = vertex_range<G> && edge_range<G, vertex_edge_range_t<G>>;
-//!is_same_v<vertex_edge_range_t<G>, vertex_range_t<G>> &&
-// CSR fails this condition b/c row_index & col_index are both index_vectors; common?
-
-template <class G>
-concept sourced_incidence_graph = incidence_graph<G> && sourced_edge_range<G, vertex_edge_range_t<G>>;
 
 template <class G>
 concept undirected_incidence_graph = sourced_incidence_graph<G> && is_undirected_edge_v<edge_t<G>>;
