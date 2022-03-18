@@ -110,7 +110,19 @@ protected:
 
 public:
   constexpr reference operator*() const {
-    value_ = {vertex_key(g_, ui_), target_key(g_, *uvi_), &*uvi_, invoke(*value_fn_, *uvi_)};
+    if constexpr (undirected_incidence_graph<G>) {
+      if (target_key(g_, *uvi_) != vertex_key(g_, ui_)) {
+        value_.source_key = source_key(g_, *uvi_);
+        value_.target_key = target_key(g_, *uvi_);
+      } else {
+        value_.source_key = target_key(g_, *uvi_);
+        value_.target_key = source_key(g_, *uvi_);
+      }
+      value_.edge  = &*uvi_;
+      value_.value = invoke(*value_fn_, *uvi_);
+    } else {
+      value_ = {vertex_key(g_, ui_), target_key(g_, *uvi_), &*uvi_, invoke(*value_fn_, *uvi_)};
+    }
     return reinterpret_cast<reference>(value_);
   }
 
@@ -185,7 +197,18 @@ public:
 
 public:
   constexpr reference operator*() const {
-    value_ = {vertex_key(g_, ui_), target_key(g_, *uvi_), &*uvi_};
+    if constexpr (undirected_incidence_graph<G>) {
+      if (target_key(g_, *uvi_) != vertex_key(g_, ui_)) {
+        value_.source_key = source_key(g_, *uvi_);
+        value_.target_key = target_key(g_, *uvi_);
+      } else {
+        value_.source_key = target_key(g_, *uvi_);
+        value_.target_key = source_key(g_, *uvi_);
+      }
+      value_.edge = &*uvi_;
+    } else {
+      value_ = {vertex_key(g_, ui_), target_key(g_, *uvi_), &*uvi_};
+    }
     return reinterpret_cast<reference>(value_);
   }
 

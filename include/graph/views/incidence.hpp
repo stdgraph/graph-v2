@@ -72,12 +72,11 @@ protected:
 public:
   constexpr reference operator*() const {
     if constexpr (undirected_incidence_graph<G>) {
-      static_assert(sourced_incidence_graph<G>);
       if (target_key(g_, *iter_) != this->source_vertex_key()) {
-        value_.source_key = source_key(g_.*iter_);
+        value_.source_key = source_key(g_, *iter_);
         value_.target_key = target_key(g_, *iter_);
       } else {
-        value_.source_key = target_key(g_.*iter_);
+        value_.source_key = target_key(g_, *iter_);
         value_.target_key = source_key(g_, *iter_);
       }
     } else if constexpr (Sourced) {
