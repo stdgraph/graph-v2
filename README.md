@@ -18,19 +18,23 @@ The goals of the library include:
 2. Syntax that is simple, expressive and easy to understand when writing algorithms.
 3. Present different views of incidence graphs that are commonly used by the algorithms (incidence, neighbors/adjacency, 
    edge-list).
-4. Easy integration of existing graph data structures.
-5. Support optional, user-defined value_types for an edge, vertex and graph.
-6. Be able to extend the design for future standardization, or uses outside the standard. For instance:
+4. Support optional, user-defined value_types for an edge, vertex and graph.
+5. Easy integration of existing graph data structures.
+6. Be able to extend the design for future standardization, or for uses outside the standard. For instance:
 
    a. All algorithms in the standard will only support vertices in random-access containers. However, graph algorithms and 
       data structures outside of the standard may use a map, unordered_map or other data structure and the design should 
       support that use.
 
-   b. While vertices only have "outgoing" edges in the standard because most algorithms only require that, bi-directional 
+   b. All algorithms in the standard require an integral vertex key. However, graph algorithms and data structures 
+      outside of the standard may use a string or compound type and the design should support that use.
+
+   c. While vertices only have "outgoing" edges in the standard because most algorithms only require that, bi-directional 
       graphs with both incoming and outgoing edges can also exist and the design should should be extensible to support
       that.
 
-7. Define useful traits and concepts that can be used by algorithms.
+7. Define useful traits and concepts that can be used by algorithms to describe their requirements, and provide expected
+   and optimized results.
 8. Provide an initial set of useful algorithms and a graph data structure.
 
 ## Getting Started
@@ -79,31 +83,31 @@ Other Useful Tools
 
 Template parameters:
 
-| Abbr     | Description                            | 
-| :--------| :--------------------------------------|
-| G        | Graph                                  |
-| GV       | Graph Value (user-defined or void)     |
+| Abbr     | Description                                                                     | 
+| :--------| :-------------------------------------------------------------------------------|
+| G        | Graph                                                                           |
+| GV       | Graph Value (user-defined or void)                                              |
 | GVF      | Graph Value Function: gvf(g) -> value; declval(value) may be different than GV  |
-| V        | Vertex type                            |
-| VKey     | Vertex key type                        |
-| VV       | Vertex Value (user-defined or void)    |
+| V        | Vertex type                                                                     |
+| VKey     | Vertex key type                                                                 |
+| VV       | Vertex Value (user-defined or void)                                             |
 | VVF      | Vertex Value Function: vvf(u) -> value; declval(value) may be different than VV |
-| VR       | Vertex Range                           |
-| E        | Edge type                              |
-| EV       | Edge Value (user-defined or void)      |
-| ER       | Edge Range                             |
+| VR       | Vertex Range                                                                    |
+| E        | Edge type                                                                       |
+| EV       | Edge Value (user-defined or void)                                               |
+| ER       | Edge Range                                                                      |
 | EVF      | Edge Value Function: evf(uv) -> value; declval(value) may be different than EV  |
 
 Parameters:
 
-| Abbr      | Description                            | 
-| :---------| :--------------------------------------|
-| g         | graph reference                        |
-| u,v,x,y   | vertex referenc                        |
-| ukey,vkey | vertex keys                            |
-| ui,vi     | vertex iterators                       |
-| uv        | edge reference                         |
-| uvi       | edge iterator                          |
+| Abbr         | Description                            | 
+| :------------| :--------------------------------------|
+| g            | graph reference                        |
+| u, v, x, y   | vertex reference                       |
+| ukey, vkey   | vertex keys                            |
+| ui,vi        | vertex iterators                       |
+| uv           | edge reference                         |
+| uvi          | edge iterator                          |
 
 ### Graph Views
 

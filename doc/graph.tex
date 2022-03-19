@@ -69,7 +69,7 @@
 \clearpage
 
 \section{Introduction}
-This document proposes the addition of a \textbf{graph data structure} and \textbf{graph algorithms} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed data structures and algorithms.
+This document proposes the addition of a \textbf{graph data structure} and \textbf{graph algorithms} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed algorithms, views, graph functions and data structures.
 
 \subsection{Revision History}
 \subsubsection*{P1709R2}
@@ -87,18 +87,6 @@ represent the \textbf{map} of a game world. In \textbf{business} environments, g
 
 \subsection{Graph}
  A \textit{graph} \cite{REF_graph} $G = (V, E)$ is a set of \textit{vertices} \cite{REF_graph} $V$, \textbf{points} in a space, and \textit{edges} \cite{REF_graph} $E$, \textbf{links} between these vertices. Edges may or may not be \textbf{oriented}, that is, \textit{directed} \cite{REF_graph} or \textit{undirected} \cite{REF_graph}, respectively. Moreover, edges may be \textit{weighted} \cite{REF_graph}, that is, assigned a value. Both \textbf{static} and \textbf{dynamic} implementations of a graph exist, specifically a (static) \textbf{matrix}, each having the typical advantages and disadvantages associated with static and dynamic data structures.
-
-\subsection{Data Structures}
-TBA
-
-\subsubsection{Adjacency List}
-TBA
-
-\subsubsection{Adjacency Array}
-TBA
-
-\subsubsection{Adjacency Matrix}
-TBA
 
 \subsection{Algorithms}
 TBA
@@ -133,27 +121,36 @@ Articulation points \cite{REF_} ...
 \subsubsection{Transitive Closure}
 Transitive closure \cite{REF_} ...
 
-\subsubsection{Other Algorithms}
-The following algorithms have been identified for consideration in (an) \textbf{additional} paper(s).
+%\subsubsection{Other Algorithms}
+%The following algorithms have been identified for consideration in (an) \textbf{additional} paper(s).
+%
+%\begin{enumerate}
+%\item Minimum spanning tree
+%\item Maximum flow
+%\item Matching
+%\item Bipartite matching
+%\item Min-cost network flow
+%\item Isomorphism
+%\item Subgraph isomorphism
+%\item Centrality
+%\item Minimum cut
+%\item Cycle detection
+%\item Path enumeration
+%\item Community detection
+%\item Clique enumeration
+%\item Find triangles
+%\item Lowest common ancestor
+%\item Dominator algorithms
+%\end{enumerate}
 
-\begin{enumerate}
-\item Minimum spanning tree
-\item Maximum flow
-\item Matching
-\item Bipartite matching
-\item Min-cost network flow
-\item Isomorphism
-\item Subgraph isomorphism
-\item Centrality
-\item Minimum cut
-\item Cycle detection
-\item Path enumeration
-\item Community detection
-\item Clique enumeration
-\item Find triangles
-\item Lowest common ancestor
-\item Dominator algorithms
-\end{enumerate}
+\subsection{Views}
+TBA
+
+\subsection{Graph Types, Concepts, Traits and Functions}
+TBA
+
+\subsection{csr\_graph Data Structures}
+TBA
 
 \section{Impact on the Standard}
 This proposal is a pure \textbf{library} extension.
@@ -170,22 +167,17 @@ TBA
 \subsection{Header \texttt{<graph>} synopsis [graph.syn]}
 
 \begin{lstlisting}
-namespace std {
-
-namespace graph {
+namespace std::graph {
 
 // ...
 
 template <typename G>
-void reserve_vertices (G& g, vertex_size_t<G>);
+auto vertices (G& g) -> vertex_range_t<G>;
 
 template <typename G>
 void resize_vertices (G& g, vertex_size_t<G>);
 
 // ...
-
-}
-
 }
 \end{lstlisting}
 
@@ -195,7 +187,7 @@ void resize_vertices (G& g, vertex_size_t<G>);
 
 \begin{lstlisting}
 template <typename G>
-void reserve_vertices (G& g, vertex_size_t<G>);
+auto vertices (G& g) -> vertex_range_t<G>;
 \end{lstlisting}
 %
 \begin{itemize}
