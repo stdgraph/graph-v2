@@ -16,7 +16,7 @@ API functions. It includes some common algorithms, views and a graph data struct
 The goals of the library include:
 1. Support creation of high-performance algorithms that are as good as the existing state-of-the art, or better.
 2. Syntax that is simple, expressive and easy to understand when writing algorithms.
-3. Present different views of incidence graphs that are commonly used by the algorithms (incidence, neighbors/adjacency, 
+3. Present different views of incidence graphs that are commonly used by the algorithms (incidence, neighbors [adjacency], 
    edge-list).
 4. Support optional, user-defined value_types for an edge, vertex and graph.
 5. Easy integration of existing graph data structures.
@@ -100,7 +100,7 @@ Template parameters:
 | ER       | Edge Range                                                                      |
 | EVF      | Edge Value Function: evf(uv) -> value; declval(value) may be different than EV  |
 
-Parameters:
+Function Parameters:
 
 | Abbr         | Description                            | 
 | :------------| :--------------------------------------|

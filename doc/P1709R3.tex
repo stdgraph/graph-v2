@@ -33,7 +33,7 @@
 \vfill
 \begin{center}
 \LARGE
-\textbf{Graph Library}\\
+\textbf{P1709R3 Graph Library}\\
 \vspace{12pt}
 \normalsize
 	Phillip Ratzloff (SAS Institute)\\
@@ -72,6 +72,9 @@
 This document proposes the addition of a \textbf{graph data structure} and \textbf{graph algorithms} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed algorithms, views, graph functions and data structures.
 
 \subsection{Revision History}
+\subsubsection*{P1709R3}
+Simplifiy the Graph API by focusing on functionality needed for an incidence graph, removing mutable functions and removing unnecessary functions. Replaced the \texttt{vertex\_vertex\_range} and \texttt{edge\_range} with \texttt{neighbors} and \texttt{edgelist} Graph Views and added new \texttt{vertexlist} and \texttt{incidence} views. Simplified concepts and graph traits.
+
 \subsubsection*{P1709R2}
 Define the \textbf{uniform API} for undirected and directed algorithms (an extended API also exists for directed graphs). Added \textbf{concepts} for undirected, directed and bidirected graphs. Refined \textbf{DFS} and \textbf{BFS} range definitions from prototype experience. Refined \textbf{shortest paths} and \textbf{transitive closure} algorithms from input and prototype experience.
 
@@ -87,6 +90,10 @@ This proposal is a pure \textbf{library} extension.
 \section{Motivation and Scope}
 A graph data structure, used in ML and other \textbf{scientific} domains, as well as \textbf{industrial} and \textbf{general} programming, does \textbf{not} presently exist in the C++ standard. In ML, a graph forms the underlying structure of an \textbf{artificial neural network} (ANN). In a \textbf{game}, a graph can be used to
 represent the \textbf{map} of a game world. In \textbf{business} environments, graphs arise as \textbf{entity relationship diagrams} (ERD) or \textbf{data flow diagrams} (DFD). In the realm of \textbf{social media}, a graph represents a \textbf{social network}.
+
+This paper limits itself to incidence graphs only. It does not include hypergraphs.
+
+\hl{TBD: Bipartite graphs?}
 
 \subsection{Graph}
  A \textit{graph} \cite{REF_graph} $G = (V, E)$ is a set of \textit{vertices} \cite{REF_graph} $V$, \textbf{points} in a space, and \textit{edges} \cite{REF_graph} $E$, \textbf{links} between these vertices. Edges may or may not be \textbf{oriented}, that is, \textit{directed} \cite{REF_graph} or \textit{undirected} \cite{REF_graph}, respectively. Moreover, edges may be \textit{weighted} \cite{REF_graph}, that is, assigned a value. Both \textbf{static} and \textbf{dynamic} implementations of a graph exist, specifically a (static) \textbf{matrix}, each having the typical advantages and disadvantages associated with static and dynamic data structures.
@@ -156,7 +163,86 @@ TBA
 TBA
 
 \section{Design Decisions}
-TBA
+\subsection{Graph Library Organization}
+A physical graph is made up of a range of vertices, where each vertex has a range of edges. This is known as an Incidence Graph. There are a variety of 
+ways it can be implemented and such a description is outside the scope of this paper. All implementations share a common interface represented by the
+Graph API in this paper.
+
+The Graph API is a set of types, traits and concepts that describe a graph, and a set of functions that provide low-level access to the 
+underlying graph with the following characteristics:
+\begin{enumerate}
+\item All functions are Customization Point Objects (CPO) that can be overridden to integrate it with this library. 6-9 functions must be
+overridden for a graph data structure to fully integrate with this library, and more functions are available if needed. This proposal includes 
+csr\_graph, a static graph for performance, that demonstrates how CPOs are overridden.
+\item The graph types are defined by the return types of the graph functions, or derivative of them.
+\item User-defined value types can be defined for the edge, vertex and graph types. A type of \texttt{void} is assumed if no type has been defined.
+Unlike existing containers in the standard, the type is optional. Not all algorithms require values on an edge or vertex, simply using the relationships
+between vertices as defined by edges.
+\end{enumerate}
+
+Graph Views are built on top of the Graph API and provide common ways for algorithms to iterate through the objects of a graph:
+\begin{enumerate}
+\item \texttt{views::vertexlist(g)} returns a range of \texttt{views::vertex\_view}, for the vertices in the graph. 
+\item \texttt{views::incidence(g,u)} returns a range of \texttt{views::edge\_view}, for the edges of a source vertex.
+\item \texttt{views::neighbors(g,u)} returns a range of \texttt{views::neighbor\_view}, for the neighboring vertices of a source vertex.
+\item \texttt{views::edgelist(g)} returns a range of \texttt{views::edge\_view}, for all the edges of a graph. 
+\end{enumerate}
+
+Graph Algorithms use Graph Views (and the Graph API as needed) to traverse the graph to acheive its goal. If an algorithm needs a value from 
+a vertex or edge, it should accept a function object that retreives the value. It should never call vertex\_value(g,u) or edge\_value(g,uv)
+directly.
+
+Like the Standard Telmplate Library (STL), algorithms and data structures can be implemented independently and be used interchangeably,
+as long as the data structure meets the concept constraints defined by an algorithm.
+
+A graph can be tagged with type aliases to describe underlying characteristics that can be used by an algorithm. Two examples
+in this proposal include \texttt{is\_undirected\_edge\_v<E>} and \texttt{is\_adjacency\_matrix\_v<G>}.
+
+\subsection{Separation of Graph Algorithm and Data Structure Requirements}
+
+There are a wide variety of ways to represent a graph that can include both outgoing and incoming edges, undirected edges,
+sparse vertex ids, non-numeric vertex ids, etc. However, it is necessary to constrain the design to focus on providing reasonable 
+value for the widely accepted algorithms currently available for graphs. With that in mind, the following guidelines have been established.
+\begin{enumerate}
+\item Graph data structures are assumed to have vertices in a sized \texttt{forward\_range}, and edges in an unsized \texttt{forward\_range}.
+\item Algorithms in this proposal will target a subset of graphs with vertices in a sized \texttt{random\_acccess\_range} with 
+integral ids, and edges will be in a \texttt{forward\_range}, for simplicity and performance. Algorithms may require edges to be sized as
+needed. It is anticipated that future algorithm proposals will continue to follow these requirements.
+\item Views follow the same requirements as the algorithms.
+\end{enumerate}
+
+The discrepancy between these definitions is to enable a wider variety of algorithms andm graph data structures outside the standard that 
+can leverage the underlying design. For instance, the following should be possible in graphs and algorithms outside of this proposal:
+
+\begin{enumerate}
+\item Incoming edges could exist for vertices, in addition to the existing incidence, or outgoing, edges for a bi-directed graph.
+\item Vertices could be stored in a map, unordered\_map or similar data structure for sparse, non-contiguous ids.
+\item Non-integral ids could be used, such as strings or compound types, that follow the comparison requirements of the vertex container.
+\item Edges could be stored in a map or set, ordered on the neighbor id, for faster neighbor lookup.
+\end{enumerate}
+
+Such features can be important for embedded graph implementations in domain-specific cases and this proposal should not prevent them. 
+Future papers could consider proposing these features.
+
+\subsection{Customization Point Objects}
+All functions for the Graph API, Views and Algorithms are defined as Customization Point Objects (CPO), allowing them to be overriden for
+specific graphs. tag\_invoke is used to implement the CPO functions.
+
+\subsection{Namespaces and Headers}
+Graph algorithms, views and data structures are unique and not easily interchanged with other elements of the standard library. For
+instance, graph algorithms wouldn't be used on a non-graph range. For this reason it is recommended to have them in their own 
+namespaces. Suggestions for namespaces are \texttt{std::graph} and
+\texttt{std::ranges::graph} for the root namespace. The graph namespaces proposed include
+\\
+\hspace*{20mm}\texttt{graph}\\
+\hspace*{30mm}\texttt{graph::access}\\
+\hspace*{30mm}\texttt{graph::views}\\
+\hspace*{30mm}\texttt{graph::views::access}\\
+\\
+Proposed headers include\\
+\hspace*{20mm}\texttt{<graph>}\\
+\hspace*{30mm}\texttt{<graph\_view>}\\
+\hspace*{30mm}\texttt{<graph\_algorithm>}\\
 
 \section{Technical Specifications}
 TBA
@@ -169,10 +255,13 @@ namespace std::graph {
 // ...
 
 template <typename G>
-auto vertices (G& g) -> vertex_range_t<G>;
+auto vertices (G& g);
 
 template <typename G>
-void resize_vertices (G& g, vertex_size_t<G>);
+auto vertex_id(G& g, vertex_iterator_t<G>);
+
+template <typename G>
+auto vertex_value(G& g, vertex_reference_t<G>);
 
 // ...
 }
@@ -184,7 +273,7 @@ void resize_vertices (G& g, vertex_size_t<G>);
 
 \begin{lstlisting}
 template <typename G>
-auto vertices (G& g) -> vertex_range_t<G>;
+auto vertices (G& g);
 \end{lstlisting}
 %
 \begin{itemize}
@@ -199,7 +288,7 @@ auto vertices (G& g) -> vertex_range_t<G>;
 
 \begin{lstlisting}
 template <typename G>
-void resize_vertices (G& g, vertex_size_t<G>);
+auto vertex_id (G& g, vertex_iterator_t<G>);
 \end{lstlisting}
 %
 \begin{itemize}
@@ -209,6 +298,63 @@ void resize_vertices (G& g, vertex_size_t<G>);
 \item Returns: TBA.
 \item Remarks: TBA.
 \end{itemize}
+
+\vspace{10pt}
+
+\begin{lstlisting}
+template <typename G>
+auto vertex_value (G& g, vertex_reference_t<G>);
+\end{lstlisting}
+%
+\begin{itemize}
+\item Preconditions: TBA.
+\item Effects: TBA.
+\item Complexity: TBA.
+\item Returns: TBA.
+\item Remarks: TBA.
+\end{itemize}
+
+\subsection{Header \texttt{<graph\_view>} synopsis [graph.syn]}
+
+\begin{lstlisting}
+namespace std::graph::views {
+
+// ...
+
+template <typename G>
+auto vertexlist(G& g);
+
+template <typename G>
+auto incidence(G& g, vertex_reference_t<G>);
+
+template <typename G>
+auto neighbors(G& g, vertex_reference_t<G>);
+
+template <typename G>
+auto edgelist(G& g);
+
+
+// ...
+}
+\end{lstlisting}
+
+\subsection{Header \texttt{<graph\_algorithm>} synopsis [graph.syn]}
+
+\begin{lstlisting}
+namespace std::graph {
+
+// ...
+
+template <typename G>
+auto breath_first_search(G& g, vertex_reference_t<G> seed);
+
+template <typename G>
+auto depth_first_search(G& g, vertex_reference_t<G> seed);
+
+
+// ...
+}
+\end{lstlisting}
 
 \section{Acknowledgements}
 Michael Wong's work is made possible by Codeplay Software Ltd., ISOCPP Foundation, Khronos and the Standards Council of Canada.  The authors wish to further thank the members of SG19 for their contributions.

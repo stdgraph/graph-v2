@@ -110,13 +110,14 @@
     - [ ] storing values in iterator: shadow struct, setting values in operator*(), mutable value, ref_to_ptr
     - [ ] fnc obj as ptr vs. value?
     - [ ] vs. NWGraph (returning references vs. values)
-  - [ ] tag_invoke design & use (namespaces, tag names, etc.)
+  - [ ] tag_invoke design & use (access namespace, tag names, etc.)
 - Readiness
   - [ ] Sep-2022 CppCon
   - [ ] Oct-2022 WG21 Kona
   - [ ] Feb-2025 deadline for C++26
 
 ### Issues
+- [ ] SG19 Questions/Input
 - [ ] Can't run tests in VS+WSL2 (they will run in VSCode, but is slow)
   - [ ] Submit a defect to MS?
 - [ ] csv_parser
@@ -127,30 +128,26 @@
   - [x] Fork: No response to issues submitted
 - [ ] Are the CSR vertex & edge types different? (requirement of incidence and adjacency concepts)
 - [ ] If we have an access namespace, do we need a container namespace?
-- [ ] SG19 Input
-  - [ ] Core data structures? static graph(CSR), dynamic graph (vol variant)
-  - [ ] vertex_id or vertex_id?
 - [ ] Should operator\[\](n) -> vertex& be a requirement for a graph?
 - [ ] Can std::array be used as a basis for a constexpr graph? What would the graph be?
-- [ ] Does a LaTeX document take fewer pages than equivilent in Google Docs?
-- [ ] SG19 Questions
 - [ ] Can CSR edges have a void value? (e.g. no v vector)
 - [ ] How easy is it to write a view w/o the graph API?
 - [ ] How to validate constexpr? (need to use std::array)
 - [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VId. How to adapt existing graphs?
 - [ ] Can transform_view be used in place of the projections in the graph views?
 - [ ] How to support bipartite graphs using different vertex types?
-  - [ ] Requires definition of 2+ types of vertices. How to define vertex type: compile-time vs. run-time?
-    - [ ] vertices are stored as a range of range of vertices, where the outer range is the type of vertex
+  - [x] Requires definition of 2+ types of vertices. How to define vertex type: compile-time vs. run-time?
+    - [x] vertices are stored as a range of range of vertices, where the outer range is the type of vertex
+    - [x] compile-time requires additional type parameter; confusing and too invasive to interface
   - [ ] Need proof-of-concept graph data structure to demonstrate
   - [ ] Option 1: extend API & Views with the type (or hidden if not used)
     - [ ] keeps uniformity of vertex type
     - [ ] may require use of variant for vertex_value type (having a unique value__type per vertex type significantly increases API complexity)
     - [ ] API extensions
       - [ ] vertices(g,type)
-      - [ ] find_vertex(g,type,id)
+      - [ ] find_vertex(g,id,type)
       - [ ] vertex_type(g,u), or vertex_type(g,ui) (like vertex_id)
-      - [ ] target_type(g,uv), source_type(g,uv), other_type(g,uv)
+      - [ ] target_type(g,uv), source_type(g,uv)
     - [ ] View exensions
       - [ ] vertex_view would need to include vertex type
       - [ ] edge_view would need to include target & source vertex type (with the id)
@@ -166,9 +163,9 @@
     - [ ] invasive to the existing design and would make it significantly more complicated
     - [ ] would delay existing design by months and there's no guarantee to be successful
 - [ ] Should we worry about row-major & column-major ordering of adjacency_matrix? always assume row-major?
-- [ ] Do we need a run-time function to check for undirectedness, in addition to is_undirected_edge_v<EV>? Is it a run-time property for some graphs?
 - [ ] Is there a way for EVF to take both edge_value and fnc obj? (same for VVF & vertex_value)
-- [ ] The default for edges(g,uid) CPO isn't being found by msvc or gcc
+- [ ] The default for edges(g,uid) CPO isn't being found by msvc or gcc. Is there a way to only have to override one version of edges(g,)?
+- [ ] Use of access namespace is required by CPO and exposed when specializing the functions. Acceptable? Better way?
 
 ## Resolved
 ### ToDo Completed
@@ -226,3 +223,5 @@
 - [x] edge_list_graph (edgelist_edge<VId,E,EV> view?): edgelist is a view, or projection of a container
 - [x] Are there any issues with using tag_invoke? It appears not. Others are using it in papers.
 - [x] key vs. id? "key" is a better term, but id has been used extensively in boost and other graph libraries and will be easier for people to recognize
+- [x] Do we need a run-time function to check for undirectedness, in addition to is_undirected_edge_v<EV>? Is it a run-time property for some graphs?
+        A: We'll only support compile-time. If someone needs run-time they can create a wrapper for is_undirected_edge_v to use
