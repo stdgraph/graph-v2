@@ -2,12 +2,12 @@
 #include "graph/graph.hpp"
 
 //
-// edgelist(g,u) -> edge_view<VKey,Sourced,E,EV>:
+// edgelist(g,u) -> edge_view<VId,Sourced,E,EV>:
 //
-// enable: for([ukey, vkey, uv]        : edgelist(g))
-//         for([ukey, vkey, uv]        : edgelist(g,fn))
-//         for([ukey, vkey, uv, value] : edgelist(g,ukey,vkey))
-//         for([ukey, vkey, uv, value] : edgelist(g,ukey,vkey,fn))
+// enable: for([uid, vid, uv]        : edgelist(g))
+//         for([uid, vid, uv]        : edgelist(g,fn))
+//         for([uid, vid, uv, value] : edgelist(g,uid,vid))
+//         for([uid, vid, uv, value] : edgelist(g,uid,vid,fn))
 //
 namespace std::graph::views {
 
@@ -69,7 +69,7 @@ public:
 
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
-  using vertex_key_type = vertex_key_t<graph_type>;
+  using vertex_id_type  = vertex_id_t<graph_type>;
   using vertex_iterator = vertex_iterator_t<G>;
 
   using edge_range          = vertex_edge_range_t<graph_type>;
@@ -79,7 +79,7 @@ public:
   using edge_value_type     = invoke_result_t<EVF, edge_reference_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_view<const vertex_key_type, true, edge_reference_type, edge_value_type>;
+  using value_type        = edge_view<const vertex_id_type, true, edge_reference_type, edge_value_type>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -106,22 +106,22 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-  using shadow_value_type = edge_view<vertex_key_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+  using shadow_value_type = edge_view<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
 public:
   constexpr reference operator*() const {
     if constexpr (undirected_incidence_graph<G>) {
-      if (target_key(g_, *uvi_) != vertex_key(g_, ui_)) {
-        value_.source_key = source_key(g_, *uvi_);
-        value_.target_key = target_key(g_, *uvi_);
+      if (target_id(g_, *uvi_) != vertex_id(g_, ui_)) {
+        value_.source_id = source_id(g_, *uvi_);
+        value_.target_id = target_id(g_, *uvi_);
       } else {
-        value_.source_key = target_key(g_, *uvi_);
-        value_.target_key = source_key(g_, *uvi_);
+        value_.source_id = target_id(g_, *uvi_);
+        value_.target_id = source_id(g_, *uvi_);
       }
       value_.edge  = &*uvi_;
       value_.value = invoke(*value_fn_, *uvi_);
     } else {
-      value_ = {vertex_key(g_, ui_), target_key(g_, *uvi_), &*uvi_, invoke(*value_fn_, *uvi_)};
+      value_ = {vertex_id(g_, ui_), target_id(g_, *uvi_), &*uvi_, invoke(*value_fn_, *uvi_)};
     }
     return reinterpret_cast<reference>(value_);
   }
@@ -157,7 +157,7 @@ public:
 
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
-  using vertex_key_type = vertex_key_t<graph_type>;
+  using vertex_id_type  = vertex_id_t<graph_type>;
   using vertex_iterator = vertex_iterator_t<G>;
 
   using edge_range          = vertex_edge_range_t<graph_type>;
@@ -167,7 +167,7 @@ public:
   using edge_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_view<const vertex_key_type, true, edge_reference_type, edge_value_type>;
+  using value_type        = edge_view<const vertex_id_type, true, edge_reference_type, edge_value_type>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -179,7 +179,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-  using shadow_value_type = edge_view<vertex_key_type, true, shadow_edge_type*, edge_value_type>;
+  using shadow_value_type = edge_view<vertex_id_type, true, shadow_edge_type*, edge_value_type>;
 
 public:
   edgelist_iterator(graph_type& g, vertex_iterator ui) : base_type(), g_(g), ui_(ui), uvi_() {
@@ -198,16 +198,16 @@ public:
 public:
   constexpr reference operator*() const {
     if constexpr (undirected_incidence_graph<G>) {
-      if (target_key(g_, *uvi_) != vertex_key(g_, ui_)) {
-        value_.source_key = source_key(g_, *uvi_);
-        value_.target_key = target_key(g_, *uvi_);
+      if (target_id(g_, *uvi_) != vertex_id(g_, ui_)) {
+        value_.source_id = source_id(g_, *uvi_);
+        value_.target_id = target_id(g_, *uvi_);
       } else {
-        value_.source_key = target_key(g_, *uvi_);
-        value_.target_key = source_key(g_, *uvi_);
+        value_.source_id = target_id(g_, *uvi_);
+        value_.target_id = source_id(g_, *uvi_);
       }
       value_.edge = &*uvi_;
     } else {
-      value_ = {vertex_key(g_, ui_), target_key(g_, *uvi_), &*uvi_};
+      value_ = {vertex_id(g_, ui_), target_id(g_, *uvi_), &*uvi_};
     }
     return reinterpret_cast<reference>(value_);
   }
@@ -240,34 +240,34 @@ using edgelist_view = ranges::subrange<edgelist_iterator<G, EVF>, vertex_iterato
 
 namespace access {
   // ranges
-  TAG_INVOKE_DEF(edgelist); // edgelist(g)                 -> edges[ukey,vkey,uv]
-                            // edgelist(g,fn)              -> edges[ukey,vkey,uv,value]
-                            // edgelist(g,ukey,vkey)       -> edges[ukey,vkey,uv]
-                            // edgelist(g,ukey,vkey,fn)    -> edges[ukey,vkey,uv,value]
+  TAG_INVOKE_DEF(edgelist); // edgelist(g)                 -> edges[uid,vid,uv]
+                            // edgelist(g,fn)              -> edges[uid,vid,uv,value]
+                            // edgelist(g,uid,vid)       -> edges[uid,vid,uv]
+                            // edgelist(g,uid,vid,fn)    -> edges[uid,vid,uv,value]
 
   template <class G>
   concept _has_edgelist_g_adl = incidence_graph<G> && requires(G&& g) {
     {edgelist(g)};
   };
   template <class G>
-  concept _has_edgelist_g_ukey_adl = incidence_graph<G> && requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey) {
-    {edgelist(g, ukey, vkey)};
+  concept _has_edgelist_g_uid_adl = incidence_graph<G> && requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
+    {edgelist(g, uid, vid)};
   };
   template <class G, class EVF>
   concept _has_edgelist_g_evf_adl = incidence_graph<G> && requires(G&& g, const EVF& evf) {
     {edgelist(g, evf)};
   };
   template <class G, class EVF>
-  concept _has_edgelist_g_ukey_evf_adl = incidence_graph<G> &&
-        requires(G&& g, vertex_key_t<G> ukey, vertex_key_t<G> vkey, const EVF& evf) {
-    {edgelist(g, ukey, vkey, evf)};
+  concept _has_edgelist_g_uid_evf_adl = incidence_graph<G> &&
+        requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, const EVF& evf) {
+    {edgelist(g, uid, vid, evf)};
   };
 
 } // namespace access
 
 //
 // edgelist(g)
-// edgelist(g,ukey,vkey)
+// edgelist(g,uid,vid)
 //
 template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
@@ -282,9 +282,9 @@ constexpr auto edgelist(G&& g) {
 
 template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edgelist(G&& g, vertex_key_t<G> first, vertex_key_t<G> last) {
+constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last) {
   assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));
-  if constexpr (access::_has_edgelist_g_ukey_adl<G>)
+  if constexpr (access::_has_edgelist_g_uid_adl<G>)
     return access::edgelist(g, first, last);
   else {
     using iterator_type = edgelist_iterator<G, void>;
@@ -295,7 +295,7 @@ constexpr auto edgelist(G&& g, vertex_key_t<G> first, vertex_key_t<G> last) {
 
 //
 // edgelist(g,u,evf)
-// edgelist(g,ukey,evf)
+// edgelist(g,uid,evf)
 //
 template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
@@ -310,9 +310,9 @@ constexpr auto edgelist(G&& g, const EVF& evf) {
 
 template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edgelist(G&& g, vertex_key_t<G> first, vertex_key_t<G> last, const EVF& evf) {
+constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last, const EVF& evf) {
   assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));
-  if constexpr (access::_has_edgelist_g_ukey_evf_adl<G, EVF>)
+  if constexpr (access::_has_edgelist_g_uid_evf_adl<G, EVF>)
     return access::edgelist(g, first, last, evf);
   else {
     using iterator_type = edgelist_iterator<G, EVF>;

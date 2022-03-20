@@ -26,7 +26,7 @@ The goals of the library include:
       data structures outside of the standard may use a map, unordered_map or other data structure and the design should 
       support that use.
 
-   b. All algorithms in the standard require an integral vertex key. However, graph algorithms and data structures 
+   b. All algorithms in the standard require an integral vertex id. However, graph algorithms and data structures 
       outside of the standard may use a string or compound type and the design should support that use.
 
    c. While vertices only have "outgoing" edges in the standard because most algorithms only require that, bi-directional 
@@ -35,13 +35,15 @@ The goals of the library include:
 
 7. Define useful traits and concepts that can be used by algorithms to describe their requirements, and provide expected
    and optimized results.
-8. Provide an initial set of useful algorithms and a graph data structure.
+8. Provide initial functionality that is useful that includes graph algorithms, views, API, and data structure.
 
 ## Getting Started
 ### Build & Run Requirements
 This is being actively developed with the latest releases of MSVC (VS2022) on Windows and gcc (11) on Linux. Other releases
-or compilers may or may not work. (At the time of this writing Clang doesn't have a \<concepts\> header and so it hasn't
-been used.)
+or compilers may or may not work.
+
+At the time of this writing Clang doesn't have a \<concepts\> header and so it hasn't been used. It will be added to the
+test suite after it has the header and fully supports concepts.
 
 #### Prerequesites
 1. C++20 compliant compiler that fully supports concepts and ranges. 
@@ -89,7 +91,7 @@ Template parameters:
 | GV       | Graph Value (user-defined or void)                                              |
 | GVF      | Graph Value Function: gvf(g) -> value; declval(value) may be different than GV  |
 | V        | Vertex type                                                                     |
-| VKey     | Vertex key type                                                                 |
+| VId      | Vertex id type                                                                  |
 | VV       | Vertex Value (user-defined or void)                                             |
 | VVF      | Vertex Value Function: vvf(u) -> value; declval(value) may be different than VV |
 | VR       | Vertex Range                                                                    |
@@ -104,7 +106,7 @@ Parameters:
 | :------------| :--------------------------------------|
 | g            | graph reference                        |
 | u, v, x, y   | vertex reference                       |
-| ukey, vkey   | vertex keys                            |
+| uid, vid     | vertex ids                             |
 | ui,vi        | vertex iterators                       |
 | uv           | edge reference                         |
 | uvi          | edge iterator                          |

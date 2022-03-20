@@ -17,10 +17,10 @@ requires edge_weight_function<G, WF> &&
       is_arithmetic_v<invoke_result_t<WF, ranges::range_reference_t<vertex_edge_range_t<G>>>> &&
       ranges::random_access_range<vertex_range_t<G>>
 auto dijkstra_book(
-      G&&             g,      //
-      vertex_key_t<G> source, //
-      WF              weight = [&g](edge_reference_t<G> uv) { return 1; }) {
-  using key_type    = vertex_key_t<G>;
+      G&&            g,      //
+      vertex_id_t<G> source, //
+      WF             weight = [&g](edge_reference_t<G> uv) { return 1; }) {
+  using id_type     = vertex_id_t<G>;
   using weight_type = decltype(weight(std::declval<edge_reference_t<G>>()));
 
   size_t N(size(vertices(g)));
@@ -30,8 +30,8 @@ auto dijkstra_book(
   distance[source] = 0;
 
   struct weighted_vertex {
-    key_type    vertex_key = key_type();
-    weight_type weight     = weight_type();
+    id_type     vertex_id = id_type();
+    weight_type weight    = weight_type();
   };
 
   priority_queue<weighted_vertex, vector<weighted_vertex>,
@@ -42,22 +42,22 @@ auto dijkstra_book(
 
   while (!Q.empty()) {
 
-    auto ukey = Q.top().vertex_key;
+    auto uid = Q.top().vertex_id;
     Q.pop();
 
-    //for (auto&& [vkey, w] : g[u]) -- pretty but would only allow one property
+    //for (auto&& [vid, w] : g[u]) -- pretty but would only allow one property
     //
     //for (auto&& uv : std::graph::edges(g, g[u])) {
-    //  auto        vkey = target_key(g, uv);
+    //  auto        vid = target_id(g, uv);
     //
     //extension:
-    //for (auto&& [vkey, uv, w] : views::incidence(g, ukey, weight)) {
+    //for (auto&& [vid, uv, w] : views::incidence(g, uid, weight)) {
     //
-    for (auto&& [vkey, uv] : views::incidence(g, ukey)) {
+    for (auto&& [vid, uv] : views::incidence(g, uid)) {
       weight_type w = weight(uv);
-      if (distance[ukey] + w < distance[vkey]) {
-        distance[vkey] = distance[ukey] + w;
-        Q.push({vkey, distance[vkey]});
+      if (distance[uid] + w < distance[vid]) {
+        distance[vid] = distance[uid] + w;
+        Q.push({vid, distance[vid]});
       }
     }
   }
@@ -66,11 +66,11 @@ auto dijkstra_book(
 }
 
 template <incidence_graph G>
-void vertex_key_example(G&& g) {
-  auto ui  = begin(vertices(g));
-  auto key = vertex_key(g, ui);
+void vertex_id_example(G&& g) {
+  auto ui = begin(vertices(g));
+  auto id = vertex_id(g, ui);
 
-  for (auto&& [ukey, u] : views::vertexlist(g)) { //
+  for (auto&& [uid, u] : views::vertexlist(g)) { //
   }
 }
 

@@ -25,14 +25,14 @@ using std::remove_reference_t;
 using std::is_const_v;
 
 using std::graph::vertex_t;
-using std::graph::vertex_key_t;
+using std::graph::vertex_id_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
 
 using std::graph::vertices;
 using std::graph::edges;
 using std::graph::vertex_value;
-using std::graph::target_key;
+using std::graph::target_id;
 using std::graph::target;
 using std::graph::edge_value;
 
@@ -41,8 +41,8 @@ using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 
 template <typename G>
-constexpr auto find_frankfurt_key(const G& g) {
-  return find_city_key(g, "Frankf\xC3\xBCrt");
+constexpr auto find_frankfurt_id(const G& g) {
+  return find_city_id(g, "Frankf\xC3\xBCrt");
 }
 
 template <typename G>
@@ -56,20 +56,20 @@ TEST_CASE("Germany routes examples", "[csv][vofl][germany][example]") {
   using G  = routes_volf_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
-  auto frankfurt     = find_frankfurt(g);
-  auto frankfurt_key = find_frankfurt_key(g);
+  auto frankfurt    = find_frankfurt(g);
+  auto frankfurt_id = find_frankfurt_id(g);
 
 #if 0
   SECTION("Incidence iteration") {
-    for (auto&& [ukey, u] : std::graph::views::vertexlist(g)) {
-      for (auto&& [vkey, uv] : std::graph::views::edges_view(g, u)) {
+    for (auto&& [uid, u] : std::graph::views::vertexlist(g)) {
+      for (auto&& [vid, uv] : std::graph::views::edges_view(g, u)) {
       }
     }
   }
 
   SECTION("Adjacency iteration") {
-    for (auto&& [ukey, u] : std::graph::views::vertexlist(g)) {
-      for (auto&& [vkey, v] : std::graph::views::adjacency_view(g, u)) {
+    for (auto&& [uid, u] : std::graph::views::vertexlist(g)) {
+      for (auto&& [vid, v] : std::graph::views::adjacency_view(g, u)) {
       }
     }
   }
@@ -77,7 +77,7 @@ TEST_CASE("Germany routes examples", "[csv][vofl][germany][example]") {
 
 #if 0
   SECTION("Edgelist iteration") {
-    for (auto&& [ukey, vkey, uv] : std::graph::edges_view(g)) {
+    for (auto&& [uid, vid, uv] : std::graph::edges_view(g)) {
     }
   }
 #endif

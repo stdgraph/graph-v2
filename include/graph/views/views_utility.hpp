@@ -4,201 +4,201 @@ namespace std::graph::views {
 
 //
 // vertex_view
-// for(auto&& [ukey, u]        : vertexlist(g))
-// for(auto&& [ukey, u, value] : vertexlist(g, [](vertex_reference_t<G> u) { return ...; } )
+// for(auto&& [uid, u]        : vertexlist(g))
+// for(auto&& [uid, u, value] : vertexlist(g, [](vertex_reference_t<G> u) { return ...; } )
 //
-template <class VKey, class V, class VV>
+template <class VId, class V, class VV>
 struct vertex_view {
-  VKey key;
-  V    vertex;
-  VV   value;
+  VId id;
+  V   vertex;
+  VV  value;
 };
-template <class VKey, class V>
-struct vertex_view<VKey, V, void> {
-  VKey key;
-  V    vertex;
+template <class VId, class V>
+struct vertex_view<VId, V, void> {
+  VId id;
+  V   vertex;
 };
-template <class VKey, class VV>
-struct vertex_view<VKey, void, VV> {
-  VKey key;
-  VV   value;
+template <class VId, class VV>
+struct vertex_view<VId, void, VV> {
+  VId id;
+  VV  value;
 };
-template <class VKey>
-struct vertex_view<VKey, void, void> {
-  VKey key;
+template <class VId>
+struct vertex_view<VId, void, void> {
+  VId id;
 };
 
-template <class VKey, class VV>
-using copyable_vertex_t = vertex_view<VKey, void, VV>; // {key, value}
+template <class VId, class VV>
+using copyable_vertex_t = vertex_view<VId, void, VV>; // {id, value}
 
 //
 // edge_view
 //
-// for(auto&& [target_key, uv]        : incidence(g,u))
-// for(auto&& [target_key, uv, value] : incidence(g,u, [](edge_reference_t<G> uv) { return ...; })
+// for(auto&& [target_id, uv]        : incidence(g,u))
+// for(auto&& [target_id, uv, value] : incidence(g,u, [](edge_reference_t<G> uv) { return ...; })
 //
-// for(auto&& [source_key, target_key, uv]        : incidence(g,u))
-// for(auto&& [source_key, target_key, uv, value] : incidence(g,u, [](edge_reference_t<G> uv) { return ...; })
+// for(auto&& [source_id, target_id, uv]        : incidence(g,u))
+// for(auto&& [source_id, target_id, uv, value] : incidence(g,u, [](edge_reference_t<G> uv) { return ...; })
 //
-template <class VKey, bool Sourced, class E, class EV>
+template <class VId, bool Sourced, class E, class EV>
 struct edge_view {
-  VKey source_key;
-  VKey target_key;
-  E    edge;
-  EV   value;
+  VId source_id;
+  VId target_id;
+  E   edge;
+  EV  value;
 };
 
-template <class VKey, class E>
-struct edge_view<VKey, true, E, void> {
-  VKey source_key;
-  VKey target_key;
-  E    edge;
+template <class VId, class E>
+struct edge_view<VId, true, E, void> {
+  VId source_id;
+  VId target_id;
+  E   edge;
 };
-template <class VKey>
-struct edge_view<VKey, true, void, void> {
-  VKey source_key;
-  VKey target_key;
+template <class VId>
+struct edge_view<VId, true, void, void> {
+  VId source_id;
+  VId target_id;
 };
-template <class VKey, class EV>
-struct edge_view<VKey, true, void, EV> {
-  VKey source_key;
-  VKey target_key;
-  EV   value;
-};
-
-template <class VKey, class E, class EV>
-struct edge_view<VKey, false, E, EV> {
-  VKey target_key;
-  E    edge;
-  EV   value;
-};
-template <class VKey, class E>
-struct edge_view<VKey, false, E, void> {
-  VKey target_key;
-  E    edge;
+template <class VId, class EV>
+struct edge_view<VId, true, void, EV> {
+  VId source_id;
+  VId target_id;
+  EV  value;
 };
 
-template <class VKey, class EV>
-struct edge_view<VKey, false, void, EV> {
-  VKey target_key;
-  EV   value;
+template <class VId, class E, class EV>
+struct edge_view<VId, false, E, EV> {
+  VId target_id;
+  E   edge;
+  EV  value;
 };
-template <class VKey>
-struct edge_view<VKey, false, void, void> {
-  VKey target_key;
+template <class VId, class E>
+struct edge_view<VId, false, E, void> {
+  VId target_id;
+  E   edge;
+};
+
+template <class VId, class EV>
+struct edge_view<VId, false, void, EV> {
+  VId target_id;
+  EV  value;
+};
+template <class VId>
+struct edge_view<VId, false, void, void> {
+  VId target_id;
 };
 
 //
 // targeted_edge
-// for(auto&& [vkey,uv,value] : edges_view(g, u, [](vertex_edge_reference_t<G> uv) { return ...; } )
-// for(auto&& [vkey,uv]       : edges_view(g, u) )
+// for(auto&& [vid,uv,value] : edges_view(g, u, [](vertex_edge_reference_t<G> uv) { return ...; } )
+// for(auto&& [vid,uv]       : edges_view(g, u) )
 //
-template <class VKey, class E, class EV>
-using targeted_edge = edge_view<VKey, false, E, EV>; // {target_key, edge, [, value]}
+template <class VId, class E, class EV>
+using targeted_edge = edge_view<VId, false, E, EV>; // {target_id, edge, [, value]}
 
 //
 // sourced_edge
-// for(auto&& [ukey,vkey,uv,value] : sourced_edges_view(g, u, [](vertex_edge_reference_t<G> uv) { return ...; } )
-// for(auto&& [ukey,vkey,uv]       : sourced_edges_view(g, u) )
+// for(auto&& [uid,vid,uv,value] : sourced_edges_view(g, u, [](vertex_edge_reference_t<G> uv) { return ...; } )
+// for(auto&& [uid,vid,uv]       : sourced_edges_view(g, u) )
 //
-template <class VKey, class V, class E, class EV>
-using sourced_edge = edge_view<VKey, true, E, EV>; // {source_key, target_key, edge, [, value]}
+template <class VId, class V, class E, class EV>
+using sourced_edge = edge_view<VId, true, E, EV>; // {source_id, target_id, edge, [, value]}
 
 //
 // edgelist_edge
-// for(auto&& [ukey,vkey,uv,value] : edges_view(g, [](vertex_edge_reference_t<G> g) { return ...; } )
-// for(auto&& [ukey,vkey,uv]       : edges_view(g) )
+// for(auto&& [uid,vid,uv,value] : edges_view(g, [](vertex_edge_reference_t<G> g) { return ...; } )
+// for(auto&& [uid,vid,uv]       : edges_view(g) )
 //
-template <class VKey, class E, class EV>
-using edgelist_edge = edge_view<VKey, true, E, EV>; // {source_key, target_key [, edge] [, value]}
+template <class VId, class E, class EV>
+using edgelist_edge = edge_view<VId, true, E, EV>; // {source_id, target_id [, edge] [, value]}
 
 //
 // copyable_edge
 //
-template <class VKey, class EV>
-using copyable_edge_t = edge_view<VKey, true, void, EV>; // {source_key, target_key [, value]}
+template <class VId, class EV>
+using copyable_edge_t = edge_view<VId, true, void, EV>; // {source_id, target_id [, value]}
 
 //
 // neighbor_view (for adjacency)
 //
-template <class VKey, bool Sourced, class V, class VV>
+template <class VId, bool Sourced, class V, class VV>
 struct neighbor_view {
-  VKey source_key;
-  VKey target_key;
-  V    target;
-  VV   value;
+  VId source_id;
+  VId target_id;
+  V   target;
+  VV  value;
 };
 
-template <class VKey, class V, class VV>
-struct neighbor_view<VKey, false, V, VV> {
-  VKey target_key;
-  V    target;
-  VV   value;
+template <class VId, class V, class VV>
+struct neighbor_view<VId, false, V, VV> {
+  VId target_id;
+  V   target;
+  VV  value;
 };
 
-template <class VKey, class V>
-struct neighbor_view<VKey, false, V, void> {
-  VKey target_key;
-  V    target;
+template <class VId, class V>
+struct neighbor_view<VId, false, V, void> {
+  VId target_id;
+  V   target;
 };
 
-template <class VKey, class VV>
-struct neighbor_view<VKey, false, void, VV> {
-  VKey target_key;
-  VV   value;
+template <class VId, class VV>
+struct neighbor_view<VId, false, void, VV> {
+  VId target_id;
+  VV  value;
 };
 
-template <class VKey>
-struct neighbor_view<VKey, false, void, void> {
-  VKey target_key;
+template <class VId>
+struct neighbor_view<VId, false, void, void> {
+  VId target_id;
 };
 
-template <class VKey, class V>
-struct neighbor_view<VKey, true, V, void> {
-  VKey source_key;
-  VKey target_key;
-  V    target;
+template <class VId, class V>
+struct neighbor_view<VId, true, V, void> {
+  VId source_id;
+  VId target_id;
+  V   target;
 };
 
-template <class VKey, class VV>
-struct neighbor_view<VKey, true, void, VV> {
-  VKey source_key;
-  VKey target_key;
-  VV   value;
+template <class VId, class VV>
+struct neighbor_view<VId, true, void, VV> {
+  VId source_id;
+  VId target_id;
+  VV  value;
 };
 
-template <class VKey>
-struct neighbor_view<VKey, true, void, void> {
-  VKey source_key;
-  VKey target_key;
+template <class VId>
+struct neighbor_view<VId, true, void, void> {
+  VId source_id;
+  VId target_id;
 };
 
 //
 // view concepts
 //
-template <class T, class VKey, class VV>
-concept copyable_vertex = convertible_to<T, copyable_vertex_t<VKey, VV>>;
+template <class T, class VId, class VV>
+concept copyable_vertex = convertible_to<T, copyable_vertex_t<VId, VV>>;
 
-template <class T, class VKey, class EV>
-concept copyable_edge = convertible_to<T, copyable_edge_t<VKey, EV>>;
+template <class T, class VId, class EV>
+concept copyable_edge = convertible_to<T, copyable_edge_t<VId, EV>>;
 
 //
 // is_sourced<G>
 //
 template <class T>
 inline constexpr bool is_sourced_v = false;
-template <class VKey, class V, class VV>
-inline constexpr bool is_sourced_v<edge_view<VKey, true, V, VV>> = true;
-template <class VKey, class V, class VV>
-inline constexpr bool is_sourced_v<neighbor_view<VKey, true, V, VV>> = true;
+template <class VId, class V, class VV>
+inline constexpr bool is_sourced_v<edge_view<VId, true, V, VV>> = true;
+template <class VId, class V, class VV>
+inline constexpr bool is_sourced_v<neighbor_view<VId, true, V, VV>> = true;
 
 
 template <class G, bool Sourced>
 class source_vertex {
 public:
-  using vertex_key_type = vertex_key_t<G>;
+  using vertex_id_type = vertex_id_t<G>;
 
-  source_vertex(vertex_key_type key) : key_(key) {}
+  source_vertex(vertex_id_type id) : id_(id) {}
 
   source_vertex()                         = default;
   source_vertex(const source_vertex& rhs) = default;
@@ -208,18 +208,18 @@ public:
   source_vertex& operator=(const source_vertex&) = default;
   source_vertex& operator=(source_vertex&&) = default;
 
-  constexpr vertex_key_type source_vertex_key() const noexcept { return key_; }
+  constexpr vertex_id_type source_vertex_id() const noexcept { return id_; }
 
 protected:
-  vertex_key_type key_ = 0;
+  vertex_id_type id_ = 0;
 };
 
 template <class G>
 class source_vertex<G, false> {
 public:
-  using vertex_key_type = vertex_key_t<G>;
+  using vertex_id_type = vertex_id_t<G>;
 
-  source_vertex(vertex_key_type key) {}
+  source_vertex(vertex_id_type id) {}
   source_vertex() = default;
 };
 

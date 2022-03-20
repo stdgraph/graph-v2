@@ -36,4 +36,3 @@ std::string quoted_utf8(const char* s) {
     utf8_append(out, *ch);
   return out;
 }
-

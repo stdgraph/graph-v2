@@ -25,14 +25,14 @@ using std::remove_reference_t;
 using std::is_const_v;
 
 using std::graph::vertex_t;
-using std::graph::vertex_key_t;
+using std::graph::vertex_id_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
 
 using std::graph::vertices;
 using std::graph::edges;
 using std::graph::vertex_value;
-using std::graph::target_key;
+using std::graph::target_id;
 using std::graph::target;
 using std::graph::edge_value;
 
@@ -41,8 +41,8 @@ using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 
 template <typename G>
-constexpr auto find_frankfurt_key(const G& g) {
-  return find_city_key(g, "Frankf\xC3\xBCrt");
+constexpr auto find_frankfurt_id(const G& g) {
+  return find_city_id(g, "Frankf\xC3\xBCrt");
 }
 
 template <typename G>

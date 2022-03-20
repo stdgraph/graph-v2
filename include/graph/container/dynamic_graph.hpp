@@ -7,23 +7,23 @@
 #include "graph/graph.hpp"
 #include "container_utility.hpp"
 
-// load_vertices(vrng, vvalue_fnc) -> [ukey,vval]
+// load_vertices(vrng, vvalue_fnc) -> [uid,vval]
 //
-// load_edges(erng, eproj) -> [ukey,vkey]
-// load_edges(erng, eproj) -> [ukey,vkey, eval]
+// load_edges(erng, eproj) -> [uid,vid]
+// load_edges(erng, eproj) -> [uid,vid, eval]
 //
-// load_edges(erng, eproj) -> [ukey,vkey]
-// load_edges(erng, eproj) -> [ukey,vkey, eval]
+// load_edges(erng, eproj) -> [uid,vid]
+// load_edges(erng, eproj) -> [uid,vid, eval]
 //
-// load_edges(erng, eproj, vrng, vproj) -> [ukey,vkey],       [ukey,vval]
-// load_edges(erng, eproj, vrng, vproj) -> [ukey,vkey, eval], [ukey,vval]
+// load_edges(erng, eproj, vrng, vproj) -> [uid,vid],       [uid,vval]
+// load_edges(erng, eproj, vrng, vproj) -> [uid,vid, eval], [uid,vval]
 //
-// load_edges(initializer_list<[ukey,vkey]>
-// load_edges(initializer_list<[ukey,vkey,eval]>
+// load_edges(initializer_list<[uid,vid]>
+// load_edges(initializer_list<[uid,vid,eval]>
 //
-// [ukey,vval]      <-- copyable_vertex<VKey,VV>
-// [ukey,vkey]      <-- copyable_edge<VKey,void>
-// [ukey,vkey,eval] <-- copyable_edge<VKey,EV>
+// [uid,vval]      <-- copyable_vertex<VId,VV>
+// [uid,vid]      <-- copyable_edge<VId,void>
+// [uid,vid,eval] <-- copyable_edge<VId,EV>
 //
 
 namespace std::graph::container {
@@ -32,73 +32,73 @@ namespace std::graph::container {
 // dynamic_graph forward references
 //
 
-template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VKey = uint32_t>
+template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VId = uint32_t>
 struct vofl_graph_traits;
 
-template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VKey = uint32_t>
+template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VId = uint32_t>
 struct vol_graph_traits;
 
-template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VKey = uint32_t>
+template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VId = uint32_t>
 struct vov_graph_traits;
 
 
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
 class dynamic_edge;
 
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
 class dynamic_vertex;
 
 template <class EV     = void,
           class VV     = void,
           class GV     = void,
           bool Sourced = false,
-          class VKey   = uint32_t,
-          class Traits = vofl_graph_traits<EV, VV, GV, Sourced, VKey>>
+          class VId    = uint32_t,
+          class Traits = vofl_graph_traits<EV, VV, GV, Sourced, VId>>
 class dynamic_graph;
 
-template <class EV, class VV, class GV, bool Sourced, class VKey>
+template <class EV, class VV, class GV, bool Sourced, class VId>
 struct vofl_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
   using graph_value_type                     = GV;
-  using vertex_key_type                      = VKey;
+  using vertex_id_type                       = VId;
   constexpr inline const static bool sourced = Sourced;
 
-  using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VKey, vofl_graph_traits>;
-  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VKey, vofl_graph_traits>;
-  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VKey, vofl_graph_traits>;
+  using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VId, vofl_graph_traits>;
+  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VId, vofl_graph_traits>;
+  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VId, vofl_graph_traits>;
 
   using vertices_type = vector<vertex_type>;
   using edges_type    = forward_list<edge_type>;
 };
 
-template <class EV, class VV, class GV, bool Sourced, class VKey>
+template <class EV, class VV, class GV, bool Sourced, class VId>
 struct vol_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
   using graph_value_type                     = GV;
-  using vertex_key_type                      = VKey;
+  using vertex_id_type                       = VId;
   constexpr inline const static bool sourced = Sourced;
 
-  using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VKey, vol_graph_traits>;
-  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VKey, vol_graph_traits>;
-  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VKey, vol_graph_traits>;
+  using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VId, vol_graph_traits>;
+  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VId, vol_graph_traits>;
+  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VId, vol_graph_traits>;
 
   using vertices_type = vector<vertex_type>;
   using edges_type    = list<edge_type>;
 };
 
-template <class EV, class VV, class GV, bool Sourced, class VKey>
+template <class EV, class VV, class GV, bool Sourced, class VId>
 struct vov_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
   using graph_value_type                     = GV;
-  using vertex_key_type                      = VKey;
+  using vertex_id_type                       = VId;
   constexpr inline const static bool sourced = Sourced;
 
-  using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VKey, vov_graph_traits>;
-  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VKey, vov_graph_traits>;
-  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VKey, vov_graph_traits>;
+  using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VId, vov_graph_traits>;
+  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VId, vov_graph_traits>;
+  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VId, vov_graph_traits>;
 
   using vertices_type = vector<vertex_type>;
   using edges_type    = vector<edge_type>;
@@ -109,23 +109,23 @@ using dynamic_adjacency_graph = dynamic_graph<typename Traits::edge_value_type,
                                               typename Traits::vertex_value_type,
                                               typename Traits::graph_value_type,
                                               Traits::sourced,
-                                              typename Traits::vertex_key_type,
+                                              typename Traits::vertex_id_type,
                                               Traits>;
 
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge_target
 //
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
 class dynamic_edge_target {
 public:
-  using vertex_key_type = VKey;
-  using value_type      = EV;
-  using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
-  using edge_type       = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
+  using vertex_id_type = VId;
+  using value_type     = EV;
+  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
 
 public:
-  constexpr dynamic_edge_target(vertex_key_type target_key) : target_key_(target_key) {}
+  constexpr dynamic_edge_target(vertex_id_type target_id) : target_id_(target_id) {}
 
   constexpr dynamic_edge_target()                           = default;
   constexpr dynamic_edge_target(const dynamic_edge_target&) = default;
@@ -136,41 +136,41 @@ public:
   constexpr dynamic_edge_target& operator=(dynamic_edge_target&&) = default;
 
 public:
-  //constexpr vertex_key_type target_key() const { return target_key_; }
-  //constexpr vertex_key_type source_key() const { return source_key_; }
+  //constexpr vertex_id_type target_id() const { return target_id_; }
+  //constexpr vertex_id_type source_id() const { return source_id_; }
 
 private:
-  vertex_key_type target_key_ = vertex_key_type();
+  vertex_id_type target_id_ = vertex_id_type();
 
 private:
-  // target_key(g,uv), target(g,uv)
-  friend constexpr vertex_key_type
-  tag_invoke(::std::graph::access::target_key_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return uv.target_key_;
+  // target_id(g,uv), target(g,uv)
+  friend constexpr vertex_id_type
+  tag_invoke(::std::graph::access::target_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+    return uv.target_id_;
   }
   friend constexpr vertex_type& tag_invoke(::std::graph::access::target_fn_t, graph_type& g, edge_type& uv) noexcept {
-    return begin(vertices(g))[uv.target_key_];
+    return begin(vertices(g))[uv.target_id_];
   }
   friend constexpr const vertex_type&
   tag_invoke(::std::graph::access::target_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return begin(vertices(g))[uv.target_key_];
+    return begin(vertices(g))[uv.target_id_];
   }
 };
 
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge_source
 //
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
 class dynamic_edge_source {
 public:
-  using vertex_key_type = VKey;
-  using value_type      = EV;
-  using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
-  using edge_type       = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
+  using vertex_id_type = VId;
+  using value_type     = EV;
+  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
 
 public:
-  constexpr dynamic_edge_source(vertex_key_type source_key) : source_key_(source_key) {}
+  constexpr dynamic_edge_source(vertex_id_type source_id) : source_id_(source_id) {}
 
   constexpr dynamic_edge_source()                           = default;
   constexpr dynamic_edge_source(const dynamic_edge_source&) = default;
@@ -181,40 +181,40 @@ public:
   constexpr dynamic_edge_source& operator=(dynamic_edge_source&&) = default;
 
 public:
-  //constexpr vertex_key_type source_key() const { return source_key_; }
-  //constexpr vertex_key_type source_key() const { return source_key_; }
+  //constexpr vertex_id_type source_id() const { return source_id_; }
+  //constexpr vertex_id_type source_id() const { return source_id_; }
 
 private:
-  vertex_key_type source_key_ = vertex_key_type();
+  vertex_id_type source_id_ = vertex_id_type();
 
 private:
-  // source_key(g,uv), source(g)
-  friend constexpr vertex_key_type
-  tag_invoke(::std::graph::access::source_key_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return uv.source_key_;
+  // source_id(g,uv), source(g)
+  friend constexpr vertex_id_type
+  tag_invoke(::std::graph::access::source_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+    return uv.source_id_;
   }
   friend constexpr vertex_type& tag_invoke(::std::graph::access::source_fn_t, graph_type& g, edge_type& uv) noexcept {
-    return begin(vertices(g))[uv.source_key_];
+    return begin(vertices(g))[uv.source_id_];
   }
   friend constexpr const vertex_type&
   tag_invoke(::std::graph::access::source_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return begin(vertices(g))[uv.source_key_];
+    return begin(vertices(g))[uv.source_id_];
   }
 };
 
-template <class EV, class VV, class GV, class VKey, class Traits>
-class dynamic_edge_source<EV, VV, GV, false, VKey, Traits> {};
+template <class EV, class VV, class GV, class VId, class Traits>
+class dynamic_edge_source<EV, VV, GV, false, VId, Traits> {};
 
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge_value
 //
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
 class dynamic_edge_value {
 public:
   using value_type  = EV;
-  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
-  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
-  using edge_type   = dynamic_edge_value<EV, VV, GV, Sourced, VKey, Traits>;
+  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
+  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
+  using edge_type   = dynamic_edge_value<EV, VV, GV, Sourced, VId, Traits>;
 
 public:
   constexpr dynamic_edge_value(const value_type& value) : value_(value) {}
@@ -246,36 +246,36 @@ private: // tag_invoke properties
   }
 };
 
-template <class VV, class GV, bool Sourced, class VKey, class Traits>
-class dynamic_edge_value<void, VV, GV, Sourced, VKey, Traits> {};
+template <class VV, class GV, bool Sourced, class VId, class Traits>
+class dynamic_edge_value<void, VV, GV, Sourced, VId, Traits> {};
 
 
 //--------------------------------------------------------------------------------------------------
 // dynamic_edge
 //
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
 class dynamic_edge
-      : public dynamic_edge_target<EV, VV, GV, Sourced, VKey, Traits>
-      , public dynamic_edge_source<EV, VV, GV, Sourced, VKey, Traits>
-      , public dynamic_edge_value<EV, VV, GV, Sourced, VKey, Traits> {
+      : public dynamic_edge_target<EV, VV, GV, Sourced, VId, Traits>
+      , public dynamic_edge_source<EV, VV, GV, Sourced, VId, Traits>
+      , public dynamic_edge_value<EV, VV, GV, Sourced, VId, Traits> {
 public:
-  using base_target_type = dynamic_edge_target<EV, VV, GV, Sourced, VKey, Traits>;
-  using base_source_type = dynamic_edge_source<EV, VV, GV, Sourced, VKey, Traits>;
-  using base_value_type  = dynamic_edge_value<EV, VV, GV, Sourced, VKey, Traits>;
+  using base_target_type = dynamic_edge_target<EV, VV, GV, Sourced, VId, Traits>;
+  using base_source_type = dynamic_edge_source<EV, VV, GV, Sourced, VId, Traits>;
+  using base_value_type  = dynamic_edge_value<EV, VV, GV, Sourced, VId, Traits>;
 
-  using vertex_key_type = VKey;
-  using value_type      = EV;
-  using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
-  using edge_type       = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
+  using vertex_id_type = VId;
+  using value_type     = EV;
+  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
 
 public:
-  constexpr dynamic_edge(vertex_key_type source_key, vertex_key_type target_key)
-        : base_target_type(target_key), base_source_type(source_key) {}
-  constexpr dynamic_edge(vertex_key_type source_key, vertex_key_type target_key, const value_type& val)
-        : base_target_type(target_key), base_source_type(source_key), base_value_type(val) {}
-  constexpr dynamic_edge(vertex_key_type source_key, vertex_key_type target_key, value_type&& val)
-        : base_target_type(target_key), base_source_type(source_key), base_value_type(move(val)) {}
+  constexpr dynamic_edge(vertex_id_type source_id, vertex_id_type target_id)
+        : base_target_type(target_id), base_source_type(source_id) {}
+  constexpr dynamic_edge(vertex_id_type source_id, vertex_id_type target_id, const value_type& val)
+        : base_target_type(target_id), base_source_type(source_id), base_value_type(val) {}
+  constexpr dynamic_edge(vertex_id_type source_id, vertex_id_type target_id, value_type&& val)
+        : base_target_type(target_id), base_source_type(source_id), base_value_type(move(val)) {}
 
   constexpr dynamic_edge()                    = default;
   constexpr dynamic_edge(const dynamic_edge&) = default;
@@ -286,25 +286,25 @@ public:
   constexpr dynamic_edge& operator=(dynamic_edge&&) = default;
 };
 
-template <class VV, class GV, class VKey, class Traits>
-class dynamic_edge<void, VV, GV, true, VKey, Traits>
-      : public dynamic_edge_target<void, VV, GV, true, VKey, Traits>
-      , public dynamic_edge_source<void, VV, GV, true, VKey, Traits>
-      , public dynamic_edge_value<void, VV, GV, true, VKey, Traits> {
+template <class VV, class GV, class VId, class Traits>
+class dynamic_edge<void, VV, GV, true, VId, Traits>
+      : public dynamic_edge_target<void, VV, GV, true, VId, Traits>
+      , public dynamic_edge_source<void, VV, GV, true, VId, Traits>
+      , public dynamic_edge_value<void, VV, GV, true, VId, Traits> {
 public:
-  using base_target_type = dynamic_edge_target<void, VV, GV, true, VKey, Traits>;
-  using base_source_type = dynamic_edge_source<void, VV, GV, true, VKey, Traits>;
-  using base_value_type  = dynamic_edge_value<void, VV, GV, true, VKey, Traits>;
+  using base_target_type = dynamic_edge_target<void, VV, GV, true, VId, Traits>;
+  using base_source_type = dynamic_edge_source<void, VV, GV, true, VId, Traits>;
+  using base_value_type  = dynamic_edge_value<void, VV, GV, true, VId, Traits>;
 
-  using vertex_key_type = VKey;
-  using value_type      = void;
-  using graph_type      = dynamic_graph<void, VV, GV, true, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<void, VV, GV, true, VKey, Traits>;
-  using edge_type       = dynamic_edge<void, VV, GV, true, VKey, Traits>;
+  using vertex_id_type = VId;
+  using value_type     = void;
+  using graph_type     = dynamic_graph<void, VV, GV, true, VId, Traits>;
+  using vertex_type    = dynamic_vertex<void, VV, GV, true, VId, Traits>;
+  using edge_type      = dynamic_edge<void, VV, GV, true, VId, Traits>;
 
 public:
-  constexpr dynamic_edge(vertex_key_type source_key, vertex_key_type target_key)
-        : base_target_type(target_key), base_source_type(source_key) {}
+  constexpr dynamic_edge(vertex_id_type source_id, vertex_id_type target_id)
+        : base_target_type(target_id), base_source_type(source_id) {}
 
   constexpr dynamic_edge()                    = default;
   constexpr dynamic_edge(const dynamic_edge&) = default;
@@ -316,28 +316,28 @@ public:
 };
 
 
-template <class EV, class VV, class GV, class VKey, class Traits>
-class dynamic_edge<EV, VV, GV, false, VKey, Traits>
-      : public dynamic_edge_target<EV, VV, GV, false, VKey, Traits>
-      , public dynamic_edge_source<EV, VV, GV, false, VKey, Traits>
-      , public dynamic_edge_value<EV, VV, GV, false, VKey, Traits> {
+template <class EV, class VV, class GV, class VId, class Traits>
+class dynamic_edge<EV, VV, GV, false, VId, Traits>
+      : public dynamic_edge_target<EV, VV, GV, false, VId, Traits>
+      , public dynamic_edge_source<EV, VV, GV, false, VId, Traits>
+      , public dynamic_edge_value<EV, VV, GV, false, VId, Traits> {
 public:
-  using base_target_type = dynamic_edge_target<EV, VV, GV, false, VKey, Traits>;
-  using base_source_type = dynamic_edge_source<EV, VV, GV, false, VKey, Traits>;
-  using base_value_type  = dynamic_edge_value<EV, VV, GV, false, VKey, Traits>;
+  using base_target_type = dynamic_edge_target<EV, VV, GV, false, VId, Traits>;
+  using base_source_type = dynamic_edge_source<EV, VV, GV, false, VId, Traits>;
+  using base_value_type  = dynamic_edge_value<EV, VV, GV, false, VId, Traits>;
 
-  using vertex_key_type = VKey;
-  using value_type      = EV;
-  using graph_type      = dynamic_graph<EV, VV, GV, false, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<EV, VV, GV, false, VKey, Traits>;
-  using edge_type       = dynamic_edge<EV, VV, GV, false, VKey, Traits>;
+  using vertex_id_type = VId;
+  using value_type     = EV;
+  using graph_type     = dynamic_graph<EV, VV, GV, false, VId, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, false, VId, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, false, VId, Traits>;
 
 public:
-  constexpr dynamic_edge(vertex_key_type target_key) : base_target_type(target_key) {}
-  constexpr dynamic_edge(vertex_key_type target_key, const value_type& val)
-        : base_target_type(target_key), base_value_type(val) {}
-  constexpr dynamic_edge(vertex_key_type target_key, value_type&& val)
-        : base_target_type(target_key), base_value_type(move(val)) {}
+  constexpr dynamic_edge(vertex_id_type target_id) : base_target_type(target_id) {}
+  constexpr dynamic_edge(vertex_id_type target_id, const value_type& val)
+        : base_target_type(target_id), base_value_type(val) {}
+  constexpr dynamic_edge(vertex_id_type target_id, value_type&& val)
+        : base_target_type(target_id), base_value_type(move(val)) {}
 
   constexpr dynamic_edge()                    = default;
   constexpr dynamic_edge(const dynamic_edge&) = default;
@@ -348,21 +348,21 @@ public:
   constexpr dynamic_edge& operator=(dynamic_edge&&) = default;
 };
 
-template <class VV, class GV, class VKey, class Traits>
-class dynamic_edge<void, VV, GV, false, VKey, Traits>
-      : public dynamic_edge_target<void, VV, GV, false, VKey, Traits>
-      , public dynamic_edge_source<void, VV, GV, false, VKey, Traits>
-      , public dynamic_edge_value<void, VV, GV, false, VKey, Traits> {
+template <class VV, class GV, class VId, class Traits>
+class dynamic_edge<void, VV, GV, false, VId, Traits>
+      : public dynamic_edge_target<void, VV, GV, false, VId, Traits>
+      , public dynamic_edge_source<void, VV, GV, false, VId, Traits>
+      , public dynamic_edge_value<void, VV, GV, false, VId, Traits> {
 public:
-  using base_target_type = dynamic_edge_target<void, VV, GV, false, VKey, Traits>;
-  using vertex_key_type  = VKey;
+  using base_target_type = dynamic_edge_target<void, VV, GV, false, VId, Traits>;
+  using vertex_id_type   = VId;
   using value_type       = void;
-  using graph_type       = dynamic_graph<void, VV, GV, false, VKey, Traits>;
-  using vertex_type      = dynamic_vertex<void, VV, GV, false, VKey, Traits>;
-  using edge_type        = dynamic_edge<void, VV, GV, false, VKey, Traits>;
+  using graph_type       = dynamic_graph<void, VV, GV, false, VId, Traits>;
+  using vertex_type      = dynamic_vertex<void, VV, GV, false, VId, Traits>;
+  using edge_type        = dynamic_edge<void, VV, GV, false, VId, Traits>;
 
 public:
-  constexpr dynamic_edge(vertex_key_type target_key) : base_target_type(target_key) {}
+  constexpr dynamic_edge(vertex_id_type target_id) : base_target_type(target_id) {}
 
   constexpr dynamic_edge()                    = default;
   constexpr dynamic_edge(const dynamic_edge&) = default;
@@ -376,16 +376,16 @@ public:
 //--------------------------------------------------------------------------------------------------
 // dynamic_vertex
 //
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
 class dynamic_vertex_base {
 public:
-  using vertex_key_type = VKey;
-  using value_type      = VV;
-  using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
-  using edge_type       = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
-  using edges_type      = typename Traits::edges_type;
-  using allocator_type  = typename edges_type::allocator_type;
+  using vertex_id_type = VId;
+  using value_type     = VV;
+  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
+  using edges_type     = typename Traits::edges_type;
+  using allocator_type = typename edges_type::allocator_type;
 
 public:
   constexpr dynamic_vertex_base()                           = default;
@@ -414,9 +414,9 @@ private:
   edges_type edges_;
 
 private: // tag_invoke properties
-  friend constexpr vertex_key_type
-  tag_invoke(::std::graph::access::vertex_key_fn_t, const graph_type& g, const vertex_type& u) {
-    return static_cast<vertex_key_type>(&u - &g[0]); // works well when everything is contiguous in memory
+  friend constexpr vertex_id_type
+  tag_invoke(::std::graph::access::vertex_id_fn_t, const graph_type& g, const vertex_type& u) {
+    return static_cast<vertex_id_type>(&u - &g[0]); // works well when everything is contiguous in memory
   }
 
   friend constexpr edges_type& tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, vertex_type& u) {
@@ -428,29 +428,27 @@ private: // tag_invoke properties
   }
 
   friend constexpr edges_type::iterator
-  tag_invoke(::std::graph::access::find_vertex_edge_fn_t, graph_type& g, vertex_key_type ukey, vertex_key_type vkey) {
-    return ranges::find(g[ukey].edges_, [&g, &vkey](const edge_type& uv) -> bool { return target_key(g, uv) == vkey; });
+  tag_invoke(::std::graph::access::find_vertex_edge_fn_t, graph_type& g, vertex_id_type uid, vertex_id_type vid) {
+    return ranges::find(g[uid].edges_, [&g, &vid](const edge_type& uv) -> bool { return target_id(g, uv) == vid; });
   }
-  friend constexpr edges_type::const_iterator tag_invoke(::std::graph::access::find_vertex_edge_fn_t,
-                                                         const graph_type& g,
-                                                         vertex_key_type   ukey,
-                                                         vertex_key_type   vkey) {
-    return ranges::find(g[ukey].edges_, [&g, &vkey](const edge_type& uv) -> bool { return target_key(g, uv) == vkey; });
+  friend constexpr edges_type::const_iterator
+  tag_invoke(::std::graph::access::find_vertex_edge_fn_t, const graph_type& g, vertex_id_type uid, vertex_id_type vid) {
+    return ranges::find(g[uid].edges_, [&g, &vid](const edge_type& uv) -> bool { return target_id(g, uv) == vid; });
   }
 };
 
 
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
-class dynamic_vertex : public dynamic_vertex_base<EV, VV, GV, Sourced, VKey, Traits> {
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+class dynamic_vertex : public dynamic_vertex_base<EV, VV, GV, Sourced, VId, Traits> {
 public:
-  using base_type       = dynamic_vertex_base<EV, VV, GV, Sourced, VKey, Traits>;
-  using vertex_key_type = VKey;
-  using value_type      = remove_cvref_t<VV>;
-  using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
-  using edge_type       = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
-  using edges_type      = typename Traits::edges_type;
-  using allocator_type  = typename edges_type::allocator_type;
+  using base_type      = dynamic_vertex_base<EV, VV, GV, Sourced, VId, Traits>;
+  using vertex_id_type = VId;
+  using value_type     = remove_cvref_t<VV>;
+  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
+  using edges_type     = typename Traits::edges_type;
+  using allocator_type = typename edges_type::allocator_type;
 
 public:
   constexpr dynamic_vertex(const value_type& value, allocator_type alloc = allocator_type())
@@ -487,18 +485,18 @@ private: // tag_invoke properties
 };
 
 
-template <class EV, class GV, bool Sourced, class VKey, class Traits>
-class dynamic_vertex<EV, void, GV, Sourced, VKey, Traits>
-      : public dynamic_vertex_base<EV, void, GV, Sourced, VKey, Traits> {
+template <class EV, class GV, bool Sourced, class VId, class Traits>
+class dynamic_vertex<EV, void, GV, Sourced, VId, Traits>
+      : public dynamic_vertex_base<EV, void, GV, Sourced, VId, Traits> {
 public:
-  using base_type       = dynamic_vertex_base<EV, void, GV, Sourced, VKey, Traits>;
-  using vertex_key_type = VKey;
-  using value_type      = void;
-  using graph_type      = dynamic_graph<EV, void, GV, Sourced, VKey, Traits>;
-  using vertex_type     = dynamic_vertex<EV, void, GV, Sourced, VKey, Traits>;
-  using edge_type       = dynamic_edge<EV, void, GV, Sourced, VKey, Traits>;
-  using edges_type      = typename Traits::edges_type;
-  using allocator_type  = typename edges_type::allocator_type;
+  using base_type      = dynamic_vertex_base<EV, void, GV, Sourced, VId, Traits>;
+  using vertex_id_type = VId;
+  using value_type     = void;
+  using graph_type     = dynamic_graph<EV, void, GV, Sourced, VId, Traits>;
+  using vertex_type    = dynamic_vertex<EV, void, GV, Sourced, VId, Traits>;
+  using edge_type      = dynamic_edge<EV, void, GV, Sourced, VId, Traits>;
+  using edges_type     = typename Traits::edges_type;
+  using allocator_type = typename edges_type::allocator_type;
 
 public:
   constexpr dynamic_vertex()                      = default;
@@ -523,21 +521,21 @@ public:
 /// A possible change to test the lower bounds of requirements is to use a deque to store the
 /// vertices instead of a vector.
 ///
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
 class dynamic_graph_base {
 public: // types
-  using graph_type   = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
+  using graph_type   = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
   using graph_traits = Traits;
 
-  using vertex_key_type       = VKey;
-  using vertex_type           = dynamic_vertex<EV, VV, GV, Sourced, VKey, Traits>;
+  using vertex_id_type        = VId;
+  using vertex_type           = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
   using vertices_type         = typename Traits::vertices_type;
   using vertex_allocator_type = typename vertices_type::allocator_type;
   using size_type             = vertices_type::size_type;
 
   using edges_type          = typename Traits::edges_type;
   using edge_allocator_type = typename edges_type::allocator_type;
-  using edge_type           = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
+  using edge_type           = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
 
 public: // Construction/Destruction/Assignment
   constexpr dynamic_graph_base()                          = default;
@@ -557,7 +555,7 @@ public: // Construction/Destruction/Assignment
   /// Constructor that takes edge & vertex ranges to create the graph.
   ///
   /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
+  /// @tparam EIdFnc   Function object to return edge_id_type of the
   ///                   ERng::value_type.
   /// @tparam EValueFnc Function object to return the edge_value_type, or
   ///                   a type that edge_value_type is constructible
@@ -573,8 +571,8 @@ public: // Construction/Destruction/Assignment
   ///
   /// @param erng       The container of edge data.
   /// @param vrng       The container of vertex data.
-  /// @param ekey_fnc   The edge key extractor functor:
-  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
+  /// @param eid_fnc   The edge id extractor functor:
+  ///                   eid_fnc(ERng::value_type) -> directed_adjacency_vector::edge_id_type
   /// @param evalue_fnc The edge value extractor functor:
   ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G>.
   /// @param vvalue_fnc The vertex value extractor functor:
@@ -583,7 +581,7 @@ public: // Construction/Destruction/Assignment
   ///                   vertices & edges.
   ///
   template <class ERng, class VRng, class EProj = identity, class VProj>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph_base(ERng&& erng, VRng&& vrng, EProj eproj, VProj vproj, vertex_allocator_type alloc)
         : vertices_(alloc) {
     load_vertices(vrng, vproj);
@@ -591,10 +589,10 @@ public: // Construction/Destruction/Assignment
   }
 
   /// Constructor that takes edge ranges to create the graph. Edges are scanned to determine the
-  /// largest vertex key needed.
+  /// largest vertex id needed.
   ///
   /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
+  /// @tparam EIdFnc   Function object to return edge_id_type of the
   ///                   ERng::value_type.
   /// @tparam EValueFnc Function object to return the edge_value_type, or
   ///                   a type that edge_value_type is constructible
@@ -603,8 +601,8 @@ public: // Construction/Destruction/Assignment
   ///                   to initialize the value.
   ///
   /// @param erng       The container of edge data.
-  /// @param ekey_fnc   The edge key extractor functor:
-  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
+  /// @param eid_fnc   The edge id extractor functor:
+  ///                   eid_fnc(ERng::value_type) -> directed_adjacency_vector::edge_id_type
   /// @param evalue_fnc The edge value extractor functor:
   ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
   ///                   edge_value_t<G>).
@@ -612,7 +610,7 @@ public: // Construction/Destruction/Assignment
   ///                   vertices & edges.
   ///
   template <class ERng, class EProj>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   dynamic_graph_base(ERng&& erng, EProj eproj, vertex_allocator_type alloc) : vertices_(alloc) {
 
     load_edges(move(erng), eproj);
@@ -621,7 +619,7 @@ public: // Construction/Destruction/Assignment
   /// Constructor that takes edge ranges to create the csr graph.
   ///
   /// @tparam ERng      The edge data range.
-  /// @tparam EKeyFnc   Function object to return edge_key_type of the
+  /// @tparam EIdFnc   Function object to return edge_id_type of the
   ///                   ERng::value_type.
   /// @tparam EValueFnc Function object to return the edge_value_type, or
   ///                   a type that edge_value_type is constructible
@@ -631,8 +629,8 @@ public: // Construction/Destruction/Assignment
   ///
   /// @param max_row_idx The maximum row index needed.
   /// @param erng       The container of edge data.
-  /// @param ekey_fnc   The edge key extractor functor:
-  ///                   ekey_fnc(ERng::value_type) -> directed_adjacency_vector::edge_key_type
+  /// @param eid_fnc   The edge id extractor functor:
+  ///                   eid_fnc(ERng::value_type) -> directed_adjacency_vector::edge_id_type
   /// @param evalue_fnc The edge value extractor functor:
   ///                   evalue_fnc(ERng::value_type) -> edge_value_t<G> (or a value convertible
   ///                   edge_value_t<G>).
@@ -640,19 +638,19 @@ public: // Construction/Destruction/Assignment
   ///                   vertices & edges.
   ///
   template <class ERng, class EProj>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   dynamic_graph_base(size_type vertex_count, ERng&& erng, EProj eproj, vertex_allocator_type alloc) : vertices_(alloc) {
 
     load_edges(vertex_count, 0, move(erng), eproj);
   }
 
-  dynamic_graph_base(const initializer_list<views::copyable_edge_t<VKey, EV>>& il,
-                     edge_allocator_type                                       alloc = edge_allocator_type())
+  dynamic_graph_base(const initializer_list<views::copyable_edge_t<VId, EV>>& il,
+                     edge_allocator_type                                      alloc = edge_allocator_type())
         : vertices_(alloc) {
-    size_t last_key = 0;
+    size_t last_id = 0;
     for (auto&& e : il)
-      last_key = max(last_key, static_cast<size_t>(max(e.source_key, e.target_key)));
-    resize_vertices(last_key + 1);
+      last_id = max(last_id, static_cast<size_t>(max(e.source_id, e.target_id)));
+    resize_vertices(last_id + 1);
     load_edges(il);
   }
 
@@ -664,8 +662,8 @@ public:
       resize_vertices(max(vertex_count, ranges::size(vrng)));
     }
     for (auto&& v : vrng) {
-      auto&& [key, value] = vproj(v); //views::copyable_vertex_t<VKey, VV>
-      size_t k            = static_cast<size_t>(key);
+      auto&& [id, value] = vproj(v); //views::copyable_vertex_t<VId, VV>
+      size_t k           = static_cast<size_t>(id);
       if constexpr (ranges::random_access_range<vertices_type>)
         assert(k < vertices_.size());
       vertices_[k].value() = value;
@@ -679,8 +677,8 @@ public:
       resize_vertices(max(vertex_count, ranges::size(vrng)));
     }
     for (auto&& v : vrng) {
-      auto&& [key, value] = vproj(v); //views::copyable_vertex_t<VKey, VV>
-      size_t k            = static_cast<size_t>(key);
+      auto&& [id, value] = vproj(v); //views::copyable_vertex_t<VId, VV>
+      size_t k           = static_cast<size_t>(id);
       if constexpr (ranges::random_access_range<vertices_type>)
         assert(k < vertices_.size());
       vertices_[k].value() = move(value);
@@ -689,7 +687,7 @@ public:
 
   /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   void load_edges(const ERng& erng, EProj eproj = {}, size_type vertex_count = 0, size_type edge_count_hint = 0) {
     if constexpr (resizable<vertices_type>) {
       if (vertices_.size() < vertex_count)
@@ -698,29 +696,29 @@ public:
 
     // add edges
     for (auto&& edge_data : erng) {
-      auto&& e = eproj(edge_data); //views::copyable_edge_t<VKey, EV>
+      auto&& e = eproj(edge_data); //views::copyable_edge_t<VId, EV>
 
-      if (static_cast<size_t>(e.source_key) >= vertices_.size()) {
+      if (static_cast<size_t>(e.source_id) >= vertices_.size()) {
         assert(false);
-        throw runtime_error("source key exceeds the number of vertices in load_edges");
+        throw runtime_error("source id exceeds the number of vertices in load_edges");
       }
-      if (static_cast<size_t>(e.target_key) >= vertices_.size()) {
+      if (static_cast<size_t>(e.target_id) >= vertices_.size()) {
         assert(false);
-        throw runtime_error("target key exceeds the number of vertices in load_edges");
+        throw runtime_error("target id exceeds the number of vertices in load_edges");
       }
 
-      auto&& edge_adder = push_or_insert(vertices_[e.source_key].edges());
+      auto&& edge_adder = push_or_insert(vertices_[e.source_id].edges());
       if constexpr (Sourced) {
         if constexpr (is_void_v<EV>) {
-          edge_adder(edge_type(move(e.source_key), move(e.target_key)));
+          edge_adder(edge_type(move(e.source_id), move(e.target_id)));
         } else {
-          edge_adder(edge_type(move(e.source_key), move(e.target_key), move(e.value)));
+          edge_adder(edge_type(move(e.source_id), move(e.target_id), move(e.value)));
         }
       } else {
         if constexpr (is_void_v<EV>) {
-          edge_adder(edge_type(move(e.target_key)));
+          edge_adder(edge_type(move(e.target_id)));
         } else {
-          edge_adder(edge_type(move(e.target_key), move(e.value)));
+          edge_adder(edge_type(move(e.target_id), move(e.value)));
         }
       }
     }
@@ -728,7 +726,7 @@ public:
 
   /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   void load_edges(ERng&& erng, EProj eproj = {}, size_type vertex_count = 0, size_type edge_count_hint = 0) {
     if constexpr (resizable<vertices_type>) {
       if (vertices_.size() < vertex_count)
@@ -737,29 +735,29 @@ public:
 
     // add edges
     for (auto&& edge_data : erng) {
-      auto&& e = eproj(edge_data); //views::copyable_edge_t<VKey, EV>
+      auto&& e = eproj(edge_data); //views::copyable_edge_t<VId, EV>
 
-      if (static_cast<size_t>(e.source_key) >= vertices_.size()) {
+      if (static_cast<size_t>(e.source_id) >= vertices_.size()) {
         assert(false);
-        throw runtime_error("source key exceeds the number of vertices in load_edges");
+        throw runtime_error("source id exceeds the number of vertices in load_edges");
       }
-      if (static_cast<size_t>(e.target_key) >= vertices_.size()) {
+      if (static_cast<size_t>(e.target_id) >= vertices_.size()) {
         assert(false);
-        throw runtime_error("target key exceeds the number of vertices in load_edges");
+        throw runtime_error("target id exceeds the number of vertices in load_edges");
       }
 
-      auto&& edge_adder = push_or_insert(vertices_[e.source_key].edges());
+      auto&& edge_adder = push_or_insert(vertices_[e.source_id].edges());
       if constexpr (Sourced) {
         if constexpr (is_void_v<EV>) {
-          edge_adder(edge_type(move(e.source_key), move(e.target_key)));
+          edge_adder(edge_type(move(e.source_id), move(e.target_id)));
         } else {
-          edge_adder(edge_type(move(e.source_key), move(e.target_key), move(e.value)));
+          edge_adder(edge_type(move(e.source_id), move(e.target_id), move(e.value)));
         }
       } else {
         if constexpr (is_void_v<EV>) {
-          edge_adder(edge_type(move(e.target_key)));
+          edge_adder(edge_type(move(e.target_id)));
         } else {
-          edge_adder(edge_type(move(e.target_key), move(e.value)));
+          edge_adder(edge_type(move(e.target_id), move(e.value)));
         }
       }
     }
@@ -768,18 +766,18 @@ public:
 #if 0
   /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   void load_edges(ERng&& erng, EProj eproj = {}) {
     // Nothing to do?
     if (erng.begin() == erng.end())
       return;
 
-    // Evaluate max vertex key needed
+    // Evaluate max vertex id needed
     size_type       erng_size   = 0;
-    vertex_key_type max_row_idx = 0;
+    vertex_id_type max_row_idx = 0;
     for (auto& edge_data : erng) {
       auto&& e    = eproj(edge_data);
-      max_row_idx = max(max_row_idx, max(e.source_key, e.target_key));
+      max_row_idx = max(max_row_idx, max(e.source_id, e.target_id));
       ++erng_size;
     }
 
@@ -829,17 +827,17 @@ private: // tag_invoke properties
     return g.vertices_;
   }
 
-  friend vertex_key_type
-  tag_invoke(::std::graph::access::vertex_key_fn_t, const dynamic_graph_base& g, vertices_type::const_iterator ui) {
-    return static_cast<vertex_key_type>(ui - g.vertices_.begin());
+  friend vertex_id_type
+  tag_invoke(::std::graph::access::vertex_id_fn_t, const dynamic_graph_base& g, vertices_type::const_iterator ui) {
+    return static_cast<vertex_id_type>(ui - g.vertices_.begin());
   }
 
-  friend constexpr edges_type& tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, const vertex_key_type ukey) {
-    return g.vertices_[ukey].edges();
+  friend constexpr edges_type& tag_invoke(::std::graph::access::edges_fn_t, graph_type& g, const vertex_id_type uid) {
+    return g.vertices_[uid].edges();
   }
   friend constexpr const edges_type&
-  tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_key_type ukey) {
-    return g.vertices_[ukey].edges();
+  tag_invoke(::std::graph::access::edges_fn_t, const graph_type& g, const vertex_id_type uid) {
+    return g.vertices_[uid].edges();
   }
 };
 
@@ -853,22 +851,22 @@ private: // tag_invoke properties
 ///               on the vertex.
 /// @tparam GV    [default=void] The graph value type. If "void" is used no user value is stored
 ///               on the graph.
-/// @tparam VKey  [default=uint32_t] The type used for the vertex key.
+/// @tparam VId  [default=uint32_t] The type used for the vertex id.
 /// @tparam Alloc The allocator used for storing the vertices and edges.
 ///
-template <class EV, class VV, class GV, bool Sourced, class VKey, class Traits>
-class dynamic_graph : public dynamic_graph_base<EV, VV, GV, Sourced, VKey, Traits> {
+template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+class dynamic_graph : public dynamic_graph_base<EV, VV, GV, Sourced, VId, Traits> {
 public:
-  using base_type       = dynamic_graph_base<EV, VV, GV, Sourced, VKey, Traits>;
-  using graph_type      = dynamic_graph<EV, VV, GV, Sourced, VKey, Traits>;
-  using graph_traits    = Traits;
-  using vertex_key_type = VKey;
-  using value_type      = GV;
-  using allocator_type  = typename Traits::vertices_type::allocator_type;
+  using base_type      = dynamic_graph_base<EV, VV, GV, Sourced, VId, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
+  using graph_traits   = Traits;
+  using vertex_id_type = VId;
+  using value_type     = GV;
+  using allocator_type = typename Traits::vertices_type::allocator_type;
 
   using edges_type          = typename Traits::edges_type;
   using edge_allocator_type = typename edges_type::allocator_type;
-  using edge_type           = dynamic_edge<EV, VV, GV, Sourced, VKey, Traits>;
+  using edge_type           = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
 
   constexpr inline const static bool sourced = Sourced;
 
@@ -895,13 +893,13 @@ public:
   // gv&&, erng, eproj, vproj, alloc
 
   template <class ERng, class VRng, class EProj = identity, class VProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph(
         const ERng& erng, const VRng& vrng, EProj eproj = {}, VProj vproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc) {}
 
   template <class ERng, class VRng, class EProj = identity, class VProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph(const GV&      gv,
                 const ERng&    erng,
                 const VRng&    vrng,
@@ -911,58 +909,58 @@ public:
         : base_type(erng, vrng, eproj, vproj, alloc), value_(gv) {}
 
   template <class ERng, class EProj, class VRng, class VProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph(
         const ERng& erng, const VRng& vrng, EProj eproj, VProj vproj, GV&& gv, allocator_type alloc = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc), value_(move(gv)) {}
 
 
-  //       max_vertex_key, erng, eproj, alloc
-  // gv&,  max_vertex_key, erng, eproj, alloc
-  // gv&&, max_vertex_key, erng, eproj, alloc
+  //       max_vertex_id, erng, eproj, alloc
+  // gv&,  max_vertex_id, erng, eproj, alloc
+  // gv&&, max_vertex_id, erng, eproj, alloc
 
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(vertex_key_type max_vertex_key, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
-        : base_type(max_vertex_key, erng, eproj, alloc) {}
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
+  dynamic_graph(vertex_id_type max_vertex_id, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, alloc) {}
 
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(const GV&       gv,
-                vertex_key_type max_vertex_key,
-                ERng&           erng,
-                EProj           eproj = {},
-                allocator_type  alloc = allocator_type())
-        : base_type(max_vertex_key, erng, eproj, alloc), value_(gv) {}
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
+  dynamic_graph(const GV&      gv,
+                vertex_id_type max_vertex_id,
+                ERng&          erng,
+                EProj          eproj = {},
+                allocator_type alloc = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, alloc), value_(gv) {}
 
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   dynamic_graph(
-        GV&& gv, vertex_key_type max_vertex_key, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
-        : base_type(max_vertex_key, erng, eproj, alloc), value_(move(gv)) {}
+        GV&& gv, vertex_id_type max_vertex_id, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, alloc), value_(move(gv)) {}
 
   // erng, eproj,       alloc
   // erng, eproj, gv&,  alloc
   // erng, eproj, gv&&, alloc
 
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   dynamic_graph(ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, eproj, alloc) {}
 
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   dynamic_graph(const GV& gv, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, eproj, alloc), value_(gv) {}
 
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   dynamic_graph(GV&& gv, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, eproj, alloc), value_(move(gv)) {}
 
 
-  dynamic_graph(const initializer_list<views::copyable_edge_t<VKey, EV>>& il,
-                edge_allocator_type                                       alloc = edge_allocator_type())
+  dynamic_graph(const initializer_list<views::copyable_edge_t<VId, EV>>& il,
+                edge_allocator_type                                      alloc = edge_allocator_type())
         : base_type(il, alloc) {}
 
 public:
@@ -980,21 +978,21 @@ private: // tag_invoke properties
 };
 
 // a specialization for dynamic_graph<...> that doesn't have a graph value_type
-template <class EV, class VV, bool Sourced, class VKey, class Traits>
-class dynamic_graph<EV, VV, void, Sourced, VKey, Traits>
-      : public dynamic_graph_base<EV, VV, void, Sourced, VKey, Traits> {
+template <class EV, class VV, bool Sourced, class VId, class Traits>
+class dynamic_graph<EV, VV, void, Sourced, VId, Traits>
+      : public dynamic_graph_base<EV, VV, void, Sourced, VId, Traits> {
 public:
-  using base_type       = dynamic_graph_base<EV, VV, void, Sourced, VKey, Traits>;
-  using graph_type      = dynamic_graph<EV, VV, void, Sourced, VKey, Traits>;
-  using graph_traits    = Traits;
-  using vertex_key_type = VKey;
-  using value_type      = void;
-  using allocator_type  = typename Traits::vertices_type::allocator_type;
+  using base_type      = dynamic_graph_base<EV, VV, void, Sourced, VId, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, void, Sourced, VId, Traits>;
+  using graph_traits   = Traits;
+  using vertex_id_type = VId;
+  using value_type     = void;
+  using allocator_type = typename Traits::vertices_type::allocator_type;
   using base_type::vertices_type;
 
   using edges_type          = typename Traits::edges_type;
   using edge_allocator_type = typename edges_type::allocator_type;
-  using edge_type           = dynamic_edge<EV, VV, void, Sourced, VKey, Traits>;
+  using edge_type           = dynamic_edge<EV, VV, void, Sourced, VId, Traits>;
 
   dynamic_graph()                     = default;
   dynamic_graph(const dynamic_graph&) = default;
@@ -1005,22 +1003,22 @@ public:
   dynamic_graph& operator=(dynamic_graph&&) = default;
 
   template <class ERng, class EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
   dynamic_graph(ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, eproj, alloc) {}
 
   template <class ERng, typename EProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc>
-  dynamic_graph(vertex_key_type max_vertex_key, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
-        : base_type(max_vertex_key, erng, eproj, alloc) {}
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
+  dynamic_graph(vertex_id_type max_vertex_id, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, alloc) {}
 
   template <class ERng, class VRng, class EProj = identity, class VProj = identity>
-  //requires edge_value_extractor<ERng, EKeyFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
+  //requires edge_value_extractor<ERng, EIdFnc, EValueFnc> && vertex_value_extractor<VRng, VValueFnc>
   dynamic_graph(ERng& erng, VRng& vrng, EProj eproj = {}, VProj vproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc) {}
 
-  dynamic_graph(const initializer_list<views::copyable_edge_t<VKey, EV>>& il,
-                edge_allocator_type                                       alloc = edge_allocator_type())
+  dynamic_graph(const initializer_list<views::copyable_edge_t<VId, EV>>& il,
+                edge_allocator_type                                      alloc = edge_allocator_type())
         : base_type(il, alloc) {}
 };
 

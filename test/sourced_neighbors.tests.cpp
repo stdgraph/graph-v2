@@ -22,7 +22,7 @@ using std::is_lvalue_reference_v;
 
 using std::graph::vertex_t;
 using std::graph::vertex_reference_t;
-using std::graph::vertex_key_t;
+using std::graph::vertex_id_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
 using std::graph::edge_reference_t;
@@ -30,9 +30,9 @@ using std::graph::edge_reference_t;
 using std::graph::graph_value;
 using std::graph::vertices;
 using std::graph::edges;
-using std::graph::vertex_key;
+using std::graph::vertex_id;
 using std::graph::vertex_value;
-using std::graph::target_key;
+using std::graph::target_id;
 using std::graph::target;
 using std::graph::edge_value;
 using std::graph::degree;
@@ -44,8 +44,8 @@ using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, 
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
 template <typename G>
-constexpr auto find_frankfurt_key(const G& g) {
-  return find_city_key(g, "Frankf\xC3\xBCrt");
+constexpr auto find_frankfurt_id(const G& g) {
+  return find_city_id(g, "Frankf\xC3\xBCrt");
 }
 
 template <typename G>
@@ -65,46 +65,46 @@ TEST_CASE("sourced neighbors test", "[vol][neighbors][sourced]") {
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
   // name_order_policy::source_order_found gives best output with least overlap for germany routes
 
-  const auto frankfurt     = find_frankfurt(g);
-  const auto frankfurt_key = find_frankfurt_key(g);
+  const auto frankfurt    = find_frankfurt(g);
+  const auto frankfurt_id = find_frankfurt_id(g);
 
   SECTION("non-const neighbor_iterator") {
     static_assert(!std::is_const_v<std::remove_reference_t<decltype(g)>>);
     static_assert(!std::is_const_v<G>);
 
     REQUIRE(frankfurt);
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
 
     std::graph::views::neighbor_iterator<G> i0; // default construction
-    std::graph::views::neighbor_iterator<G> i1(g, ukey);
+    std::graph::views::neighbor_iterator<G> i1(g, uid);
     static_assert(std::forward_iterator<decltype(i1)>, "neighbor_iterator must be a forward_iterator");
     static_assert(std::is_move_assignable_v<decltype(i0)>, "neighbor_iterator must be move_assignable");
     static_assert(std::is_copy_assignable_v<decltype(i0)>, "neighbor_iterator must be copy_assignable");
     {
-      auto&& [vkey, uv] = *i1;
-      static_assert(is_const_v<decltype(vkey)>, "vertex key must be const");
+      auto&& [vid, uv] = *i1;
+      static_assert(is_const_v<decltype(vid)>, "vertex id must be const");
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>, "edge must be non-const");
-      REQUIRE(vkey == 1);
+      REQUIRE(vid == 1);
     }
     {
-      auto&& [vkey, uv] = *++i1;
-      REQUIRE(vkey == 4);
+      auto&& [vid, uv] = *++i1;
+      REQUIRE(vid == 4);
       auto i1b = i1;
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::neighbor_iterator<G> i2(g, ukey);
+    std::graph::views::neighbor_iterator<G> i2(g, uid);
     {
-      auto&& [vkey, uv] = *i2;
-      static_assert(is_const_v<decltype(vkey)>, "vertex key must be const");
+      auto&& [vid, uv] = *i2;
+      static_assert(is_const_v<decltype(vid)>, "vertex id must be const");
       static_assert(is_lvalue_reference_v<decltype(uv)>, "edge must be lvalue reference");
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>, "edge must be non-const");
-      REQUIRE(vkey == 1);
+      REQUIRE(vid == 1);
     }
     {
-      auto&& [vkey, uv] = *++i2;
-      REQUIRE(vkey == 4);
+      auto&& [vid, uv] = *++i2;
+      REQUIRE(vid == 4);
       auto i2b = i2;
       REQUIRE(i2b == i2);
     }
@@ -121,7 +121,7 @@ TEST_CASE("sourced neighbors test", "[vol][neighbors][sourced]") {
     auto vvf  = [&g](vertex_reference_t<G> uu) -> std::string& { return vertex_value(g, uu); };
     using VVF = decltype(vvf);
 
-    std::graph::views::neighbor_iterator<G, false, VVF> i3(g, ukey, vvf);
+    std::graph::views::neighbor_iterator<G, false, VVF> i3(g, uid, vvf);
     {
       // The following asserts are used to isolate problem with failing input_or_output_iterator concept for neighbor_iterator
       static_assert(std::movable<decltype(i3)>, "neighbor_iterator<G,VVF> is NOT movable");
@@ -131,13 +131,13 @@ TEST_CASE("sourced neighbors test", "[vol][neighbors][sourced]") {
       static_assert(std::input_or_output_iterator<decltype(i3)>,
                     "neighbor_iterator<G,VVF> is NOT an input_or_output_iterator");
 
-      auto&& [vkey, v, name] = *i3;
-      REQUIRE(vkey == 1);
+      auto&& [vid, v, name] = *i3;
+      REQUIRE(vid == 1);
       REQUIRE(vertex_value(g, v) == "Mannheim");
     }
     {
-      auto&& [vkey, v, name] = *++i3;
-      REQUIRE(vkey == 4);
+      auto&& [vid, v, name] = *++i3;
+      REQUIRE(vid == 4);
       REQUIRE(vertex_value(g, v) == "W\xc3\xbcrzburg");
     }
 
@@ -151,55 +151,55 @@ TEST_CASE("sourced neighbors test", "[vol][neighbors][sourced]") {
     G2& g2   = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>, "graph must be const");
 
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
 
     //std::graph::views::neighbor_iterator<G2> i0; // default construction
-    std::graph::views::neighbor_iterator<G2, false> i1(g2, ukey);
+    std::graph::views::neighbor_iterator<G2, false> i1(g2, uid);
     static_assert(std::forward_iterator<decltype(i1)>, "neighbor_iterator must be a forward_iterator");
     {
-      auto&& [vkey, v] = *i1;
+      auto&& [vid, v] = *i1;
 
       vertex_reference_t<G2> v2 = v;
       static_assert(is_const_v<remove_reference_t<decltype(v2)>>, "neighbor must be const");
 
-      static_assert(is_const_v<decltype(vkey)>, "key must be const");
+      static_assert(is_const_v<decltype(vid)>, "id must be const");
       static_assert(is_lvalue_reference_v<decltype(v)>, "neighbor must be lvalue reference");
       static_assert(is_const_v<remove_reference_t<decltype(v)>>, "neighbor must be const");
-      REQUIRE(vkey == 1);
+      REQUIRE(vid == 1);
     }
     {
-      auto&& [vkey, uv] = *++i1;
-      REQUIRE(vkey == 4);
+      auto&& [vid, uv] = *++i1;
+      REQUIRE(vid == 4);
       auto i1b = i1;
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::neighbor_iterator<G2, false> i2(g2, ukey);
+    std::graph::views::neighbor_iterator<G2, false> i2(g2, uid);
     {
-      auto&& [vkey, v] = *i2;
-      static_assert(is_const_v<decltype(vkey)>, "key must be const");
+      auto&& [vid, v] = *i2;
+      static_assert(is_const_v<decltype(vid)>, "id must be const");
       static_assert(is_const_v<remove_reference_t<decltype(v)>>, "neighbor must be const");
-      REQUIRE(vkey == 1);
+      REQUIRE(vid == 1);
     }
     {
-      auto&& [vkey, v] = *++i2;
-      REQUIRE(vkey == 4);
+      auto&& [vid, v] = *++i2;
+      REQUIRE(vid == 4);
       auto i2b = i2;
       REQUIRE(i2b == i2);
     }
 
     auto vvf  = [&g2](vertex_reference_t<G2> uu) -> const std::string& { return vertex_value(g2, uu); };
     using VVF = decltype(vvf);
-    std::graph::views::neighbor_iterator<G2, false, VVF> i3(g2, ukey, vvf);
+    std::graph::views::neighbor_iterator<G2, false, VVF> i3(g2, uid, vvf);
     {
-      auto&& [vkey, v, name] = *i3;
-      REQUIRE(vkey == 1);
+      auto&& [vid, v, name] = *i3;
+      REQUIRE(vid == 1);
       REQUIRE(name == "Mannheim");
     }
     {
-      auto&& [vkey, v, name] = *++i3;
-      REQUIRE(vkey == 4);
+      auto&& [vid, v, name] = *++i3;
+      REQUIRE(vid == 4);
       REQUIRE(name == "W\xc3\xbcrzburg");
     }
   }
@@ -209,41 +209,41 @@ TEST_CASE("sourced neighbors test", "[vol][neighbors][sourced]") {
     static_assert(!std::is_const_v<G>);
 
     REQUIRE(frankfurt);
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
 
     std::graph::views::neighbor_iterator<G, true> i0; // default construction
-    std::graph::views::neighbor_iterator<G, true> i1(g, ukey);
+    std::graph::views::neighbor_iterator<G, true> i1(g, uid);
     static_assert(std::forward_iterator<decltype(i1)>, "neighbor_iterator must be a forward_iterator");
     {
-      auto&& [uukey, vkey, v] = *i1;
-      static_assert(is_const_v<decltype(uukey)>, "vertex key must be const");
-      static_assert(is_const_v<decltype(vkey)>, "vertex key must be const");
+      auto&& [uuid, vid, v] = *i1;
+      static_assert(is_const_v<decltype(uuid)>, "vertex id must be const");
+      static_assert(is_const_v<decltype(vid)>, "vertex id must be const");
       static_assert(!is_const_v<remove_reference_t<decltype(v)>>, "neighbore must be non-const");
-      REQUIRE(uukey == ukey);
-      REQUIRE(vkey == 1);
+      REQUIRE(uuid == uid);
+      REQUIRE(vid == 1);
     }
     {
-      auto&& [uukey, vkey, v] = *++i1;
-      REQUIRE(uukey == ukey);
-      REQUIRE(vkey == 4);
+      auto&& [uuid, vid, v] = *++i1;
+      REQUIRE(uuid == uid);
+      REQUIRE(vid == 4);
       auto i1b = i1;
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::neighbor_iterator<G, true> i2(g, ukey);
+    std::graph::views::neighbor_iterator<G, true> i2(g, uid);
     {
-      auto&& [uukey, vkey, v] = *i2;
-      static_assert(is_const_v<decltype(vkey)>, "vertex key must be const");
+      auto&& [uuid, vid, v] = *i2;
+      static_assert(is_const_v<decltype(vid)>, "vertex id must be const");
       static_assert(is_lvalue_reference_v<decltype(v)>, "neighbor must be lvalue reference");
       static_assert(!is_const_v<remove_reference_t<decltype(v)>>, "neighbore must be non-const");
-      REQUIRE(uukey == ukey);
-      REQUIRE(vkey == 1);
+      REQUIRE(uuid == uid);
+      REQUIRE(vid == 1);
     }
     {
-      auto&& [uukey, vkey, v] = *++i2;
-      REQUIRE(uukey == ukey);
-      REQUIRE(vkey == 4);
+      auto&& [uuid, vid, v] = *++i2;
+      REQUIRE(uuid == uid);
+      REQUIRE(vid == 4);
       auto i2b = i2;
       REQUIRE(i2b == i2);
     }
@@ -260,7 +260,7 @@ TEST_CASE("sourced neighbors test", "[vol][neighbors][sourced]") {
     auto vvf  = [&g](vertex_reference_t<G> uu) -> std::string& { return vertex_value(g, uu); };
     using VVF = decltype(vvf);
 
-    std::graph::views::neighbor_iterator<G, true, VVF> i3(g, ukey, vvf);
+    std::graph::views::neighbor_iterator<G, true, VVF> i3(g, uid, vvf);
     {
       // The following asserts are used to isolate problem with failing input_or_output_iterator concept for neighbor_iterator
       static_assert(std::movable<decltype(i3)>, "neighbor_iterator<G,VVF> is NOT movable");
@@ -270,41 +270,41 @@ TEST_CASE("sourced neighbors test", "[vol][neighbors][sourced]") {
       static_assert(std::input_or_output_iterator<decltype(i3)>,
                     "neighbor_iterator<G,VVF> is NOT an input_or_output_iterator");
 
-      auto&& [uukey, vkey, v, name] = *i3;
-      REQUIRE(uukey == ukey);
-      REQUIRE(vkey == 1);
+      auto&& [uuid, vid, v, name] = *i3;
+      REQUIRE(uuid == uid);
+      REQUIRE(vid == 1);
       REQUIRE(name == "Mannheim");
     }
     {
-      auto&& [uukey, vkey, v, name] = *++i3;
-      REQUIRE(uukey == ukey);
-      REQUIRE(vkey == 4);
+      auto&& [uuid, vid, v, name] = *++i3;
+      REQUIRE(uuid == uid);
+      REQUIRE(vid == 4);
       REQUIRE(name == "W\xc3\xbcrzburg");
     }
   }
 
   SECTION("non-const neighbors") {
-    vertex_reference_t<G> u       = **frankfurt;
-    vertex_key_t<G>       ukey    = frankfurt_key;
-    using view_t   = decltype(std::graph::views::neighbors(g, ukey));
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
+    using view_t              = decltype(std::graph::views::neighbors(g, uid));
     static_assert(forward_range<view_t>, "neighbors(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [vkey, uv] : std::graph::views::neighbors(g, ukey)) {
+    for (auto&& [vid, uv] : std::graph::views::neighbors(g, uid)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
   }
 
   SECTION("const neighbors") {
-    using G2                   = const G;
-    G2&                   g2   = g;
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
+    using G2                  = const G;
+    G2&                   g2  = g;
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
 
-    using view_t = decltype(std::graph::views::neighbors(g2, ukey));
+    using view_t = decltype(std::graph::views::neighbors(g2, uid));
     static_assert(forward_range<view_t>, "neighbors(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [vkey, uv] : std::graph::views::neighbors(g2, ukey)) {
+    for (auto&& [vid, uv] : std::graph::views::neighbors(g2, uid)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));
@@ -312,51 +312,51 @@ TEST_CASE("sourced neighbors test", "[vol][neighbors][sourced]") {
 
   SECTION("non-const neighbors with vertex_fn") {
     // Note: must include trailing return type on lambda
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
-    size_t                cnt  = 0;
-    auto                  vvf  = [&g](vertex_reference_t<G> uu) -> std::string& { return vertex_value(g, uu); };
-    for (auto&& [vkey, uv, val] : std::graph::views::neighbors(g, ukey, vvf)) {
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
+    size_t                cnt = 0;
+    auto                  vvf = [&g](vertex_reference_t<G> uu) -> std::string& { return vertex_value(g, uu); };
+    for (auto&& [vid, uv, val] : std::graph::views::neighbors(g, uid, vvf)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
   }
   SECTION("const neighbors with vertex_fn") {
     // Note: must include trailing return type on lambda
-    using G2                   = const G;
-    G2&                   g2   = g;
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
+    using G2                  = const G;
+    G2&                   g2  = g;
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
     auto                  vvf = [&g2](vertex_reference_t<G2> uu) -> const std::string& { return vertex_value(g2, uu); };
     size_t                cnt = 0;
-    for (auto&& [vkey, uv, val] : std::graph::views::neighbors(g2, ukey, vvf)) {
+    for (auto&& [vid, uv, val] : std::graph::views::neighbors(g2, uid, vvf)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));
   }
 
   SECTION("non-const sourced_neighbors") {
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
-    using view_t               = decltype(std::graph::views::sourced_neighbors(g, ukey));
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
+    using view_t              = decltype(std::graph::views::sourced_neighbors(g, uid));
     static_assert(forward_range<view_t>, "neighbors(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [uukey, vkey, uv] : std::graph::views::sourced_neighbors(g, ukey)) {
+    for (auto&& [uuid, vid, uv] : std::graph::views::sourced_neighbors(g, uid)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
   }
 
   SECTION("const sourced_neighbors") {
-    using G2                   = const G;
-    G2&                   g2   = g;
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
+    using G2                  = const G;
+    G2&                   g2  = g;
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
 
-    using view_t = decltype(std::graph::views::sourced_neighbors(g2, ukey));
+    using view_t = decltype(std::graph::views::sourced_neighbors(g2, uid));
     static_assert(forward_range<view_t>, "sourced_neighbors(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [uukey, vkey, uv] : std::graph::views::sourced_neighbors(g2, ukey)) {
+    for (auto&& [uuid, vid, uv] : std::graph::views::sourced_neighbors(g2, uid)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));
@@ -364,24 +364,24 @@ TEST_CASE("sourced neighbors test", "[vol][neighbors][sourced]") {
 
   SECTION("non-const sourced_neighbors with vertex_fn") {
     // Note: must include trailing return type on lambda
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
-    size_t                cnt  = 0;
-    auto                  vvf  = [&g](vertex_reference_t<G> v) -> std::string& { return vertex_value(g, v); };
-    for (auto&& [uukey, vkey, uv, val] : std::graph::views::sourced_neighbors(g, ukey, vvf)) {
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
+    size_t                cnt = 0;
+    auto                  vvf = [&g](vertex_reference_t<G> v) -> std::string& { return vertex_value(g, v); };
+    for (auto&& [uuid, vid, uv, val] : std::graph::views::sourced_neighbors(g, uid, vvf)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
   }
   SECTION("const sourced_neighbors with vertex_fn") {
     // Note: must include trailing return type on lambda
-    using G2                   = const G;
-    G2&                   g2   = g;
-    vertex_reference_t<G> u    = **frankfurt;
-    vertex_key_t<G>       ukey = frankfurt_key;
+    using G2                  = const G;
+    G2&                   g2  = g;
+    vertex_reference_t<G> u   = **frankfurt;
+    vertex_id_t<G>        uid = frankfurt_id;
     auto                  vvf = [&g2](vertex_reference_t<G2> uu) -> const std::string& { return vertex_value(g2, uu); };
     size_t                cnt = 0;
-    for (auto&& [uukey, vkey, uv, val] : std::graph::views::sourced_neighbors(g2, ukey, vvf)) {
+    for (auto&& [uuid, vid, uv, val] : std::graph::views::sourced_neighbors(g2, uid, vvf)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));

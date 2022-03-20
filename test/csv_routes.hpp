@@ -68,58 +68,58 @@ auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOr
 }
 
 enum struct name_order_policy : int8_t {
-  order_found,        // key assigned when first encountered as source or target
-  source_order_found, // key assigned when first encountered as source only; names that are only targets appear at end
-  alphabetical        // key assigned after all keys found, in name order
+  order_found,        // id assigned when first encountered as source or target
+  source_order_found, // id assigned when first encountered as source only; names that are only targets appear at end
+  alphabetical        // id assigned after all ids found, in name order
 };
 
 /// <summary>
 /// Scans 2 columns in a CSV file and returns a map<string_view,size>, where the string_view is a
-/// unique label in occurring in either column and size_t is it's unique key.
+/// unique label in occurring in either column and size_t is it's unique id.
 /// </summary>
 /// <typeparam name="ColNumOrName">Column name or column number to specify the column in the CSV file</typeparam>
 /// <param name="csv_file">CSV filename</param>
 /// <param name="col1">First column to use</param>
 /// <param name="col2">Second column to use</param>
-/// <param name="order_policy">For order_policy=order_found, the label key is assigned to the row it was
+/// <param name="order_policy">For order_policy=order_found, the label id is assigned to the row it was
 /// first encountered in the first column. Labels that only occur in the second column will be assigned
-/// a key that follows the other keys in the first column. For order_policy=alphabetical, the key will be
+/// a id that follows the other ids in the first column. For order_policy=alphabetical, the id will be
 /// assigned based on the alphabetical ordering of the labels.</param>
 /// <returns></returns>
-template <typename ColNumOrName, typename VKey = uint32_t>
+template <typename ColNumOrName, typename VId = uint32_t>
 auto unique_vertex_labels2(csv::string_view        csv_file,
                            ColNumOrName            col1,
                            ColNumOrName            col2,
                            const name_order_policy order_policy) {
   csv::CSVReader reader(csv_file); // CSV file reader
 
-  using label_key_map = std::map<std::string, VKey>; // label, vertex key
-  label_key_map lbls;
+  using label_id_map = std::map<std::string, VId>; // label, vertex id
+  label_id_map lbls;
 
-  VKey row_order = 0;
+  VId row_order = 0;
   for (csv::CSVRow& row : reader) {
-    std::string_view source_key = row[col1].get_sv();
-    std::string_view target_key = row[col2].get_sv();
+    std::string_view source_id = row[col1].get_sv();
+    std::string_view target_id = row[col2].get_sv();
     auto&& [source_iter, source_inserted] =
-          lbls.emplace(typename label_key_map::value_type(source_key, std::numeric_limits<VKey>::max()));
+          lbls.emplace(typename label_id_map::value_type(source_id, std::numeric_limits<VId>::max()));
     auto&& [target_iter, target_inserted] =
-          lbls.emplace(typename label_key_map::value_type(target_key, std::numeric_limits<VKey>::max()));
+          lbls.emplace(typename label_id_map::value_type(target_id, std::numeric_limits<VId>::max()));
 
-    if (order_policy == name_order_policy::order_found && source_iter->second == std::numeric_limits<VKey>::max())
+    if (order_policy == name_order_policy::order_found && source_iter->second == std::numeric_limits<VId>::max())
       source_iter->second = row_order++;
   }
 
-  // Assign unique keys to each label that doesn't have an order assigned yet.
+  // Assign unique ids to each label that doesn't have an order assigned yet.
   // The following behavior will occur for different order_policy:
   // 1. ==alphabetical: no order has been assigned yet and all values will be assigned to
   //    reflect the order in the map (alphabetical).
   // 2. ==order_found, then the order reflected will be defined as the first
-  //    time the label was found as the source_key in the file. Anything that hasn't been
-  //    assigned yet only appears in the target_key and will be assigned values at the end.
+  //    time the label was found as the source_id in the file. Anything that hasn't been
+  //    assigned yet only appears in the target_id and will be assigned values at the end.
   // assign order to labels that were only targets
-  for (auto&& [lbl, key] : lbls)
-    if (key == std::numeric_limits<VKey>::max())
-      key = row_order++;
+  for (auto&& [lbl, id] : lbls)
+    if (id == std::numeric_limits<VId>::max())
+      id = row_order++;
 
   return std::pair(lbls, reader.n_rows());
 }
@@ -136,13 +136,13 @@ auto unique_vertex_labels2(csv::string_view        csv_file,
 /// <param name="col2">The second column to get labels from. If the column doesn't exist the function is undefined</param>
 /// <returns></returns>
 template <std::integral T, typename ColNumOrName>
-auto max_vertex_key(csv::string_view csv_file, ColNumOrName col1, ColNumOrName col2) {
+auto max_vertex_id(csv::string_view csv_file, ColNumOrName col1, ColNumOrName col2) {
   csv::CSVReader reader(csv_file); // CSV file reader
-  T              max_key = std::numeric_limits<T>::min();
+  T              max_id = std::numeric_limits<T>::min();
   for (csv::CSVRow& row : reader)
-    max_key = std::max(max_key, std::max(row[col1].get<T>(), row[col2].get<T>()));
+    max_id = std::max(max_id, std::max(row[col1].get<T>(), row[col2].get<T>()));
 
-  return std::pair(max_key, reader.n_rows()); // return (max_key, num rows read)
+  return std::pair(max_id, reader.n_rows()); // return (max_id, num rows read)
 }
 #endif // FUTURE
 
@@ -159,7 +159,7 @@ std::optional<std::graph::vertex_iterator_t<G>> find_city(G&& g, std::string_vie
   auto vertex_to_name = [&g](std::graph::vertex_reference_t<G> u) { return std::graph::vertex_value<G>(g, u); };
   auto it = std::ranges::lower_bound(std::graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
   bool atEnd = (it == end(std::graph::vertices(g)));
-  auto key   = it - begin(std::graph::vertices(g));
+  auto id    = it - begin(std::graph::vertices(g));
   if (it != end(std::graph::vertices(g)) && std::graph::vertex_value(g, *it) == city_name)
     return std::optional<std::graph::vertex_iterator_t<G>>(it);
   return std::optional<std::graph::vertex_iterator_t<G>>();
@@ -167,7 +167,7 @@ std::optional<std::graph::vertex_iterator_t<G>> find_city(G&& g, std::string_vie
 }
 
 template <typename G>
-std::graph::vertex_key_t<G> find_city_key(G&& g, std::string_view city_name) {
+std::graph::vertex_id_t<G> find_city_id(G&& g, std::string_view city_name) {
 #if 1
   auto it = std::ranges::find_if(std::graph::vertices(g),
                                  [&g, &city_name](auto& u) { return std::graph::vertex_value<G>(g, u) == city_name; });
@@ -177,15 +177,15 @@ std::graph::vertex_key_t<G> find_city_key(G&& g, std::string_view city_name) {
   if (it != end(std::graph::vertices(g)) && std::graph::vertex_value(g, *it) != city_name)
     it = end(std::graph::vertices(g));
 #endif
-  return static_cast<std::graph::vertex_key_t<G>>(it -
-                                                  begin(std::graph::vertices(g))); // == size(vertices(g)) if not found
+  return static_cast<std::graph::vertex_id_t<G>>(it -
+                                                 begin(std::graph::vertices(g))); // == size(vertices(g)) if not found
 }
 
 /// <summary>
-/// Loads graph such that the vertices are ordered in the same order as the source_key on the edges.
-/// The value of the source_key is not significant. Edges must be ordered by their source_key.
+/// Loads graph such that the vertices are ordered in the same order as the source_id on the edges.
+/// The value of the source_id is not significant. Edges must be ordered by their source_id.
 ///
-/// Uses 2 passes the the CSV file. The first is to get the set of unique vertex keys and to create
+/// Uses 2 passes the the CSV file. The first is to get the set of unique vertex ids and to create
 /// the vertices. The second pass is used to create the edges.
 /// </summary>
 /// <typeparam name="G"></typeparam>
@@ -195,33 +195,33 @@ template <typename G>
 auto load_graph(csv::string_view csv_file) {
   using namespace std::graph;
 
-  using graph_type      = G;
-  using vertex_key_type = vertex_key_t<graph_type>;
+  using graph_type     = G;
+  using vertex_id_type = vertex_id_t<graph_type>;
 
   const size_t col1 = 0;
   const size_t col2 = 1;
 
   // Scan the CSV to get the unique city names (cols 0 & 1)
   auto&& [city_names, csv_row_cnt] = unique_vertex_labels2(csv_file, col1, col2, name_order_policy::alphabetical);
-  using city_key_map               = std::ranges::range_value_t<decltype(city_names)>;
+  using city_id_map                = std::ranges::range_value_t<decltype(city_names)>;
   graph_type g;
 
   // Load vertices
-  auto city_key_getter = [&city_names](const city_key_map& name_key) {
-    using copyable_key_name = std::graph::views::copyable_vertex_t<vertex_key_type, std::string>;
-    return copyable_key_name{name_key.second,
-                             name_key.first}; // {key,name} don't move name b/c we need to keep it in the map
+  auto city_id_getter = [&city_names](const city_id_map& name_id) {
+    using copyable_id_name = std::graph::views::copyable_vertex_t<vertex_id_type, std::string>;
+    return copyable_id_name{name_id.second,
+                            name_id.first}; // {id,name} don't move name b/c we need to keep it in the map
   };
-  g.load_vertices(city_names, city_key_getter);
+  g.load_vertices(city_names, city_id_getter);
 
   // load edges
   auto eproj = [&g, col1, col2](const csv::CSVRow& row) {
     using edge_value_type    = std::remove_cvref_t<edge_value_t<G>>;
-    using copyable_edge_type = views::copyable_edge_t<vertex_key_type, edge_value_type>;
+    using copyable_edge_type = views::copyable_edge_t<vertex_id_type, edge_value_type>;
     return copyable_edge_type{
-          find_city_key(g, row[col1].get_sv()), // source_key
-          find_city_key(g, row[col2].get_sv()), // target_key
-          row[2].get<double>()                  // value (e.g. distance)
+          find_city_id(g, row[col1].get_sv()), // source_id
+          find_city_id(g, row[col2].get_sv()), // target_id
+          row[2].get<double>()                 // value (e.g. distance)
     };
   };
 
@@ -236,8 +236,8 @@ auto load_graph(csv::string_view csv_file) {
 /// can use std::lower_bound. Edges are shown in the same order as they appear in the CSV, relative
 /// to the source city.
 ///
-/// Requires a single pass throught the CSV file to build both a map of unique labels --> vertex_key,
-/// and a "copy" of the rows. The rows have iterators to the unique labels for source and target keys
+/// Requires a single pass throught the CSV file to build both a map of unique labels --> vertex_id,
+/// and a "copy" of the rows. The rows have iterators to the unique labels for source and target ids
 /// plus a copy of the values stored.
 ///
 /// The resulting graph should give the order as load_graph(csv_file) for vertices but edges may be
@@ -259,52 +259,52 @@ auto load_ordered_graph(csv::string_view        csv_file,
   using std::move;
   using std::numeric_limits;
   using graph_type        = G;
-  using vertex_key_type   = vertex_key_t<G>;
+  using vertex_id_type    = vertex_id_t<G>;
   using vertex_value_type = vertex_value_t<G>;
   using edge_value_type   = edge_value_t<G>; //std::remove_cvref<edge_value_t<G>>;
 
   csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
 
-  using labels_map   = map<string_view, vertex_key_type>; // label, vertex key (also output order, assigned later)
+  using labels_map   = map<string_view, vertex_id_type>; // label, vertex id (also output order, assigned later)
   using csv_row_type = views::copyable_edge_t<iterator_t<labels_map>, double>;
   using csv_row_deq  = deque<csv_row_type>;
 
-  labels_map  lbls;    // unique labels for both source_key and target_key, ordered
+  labels_map  lbls;    // unique labels for both source_id and target_id, ordered
   csv_row_deq row_deq; // all rows in the csv, though the labels only refer to entries in lbls
 
   // scan the CSV file. lbls has the only (unique) string_views into the file.
-  vertex_key_type row_order = 0;
+  vertex_id_type row_order = 0;
   for (csv::CSVRow& row : reader) {
-    string_view source_key = row[0].get_sv();
-    string_view target_key = row[1].get_sv();
-    double      value      = row[2].get<double>();
+    string_view source_id = row[0].get_sv();
+    string_view target_id = row[1].get_sv();
+    double      value     = row[2].get<double>();
     auto&& [source_iter, source_inserted] =
-          lbls.emplace(range_value_t<labels_map>(source_key, numeric_limits<vertex_key_type>::max()));
+          lbls.emplace(range_value_t<labels_map>(source_id, numeric_limits<vertex_id_type>::max()));
     auto&& [target_iter, target_inserted] =
-          lbls.emplace(range_value_t<labels_map>(target_key, numeric_limits<vertex_key_type>::max()));
+          lbls.emplace(range_value_t<labels_map>(target_id, numeric_limits<vertex_id_type>::max()));
 
     if (order_policy == name_order_policy::order_found || order_policy == name_order_policy::source_order_found) {
-      if (source_iter->second == numeric_limits<vertex_key_type>::max())
+      if (source_iter->second == numeric_limits<vertex_id_type>::max())
         source_iter->second = row_order++;
       if (order_policy != name_order_policy::source_order_found &&
-          target_iter->second == numeric_limits<vertex_key_type>::max())
+          target_iter->second == numeric_limits<vertex_id_type>::max())
         target_iter->second = row_order++;
     }
 
     row_deq.push_back({source_iter, target_iter, value});
   }
 
-  // Assign unique vertex keys to each label (assigned in label order)
-  // This only occurs for vertices where target_key is never a source
-  for (auto&& [lbl, key] : lbls)
-    if (key == std::numeric_limits<vertex_key_type>::max())
-      key = row_order++;
+  // Assign unique vertex ids to each label (assigned in label order)
+  // This only occurs for vertices where target_id is never a source
+  for (auto&& [lbl, id] : lbls)
+    if (id == std::numeric_limits<vertex_id_type>::max())
+      id = row_order++;
 
-  // Sort the rows based on the source_key, using it's key just assigned
-  // row order is preserved within the same source_key (this should give the same order as load_ordered_graph)
+  // Sort the rows based on the source_id, using it's id just assigned
+  // row order is preserved within the same source_id (this should give the same order as load_ordered_graph)
   std::ranges::sort(row_deq, [](const csv_row_type& lhs, const csv_row_type& rhs) {
-    return std::tie(lhs.source_key->second, lhs.target_key->second) <
-           std::tie(rhs.source_key->second, rhs.target_key->second);
+    return std::tie(lhs.source_id->second, lhs.target_id->second) <
+           std::tie(rhs.source_id->second, rhs.target_id->second);
   });
 
   // Create sorted list of iterators to the cities/labels using the row_order value assigned
@@ -322,7 +322,7 @@ auto load_ordered_graph(csv::string_view        csv_file,
 
   // load vertices
   using copyable_label        = std::remove_reference_t<vertex_value_type>;
-  using graph_copyable_vertex = std::graph::views::copyable_vertex_t<vertex_key_type, copyable_label>;
+  using graph_copyable_vertex = std::graph::views::copyable_vertex_t<vertex_id_type, copyable_label>;
   auto city_name_getter       = [](lbl_iter& lbl) {
     graph_copyable_vertex retval{lbl->second, copyable_label(lbl->first)};
     return retval;
@@ -331,9 +331,9 @@ auto load_ordered_graph(csv::string_view        csv_file,
 
   // load edges
   auto eproj = [&g](csv_row_type& row) {
-    using graph_copyable_edge_type = views::copyable_edge_t<vertex_key_type, edge_value_type>;
-    graph_copyable_edge_type retval{static_cast<vertex_key_type>(row.source_key->second),
-                                    static_cast<vertex_key_type>(row.target_key->second), row.value};
+    using graph_copyable_edge_type = views::copyable_edge_t<vertex_id_type, edge_value_type>;
+    graph_copyable_edge_type retval{static_cast<vertex_id_type>(row.source_id->second),
+                                    static_cast<vertex_id_type>(row.target_id->second), row.value};
     return retval;
   };
   g.load_edges(row_deq, eproj, lbls.size(), row_deq.size());
@@ -359,28 +359,28 @@ OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
   auto rng = vertices(g) | views::transform([&g](auto&& u) { return std::tuple(u, vertex_value(g, u)); });
 
   //auto transform_incidence_edge = [&g](auto&& uv) { return std::tuple(target(g, uv), uv); };
-  for (routes_vol_graph::key_type ukey = 0; auto&& u : vertices(g)) {
-    os << '[' << ukey << ' ' << vertex_value(g, u) << ']' << std::endl;
+  for (routes_vol_graph::id_type uid = 0; auto&& u : vertices(g)) {
+    os << '[' << uid << ' ' << vertex_value(g, u) << ']' << std::endl;
     //auto vw = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
     //auto x = [&g](auto&& uv) { return std::tuple(uv, target(g, uv); };
 
     //auto rng = edges(g, u) | views::transform([&g](auto&& uv) { return std::tuple(target(g, uv), uv); });
 
     for (auto&& uv : edges(g, u)) {
-      auto   vkey = target_key(g, uv);
+      auto   vid = target_id(g, uv);
       auto&& v    = target(g, uv);
-      os << "  --> [" << vkey << ' ' << vertex_value(g, v) << "] " << edge_value(g, uv) << "km" << std::endl;
+      os << "  --> [" << vid << ' ' << vertex_value(g, v) << "] " << edge_value(g, uv) << "km" << std::endl;
     }
-    ++ukey;
+    ++uid;
   }
 #else
-  for (auto&& [ukey, u] : views::vertexlist(g)) {
-    os << '[' << ukey << ' ' << vertex_value(g, u) << ']' << std::endl;
+  for (auto&& [uid, u] : views::vertexlist(g)) {
+    os << '[' << uid << ' ' << vertex_value(g, u) << ']' << std::endl;
     //auto vw = std::ranges::transform_view(edges(g, u), transform_incidence_edge);
     for (auto&& uv : edges(g, u)) {
-      auto   vkey = target_key(g, uv);
-      auto&& v    = target(g, uv);
-      os << "  --> [" << vkey << ' ' << vertex_value(g, v) << "] " << edge_value(g, uv) << "km" << std::endl;
+      auto   vid = target_id(g, uv);
+      auto&& v   = target(g, uv);
+      os << "  --> [" << vid << ' ' << vertex_value(g, v) << "] " << edge_value(g, uv) << "km" << std::endl;
     }
   }
 #endif
@@ -460,11 +460,11 @@ void output_routes_graphviz(const G& g, std::string_view filename) {
      << "  overlap = scalexy\n"
      << "  splines = curved\n";
 
-  for (auto&& [ukey, u] : views::vertexlist(g)) {
-    of << "  " << ukey << " [shape=oval,label=\"" << vertex_value(g, u) << " [" << ukey << "]\"]\n";
-    for (auto&& [vkey, uv] : views::incidence(g, u)) {
+  for (auto&& [uid, u] : views::vertexlist(g)) {
+    of << "  " << uid << " [shape=oval,label=\"" << vertex_value(g, u) << " [" << uid << "]\"]\n";
+    for (auto&& [vid, uv] : views::incidence(g, u)) {
       auto&& v = target(g, uv);
-      of << "   " << ukey << " -> " << vkey << " [arrowhead=vee,xlabel=\"" << edge_value(g, uv)
+      of << "   " << uid << " -> " << vid << " [arrowhead=vee,xlabel=\"" << edge_value(g, uv)
          << " km\", fontcolor=blue]\n";
     }
     of << std::endl;
@@ -486,20 +486,20 @@ void generate_routes_tests(const G& g, std::string_view name) {
   using std::endl;
   ostream_indenter indent;
   cout << endl << indent << "auto ui = begin(vertices(g));" << endl;
-  cout << indent << "vertex_key_t<G> ukey = 0;" << endl;
-  for (vertex_key_t<G> ukey = 0; auto&& u : vertices(g)) {
+  cout << indent << "vertex_id_t<G> uid = 0;" << endl;
+  for (vertex_id_t<G> uid = 0; auto&& u : vertices(g)) {
 
-    if (ukey > 0) {
+    if (uid > 0) {
       cout << indent << "if(++ui != end(vertices(g))) {" << endl;
     } else {
       cout << indent << "if(ui != end(vertices(g))) {" << endl;
     }
     ++indent;
     {
-      if (ukey > 0)
-        cout << indent << "REQUIRE(" << ukey << " == ++ukey);" << endl;
+      if (uid > 0)
+        cout << indent << "REQUIRE(" << uid << " == ++uid);" << endl;
       else
-        cout << indent << "REQUIRE(" << ukey << " == ukey);" << endl;
+        cout << indent << "REQUIRE(" << uid << " == uid);" << endl;
 
       size_t uv_cnt = 0;
       cout << indent << "REQUIRE(\"" << quoted_utf8(vertex_value(g, u)) << "\" == vertex_value(g,*ui));" << endl;
@@ -509,7 +509,7 @@ void generate_routes_tests(const G& g, std::string_view name) {
           cout << endl << indent << "++uvi;" << endl;
         }
         auto&& v = target(g, uv);
-        cout << indent << "REQUIRE(" << target_key(g, uv) << " == target_key(g, *uvi));\n";
+        cout << indent << "REQUIRE(" << target_id(g, uv) << " == target_id(g, *uvi));\n";
         cout << indent << "REQUIRE(\"" << quoted_utf8(vertex_value(g, target(g, uv)))
              << "\" == vertex_value(g, target(g, *uvi)));\n";
         cout << indent << "REQUIRE(" << edge_value(g, uv) << " == edge_value(g,*uvi));\n";
@@ -520,7 +520,7 @@ void generate_routes_tests(const G& g, std::string_view name) {
     }
     cout << "}" << endl;
     --indent;
-    ++ukey;
+    ++uid;
   }
 
   cout << endl

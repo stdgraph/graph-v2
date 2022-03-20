@@ -129,16 +129,15 @@
 - [ ] If we have an access namespace, do we need a container namespace?
 - [ ] SG19 Input
   - [ ] Core data structures? static graph(CSR), dynamic graph (vol variant)
-  - [ ] vertex_key or vertex_id?
+  - [ ] vertex_id or vertex_id?
 - [ ] Should operator\[\](n) -> vertex& be a requirement for a graph?
 - [ ] Can std::array be used as a basis for a constexpr graph? What would the graph be?
 - [ ] Does a LaTeX document take fewer pages than equivilent in Google Docs?
 - [ ] SG19 Questions
-  - [ ] key vs. id?
 - [ ] Can CSR edges have a void value? (e.g. no v vector)
 - [ ] How easy is it to write a view w/o the graph API?
 - [ ] How to validate constexpr? (need to use std::array)
-- [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VKey. How to adapt existing graphs?
+- [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VId. How to adapt existing graphs?
 - [ ] Can transform_view be used in place of the projections in the graph views?
 - [ ] How to support bipartite graphs using different vertex types?
   - [ ] Requires definition of 2+ types of vertices. How to define vertex type: compile-time vs. run-time?
@@ -149,16 +148,16 @@
     - [ ] may require use of variant for vertex_value type (having a unique value__type per vertex type significantly increases API complexity)
     - [ ] API extensions
       - [ ] vertices(g,type)
-      - [ ] find_vertex(g,type,key)
-      - [ ] vertex_type(g,u), or vertex_type(g,ui) (like vertex_key)
+      - [ ] find_vertex(g,type,id)
+      - [ ] vertex_type(g,u), or vertex_type(g,ui) (like vertex_id)
       - [ ] target_type(g,uv), source_type(g,uv), other_type(g,uv)
     - [ ] View exensions
       - [ ] vertex_view would need to include vertex type
-      - [ ] edge_view would need to include target & source vertex type (with the key)
+      - [ ] edge_view would need to include target & source vertex type (with the id)
       - [ ] neighbor_view would need to include target vertex type
       - [ ] These extensions could be a template parameter based on the underlying type of graph; they would be absent if not needed
       - [ ] How to efficiently iterate through vertices of a specific type?
-  - [ ] Option 2: use existing vertex_key to be a pair<vtx_type,vtx_key>
+  - [ ] Option 2: use existing vertex_id to be a pair<vtx_type,vtx_id>
     - [ ] Can the existing design adapt to this? (Best option if it can be made to work)
     - [ ] keeps uniformity of vertex type
     - [ ] may require use of variant for vertex_value type
@@ -169,7 +168,7 @@
 - [ ] Should we worry about row-major & column-major ordering of adjacency_matrix? always assume row-major?
 - [ ] Do we need a run-time function to check for undirectedness, in addition to is_undirected_edge_v<EV>? Is it a run-time property for some graphs?
 - [ ] Is there a way for EVF to take both edge_value and fnc obj? (same for VVF & vertex_value)
-- [ ] The default for edges(g,ukey) CPO isn't being found by msvc or gcc
+- [ ] The default for edges(g,uid) CPO isn't being found by msvc or gcc
 
 ## Resolved
 ### ToDo Completed
@@ -182,6 +181,7 @@
     - [x] vertex_edge_range
   - [x] add overridable is_undirected_edge_v<E> & undirected_incidence_graph<G> concept
   - [x] add overridable is_adjacencey_matrix_v<G>
+  - [x] "key" --> "id"
 - Views
   - [x] vertexlist
   - [x] edgelist
@@ -194,7 +194,7 @@
     - [x] dynamic_graph (adjustable to different vertex & edge containers)
       - [x] Implement graph, vector, edge
       - [x] Load from CSV file
-      - [x] Add \<bool sourced\> template parameter to include source_key
+      - [x] Add \<bool sourced\> template parameter to include source_id
       - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer 
     - [x] csr_graph
       - [x] Implement graph, vertex, edge
@@ -212,16 +212,17 @@
 - Feedback
 
 ### Issues Resolved
-- [x] vertex_key(g,u) now takes a vertex reference (not iterator)
-  - [x] how to define vertex_key_t without calling vertex_key()? 
+- [x] vertex_id(g,u) now takes a vertex reference (not iterator)
+  - [x] how to define vertex_id_t without calling vertex_id()? 
   - [x] make it obvious it's unavailable for non-contiguous vertices
-  - [x] Answer: for([ukey,u] : vertices(g))
+  - [x] Answer: for([uid,u] : vertices(g))
 - [x] Best way to extend vol_graph to support different container types?
   - [x] Answer: graph_traits with template specializations for user-defined values. vol_graph renamed to dynamic_graph
 - [x] What is the best dynamic graph to propose for the std? vol, vov? premature. Revisit later
-- [x] Can an edgelist be trivially created by a user? (e.g. vector<pair<target_key,weight>>) yes; need to flush this out in paper
+- [x] Can an edgelist be trivially created by a user? (e.g. vector<pair<target_id,weight>>) yes; need to flush this out in paper
 - [x] Can we drop the vertex_vertex_range in favor of just having vertexlist(g,u) [adjacency view]? yes
 - [x] Can std::vector be used as a basis for a constexpr graph? No because we can't have variables of vector
-- [x] Should CSR support source_key on edges (Sourced template parameter)? No. Views will be able to provide it so it won't be needed.
-- [x] edge_list_graph (edgelist_edge<VKey,E,EV> view?): edgelist is a view, or projection of a container
+- [x] Should CSR support source_id on edges (Sourced template parameter)? No. Views will be able to provide it so it won't be needed.
+- [x] edge_list_graph (edgelist_edge<VId,E,EV> view?): edgelist is a view, or projection of a container
 - [x] Are there any issues with using tag_invoke? It appears not. Others are using it in papers.
+- [x] key vs. id? "key" is a better term, but id has been used extensively in boost and other graph libraries and will be easier for people to recognize

@@ -84,22 +84,22 @@ requires has_array_operator<C, K>
 constexpr auto assign_or_insert(C& container) {
   if constexpr (ranges::random_access_range<C>) {
     static_assert(ranges::sized_range<C>, "random_access container is assumed to have size()");
-    return [&container](const K& key, C::value_type&& value) {
-      typename C::size_type k = static_cast<C::size_type>(key);
+    return [&container](const K& id, C::value_type&& value) {
+      typename C::size_type k = static_cast<C::size_type>(id);
       assert(k < container.size());
       container[k] = move(value);
     };
   } else if constexpr (has_array_operator<C, K>) {
-    return [&container](const K& key, C::value_type&& value) { container[key] = move(value); };
+    return [&container](const K& id, C::value_type&& value) { container[id] = move(value); };
   }
 }
 
 
 // Requirements for extracting edge values from external sources for graph construction
-// ERng is a forward_range because it is traversed twice; once to get the max vertex_key
+// ERng is a forward_range because it is traversed twice; once to get the max vertex_id
 // and a second time to load the edges.
-template <class ERng, class EKeyFnc, class EValueFnc>
-concept edge_value_extractor = ranges::forward_range<ERng> && invocable<EKeyFnc, typename ERng::value_type> &&
+template <class ERng, class EIdFnc, class EValueFnc>
+concept edge_value_extractor = ranges::forward_range<ERng> && invocable<EIdFnc, typename ERng::value_type> &&
       invocable<EValueFnc, typename ERng::value_type>;
 
 namespace detail {
