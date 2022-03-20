@@ -81,6 +81,9 @@ Rewrite with a focus on a \textbf{purely functional design}, emphasizing the alg
 \subsubsection*{P1709R0}
 Focus on \textbf{object-oriented API} for data structures and example code for a few algorithms.
 
+\section{Impact on the Standard}
+This proposal is a pure \textbf{library} extension.
+
 \section{Motivation and Scope}
 A graph data structure, used in ML and other \textbf{scientific} domains, as well as \textbf{industrial} and \textbf{general} programming, does \textbf{not} presently exist in the C++ standard. In ML, a graph forms the underlying structure of an \textbf{artificial neural network} (ANN). In a \textbf{game}, a graph can be used to
 represent the \textbf{map} of a game world. In \textbf{business} environments, graphs arise as \textbf{entity relationship diagrams} (ERD) or \textbf{data flow diagrams} (DFD). In the realm of \textbf{social media}, a graph represents a \textbf{social network}.
@@ -96,9 +99,6 @@ The depth-first search \cite{REF_graph} (DFS) ...
 
 \subsubsection{Breadth-First Search}
 The breadth-First search \cite{REF_graph} (BFS) ...
-
-\subsubsection{Topological Search}
-The Topological search \cite{REF_} (TopoSort) ...
 
 \subsubsection{Dijkstra's Algorithm}
 Dijkstra's algorithm \cite{REF_} ...
@@ -146,19 +146,16 @@ Transitive closure \cite{REF_} ...
 \subsection{Views}
 TBA
 
-\subsection{Graph Types, Concepts, Traits and Functions}
+\subsection{Graph Types, Traits, Concepts and Functions}
 TBA
 
-\subsection{csr\_graph Data Structures}
-TBA
-
-\section{Impact on the Standard}
-This proposal is a pure \textbf{library} extension.
-
-\section{Design Decisions}
+\subsection{csr\_graph Data Structure}
 TBA
 
 \subsection{TBA}
+TBA
+
+\section{Design Decisions}
 TBA
 
 \section{Technical Specifications}
@@ -214,7 +211,7 @@ void resize_vertices (G& g, vertex_size_t<G>);
 \end{itemize}
 
 \section{Acknowledgements}
-Michael Wong's work is made possible by Codeplay Software Ltd., ISOCPP Foundation, Khronos and the Standards Council of Canada.  The authors of this proposal wish to further thank the members of SG19 for their contributions.
+Michael Wong's work is made possible by Codeplay Software Ltd., ISOCPP Foundation, Khronos and the Standards Council of Canada.  The authors wish to further thank the members of SG19 for their contributions.
 
 \footnotesize
 \bibliographystyle{unsrt}
