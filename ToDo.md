@@ -133,6 +133,7 @@
     - [ ] add license file
     - [ ] README.md completion
     - [ ] Algorithms: bfs + dfs + dijkstra|bellman_ford + warshall_transitive_closure
+    - [ ] DoxyGen output OK
   - [ ] Sep-2022 CppCon
   - [ ] Oct-2022 WG21 Kona
   - [ ] Feb-2025 deadline for C++26
@@ -187,6 +188,7 @@
 - [ ] Is there a way for EVF to take both edge_value and fnc obj? (same for VVF & vertex_value)
 - [ ] The default for edges(g,uid) CPO isn't being found by msvc or gcc. Is there a way to only have to override one version of edges(g,)?
 - [ ] Use of access namespace is required by CPO and exposed when specializing the functions. Acceptable? Better way?
+- [ ] Are bfs & bfs algorithms, views or ranges?
 
 ## Resolved
 ### ToDo Completed

@@ -11,7 +11,7 @@
 #if !defined(GRAPH_BFS_HPP)
 #  define GRAPH_BFS_HPP
 
-namespace std::graph {
+namespace std::graph::views {
 
 // options: depth_limit, {cancel, cancel_branch}
 
@@ -19,8 +19,8 @@ template <class G>
 struct bfs_vertex_view {
   vertex_reference_t<G> vertex;
   vertex_reference_t<G> parent;
-  vertex_id<G>          parent_id;
-  vertex_id<G>          seed        = 0;
+  vertex_id_t<G>        parent_id;
+  vertex_id_t<G>        seed        = 0;
   bool                  is_path_end = false;
   size_t                depth       = 0;
 };
@@ -29,12 +29,13 @@ template <class G>
 struct bfs_edge_view {
   edge_reference_t<G>   edge;
   vertex_reference_t<G> parent;
-  vertex_id<G>          parent_id;
-  vertex_id<G>          seed         = 0;
+  vertex_id_t<G>        parent_id;
+  vertex_id_t<G>        seed         = 0;
   bool                  is_back_edge = false;
   size_t                depth        = 0;
 };
 
+#if 0
 //----------------------------------------------------------------------------------------
 /// breadth-first search range for vertices, given a single seed vertex.
 ///
@@ -93,6 +94,7 @@ public:
     const_iterator end() const;
     const_iterator cend() const;
   };
+#endif 
 
 } // namespace std::graph
 

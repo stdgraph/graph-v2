@@ -16,7 +16,7 @@ target_link_options(catch_main INTERFACE $<$<CXX_COMPILER_ID:GNU>:-pthread -fcon
 add_executable(tests tests.cpp "examples.cpp" 
                                "csv_routes_vofl_tests.cpp" "csv_routes.hpp"  "csv_routes.cpp" "csv_routes_dov_tests.cpp" "csv_routes_csr_tests.cpp" 
                                "vertexlist_tests.cpp" "incidence_tests.cpp" "sourced_incidence_tests.cpp" "neighbors_tests.cpp" "sourced_neighbors.tests.cpp" "edgelist_tests.cpp" 
-                               "shortest_paths_tests.cpp" "transitive_closure_tests.cpp")
+                               "shortest_paths_tests.cpp" "transitive_closure_tests.cpp" "dfs_tests.cpp" "bfs_tests.cpp")
 target_link_libraries(tests PRIVATE project_warnings project_options catch_main graph)
 target_link_libraries(tests PRIVATE CONAN_PKG::fmt)
 target_link_libraries(tests PRIVATE csv_parser)
