@@ -76,9 +76,9 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
   auto frankfurt_id = find_frankfurt_id(g);
 
   SECTION("bfs_edge_range") {
-    dfs_edge_range<G,size_t> dfs(g, frankfurt_id);
-    int            cnt = 0;
-    for (auto&& [vid, uv, depth] : dfs) {
+    dfs_edge_range dfs(g, frankfurt_id);
+    int                       cnt = 0;
+    for (auto&& [vid, uv] : dfs) {
       ++cnt;
     }
     REQUIRE(cnt == 9);
