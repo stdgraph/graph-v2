@@ -33,6 +33,7 @@ using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
 
 using std::graph::views::dfs_vertex_range;
+using std::graph::views::dfs_edge_range;
 
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
@@ -55,7 +56,31 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  SECTION("bfs_range") { 
-	  //dfs_vertex_range dfs(g, frankfurt_id); 
+  SECTION("bfs_vertex_range") {
+    dfs_vertex_range dfs(g, frankfurt_id);
+    int              cnt = 0;
+    for (auto&& id : dfs) {
+      ++cnt;
+    }
+    REQUIRE(cnt == 10);
+  }
+}
+
+TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
+  init_console();
+  using G  = routes_vol_graph_type;
+  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
+
+
+  auto frankfurt    = find_frankfurt(g);
+  auto frankfurt_id = find_frankfurt_id(g);
+
+  SECTION("bfs_edge_range") {
+    dfs_edge_range<G,size_t> dfs(g, frankfurt_id);
+    int            cnt = 0;
+    for (auto&& [vid, uv, depth] : dfs) {
+      ++cnt;
+    }
+    REQUIRE(cnt == 9);
   }
 }
