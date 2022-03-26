@@ -18,13 +18,13 @@ struct reaches {
 /// Warshall's algorithm. Complexity is O(n^3).
 //
 // clang-format off
-template <incidence_graph G, typename OutIter, typename A = allocator<bool>>
+template <incidence_graph G, typename OutIter, typename Alloc = allocator<bool>>
   requires ranges::random_access_range<vertex_range_t<G>> && 
            integral<vertex_id_t<G>> && 
            output_iterator<OutIter, reaches<G>>
            //&& directed<G>
 // clang-format on
-constexpr void warshall_transitive_closure(G& g, OutIter result_iter, A alloc = A()) {
+constexpr void warshall_transitive_closure(G& g, OutIter result_iter, Alloc alloc = Alloc()) {
   using views::vertexlist;
   using views::incidence;
   const size_t      V = ranges::size(g);

@@ -8,18 +8,18 @@
   - [x] Ranges
   - [ ] Concepts and type_traits
     - [x] graph: incidence_graph, sourced_incidence_graph, adjacency_matrix, undirected_incidence_graph
-    - [ ] views: vertex_view, edge_view, neighbor_view
+    - [ ] views: vertex_view, edge_view, neighbor_view returned from graph views
     - [ ] functions: VVF, EVF
   - [x] Accessor functions
   - [ ] Views
     - [ ] incidence
       - [ ] unit tests for Sourced edges (sourced and unsourced graph)
-      - [ ] unit tests for undirected_graph<G>
+      - [ ] unit tests for undirected_graph\<G\>
     - [ ] neighbors
       - [ ] unit tests for Sourced edges (sourced and unsourced graph)
-      - [ ] unit tests for undirected_graph<G>
+      - [ ] unit tests for undirected_graph\<G\>
     - [ ] edgelist
-      - [ ] unit tests for undirected_graph<G>
+      - [ ] unit tests for undirected_graph\<G\>
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -95,16 +95,27 @@
 - Documentation
   - [x] Decprecate original "graph" repository
   - [ ] README.md
-    - [ ] Add general description
+    - [x] Add general description
     - [x] Add Getting Started
   - [ ] P1709
     - [x] Google Doc --> LaTex
-    - [ ] Add overview/goal
-    - [ ] Add sections
+    - [ ] Design Decisions
+      - [x] Library Organization
+      - [x] Separation of Graph Algorithm and Data Structure Requirements
+      - [ ] Graph Function override overview
+    - [ ] Algorithms
+    - [ ] Technical Specifications
+      - [ ] \<graph\>
+      - [ ] \<vertexlist\>
+      - [ ] \<incidence\>
+      - [ ] \<neighbors\>
+      - [ ] \<edgelist\>
+      - [ ] \<graph_algorithm\>
+      - [ ] \<csr_graph\>
 - Feedback
 - Code Review
   - [ ] graph concepts
-  - [ ] undirected_graph<G> concept + source/target swapping in views
+  - [ ] undirected_graph\<G\> concept + source/target swapping in views
   - [ ] views iterator design: 
     - [ ] use of subrange
     - [ ] storing values in iterator: shadow struct, setting values in operator*(), mutable value, ref_to_ptr
@@ -176,8 +187,8 @@
   - [x] ranges
     - [x] vertex_range
     - [x] vertex_edge_range
-  - [x] add overridable is_undirected_edge_v<E> & undirected_incidence_graph<G> concept
-  - [x] add overridable is_adjacencey_matrix_v<G>
+  - [x] add overridable is_undirected_edge_v<E> & undirected_incidence_graph\<G\> concept
+  - [x] add overridable is_adjacencey_matrix_v\<G\>
   - [x] "key" --> "id"
 - Views
   - [x] vertexlist

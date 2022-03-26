@@ -49,7 +49,7 @@
 \vspace{32pt}
 \begin{tabular}{ll}
 \textbf{Document Number:} & P1709R3\\
-\textbf{Date:} & \hl{March \#}, 2022 (mailing)\\ 
+\textbf{Date:} & \hl{April 14}, 2022 (mailing)\\ 
 \textbf{Project:} & ISO JTC1/SC22/WG21: Programming Language C++\\
 \textbf{Audience:} & SG19, WG21, LEWG\\
 \textbf{Emails:}
@@ -159,9 +159,6 @@ TBA
 \subsection{csr\_graph Data Structure}
 TBA
 
-\subsection{TBA}
-TBA
-
 \section{Design Decisions}
 \subsection{Graph Library Organization}
 A physical graph is made up of a range of vertices, where each vertex has a range of edges. This is known as an Incidence Graph. There are a variety of 
@@ -171,8 +168,8 @@ Graph API in this paper.
 The Graph API is a set of types, traits and concepts that describe a graph, and a set of functions that provide low-level access to the 
 underlying graph with the following characteristics:
 \begin{enumerate}
-\item All functions are Customization Point Objects (CPO) that can be overridden to integrate it with this library. 6-9 functions must be
-overridden for a graph data structure to fully integrate with this library, and more functions are available if needed. This proposal includes 
+\item All functions are Customization Point Objects (CPO) that can be overridden to integrate a graph with this library. 
+6-9 functions must be overridden for a graph data structure to fully integrate with this library, and more functions are available if needed. This proposal includes 
 csr\_graph, a static graph for performance, that demonstrates how CPOs are overridden.
 \item The graph types are defined by the return types of the graph functions, or derivative of them.
 \item User-defined value types can be defined for the edge, vertex and graph types. A type of \texttt{void} is assumed if no type has been defined.
@@ -211,7 +208,7 @@ needed. It is anticipated that future algorithm proposals will continue to follo
 \item Views follow the same requirements as the algorithms.
 \end{enumerate}
 
-The discrepancy between these definitions is to enable a wider variety of algorithms andm graph data structures outside the standard that 
+The discrepancy between these definitions is to enable a wider variety of algorithms and graph data structures outside the standard that 
 can leverage the underlying design. For instance, the following should be possible in graphs and algorithms outside of this proposal:
 
 \begin{enumerate}
@@ -235,14 +232,15 @@ namespaces. Suggestions for namespaces are \texttt{std::graph} and
 \texttt{std::ranges::graph} for the root namespace. The graph namespaces proposed include
 \\
 \hspace*{20mm}\texttt{graph}\\
-\hspace*{30mm}\texttt{graph::access}\\
-\hspace*{30mm}\texttt{graph::views}\\
-\hspace*{30mm}\texttt{graph::views::access}\\
+\hspace*{20mm}\texttt{graph::access}\\
+\hspace*{20mm}\texttt{graph::views}\\
+\hspace*{20mm}\texttt{graph::views::access}\\
 \\
 Proposed headers include\\
 \hspace*{20mm}\texttt{<graph>}\\
-\hspace*{30mm}\texttt{<graph\_view>}\\
-\hspace*{30mm}\texttt{<graph\_algorithm>}\\
+\hspace*{20mm}\texttt{<graph\_view>}\\
+\hspace*{20mm}\texttt{<graph\_algorithm>}\\
+\hspace*{20mm}\texttt{<csr\_graph>}\\
 
 \section{Technical Specifications}
 TBA
@@ -355,6 +353,21 @@ auto depth_first_search(G& g, vertex_reference_t<G> seed);
 // ...
 }
 \end{lstlisting}
+
+\subsection{Header \texttt{<csr\_graph>} synopsis [graph.syn]}
+
+\begin{lstlisting}
+namespace std::graph {
+
+// ...
+
+template<class EV, class VV, class GV, class VId, class Alloc>
+class csr_graph;
+
+// ...
+}
+\end{lstlisting}
+
 
 \section{Acknowledgements}
 Michael Wong's work is made possible by Codeplay Software Ltd., ISOCPP Foundation, Khronos and the Standards Council of Canada.  The authors wish to further thank the members of SG19 for their contributions.
