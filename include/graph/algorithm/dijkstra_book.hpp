@@ -65,13 +65,4 @@ auto dijkstra_book(
   return distance;
 }
 
-template <incidence_graph G>
-void vertex_id_example(G&& g) {
-  auto ui = begin(vertices(g));
-  auto id = vertex_id(g, ui);
-
-  for (auto&& [uid, u] : views::vertexlist(g)) { //
-  }
-}
-
 } // namespace std::graph

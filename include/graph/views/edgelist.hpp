@@ -2,12 +2,15 @@
 #include "graph/graph.hpp"
 
 //
-// edgelist(g,u) -> edge_view<VId,Sourced,E,EV>:
+// edgelist(g,u) -> edge_view<VId,true,E,EV> -> {source_id, target_id, edge& [,value]}
 //
-// enable: for([uid, vid, uv]        : edgelist(g))
-//         for([uid, vid, uv]        : edgelist(g,fn))
-//         for([uid, vid, uv, value] : edgelist(g,uid,vid))
-//         for([uid, vid, uv, value] : edgelist(g,uid,vid,fn))
+// given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(uv); }
+// 
+// examples: for([uid, vid, uv]        : edgelist(g))
+//           for([uid, vid, uv]        : edgelist(g,evf))
+// 
+//           for([uid, vid, uv, value] : edgelist(g,uid,vid))
+//           for([uid, vid, uv, value] : edgelist(g,uid,vid,evf))
 //
 namespace std::graph::views {
 

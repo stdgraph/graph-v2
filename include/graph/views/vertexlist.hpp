@@ -3,12 +3,14 @@
 #include "graph/views/views_utility.hpp"
 
 //
-// vertexlist(g) -> [id, vertex& [,value]]
+// vertexlist(g) -> vertex_view<VId,V,VV> -> {id, vertex& [,value]}
 //
-// enable: for(auto&& [uid, u]      : vertexlist(g))
-//    and: for(auto&& [uid, u, val] : vertexlist(g,[&g](vertex_t<G>& u) -> decl_type(vertex_value(g)) { return vertex_value(g,u);})
+// given:    vvf = [&g](vertex_reference_t<G> u) -> decl_type(vertex_value(g)) { return vertex_value(g,u);}
+//           (trailing return type is required if defined inline as vertexlist parameter)
 //
-// Note: trailing return type is required
+// examples: for(auto&& [uid, u]      : vertexlist(g))
+//         : for(auto&& [uid, u, val] : vertexlist(g,vvf)
+//
 //
 namespace std::graph::views {
 

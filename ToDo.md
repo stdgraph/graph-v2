@@ -8,30 +8,36 @@
   - [x] Ranges
   - [ ] Concepts and type_traits
     - [x] graph: incidence_graph, sourced_incidence_graph, adjacency_matrix, undirected_incidence_graph
-    - [ ] views: vertex_view, edge_view, neighbor_view returned from graph views
-    - [ ] functions: VVF, EVF
+    - [ ] **view concepts: vertex_view, edge_view, neighbor_view returned from graph views**
+    - [ ] **function concepts: VVF, EVF**
   - [x] Accessor functions
   - [ ] Views
+    - [ ] vertexlist
+      - [ ] Copy VVF to iterator (not reference)
+      - [ ] Accept VVF(g,u) & allow vertex_value?
     - [ ] incidence
-      - [ ] unit tests for Sourced edges (sourced and unsourced graph)
+      - [ ] **unit tests for Sourced edges (sourced and unsourced graph)**
+      - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
     - [ ] neighbors
-      - [ ] unit tests for Sourced edges (sourced and unsourced graph)
+      - [ ] **unit tests for Sourced edges (sourced and unsourced graph)**
+      - [ ] Copy VVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
     - [ ] edgelist
+      - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
 - Algorithms
   - [ ] Common
   - [ ] Ranges
-    - [ ] bfs_vertex_range
-    - [ ] bfs_edge_range
-    - [ ] dfs_vertex_range
-    - [ ] dfs_edge_range
+    - [ ] **bfs_vertex_range**
+    - [ ] **bfs_edge_range**
+    - [ ] **dfs_vertex_range**
+    - [ ] **dfs_edge_range**
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra book (impl from AndrewL)
-      - [ ] dijkstra_shortest_paths
-      - [ ] bellman_ford_shortest paths
+      - [ ] **dijkstra_shortest_paths**
+      - [ ] **bellman_ford_shortest paths**
     - [ ] Components
       - [ ] connected_components
       - [ ] strongly_connected_components
@@ -47,11 +53,11 @@
     - [ ] copy (g1 --> g2) (not for P1709)
 - Containers (data structures)
     - [x] csr_graph (for P1709)
-      - [ ] Use concepts for load, load_edges, load_vertices, ctors
+      - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [x] Support VV=void
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] dynamic_graph
-      - [ ] Use concepts for load, load_edges, load_vertices, ctors
+      - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
       - [ ] graph with map-based vertices (requires different algorithm impl)
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
@@ -123,6 +129,10 @@
     - [ ] vs. NWGraph (returning references vs. values)
   - [ ] tag_invoke design & use (access namespace, tag names, etc.)
 - Readiness
+  - [ ] **Publish in github**
+    - [ ] add license file
+    - [ ] README.md completion
+    - [ ] Algorithms: bfs + dfs + dijkstra|bellman_ford + warshall_transitive_closure
   - [ ] Sep-2022 CppCon
   - [ ] Oct-2022 WG21 Kona
   - [ ] Feb-2025 deadline for C++26
