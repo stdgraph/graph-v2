@@ -59,7 +59,7 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
   SECTION("bfs_vertex_range") {
     dfs_vertex_range dfs(g, frankfurt_id);
     int              cnt = 0;
-    for (auto&& id : dfs) {
+    for (auto&& [uid, u] : dfs) {
       ++cnt;
     }
     REQUIRE(cnt == 10);

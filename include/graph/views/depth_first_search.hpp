@@ -47,9 +47,18 @@ template <incidence_graph G, class Stack = stack<vertex_id_t<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class dfs_vertex_range : public ranges::view_interface<dfs_vertex_range<G, Stack>> {
 public:
-  using graph_type      = G;
-  using vertex_id_type  = vertex_id_t<graph_type>;
-  using vertex_iterator = vertex_iterator_t<graph_type>;
+  using graph_type            = G;
+  using vertex_type           = vertex_t<G>;
+  using vertex_id_type        = vertex_id_t<graph_type>;
+  using vertex_reference_type = vertex_reference_t<graph_type>;
+  using vertex_iterator       = vertex_iterator_t<graph_type>;
+
+private:
+  // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
+  // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
+  using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
+  using shadow_value_type =
+        vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, void>; //_detail::ref_to_ptr<vertex_value_type>
 
 public:
   dfs_vertex_range(graph_type& g, vertex_id_type seed = 0) : g_(g), colors_(ranges::size(vertices(g)), white) {
@@ -92,12 +101,13 @@ public:
   class dfs_range_iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = vertex_id_type;
+    using value_type        = vertex_view<const vertex_id_type, vertex_type&, void>;
     using reference         = value_type&;
     using pointer           = value_type*;
     using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
     using different_type    = ranges::range_difference_t<vertex_range_t<graph_type>>;
 
+  private:
   public:
     dfs_range_iterator(dfs_vertex_range<graph_type>& range) : the_range_(range), cursor_(0) {}
 
@@ -128,7 +138,11 @@ public:
       return temp;
     }
 
-    reference operator*() noexcept { return the_range_.S_.top(); }
+    reference operator*() noexcept {
+      value_ = { the_range_.S_.top(), &*find_vertex(the_range_.g_, the_range_.S_.top())};
+      return reinterpret_cast<reference>(value_);
+      //return the_range_.S_.top();
+    }
 
     struct end_sentinel_type {};
 
@@ -136,6 +150,7 @@ public:
     bool operator!=(const end_sentinel_type&) const noexcept { return !the_range_.empty(); }
 
   private:
+    mutable shadow_value_type     value_ = {};
     dfs_vertex_range<graph_type>& the_range_;
     vertex_id_type                cursor_;
   };
@@ -154,7 +169,7 @@ private:
   graph_type&          g_;
   Stack                S_;
   vector<three_colors> colors_;
-};
+}; // namespace std::graph::views
 
 
 //---------------------------------------------------------------------------------------
@@ -164,10 +179,10 @@ template <incidence_graph G, bool Cancelable = false, class Stack = stack<vertex
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class dfs_edge_range {
 public:
-  using graph_type      = G;
-  using vertex_id_type  = vertex_id_t<graph_type>;
-  using vertex_iterator = vertex_iterator_t<graph_type>;
-  using edge_type       = edge_t<G>;
+  using graph_type          = G;
+  using vertex_id_type      = vertex_id_t<graph_type>;
+  using vertex_iterator     = vertex_iterator_t<graph_type>;
+  using edge_reference_type = edge_reference_t<graph_type>;
 
 public:
   dfs_edge_range(G& g, vertex_id_type seed = 0) : g_(g), colors_(ranges::size(vertices(g)), white) {
@@ -187,14 +202,17 @@ public:
   class dfs_edge_range_iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = edge_view<vertex_id_type, false, edge_type&, void>;
+    using value_type        = edge_view<const vertex_id_type, false, edge_reference_type, void>;
     using reference         = value_type&;
     using pointer           = value_type*;
     using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
     using different_type    = ranges::range_difference_t<vertex_range_t<graph_type>>;
 
   private:
-    using shadow_value_type = edge_view<vertex_id_type, false, edge_type*, void>;
+    // avoid difficulty in undefined vertex reference value in value_type
+    // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
+    using shadow_edge_type  = remove_reference_t<edge_reference_type>;
+    using shadow_value_type = edge_view<vertex_id_type, false, shadow_edge_type*, void>;
 
   public:
     dfs_edge_range_iterator(dfs_edge_range<G, Cancelable, Stack>& range)
