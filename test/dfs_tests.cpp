@@ -4,6 +4,11 @@
 #include "graph/views/depth_first_search.hpp"
 #include "graph/container/dynamic_graph.hpp"
 
+#define TEST_OPTION_OUTPUT (1)
+#define TEST_OPTION_GEN (2)
+#define TEST_OPTION_TEST (3)
+#define TEST_OPTION TEST_OPTION_TEST
+
 using std::cout;
 using std::endl;
 
@@ -59,18 +64,140 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  SECTION("bfs_vertex_range") {
+#if TEST_OPTION == TEST_OPTION_OUTPUT
+  SECTION("bfs_vertex_range output") {
     dfs_vertex_range dfs(g, frankfurt_id);
 
     int cnt = 0;
-    cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << endl;
+    cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
     for (auto&& [uid, u] : dfs) {
       ostream_indenter indent(static_cast<int>(dfs.depth()));
       cout << indent << '[' << uid << "] " << vertex_value(g, u) << endl;
       ++cnt;
     }
     REQUIRE(cnt == 9);
+    /* Output:
+        [0] Frankfürt (seed)
+          [1] Mannheim
+            [2] Karlsruhe
+              [3] Augsburg
+                [8] München
+          [4] Würzburg
+            [5] Nürnberg
+              [9] Stuttgart
+            [7] Erfurt
+          [6] Kassel
+    */
   }
+#elif TEST_OPTION == TEST_OPTION_GEN
+  SECTION("bfs_vertex_range generate content test") {
+    using namespace std::graph;
+    using std::cout;
+    using std::endl;
+    ostream_indenter indent;
+
+    cout << endl
+         << indent << "dfs_vertex_range dfs(g, frankfurt_id);" << endl
+         << indent << "auto             city     = dfs.begin();" << endl
+         << indent << "int              city_cnt = 0;" << endl;
+
+    int city_cnt = 0;
+    for (auto&& [uid, u] : dfs_vertex_range(g, frankfurt_id)) {
+      ++city_cnt;
+      cout << endl << indent << "if(city != dfs.end()) {\n";
+      ++indent;
+      cout << indent << "auto&& [uid, u] = *city;\n"
+           << indent << "REQUIRE(" << uid << " == uid);\n"
+           << indent << "REQUIRE(\"" << vertex_value(g, u) << "\" == vertex_value(g, u));\n"
+           << indent << "++city_cnt;\n"
+           << indent << "++city;\n";
+      --indent;
+      cout << indent << "}\n";
+    }
+    cout << endl << indent << "REQUIRE(" << city_cnt << " == city_cnt);" << endl << endl;
+  }
+#elif TEST_OPTION == TEST_OPTION_TEST
+  SECTION("bfs_vertex_range test content") {
+
+    dfs_vertex_range dfs(g, frankfurt_id);
+    auto             city     = dfs.begin();
+    int              city_cnt = 0;
+
+    if (city != dfs.end()) {
+      auto&& [uid, u] = *city;
+      REQUIRE(1 == uid);
+      REQUIRE("Mannheim" == vertex_value(g, u));
+      ++city_cnt;
+      ++city;
+    }
+
+    if (city != dfs.end()) {
+      auto&& [uid, u] = *city;
+      REQUIRE(2 == uid);
+      REQUIRE("Karlsruhe" == vertex_value(g, u));
+      ++city_cnt;
+      ++city;
+    }
+
+    if (city != dfs.end()) {
+      auto&& [uid, u] = *city;
+      REQUIRE(3 == uid);
+      REQUIRE("Augsburg" == vertex_value(g, u));
+      ++city_cnt;
+      ++city;
+    }
+
+    if (city != dfs.end()) {
+      auto&& [uid, u] = *city;
+      REQUIRE(8 == uid);
+      REQUIRE("München" == vertex_value(g, u));
+      ++city_cnt;
+      ++city;
+    }
+
+    if (city != dfs.end()) {
+      auto&& [uid, u] = *city;
+      REQUIRE(4 == uid);
+      REQUIRE("Würzburg" == vertex_value(g, u));
+      ++city_cnt;
+      ++city;
+    }
+
+    if (city != dfs.end()) {
+      auto&& [uid, u] = *city;
+      REQUIRE(5 == uid);
+      REQUIRE("Nürnberg" == vertex_value(g, u));
+      ++city_cnt;
+      ++city;
+    }
+
+    if (city != dfs.end()) {
+      auto&& [uid, u] = *city;
+      REQUIRE(9 == uid);
+      REQUIRE("Stuttgart" == vertex_value(g, u));
+      ++city_cnt;
+      ++city;
+    }
+
+    if (city != dfs.end()) {
+      auto&& [uid, u] = *city;
+      REQUIRE(7 == uid);
+      REQUIRE("Erfurt" == vertex_value(g, u));
+      ++city_cnt;
+      ++city;
+    }
+
+    if (city != dfs.end()) {
+      auto&& [uid, u] = *city;
+      REQUIRE(6 == uid);
+      REQUIRE("Kassel" == vertex_value(g, u));
+      ++city_cnt;
+      ++city;
+    }
+
+    REQUIRE(9 == city_cnt);
+  }
+#endif
 }
 
 TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
@@ -78,19 +205,150 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
   using G  = routes_vol_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
 
-
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  SECTION("dfs_edge_range") {
+#if TEST_OPTION == TEST_OPTION_OUTPUT
+  SECTION("dfs_edge_range output") {
     dfs_edge_range dfs(g, frankfurt_id);
     int            cnt = 0;
-    cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << endl;
+    cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
     for (auto&& [vid, uv] : dfs) {
       ostream_indenter indent(static_cast<int>(dfs.depth()));
-      cout << indent << '[' << vid << "] " << vertex_value(g, target(g,uv)) << endl;
+      cout << indent << "--> [" << vid << "] " << vertex_value(g, target(g, uv)) << ' ' << edge_value(g, uv) << "km"
+           << endl;
       ++cnt;
     }
     REQUIRE(cnt == 9);
+    /* Output:
+        [0] Frankfürt (seed)
+          --> [1] Mannheim 85km
+            --> [2] Karlsruhe 80km
+              --> [3] Augsburg 250km
+                --> [8] München 84km
+          --> [4] Würzburg 217km
+            --> [5] Nürnberg 103km
+              --> [9] Stuttgart 183km
+            --> [7] Erfurt 186km
+          --> [6] Kassel 173km
+    */
   }
+#elif TEST_OPTION == TEST_OPTION_GEN
+  SECTION("bfs_edge_range generate content test") {
+    using namespace std::graph;
+    using std::cout;
+    using std::endl;
+    ostream_indenter indent;
+
+    cout << endl
+         << indent << "dfs_edge_range dfs(g, frankfurt_id);" << endl
+         << indent << "auto           route    = dfs.begin();" << endl
+         << indent << "int            city_cnt = 0;" << endl;
+
+    int city_cnt = 0;
+    for (auto&& [vid, uv] : dfs_edge_range(g, frankfurt_id)) {
+      ++city_cnt;
+      cout << endl << indent << "if(route != dfs.end()) {\n";
+      ++indent;
+      cout << indent << "auto&& [vid, uv] = *route;\n"
+           << indent << "REQUIRE(" << vid << " == vid);\n"
+           << indent << "REQUIRE(" << edge_value(g, uv) << " == edge_value(g, uv));\n"
+           << indent << "REQUIRE(\"" << vertex_value(g, target(g, uv)) << "\" == vertex_value(g, target(g, uv)));\n"
+           << indent << "++city_cnt;\n"
+           << indent << "++route;\n";
+      --indent;
+      cout << indent << "}\n";
+    }
+    cout << endl << indent << "REQUIRE(" << city_cnt << " == city_cnt);" << endl << endl;
+  }
+#elif TEST_OPTION == TEST_OPTION_TEST
+  SECTION("bfs_edge_range test content") {
+    dfs_edge_range dfs(g, frankfurt_id);
+    auto           route    = dfs.begin();
+    int            city_cnt = 0;
+
+    if (route != dfs.end()) {
+      auto&& [vid, uv] = *route;
+      REQUIRE(1 == vid);
+      REQUIRE(85 == edge_value(g, uv));
+      REQUIRE("Mannheim" == vertex_value(g, target(g, uv)));
+      ++city_cnt;
+      ++route;
+    }
+
+    if (route != dfs.end()) {
+      auto&& [vid, uv] = *route;
+      REQUIRE(2 == vid);
+      REQUIRE(80 == edge_value(g, uv));
+      REQUIRE("Karlsruhe" == vertex_value(g, target(g, uv)));
+      ++city_cnt;
+      ++route;
+    }
+
+    if (route != dfs.end()) {
+      auto&& [vid, uv] = *route;
+      REQUIRE(3 == vid);
+      REQUIRE(250 == edge_value(g, uv));
+      REQUIRE("Augsburg" == vertex_value(g, target(g, uv)));
+      ++city_cnt;
+      ++route;
+    }
+
+    if (route != dfs.end()) {
+      auto&& [vid, uv] = *route;
+      REQUIRE(8 == vid);
+      REQUIRE(84 == edge_value(g, uv));
+      REQUIRE("München" == vertex_value(g, target(g, uv)));
+      ++city_cnt;
+      ++route;
+    }
+
+    if (route != dfs.end()) {
+      auto&& [vid, uv] = *route;
+      REQUIRE(4 == vid);
+      REQUIRE(217 == edge_value(g, uv));
+      REQUIRE("Würzburg" == vertex_value(g, target(g, uv)));
+      ++city_cnt;
+      ++route;
+    }
+
+    if (route != dfs.end()) {
+      auto&& [vid, uv] = *route;
+      REQUIRE(5 == vid);
+      REQUIRE(103 == edge_value(g, uv));
+      REQUIRE("Nürnberg" == vertex_value(g, target(g, uv)));
+      ++city_cnt;
+      ++route;
+    }
+
+    if (route != dfs.end()) {
+      auto&& [vid, uv] = *route;
+      REQUIRE(9 == vid);
+      REQUIRE(183 == edge_value(g, uv));
+      REQUIRE("Stuttgart" == vertex_value(g, target(g, uv)));
+      ++city_cnt;
+      ++route;
+    }
+
+    if (route != dfs.end()) {
+      auto&& [vid, uv] = *route;
+      REQUIRE(7 == vid);
+      REQUIRE(186 == edge_value(g, uv));
+      REQUIRE("Erfurt" == vertex_value(g, target(g, uv)));
+      ++city_cnt;
+      ++route;
+    }
+
+    if (route != dfs.end()) {
+      auto&& [vid, uv] = *route;
+      REQUIRE(6 == vid);
+      REQUIRE(173 == edge_value(g, uv));
+      REQUIRE("Kassel" == vertex_value(g, target(g, uv)));
+      ++city_cnt;
+      ++route;
+    }
+
+    REQUIRE(9 == city_cnt);
+  }
+#endif
 }

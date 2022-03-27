@@ -37,11 +37,13 @@
       - [ ] validate results & add unit tests
       - [ ] support VVF
       - [ ] support undirected_graph<G>
+      - [ ] define begin, end, depth/size, empty
     - [ ] **dfs_edge_range**
       - [ ] validate results & add unit tests
       - [ ] support EVF
       - [ ] support Sourced?
       - [ ] support undirected_graph<G>
+      - [ ] define begin, end, depth/size, empty
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra book (impl from AndrewL)
