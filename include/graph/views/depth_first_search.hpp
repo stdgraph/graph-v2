@@ -36,7 +36,7 @@ struct dfs_elem {
 
 template <incidence_graph G, bool Cancelable, class Stack>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_base : public ranges::view_interface<dfs_base<G, Cancelable, Stack>> {
+class dfs_base : public ranges::view_base {
 public:
   using graph_type       = G;
   using vertex_type      = vertex_t<G>;
@@ -47,7 +47,8 @@ public:
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
 
 private:
-  using stack_elem = dfs_elem<graph_type>;
+  using graph_ref_type = reference_wrapper<graph_type>;
+  using stack_elem     = dfs_elem<graph_type>;
 
   using parent_alloc = typename allocator_traits<typename Stack::container_type::allocator_type>::template rebind_alloc<
         vertex_id_type>;
@@ -69,6 +70,7 @@ public:
 
   constexpr bool empty() const noexcept { return S_.empty(); }
 
+  constexpr auto size() const noexcept { return S_.size(); }
   constexpr auto depth() const noexcept { return S_.size(); }
 
   constexpr void          cancel(cancel_search cancel_type) noexcept requires Cancelable { cancel_ = cancel_type; }
@@ -111,7 +113,7 @@ protected : void advance() {
   }
 
 protected:
-  graph_type&          graph_;
+  graph_ref_type       graph_;
   Stack                S_;
   vector<three_colors> colors_;
   cancel_search        cancel_ = cancel_search::continue_search;
@@ -124,9 +126,7 @@ protected:
 
 template <incidence_graph G, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_vertex_range
-      : public dfs_base<G, Cancelable, Stack>
-      , public ranges::view_interface<dfs_vertex_range<G, Cancelable, Stack>> {
+class dfs_vertex_range : public dfs_base<G, Cancelable, Stack> {
 public:
   using base_type        = dfs_base<G, Cancelable, Stack>;
   using graph_type       = G;
@@ -153,9 +153,12 @@ public:
     using iterator_category = input_iterator_tag;
     using value_type        = vertex_view<const vertex_id_type, vertex_type&, void>;
     using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using rvalue_reference  = value_type&&;
     using pointer           = value_type*;
+    using const_pointer     = value_type*;
     using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
-    using different_type    = ranges::range_difference_t<vertex_range_t<graph_type>>;
+    using difference_type   = ranges::range_difference_t<vertex_range_t<graph_type>>;
 
   private:
     // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
@@ -165,7 +168,8 @@ public:
           vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, void>; //_detail::ref_to_ptr<vertex_value_type>
 
   public:
-    iterator(dfs_vertex_range<graph_type>& range) : the_range_(range) {}
+    iterator(const dfs_vertex_range<graph_type>& range)
+          : the_range_(const_cast<dfs_vertex_range<graph_type>&>(range)) {}
 
     iterator& operator++() {
       the_range_.get().advance();
@@ -177,7 +181,7 @@ public:
       return temp;
     }
 
-    reference operator*() noexcept {
+    reference operator*() const noexcept {
       auto& g            = the_range_.get().graph_;
       auto&& [u_id, uvi] = the_range_.get().S_.top();
       value_             = {target_id(g, *uvi), &target(g, *uvi)};
@@ -214,9 +218,7 @@ public:
 ///
 template <incidence_graph G, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_edge_range
-      : public dfs_base<G, Cancelable, Stack>
-      , public ranges::view_interface<dfs_edge_range<G, Cancelable, Stack>> {
+class dfs_edge_range : public dfs_base<G, Cancelable, Stack> {
 public:
   using base_type           = dfs_base<G, Cancelable, Stack>;
   using graph_type          = G;
@@ -240,9 +242,12 @@ public:
     using iterator_category = input_iterator_tag;
     using value_type        = edge_view<const vertex_id_type, false, edge_reference_type, void>;
     using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using rvalue_reference  = value_type&&;
     using pointer           = value_type*;
+    using const_pointer     = value_type*;
     using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
-    using different_type    = ranges::range_difference_t<vertex_range_t<graph_type>>;
+    using difference_type   = ranges::range_difference_t<vertex_range_t<graph_type>>;
 
   private:
     // avoid difficulty in undefined vertex reference value in value_type
@@ -251,7 +256,8 @@ public:
     using shadow_value_type = edge_view<vertex_id_type, false, shadow_edge_type*, void>;
 
   public:
-    iterator(dfs_edge_range<G, Cancelable, Stack>& range) : the_range_(range) {}
+    iterator(const dfs_edge_range<G, Cancelable, Stack>& range)
+          : the_range_(const_cast<dfs_edge_range<G, Cancelable, Stack>&>(range)) {}
 
     iterator& operator++() {
       the_range_.get().advance();
@@ -263,7 +269,7 @@ public:
       return temp;
     }
 
-    reference operator*() noexcept {
+    reference operator*() const noexcept {
       auto&& [u_id, uvi] = the_range_.get().S_.top();
       value_             = {target_id(the_range_.get().graph_, *uvi), &*uvi};
       return reinterpret_cast<reference>(value_);

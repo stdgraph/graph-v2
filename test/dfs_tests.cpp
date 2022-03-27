@@ -56,6 +56,7 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
+
 TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
   init_console();
   using G  = routes_vol_graph_type;
@@ -64,7 +65,7 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  SECTION("bfs_vertex_range is a view") {
+  SECTION("bfs_vertex_range is an input view") {
     dfs_vertex_range dfs(g, frankfurt_id);
     auto             it1 = dfs.begin();
     using I              = decltype(it1);
@@ -77,10 +78,26 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
 
     using I2 = std::remove_cvref_t<I>;
     REQUIRE(std::move_constructible<I2>);
-    REQUIRE(std::movable<I2>);
     REQUIRE(std::copyable<I2>);
+    REQUIRE(std::movable<I2>);
     REQUIRE(std::swappable<I2>);
     CHECK(!std::is_default_constructible_v<I2>);
+
+    CHECK(std::input_or_output_iterator<I2>);
+    CHECK(std::indirectly_readable<I2>);
+    CHECK(std::input_iterator<I2>);
+
+    using Rng = decltype(dfs);
+    CHECK(std::ranges::range<Rng>);
+    CHECK(std::movable<Rng>);
+    CHECK(std::derived_from<Rng, std::ranges::view_base>);
+    CHECK(std::ranges::enable_view<Rng>);
+    CHECK(std::ranges::view<decltype(dfs)>);
+
+    //auto it8  = std::ranges::begin(dfs);
+    //auto it9  = std::ranges::end(dfs);
+    //auto n    = std::ranges::size(dfs);
+    //auto empt = std::ranges::empty(dfs);
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
@@ -228,7 +245,7 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  SECTION("bfs_edge_range is a view") {
+  SECTION("bfs_edge_range is an input view") {
     dfs_edge_range dfs(g, frankfurt_id);
     auto           it1 = dfs.begin();
     using I            = decltype(it1);
@@ -245,6 +262,22 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
     REQUIRE(std::copyable<I2>);
     REQUIRE(std::swappable<I2>);
     CHECK(!std::is_default_constructible_v<I2>);
+
+    CHECK(std::input_or_output_iterator<I2>);
+    CHECK(std::indirectly_readable<I2>);
+    CHECK(std::input_iterator<I2>);
+
+    using Rng = decltype(dfs);
+    CHECK(std::ranges::range<Rng>);
+    CHECK(std::movable<Rng>);
+    CHECK(std::derived_from<Rng, std::ranges::view_base>);
+    CHECK(std::ranges::enable_view<Rng>);
+    CHECK(std::ranges::view<decltype(dfs)>);
+
+    //auto it8  = std::ranges::begin(dfs);
+    //auto it9  = std::ranges::end(dfs);
+    //auto n    = std::ranges::size(dfs);
+    //auto empt = std::ranges::empty(dfs);
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT

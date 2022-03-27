@@ -17,17 +17,21 @@
     - [ ] vertexlist
       - [ ] Copy VVF to iterator (not reference)
       - [ ] Accept VVF(g,u) & allow vertex_value?
+      - [ ] verify it is a std::ranges::view<>
     - [ ] incidence
       - [ ] **unit tests for Sourced edges (sourced and unsourced graph)**
       - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
+      - [ ] verify it is a std::ranges::view<>
     - [ ] neighbors
       - [ ] **unit tests for Sourced edges (sourced and unsourced graph)**
       - [ ] Copy VVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
+      - [ ] verify it is a std::ranges::view<>
     - [ ] edgelist
       - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
+      - [ ] verify it is a std::ranges::view<>
 - Algorithms
   - [ ] Common
   - [ ] Ranges
@@ -38,14 +42,16 @@
       - [ ] support Cancelable
       - [ ] support VVF
       - [ ] support undirected_graph<G>
-      - [ ] define begin, end, depth/size, empty, swap
+      - [ ] support begin, end, depth/size, empty, swap (error in gcc)
+      - [x] verify it is a std::ranges::view<>
     - [ ] **dfs_edge_range**
       - [x] validate results & add unit tests
       - [ ] support Cancelable
       - [ ] support EVF
       - [ ] support Sourced
       - [ ] support undirected_graph<G>
-      - [ ] define begin, end, depth/size, empty, swap
+      - [ ] support begin, end, depth/size, empty, swap (error in gcc)
+      - [x] verify it is a std::ranges::view<>
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra book (impl from AndrewL)
