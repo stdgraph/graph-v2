@@ -1,9 +1,17 @@
 //
 //	Author: J. Phillip Ratzloff
 //
-// inspired by new_dfs_range.hpp from: BGL17
+// inspired by new_dfs_range.hpp from NWGraph
 //
 // depth-first search graph algorithms for vertices and edges.
+//
+// examples: for(auto&& [uid,u]     : vertices_depth_first_search(g,seed))
+//           for(auto&& [uid,u,val] : vertices_depth_first_search(g,seed,vvf))
+//
+//           for(auto&& [vid,uv]     : edges_depth_first_search(g,seed))
+//           for(auto&& [vid,uv,val] : edges_depth_first_search(g,seed,evf))
+// 
+// (need to add examples for Sourced and Cancelable after they're implemented)
 //
 
 #include "../graph.hpp"
