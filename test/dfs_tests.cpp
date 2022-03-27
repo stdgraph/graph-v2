@@ -82,10 +82,13 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  SECTION("bfs_edge_range") {
+  SECTION("dfs_edge_range") {
     dfs_edge_range dfs(g, frankfurt_id);
     int            cnt = 0;
+    cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << endl;
     for (auto&& [vid, uv] : dfs) {
+      ostream_indenter indent(static_cast<int>(dfs.depth()));
+      cout << indent << '[' << vid << "] " << vertex_value(g, target(g,uv)) << endl;
       ++cnt;
     }
     REQUIRE(cnt == 9);

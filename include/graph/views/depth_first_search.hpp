@@ -11,8 +11,6 @@
 #include <stack>
 #include <vector>
 
-//#define ENABLE_DFS_PARENT
-
 #ifndef GRAPH_DFS_HPP
 #  define GRAPH_DFS_HPP
 
@@ -35,7 +33,7 @@ struct dfs_elem {
 /// depth-first search range for vertices, given a single seed vertex.
 ///
 
-template <incidence_graph G, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
+template <incidence_graph G, bool Cancelable, class Stack>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class dfs_base : public ranges::view_interface<dfs_base<G, Cancelable, Stack>> {
 public:
@@ -57,19 +55,11 @@ public:
   dfs_base(graph_type& g, vertex_id_type seed = 0)
         : graph_(g)
         , colors_(ranges::size(vertices(g)), white)
-#  ifdef ENABLE_DFS_PARENT
-        , parents_(ranges::size(vertices(graph_)), numeric_limits<vertex_id_type>::max())
-#  endif
   {
     if (seed < ranges::size(vertices(graph_)) && !ranges::empty(edges(graph_, seed))) {
       edge_iterator uv = ranges::begin(edges(graph_, seed));
       S_.push(stack_elem{seed, uv});
       colors_[seed] = grey;
-
-#  ifdef ENABLE_DFS_PARENT
-      if (!ranges::empty(edges(graph_, seed)))
-        parents_[target_id(graph_, *uv)] = seed;
-#  endif
     }
   }
   dfs_base(const dfs_base&) = delete; // can be expensive to copy
@@ -82,9 +72,6 @@ public:
   constexpr bool empty() const noexcept { return S_.empty(); }
 
   constexpr auto depth() const noexcept { return S_.size(); }
-#  ifdef ENABLE_DFS_PARENT
-  vertex_id_type parent(vertex_id_type id) const { return parents_[id]; }
-#  endif
 
   constexpr void          cancel(cancel_search cancel_type) noexcept requires Cancelable { cancel_ = cancel_type; }
   constexpr cancel_search canceled() noexcept requires Cancelable { return cancel_; }
@@ -93,9 +80,6 @@ protected : void advance() {
     auto& S      = S_;
     auto& g      = graph_;
     auto& colors = colors_;
-#  ifdef ENABLE_DFS_PARENT
-    auto& parents = parents_;
-#  endif
     auto is_unvisited = [&g, &colors](edge_reference vw) -> bool { return colors[target_id(g, vw)] == white; };
 
     // next level in search
@@ -108,9 +92,6 @@ protected : void advance() {
       S.push(stack_elem{v_id, vwi});
       vertex_id_type w_id = target_id(g, *vwi);
       colors[w_id]        = grey; // visited w
-#  ifdef ENABLE_DFS_PARENT
-      parents[w_id] = v_id;
-#  endif
     }
     // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
     else {
@@ -126,9 +107,6 @@ protected : void advance() {
           S.push({x_id, xyi});
           vertex_id_type y_id = target_id(g, *xyi);
           colors[y_id]        = grey; // visited y
-#  ifdef ENABLE_DFS_PARENT
-          parents[y_id] = x_id;
-#  endif
           break;
         } else {
           colors[x_id] = black; // finished with x
@@ -141,9 +119,6 @@ protected:
   graph_type&          graph_;
   Stack                S_;
   vector<three_colors> colors_;
-#  ifdef ENABLE_DFS_PARENT
-  vector<vertex_id_type, parent_alloc> parents_;
-#  endif
   cancel_search cancel_ = cancel_search::continue_search;
 }; // namespace std::graph::views
 
@@ -240,20 +215,20 @@ public:
 //---------------------------------------------------------------------------------------
 /// depth-first search range for edges, given a single seed vertex.
 ///
-template <incidence_graph G, bool Cancelable = false, class Stack = stack<vertex_id_t<G>>>
+template <incidence_graph G, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_edge_range : public ranges::view_interface<dfs_edge_range<G, Cancelable, Stack>> {
+class dfs_edge_range
+      : public dfs_base<G, Cancelable, Stack>
+      , public ranges::view_interface<dfs_edge_range<G, Cancelable, Stack>> {
 public:
+  using base_type           = dfs_base<G, Cancelable, Stack>;
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
 
 public:
-  dfs_edge_range(G& g, vertex_id_type seed = 0) : graph_(g), colors_(ranges::size(vertices(g)), white) {
-    S_.push(seed);
-    colors_[seed] = grey;
-  }
+  dfs_edge_range(G& g, vertex_id_type seed = 0) : base_type(g, seed) {}
 
   dfs_edge_range(const dfs_edge_range&) = delete;
   dfs_edge_range(dfs_edge_range&&)      = default;
@@ -262,9 +237,7 @@ public:
   dfs_edge_range& operator=(const dfs_edge_range&) = delete;
   dfs_edge_range& operator=(dfs_edge_range&&) = default;
 
-  constexpr bool empty() const noexcept { return S_.empty(); }
-
-  class dfs_edge_range_iterator {
+  class iterator {
   public:
     using iterator_category = input_iterator_tag;
     using value_type        = edge_view<const vertex_id_type, false, edge_reference_type, void>;
@@ -280,49 +253,21 @@ public:
     using shadow_value_type = edge_view<vertex_id_type, false, shadow_edge_type*, void>;
 
   public:
-    dfs_edge_range_iterator(dfs_edge_range<G, Cancelable, Stack>& range)
-          : the_range_(range)
-          , uid_(the_range_.S_.top())
-          , uv_begin(ranges::begin(edges(the_range_.graph_, uid_)))
-          , uv_end(ranges::end(edges(the_range_.graph_, uid_))) {}
+    iterator(dfs_edge_range<G, Cancelable, Stack>& range) : the_range_(range) {}
 
-    dfs_edge_range_iterator& operator++() {
-      auto& S      = the_range_.S_;
-      auto& colors = the_range_.colors_;
-
-      S.push(uid_);
-      colors[uid_] = grey;
-
-      uid_     = target_id(the_range_.graph_, *uv_begin);
-      uv_begin = ranges::begin(edges(the_range_.graph_, uid_));
-      uv_end   = ranges::end(edges(the_range_.graph_, uid_));
-
-      // ++uv_begin;
-      while (uv_begin != uv_end && colors[target_id(the_range_.graph_, *uv_begin)] != white) {
-        ++uv_begin;
-      }
-
-      while (uv_begin == uv_end) {
-        colors[uid_] = black;
-        uid_         = S.top();
-        S.pop();
-        if (S.empty())
-          break;
-
-        assert(colors[uid_] == grey);
-        uv_begin = ranges::begin(edges(the_range_.graph_, uid_));
-        uv_end   = ranges::end(edges(the_range_.graph_, uid_));
-
-        while (uv_begin != uv_end && colors[target_id(the_range_.graph_, *uv_begin)] != white) {
-          ++uv_begin;
-        }
-      }
-
+    iterator& operator++() {
+      the_range_.advance();
       return *this;
     }
+    iterator operator++(int) const {
+      iterator temp(*this);
+      ++*this;
+      return temp;
+    }
 
-    reference operator*() const {
-      value_ = {uid_, &*uv_begin};
+    reference operator*() noexcept {
+      auto&& [u_id, uvi] = the_range_.S_.top();
+      value_             = {target_id(the_range_.graph_, *uvi), &*uvi};
       return reinterpret_cast<reference>(value_);
     }
 
@@ -330,39 +275,24 @@ public:
 
     bool operator==(const end_sentinel_type&) const noexcept {
       if constexpr (Cancelable)
-        return the_range_.empty() || (the_range_.cancel_ == cancel_search::cancel_all);
+        return the_range_.S_.empty() || (the_range_.cancel_ == cancel_search::cancel_all);
       else
-        return the_range_.empty();
+        return the_range_.S_.empty();
     }
     bool operator!=(const end_sentinel_type& rhs) const noexcept { return !operator==(rhs); }
 
   private:
-    mutable shadow_value_type             value_;
+    mutable shadow_value_type             value_ = {};
     dfs_edge_range<G, Cancelable, Stack>& the_range_;
-    vertex_id_type                        uid_;
-    vertex_edge_iterator_t<G>             uv_begin, uv_end;
   };
 
-  constexpr auto depth() const noexcept { return S_.size(); }
+  auto begin() { return iterator(*this); }
+  auto begin() const { return iterator(*this); }
+  auto cbegin() const { return iterator(*this); }
 
-  constexpr void          cancel(cancel_search cancel_type) noexcept requires Cancelable { cancel_ = cancel_type; }
-  constexpr cancel_search canceled() noexcept requires Cancelable { return cancel_; }
-
-  using iterator = dfs_edge_range_iterator;
-
-  auto begin() { return dfs_edge_range_iterator(*this); }
-  auto begin() const { return dfs_edge_range_iterator(*this); }
-  auto cbegin() const { return dfs_edge_range_iterator(*this); }
-
-  auto end() { return typename dfs_edge_range_iterator::end_sentinel_type(); }
-  auto end() const { return typename dfs_edge_range_iterator::end_sentinel_type(); }
-  auto cend() const { return typename dfs_edge_range_iterator::end_sentinel_type(); }
-
-private:
-  G&                   graph_;
-  Stack                S_;
-  vector<three_colors> colors_;
-  cancel_search        cancel_ = cancel_search::continue_search;
+  auto end() { return typename iterator::end_sentinel_type(); }
+  auto end() const { return typename iterator::end_sentinel_type(); }
+  auto cend() const { return typename iterator::end_sentinel_type(); }
 };
 
 } // namespace std::graph::views
