@@ -10,6 +10,7 @@
 #include "graph/views/views_utility.hpp"
 #include <stack>
 #include <vector>
+#include <functional>
 
 #ifndef GRAPH_DFS_HPP
 #  define GRAPH_DFS_HPP
@@ -52,10 +53,7 @@ private:
         vertex_id_type>;
 
 public:
-  dfs_base(graph_type& g, vertex_id_type seed = 0)
-        : graph_(g)
-        , colors_(ranges::size(vertices(g)), white)
-  {
+  dfs_base(graph_type& g, vertex_id_type seed = 0) : graph_(g), colors_(ranges::size(vertices(g)), white) {
     if (seed < ranges::size(vertices(graph_)) && !ranges::empty(edges(graph_, seed))) {
       edge_iterator uv = ranges::begin(edges(graph_, seed));
       S_.push(stack_elem{seed, uv});
@@ -77,39 +75,36 @@ public:
   constexpr cancel_search canceled() noexcept requires Cancelable { return cancel_; }
 
 protected : void advance() {
-    auto& S      = S_;
-    auto& g      = graph_;
-    auto& colors = colors_;
-    auto is_unvisited = [&g, &colors](edge_reference vw) -> bool { return colors[target_id(g, vw)] == white; };
+    auto is_unvisited = [this](edge_reference vw) -> bool { return colors_[target_id(graph_, vw)] == white; };
 
     // next level in search
-    auto [u_id, uvi]    = S.top();
-    vertex_id_type v_id = target_id(g, *uvi);
-    edge_iterator  vwi  = ranges::find_if(edges(g, v_id), is_unvisited); // find first unvisited edge of v
+    auto [u_id, uvi]    = S_.top();
+    vertex_id_type v_id = target_id(graph_, *uvi);
+    edge_iterator  vwi  = ranges::find_if(edges(graph_, v_id), is_unvisited); // find first unvisited edge of v
 
     // unvisited edge found for vertex v?
-    if (vwi != ranges::end(edges(g, v_id))) {
-      S.push(stack_elem{v_id, vwi});
-      vertex_id_type w_id = target_id(g, *vwi);
-      colors[w_id]        = grey; // visited w
+    if (vwi != ranges::end(edges(graph_, v_id))) {
+      S_.push(stack_elem{v_id, vwi});
+      vertex_id_type w_id = target_id(graph_, *vwi);
+      colors_[w_id]       = grey; // visited w
     }
     // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
     else {
-      colors[v_id] = black; // finished with v
-      S.pop();
-      while (!S.empty()) {
-        auto [x_id, xyi] = S.top();
-        S.pop();
-        xyi = ranges::find_if(++xyi, ranges::end(edges(g, x_id)), is_unvisited);
+      colors_[v_id] = black; // finished with v
+      S_.pop();
+      while (!S_.empty()) {
+        auto [x_id, xyi] = S_.top();
+        S_.pop();
+        xyi = ranges::find_if(++xyi, ranges::end(edges(graph_, x_id)), is_unvisited);
 
         // unvisted edge found for vertex x?
-        if (xyi != ranges::end(edges(g, x_id))) {
-          S.push({x_id, xyi});
-          vertex_id_type y_id = target_id(g, *xyi);
-          colors[y_id]        = grey; // visited y
+        if (xyi != ranges::end(edges(graph_, x_id))) {
+          S_.push({x_id, xyi});
+          vertex_id_type y_id = target_id(graph_, *xyi);
+          colors_[y_id]       = grey; // visited y
           break;
         } else {
-          colors[x_id] = black; // finished with x
+          colors_[x_id] = black; // finished with x
         }
       }
     }
@@ -119,7 +114,7 @@ protected:
   graph_type&          graph_;
   Stack                S_;
   vector<three_colors> colors_;
-  cancel_search cancel_ = cancel_search::continue_search;
+  cancel_search        cancel_ = cancel_search::continue_search;
 }; // namespace std::graph::views
 
 
@@ -141,6 +136,7 @@ public:
   using vertex_iterator  = vertex_iterator_t<graph_type>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
+  using dfs_range_type   = reference_wrapper<dfs_vertex_range<graph_type>>;
 
 public:
   dfs_vertex_range(graph_type& g, vertex_id_type seed = 0) : base_type(g, seed) {}
@@ -172,7 +168,7 @@ public:
     iterator(dfs_vertex_range<graph_type>& range) : the_range_(range) {}
 
     iterator& operator++() {
-      the_range_.advance();
+      the_range_.get().advance();
       return *this;
     }
     iterator operator++(int) const {
@@ -182,33 +178,34 @@ public:
     }
 
     reference operator*() noexcept {
-      auto&& [u_id, uvi] = the_range_.S_.top();
-      value_             = {target_id(the_range_.graph_, *uvi), &target(the_range_.graph_, *uvi)};
+      auto& g            = the_range_.get().graph_;
+      auto&& [u_id, uvi] = the_range_.get().S_.top();
+      value_             = {target_id(g, *uvi), &target(g, *uvi)};
       return reinterpret_cast<reference>(value_);
     }
 
-    struct end_sentinel_type {};
+    struct end_sentinel {};
 
-    bool operator==(const end_sentinel_type&) const noexcept {
+    bool operator==(const end_sentinel&) const noexcept {
       if constexpr (Cancelable)
-        return the_range_.S_.empty() || (the_range_.cancel_ == cancel_search::cancel_all);
+        return the_range_.get().S_.empty() || (the_range_.get().cancel_ == cancel_search::cancel_all);
       else
-        return the_range_.S_.empty();
+        return the_range_.get().S_.empty();
     }
-    bool operator!=(const end_sentinel_type& rhs) const noexcept { return !operator==(rhs); }
+    bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
-    mutable shadow_value_type     value_ = {};
-    dfs_vertex_range<graph_type>& the_range_;
+    mutable shadow_value_type value_ = {};
+    dfs_range_type            the_range_;
   };
 
   auto begin() { return iterator(*this); }
   auto begin() const { return iterator(*this); }
   auto cbegin() const { return iterator(*this); }
 
-  auto end() { return typename iterator::end_sentinel_type(); }
-  auto end() const { return typename iterator::end_sentinel_type(); }
-  auto cend() const { return typename iterator::end_sentinel_type(); }
+  auto end() { return typename iterator::end_sentinel(); }
+  auto end() const { return typename iterator::end_sentinel(); }
+  auto cend() const { return typename iterator::end_sentinel(); }
 }; // namespace std::graph::views
 
 
@@ -226,6 +223,7 @@ public:
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
+  using dfs_range_type      = reference_wrapper<dfs_edge_range<G, Cancelable, Stack>>;
 
 public:
   dfs_edge_range(G& g, vertex_id_type seed = 0) : base_type(g, seed) {}
@@ -256,7 +254,7 @@ public:
     iterator(dfs_edge_range<G, Cancelable, Stack>& range) : the_range_(range) {}
 
     iterator& operator++() {
-      the_range_.advance();
+      the_range_.get().advance();
       return *this;
     }
     iterator operator++(int) const {
@@ -266,33 +264,33 @@ public:
     }
 
     reference operator*() noexcept {
-      auto&& [u_id, uvi] = the_range_.S_.top();
-      value_             = {target_id(the_range_.graph_, *uvi), &*uvi};
+      auto&& [u_id, uvi] = the_range_.get().S_.top();
+      value_             = {target_id(the_range_.get().graph_, *uvi), &*uvi};
       return reinterpret_cast<reference>(value_);
     }
 
-    struct end_sentinel_type {};
+    struct end_sentinel {};
 
-    bool operator==(const end_sentinel_type&) const noexcept {
+    bool operator==(const end_sentinel&) const noexcept {
       if constexpr (Cancelable)
-        return the_range_.S_.empty() || (the_range_.cancel_ == cancel_search::cancel_all);
+        return the_range_.get().S_.empty() || (the_range_.get().cancel_ == cancel_search::cancel_all);
       else
-        return the_range_.S_.empty();
+        return the_range_.get().S_.empty();
     }
-    bool operator!=(const end_sentinel_type& rhs) const noexcept { return !operator==(rhs); }
+    bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
-    mutable shadow_value_type             value_ = {};
-    dfs_edge_range<G, Cancelable, Stack>& the_range_;
+    mutable shadow_value_type value_ = {};
+    dfs_range_type            the_range_;
   };
 
   auto begin() { return iterator(*this); }
   auto begin() const { return iterator(*this); }
   auto cbegin() const { return iterator(*this); }
 
-  auto end() { return typename iterator::end_sentinel_type(); }
-  auto end() const { return typename iterator::end_sentinel_type(); }
-  auto cend() const { return typename iterator::end_sentinel_type(); }
+  auto end() { return typename iterator::end_sentinel(); }
+  auto end() const { return typename iterator::end_sentinel(); }
+  auto cend() const { return typename iterator::end_sentinel(); }
 };
 
 } // namespace std::graph::views

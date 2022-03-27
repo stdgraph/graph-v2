@@ -34,16 +34,18 @@
     - [ ] **bfs_vertex_range**
     - [ ] **bfs_edge_range**
     - [ ] **dfs_vertex_range**
-      - [ ] validate results & add unit tests
+      - [x] validate results & add unit tests
+      - [ ] support Cancelable
       - [ ] support VVF
       - [ ] support undirected_graph<G>
-      - [ ] define begin, end, depth/size, empty
+      - [ ] define begin, end, depth/size, empty, swap
     - [ ] **dfs_edge_range**
-      - [ ] validate results & add unit tests
+      - [x] validate results & add unit tests
+      - [ ] support Cancelable
       - [ ] support EVF
-      - [ ] support Sourced?
+      - [ ] support Sourced
       - [ ] support undirected_graph<G>
-      - [ ] define begin, end, depth/size, empty
+      - [ ] define begin, end, depth/size, empty, swap
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra book (impl from AndrewL)
@@ -56,7 +58,9 @@
       - [ ] articulation_points
     - [ ] Transitive Closure
       - [ ] dfs_transitive_closure
-      - [x] warshall_transitive_closure
+      - [ ] warshall_transitive_closure
+        - [x] implement
+        - [ ] validate & add unit tests
       - [ ] warshall_transitive_closure (parallel)
     - [ ] Edgelist algorithms (prove design; not for P1709)
       - [ ] Maximal Independent Set (edgelist) (from NWGraph --> Matt)

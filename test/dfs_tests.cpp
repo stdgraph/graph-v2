@@ -64,8 +64,28 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
+  SECTION("bfs_vertex_range is a view") {
+    dfs_vertex_range dfs(g, frankfurt_id);
+    auto             it1 = dfs.begin();
+    using I              = decltype(it1);
+
+    auto it2 = it1;            // copyable
+    I    it3(it1);             // copy-constuctible
+    auto it4 = std::move(it2); // movable
+    I    it5(std::move(it3));  // move-constuctible
+    //I    it6;                  // default-constructible
+
+    using I2 = std::remove_cvref_t<I>;
+    REQUIRE(std::move_constructible<I2>);
+    REQUIRE(std::movable<I2>);
+    REQUIRE(std::copyable<I2>);
+    REQUIRE(std::swappable<I2>);
+    CHECK(!std::is_default_constructible_v<I2>);
+  }
+
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("bfs_vertex_range output") {
+    dfs_vertex_range dfs(g, frankfurt_id);
     dfs_vertex_range dfs(g, frankfurt_id);
 
     int cnt = 0;
@@ -207,6 +227,25 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
 
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
+
+  SECTION("bfs_edge_range is a view") {
+    dfs_edge_range dfs(g, frankfurt_id);
+    auto           it1 = dfs.begin();
+    using I            = decltype(it1);
+
+    auto it2 = it1;            // copyable
+    I    it3(it1);             // copy-constuctible
+    auto it4 = std::move(it2); // movable
+    I    it5(std::move(it3));  // move-constuctible
+    //I    it6;                  // default-constructible
+
+    using I2 = std::remove_cvref_t<I>;
+    REQUIRE(std::move_constructible<I2>);
+    REQUIRE(std::movable<I2>);
+    REQUIRE(std::copyable<I2>);
+    REQUIRE(std::swappable<I2>);
+    CHECK(!std::is_default_constructible_v<I2>);
+  }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("dfs_edge_range output") {
