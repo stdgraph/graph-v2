@@ -4,6 +4,9 @@
 #include "graph/views/depth_first_search.hpp"
 #include "graph/container/dynamic_graph.hpp"
 
+using std::cout;
+using std::endl;
+
 using std::ranges::forward_range;
 using std::remove_reference_t;
 using std::is_const_v;
@@ -58,8 +61,11 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
 
   SECTION("bfs_vertex_range") {
     dfs_vertex_range dfs(g, frankfurt_id);
-    int              cnt = 0;
+
+    int cnt = 0;
     for (auto&& [uid, u] : dfs) {
+      ostream_indenter indent(dfs.depth());
+      cout << indent << '[' << uid << "] " << vertex_value(g, u) << endl;
       ++cnt;
     }
     REQUIRE(cnt == 10);
@@ -77,7 +83,7 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
 
   SECTION("bfs_edge_range") {
     dfs_edge_range dfs(g, frankfurt_id);
-    int                       cnt = 0;
+    int            cnt = 0;
     for (auto&& [vid, uv] : dfs) {
       ++cnt;
     }

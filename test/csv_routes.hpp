@@ -449,7 +449,8 @@ OS& operator<<(OS& os, const ostream_indenter& indent) {
 template <class G>
 void output_routes_graphviz(const G& g, std::string_view filename) {
   using namespace std::graph;
-  std::ofstream of(filename.data());
+  std::string   fn(filename);
+  std::ofstream of(fn);
   assert(of.is_open());
   //of << "\xEF\xBB\xBF"; // UTF-8 lead chars for UTF-8 including BOM
   //of << "\xBB\xBF"; // UTF-8 lead chars for UTF-8
@@ -462,7 +463,7 @@ void output_routes_graphviz(const G& g, std::string_view filename) {
 
   for (auto&& [uid, u] : views::vertexlist(g)) {
     of << "  " << uid << " [shape=oval,label=\"" << vertex_value(g, u) << " [" << uid << "]\"]\n";
-    for (auto&& [vid, uv] : views::incidence(g, u)) {
+    for (auto&& [vid, uv] : views::incidence(g, uid)) {
       auto&& v = target(g, uv);
       of << "   " << uid << " -> " << vid << " [arrowhead=vee,xlabel=\"" << edge_value(g, uv)
          << " km\", fontcolor=blue]\n";

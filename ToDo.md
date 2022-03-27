@@ -10,7 +10,9 @@
     - [x] graph: incidence_graph, sourced_incidence_graph, adjacency_matrix, undirected_incidence_graph
     - [ ] **view concepts: vertex_view, edge_view, neighbor_view returned from graph views**
     - [ ] **function concepts: VVF, EVF**
-  - [x] Accessor functions
+  - [ ] Graph API
+    - [ ] depth()? bfs, dfs
+    - [ ] cancel()? bfs, dfs
   - [ ] Views
     - [ ] vertexlist
       - [ ] Copy VVF to iterator (not reference)
@@ -32,7 +34,14 @@
     - [ ] **bfs_vertex_range**
     - [ ] **bfs_edge_range**
     - [ ] **dfs_vertex_range**
+      - [ ] validate results & add unit tests
+      - [ ] support VVF
+      - [ ] support undirected_graph<G>
     - [ ] **dfs_edge_range**
+      - [ ] validate results & add unit tests
+      - [ ] support EVF
+      - [ ] support Sourced?
+      - [ ] support undirected_graph<G>
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra book (impl from AndrewL)

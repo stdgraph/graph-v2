@@ -169,7 +169,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   //REQUIRE(frantfurt != end(germany_routes.cities()));
 
   // (uncomment to generate a graphviz file)
-  //output_routes_graphviz(g, "d:/dev/g/test/germany_routes.gv");
+  //output_routes_graphviz(g, "d:/dev/graph-v2/test/germany_routes.gv");
 
   SECTION("metadata") {
     REQUIRE(10 == std::ranges::size(vertices(g)));

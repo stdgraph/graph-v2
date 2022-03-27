@@ -22,20 +22,10 @@ enum three_colors : int8_t { black, white, grey }; // { finished, undiscovered, 
 enum struct cancel_search : int8_t { continue_search, cancel_branch, cancel_all };
 
 
-/// <summary>
-/// Defines the value returned by a dfs_vertex_range iterator.
-/// </summary>
-/// <typeparam name="VId">Vertex Id</typeparam>
-/// <typeparam name="V">Vertex type</typeparam>
-/// <typeparam name="VV">Vertex Value type</typeparam>
-/// <typeparam name="Depth">Depth type</typeparam>
-/// <typeparam name="Cancelable">Can the caller cancel iteration?</typeparam>
-template <class VId, class V, class VV, class Depth, bool Cancelable>
-struct dfs_vertex_view : public vertex_view<VId, V, VV> {
-  Depth         depth;
-  cancel_search cancel;
-  //VId         parent_id;
-  //bool        is_path_end;
+template<incidence_graph G>
+struct dfs_elem {
+  vertex_iterator_t<G>      u;
+  vertex_edge_iterator_t<G> uv;
 };
 
 
@@ -43,9 +33,9 @@ struct dfs_vertex_view : public vertex_view<VId, V, VV> {
 /// depth-first search range for vertices, given a single seed vertex.
 ///
 
-template <incidence_graph G, class Stack = stack<vertex_id_t<G>>>
+template <incidence_graph G, bool Cancelable = false, class Stack = stack<vertex_id_t<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_vertex_range : public ranges::view_interface<dfs_vertex_range<G, Stack>> {
+class dfs_vertex_range : public ranges::view_interface<dfs_vertex_range<G, Cancelable, Stack>> {
 public:
   using graph_type            = G;
   using vertex_type           = vertex_t<G>;
@@ -121,7 +111,8 @@ public:
       if (!S.empty()) {
         the_range_.dfs_visit(S.top());
       } else {
-        while (++cursor_ < ranges::size(vertices(the_range_.g_)) && colors[cursor_] != white)
+        assert(cursor_ < colors.size() - 1);
+        while (colors[++cursor_] != white && cursor_ < ranges::size(vertices(the_range_.g_)))
           ;
         if (cursor_ < ranges::size(vertices(the_range_.g_))) {
           S.push(cursor_);
@@ -139,15 +130,20 @@ public:
     }
 
     reference operator*() noexcept {
-      value_ = { the_range_.S_.top(), &*find_vertex(the_range_.g_, the_range_.S_.top())};
+      value_ = {the_range_.S_.top(), &*find_vertex(the_range_.g_, the_range_.S_.top())};
       return reinterpret_cast<reference>(value_);
       //return the_range_.S_.top();
     }
 
     struct end_sentinel_type {};
 
-    bool operator==(const end_sentinel_type&) const noexcept { return the_range_.empty(); }
-    bool operator!=(const end_sentinel_type&) const noexcept { return !the_range_.empty(); }
+    bool operator==(const end_sentinel_type&) const noexcept {
+      if constexpr (Cancelable)
+        return the_range_.empty() || (the_range_.cancel_ == cancel_search::cancel_all);
+      else
+        return the_range_.empty();
+    }
+    bool operator!=(const end_sentinel_type& rhs) const noexcept { return !operator==(rhs); }
 
   private:
     mutable shadow_value_type     value_ = {};
@@ -165,10 +161,15 @@ public:
   auto end() const { return typename dfs_range_iterator::end_sentinel_type(); }
   auto cend() const { return typename dfs_range_iterator::end_sentinel_type(); }
 
-private:
-  graph_type&          g_;
+  constexpr auto depth() const noexcept { return S_.size(); }
+
+  constexpr void          cancel(cancel_search cancel_type) noexcept requires Cancelable { cancel_ = cancel_type; }
+  constexpr cancel_search canceled() noexcept requires Cancelable { return cancel_; }
+
+private : graph_type&  g_;
   Stack                S_;
   vector<three_colors> colors_;
+  cancel_search        cancel_ = cancel_search::continue_search;
 }; // namespace std::graph::views
 
 
@@ -177,7 +178,7 @@ private:
 ///
 template <incidence_graph G, bool Cancelable = false, class Stack = stack<vertex_id_t<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_edge_range {
+class dfs_edge_range : public ranges::view_interface<dfs_edge_range<G, Cancelable, Stack>> {
 public:
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
