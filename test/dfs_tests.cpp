@@ -63,12 +63,13 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
     dfs_vertex_range dfs(g, frankfurt_id);
 
     int cnt = 0;
+    cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << endl;
     for (auto&& [uid, u] : dfs) {
-      ostream_indenter indent(dfs.depth());
+      ostream_indenter indent(static_cast<int>(dfs.depth()));
       cout << indent << '[' << uid << "] " << vertex_value(g, u) << endl;
       ++cnt;
     }
-    REQUIRE(cnt == 10);
+    REQUIRE(cnt == 9);
   }
 }
 
