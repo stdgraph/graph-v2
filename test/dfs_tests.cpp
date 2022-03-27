@@ -102,10 +102,10 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
     static_assert(std::ranges::enable_view<Rng>);
     static_assert(std::ranges::view<decltype(dfs)>);
 
-    //auto it8  = std::ranges::begin(dfs);
-    //auto it9  = std::ranges::end(dfs);
-    //auto n    = std::ranges::size(dfs);
-    //auto empt = std::ranges::empty(dfs);
+    auto it8  = std::ranges::begin(dfs);
+    auto it9  = std::ranges::end(dfs);
+    auto n    = std::ranges::size(dfs);
+    auto empt = std::ranges::empty(dfs);
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
@@ -282,10 +282,10 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
     static_assert(std::ranges::enable_view<Rng>);
     static_assert(std::ranges::view<decltype(dfs)>);
 
-    //auto it8  = std::ranges::begin(dfs);
-    //auto it9  = std::ranges::end(dfs);
-    //auto n    = std::ranges::size(dfs);
-    //auto empt = std::ranges::empty(dfs);
+    auto it8  = std::ranges::begin(dfs);
+    auto it9  = std::ranges::end(dfs);
+    auto n    = std::ranges::size(dfs);
+    auto empt = std::ranges::empty(dfs);
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT

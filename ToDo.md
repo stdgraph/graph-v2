@@ -42,7 +42,7 @@
       - [ ] support Cancelable
       - [ ] support VVF
       - [ ] support undirected_graph<G>
-      - [ ] support begin, end, depth/size, empty, swap (error in gcc)
+      - [x] support begin, end, depth/size, empty, swap (error in gcc)
       - [x] verify it is a std::ranges::view<>
     - [ ] **dfs_edge_range**
       - [x] validate results & add unit tests
@@ -50,7 +50,7 @@
       - [ ] support EVF
       - [ ] support Sourced
       - [ ] support undirected_graph<G>
-      - [ ] support begin, end, depth/size, empty, swap (error in gcc)
+      - [x] support begin, end, depth/size, empty, swap (error in gcc)
       - [x] verify it is a std::ranges::view<>
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
