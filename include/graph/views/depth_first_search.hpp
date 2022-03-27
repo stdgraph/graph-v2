@@ -37,7 +37,7 @@ struct dfs_elem {
 
 template <incidence_graph G, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_vertex_range : public ranges::view_interface<dfs_vertex_range<G, Cancelable, Stack>> {
+class dfs_base : public ranges::view_interface<dfs_base<G, Cancelable, Stack>> {
 public:
   using graph_type       = G;
   using vertex_type      = vertex_t<G>;
@@ -48,20 +48,13 @@ public:
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
 
 private:
-  // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
-  // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
-  using shadow_vertex_type = remove_reference_t<vertex_reference>;
-  using shadow_value_type =
-        vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, void>; //_detail::ref_to_ptr<vertex_value_type>
-
   using stack_elem = dfs_elem<graph_type>;
 
   using parent_alloc = typename allocator_traits<typename Stack::container_type::allocator_type>::template rebind_alloc<
         vertex_id_type>;
-  //using parent_type = vector<vertex_iterator_t<G>, parent_alloc>;
 
 public:
-  dfs_vertex_range(graph_type& g, vertex_id_type seed = 0)
+  dfs_base(graph_type& g, vertex_id_type seed = 0)
         : graph_(g)
         , colors_(ranges::size(vertices(g)), white)
 #  ifdef ENABLE_DFS_PARENT
@@ -79,12 +72,12 @@ public:
 #  endif
     }
   }
-  dfs_vertex_range(const dfs_vertex_range&) = delete; // can be expensive to copy
-  dfs_vertex_range(dfs_vertex_range&&)      = default;
-  ~dfs_vertex_range()                       = default;
+  dfs_base(const dfs_base&) = delete; // can be expensive to copy
+  dfs_base(dfs_base&&)      = default;
+  ~dfs_base()               = default;
 
-  dfs_vertex_range& operator=(const dfs_vertex_range&) = delete;
-  dfs_vertex_range& operator=(dfs_vertex_range&&) = default;
+  dfs_base& operator=(const dfs_base&) = delete;
+  dfs_base& operator=(dfs_base&&) = default;
 
   constexpr bool empty() const noexcept { return S_.empty(); }
 
@@ -96,7 +89,94 @@ public:
   constexpr void          cancel(cancel_search cancel_type) noexcept requires Cancelable { cancel_ = cancel_type; }
   constexpr cancel_search canceled() noexcept requires Cancelable { return cancel_; }
 
+protected : void advance() {
+    auto& S      = S_;
+    auto& g      = graph_;
+    auto& colors = colors_;
+#  ifdef ENABLE_DFS_PARENT
+    auto& parents = parents_;
+#  endif
+    auto is_unvisited = [&g, &colors](edge_reference vw) -> bool { return colors[target_id(g, vw)] == white; };
 
+    // next level in search
+    auto [u_id, uvi]    = S.top();
+    vertex_id_type v_id = target_id(g, *uvi);
+    edge_iterator  vwi  = ranges::find_if(edges(g, v_id), is_unvisited); // find first unvisited edge of v
+
+    // unvisited edge found for vertex v?
+    if (vwi != ranges::end(edges(g, v_id))) {
+      S.push(stack_elem{v_id, vwi});
+      vertex_id_type w_id = target_id(g, *vwi);
+      colors[w_id]        = grey; // visited w
+#  ifdef ENABLE_DFS_PARENT
+      parents[w_id] = v_id;
+#  endif
+    }
+    // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
+    else {
+      colors[v_id] = black; // finished with v
+      S.pop();
+      while (!S.empty()) {
+        auto [x_id, xyi] = S.top();
+        S.pop();
+        xyi = ranges::find_if(++xyi, ranges::end(edges(g, x_id)), is_unvisited);
+
+        // unvisted edge found for vertex x?
+        if (xyi != ranges::end(edges(g, x_id))) {
+          S.push({x_id, xyi});
+          vertex_id_type y_id = target_id(g, *xyi);
+          colors[y_id]        = grey; // visited y
+#  ifdef ENABLE_DFS_PARENT
+          parents[y_id] = x_id;
+#  endif
+          break;
+        } else {
+          colors[x_id] = black; // finished with x
+        }
+      }
+    }
+  }
+
+protected:
+  graph_type&          graph_;
+  Stack                S_;
+  vector<three_colors> colors_;
+#  ifdef ENABLE_DFS_PARENT
+  vector<vertex_id_type, parent_alloc> parents_;
+#  endif
+  cancel_search cancel_ = cancel_search::continue_search;
+}; // namespace std::graph::views
+
+
+//---------------------------------------------------------------------------------------
+/// depth-first search range for vertices, given a single seed vertex.
+///
+
+template <incidence_graph G, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+class dfs_vertex_range
+      : public dfs_base<G, Cancelable, Stack>
+      , public ranges::view_interface<dfs_vertex_range<G, Cancelable, Stack>> {
+public:
+  using base_type        = dfs_base<G, Cancelable, Stack>;
+  using graph_type       = G;
+  using vertex_type      = vertex_t<G>;
+  using vertex_id_type   = vertex_id_t<graph_type>;
+  using vertex_reference = vertex_reference_t<graph_type>;
+  using vertex_iterator  = vertex_iterator_t<graph_type>;
+  using edge_reference   = edge_reference_t<G>;
+  using edge_iterator    = vertex_edge_iterator_t<graph_type>;
+
+public:
+  dfs_vertex_range(graph_type& g, vertex_id_type seed = 0) : base_type(g, seed) {}
+  dfs_vertex_range(const dfs_vertex_range&) = delete; // can be expensive to copy
+  dfs_vertex_range(dfs_vertex_range&&)      = default;
+  ~dfs_vertex_range()                       = default;
+
+  dfs_vertex_range& operator=(const dfs_vertex_range&) = delete;
+  dfs_vertex_range& operator=(dfs_vertex_range&&) = default;
+
+public:
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
@@ -107,11 +187,17 @@ public:
     using different_type    = ranges::range_difference_t<vertex_range_t<graph_type>>;
 
   private:
+    // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
+    // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
+    using shadow_vertex_type = remove_reference_t<vertex_reference>;
+    using shadow_value_type =
+          vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, void>; //_detail::ref_to_ptr<vertex_value_type>
+
   public:
     iterator(dfs_vertex_range<graph_type>& range) : the_range_(range) {}
 
     iterator& operator++() {
-      advance();
+      the_range_.advance();
       return *this;
     }
     iterator operator++(int) const {
@@ -130,60 +216,11 @@ public:
 
     bool operator==(const end_sentinel_type&) const noexcept {
       if constexpr (Cancelable)
-        return the_range_.empty() || (the_range_.cancel_ == cancel_search::cancel_all);
+        return the_range_.S_.empty() || (the_range_.cancel_ == cancel_search::cancel_all);
       else
-        return the_range_.empty();
+        return the_range_.S_.empty();
     }
     bool operator!=(const end_sentinel_type& rhs) const noexcept { return !operator==(rhs); }
-
-  private:
-    void advance() {
-      auto& S      = the_range_.S_;
-      auto& g      = the_range_.graph_;
-      auto& colors = the_range_.colors_;
-#  ifdef ENABLE_DFS_PARENT
-      auto& parents = the_range_.parents_;
-#  endif
-      auto is_unvisited = [&g, &colors](edge_reference vw) -> bool { return colors[target_id(g, vw)] == white; };
-
-      // next level in search
-      auto [u_id, uvi]    = S.top();
-      vertex_id_type v_id = target_id(g, *uvi);
-      edge_iterator  vwi  = ranges::find_if(edges(g, v_id), is_unvisited); // find first unvisited edge of v
-
-      // unvisited edge found for vertex v?
-      if (vwi != ranges::end(edges(g, v_id))) {
-        S.push(stack_elem{v_id, vwi});
-        vertex_id_type w_id = target_id(g, *vwi);
-        colors[w_id]        = grey; // visited w
-#  ifdef ENABLE_DFS_PARENT
-        parents[w_id] = v_id;
-#  endif
-      }
-      // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
-      else {
-        colors[v_id] = black; // finished with v
-        S.pop();
-        while (!S.empty()) {
-          auto [x_id, xyi] = S.top();
-          S.pop();
-          xyi = ranges::find_if(++xyi, ranges::end(edges(g, x_id)), is_unvisited);
-
-          // unvisted edge found for vertex x?
-          if (xyi != ranges::end(edges(g, x_id))) {
-            S.push({x_id, xyi});
-            vertex_id_type y_id = target_id(g, *xyi);
-            colors[y_id]        = grey; // visited y
-#  ifdef ENABLE_DFS_PARENT
-            parents[y_id] = x_id;
-#  endif
-            break;
-          } else {
-            colors[x_id] = black; // finished with x
-          }
-        }
-      }
-    }
 
   private:
     mutable shadow_value_type     value_ = {};
@@ -197,15 +234,6 @@ public:
   auto end() { return typename iterator::end_sentinel_type(); }
   auto end() const { return typename iterator::end_sentinel_type(); }
   auto cend() const { return typename iterator::end_sentinel_type(); }
-
-private:
-  graph_type&          graph_;
-  Stack                S_;
-  vector<three_colors> colors_;
-#  ifdef ENABLE_DFS_PARENT
-  vector<vertex_id_type, parent_alloc> parents_;
-#  endif
-  cancel_search cancel_ = cancel_search::continue_search;
 }; // namespace std::graph::views
 
 
