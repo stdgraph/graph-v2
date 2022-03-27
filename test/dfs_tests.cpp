@@ -57,6 +57,12 @@ auto find_frankfurt(G&& g) {
 }
 
 
+//template <typename _Iter>
+//concept io_iterator = requires(_Iter __i) {
+//  { *__i } -> std::__detail::__can_reference;
+//}
+//&&std::weakly_incrementable<_Iter>;
+
 TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
   init_console();
   using G  = routes_vol_graph_type;
@@ -74,25 +80,27 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
     I    it3(it1);             // copy-constuctible
     auto it4 = std::move(it2); // movable
     I    it5(std::move(it3));  // move-constuctible
-    //I  it6;                  // default-constructible
+    I    it6;                  // default-constructible
 
     using I2 = std::remove_cvref_t<I>;
-    REQUIRE(std::move_constructible<I2>);
-    REQUIRE(std::copyable<I2>);
-    REQUIRE(std::movable<I2>);
-    REQUIRE(std::swappable<I2>);
-    CHECK(!std::is_default_constructible_v<I2>);
+    static_assert(std::move_constructible<I2>);
+    static_assert(std::copyable<I2>);
+    static_assert(std::movable<I2>);
+    static_assert(std::swappable<I2>);
+    static_assert(std::is_default_constructible_v<I2>);
 
-    CHECK(std::input_or_output_iterator<I2>);
-    CHECK(std::indirectly_readable<I2>);
-    CHECK(std::input_iterator<I2>);
+    //static_assert(std::input_iterator<I2>);
+    static_assert(std::input_or_output_iterator<I2>);
+    static_assert(std::indirectly_readable<I2>);
+    static_assert(std::input_iterator<I2>);
 
     using Rng = decltype(dfs);
-    CHECK(std::ranges::range<Rng>);
-    CHECK(std::movable<Rng>);
-    CHECK(std::derived_from<Rng, std::ranges::view_base>);
-    CHECK(std::ranges::enable_view<Rng>);
-    CHECK(std::ranges::view<decltype(dfs)>);
+    static_assert(std::is_constructible_v<Rng>);
+    static_assert(std::ranges::range<Rng>);
+    static_assert(std::movable<Rng>);
+    static_assert(std::derived_from<Rng, std::ranges::view_base>);
+    static_assert(std::ranges::enable_view<Rng>);
+    static_assert(std::ranges::view<decltype(dfs)>);
 
     //auto it8  = std::ranges::begin(dfs);
     //auto it9  = std::ranges::end(dfs);
@@ -257,22 +265,22 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
     //I    it6;                  // default-constructible
 
     using I2 = std::remove_cvref_t<I>;
-    REQUIRE(std::move_constructible<I2>);
-    REQUIRE(std::movable<I2>);
-    REQUIRE(std::copyable<I2>);
-    REQUIRE(std::swappable<I2>);
-    CHECK(!std::is_default_constructible_v<I2>);
+    static_assert(std::move_constructible<I2>);
+    static_assert(std::movable<I2>);
+    static_assert(std::copyable<I2>);
+    static_assert(std::swappable<I2>);
+    static_assert(std::is_default_constructible_v<I2>);
 
-    CHECK(std::input_or_output_iterator<I2>);
-    CHECK(std::indirectly_readable<I2>);
-    CHECK(std::input_iterator<I2>);
+    static_assert(std::input_or_output_iterator<I2>);
+    static_assert(std::indirectly_readable<I2>);
+    static_assert(std::input_iterator<I2>);
 
     using Rng = decltype(dfs);
-    CHECK(std::ranges::range<Rng>);
-    CHECK(std::movable<Rng>);
-    CHECK(std::derived_from<Rng, std::ranges::view_base>);
-    CHECK(std::ranges::enable_view<Rng>);
-    CHECK(std::ranges::view<decltype(dfs)>);
+    static_assert(std::ranges::range<Rng>);
+    static_assert(std::movable<Rng>);
+    static_assert(std::derived_from<Rng, std::ranges::view_base>);
+    static_assert(std::ranges::enable_view<Rng>);
+    static_assert(std::ranges::view<decltype(dfs)>);
 
     //auto it8  = std::ranges::begin(dfs);
     //auto it9  = std::ranges::end(dfs);
