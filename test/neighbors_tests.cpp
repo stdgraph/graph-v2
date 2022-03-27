@@ -32,6 +32,8 @@ using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
 
+using std::graph::views::neighbors;
+
 using routes_csr_graph_type = std::graph::container::csr_graph<double, std::string, std::string>;
 
 template <typename G>
@@ -256,5 +258,40 @@ TEST_CASE("neighbors test", "[csr][neighbors]") {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));
+  }
+
+  SECTION("neighbors is a forward view") {
+    auto nlist = neighbors(g, frankfurt_id);
+    auto it1   = nlist.begin();
+    using I    = decltype(it1);
+
+    auto it2 = it1;            // copyable
+    I    it3(it1);             // copy-constuctible
+    auto it4 = std::move(it2); // movable
+    I    it5(std::move(it3));  // move-constuctible
+    I    it6;                  // default-constructible
+
+    using I2 = std::remove_cvref_t<I>;
+    REQUIRE(std::move_constructible<I2>);
+    REQUIRE(std::copyable<I2>);
+    REQUIRE(std::movable<I2>);
+    REQUIRE(std::swappable<I2>);
+    CHECK(std::is_default_constructible_v<I2>);
+
+    CHECK(std::input_or_output_iterator<I2>);
+    CHECK(std::indirectly_readable<I2>);
+    CHECK(std::input_iterator<I2>);
+    CHECK(std::forward_iterator<I2>);
+
+    using Rng = decltype(nlist);
+    CHECK(std::ranges::range<Rng>);
+    CHECK(std::movable<Rng>);
+    //CHECK(std::derived_from<Rng, std::ranges::view_base>);
+    CHECK(std::ranges::enable_view<Rng>);
+    CHECK(std::ranges::view<decltype(nlist)>);
+
+    auto it8  = std::ranges::begin(nlist);
+    auto it9  = std::ranges::end(nlist);
+    auto empt = std::ranges::empty(nlist);
   }
 }

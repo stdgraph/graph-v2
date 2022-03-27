@@ -74,7 +74,7 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
     I    it3(it1);             // copy-constuctible
     auto it4 = std::move(it2); // movable
     I    it5(std::move(it3));  // move-constuctible
-    //I    it6;                  // default-constructible
+    //I  it6;                  // default-constructible
 
     using I2 = std::remove_cvref_t<I>;
     REQUIRE(std::move_constructible<I2>);
