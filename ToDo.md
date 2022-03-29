@@ -39,7 +39,7 @@
     - [ ] **bfs_edge_range**
     - [ ] **dfs_vertex_range**
       - [x] validate results & add unit tests
-      - [ ] support Cancelable
+      - [x] support Cancelable
       - [x] support VVF
       - [x] support undirected_graph<G>
       - [x] support begin, end, depth/size, empty, swap free functions
@@ -47,7 +47,7 @@
       - [ ] create CPOs
     - [ ] **dfs_edge_range**
       - [x] validate results & add unit tests
-      - [ ] support Cancelable
+      - [x] support Cancelable
       - [x] support EVF
       - [x] support Sourced
       - [x] support undirected_graph<G>

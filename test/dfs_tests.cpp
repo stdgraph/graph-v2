@@ -256,6 +256,30 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
     }
     REQUIRE(9 == city_cnt);
   }
+
+  SECTION("bfs_vertex_range can do cancel_all") {
+    int                                city_cnt = 0;
+    dfs_vertex_range<G> dfs(g, frankfurt_id);
+    for (auto&& [uid, u] : dfs) {
+      ++city_cnt;
+      if (uid == 2) // Karlsruhe
+        dfs.cancel(std::graph::views::cancel_search::cancel_all);
+    }
+    REQUIRE(2 == city_cnt);
+  }
+  SECTION("bfs_vertex_range can do cancel_branch #1") {
+    //cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
+    int                 city_cnt = 0;
+    dfs_vertex_range<G> dfs(g, frankfurt_id);
+    for (auto&& [uid, u] : dfs) {
+      ostream_indenter indent(size(dfs));
+      //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
+      ++city_cnt;
+      if (uid == 4) // Wurzburg
+        dfs.cancel(std::graph::views::cancel_search::cancel_branch);
+    }
+    REQUIRE(6 == city_cnt);
+  }
 }
 
 TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
@@ -517,5 +541,29 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
         [4] --> [7] Erfurt 186km
       [0] --> [6] Kassel 173km
     */
+  }
+
+  SECTION("dfs_edge_range can do cancel_all") {
+    int                 city_cnt = 0;
+    dfs_edge_range<G> dfs(g, frankfurt_id);
+    for (auto&& [vid, uv] : dfs) {
+      ++city_cnt;
+      if (vid == 2) // Karlsruhe
+        dfs.cancel(std::graph::views::cancel_search::cancel_all);
+    }
+    REQUIRE(2 == city_cnt);
+  }
+  SECTION("dfs_edge_range can do cancel_branch") {
+    //cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
+    int                 city_cnt = 0;
+    dfs_edge_range<G> dfs(g, frankfurt_id);
+    for (auto&& [vid, uv] : dfs) {
+      ostream_indenter indent(size(dfs));
+      //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
+      ++city_cnt;
+      if (vid == 4) // Wurzburg
+        dfs.cancel(std::graph::views::cancel_search::cancel_branch);
+    }
+    REQUIRE(6 == city_cnt);
   }
 }
