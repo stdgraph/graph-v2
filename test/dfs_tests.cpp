@@ -469,4 +469,53 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
           --> [6] Kassel 173km
     */
   }
+
+  SECTION("dfs_edge_range with no-EVF and Sourced") {
+    dfs_edge_range<G, void, true> dfs(g, frankfurt_id);
+    int                           city_cnt = 0;
+    //cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
+    for (auto&& [uid, vid, uv] : dfs) {
+      ostream_indenter indent(dfs.size());
+      //cout << indent << "[" << uid << "] --> [" << vid << "] " << vertex_value(g, target(g, uv)) << ' ' << edge_value(g,uv) << "km" << endl;
+      ++city_cnt;
+    }
+    REQUIRE(city_cnt == 9);
+    /*
+    [0] Frankfürt (seed)
+      [0] --> [1] Mannheim 85km
+        [1] --> [2] Karlsruhe 80km
+          [2] --> [3] Augsburg 250km
+            [3] --> [8] München 84km
+      [0] --> [4] Würzburg 217km
+        [4] --> [5] Nürnberg 103km
+          [5] --> [9] Stuttgart 183km
+        [4] --> [7] Erfurt 186km
+      [0] --> [6] Kassel 173km
+    */
+  }
+
+  SECTION("dfs_edge_range with EVF and Sourced") {
+    auto                                   evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
+    dfs_edge_range<G, decltype(evf), true> dfs(g, frankfurt_id, evf);
+    int                                    city_cnt = 0;
+    //cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
+    for (auto&& [uid, vid, uv, km] : dfs) {
+      ostream_indenter indent(dfs.size());
+      //cout << indent << "[" << uid << "] --> [" << vid << "] " << vertex_value(g, target(g, uv)) << ' ' << km << "km" << endl;
+      ++city_cnt;
+    }
+    REQUIRE(city_cnt == 9);
+    /*
+    [0] Frankfürt (seed)
+      [0] --> [1] Mannheim 85km
+        [1] --> [2] Karlsruhe 80km
+          [2] --> [3] Augsburg 250km
+            [3] --> [8] München 84km
+      [0] --> [4] Würzburg 217km
+        [4] --> [5] Nürnberg 103km
+          [5] --> [9] Stuttgart 183km
+        [4] --> [7] Erfurt 186km
+      [0] --> [6] Kassel 173km
+    */
+  }
 }
