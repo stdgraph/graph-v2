@@ -10,7 +10,7 @@
 //
 //           for(auto&& [vid,uv]     : edges_depth_first_search(g,seed))
 //           for(auto&& [vid,uv,val] : edges_depth_first_search(g,seed,evf))
-// 
+//
 // (need to add examples for Sourced and Cancelable after they're implemented)
 //
 
@@ -36,7 +36,6 @@ struct dfs_elem {
   vertex_id_t<G>            u_id;
   vertex_edge_iterator_t<G> uv;
 };
-
 
 //---------------------------------------------------------------------------------------
 /// depth-first search range for vertices, given a single seed vertex.
@@ -133,7 +132,7 @@ protected:
 /// depth-first search range for vertices, given a single seed vertex.
 ///
 
-template <incidence_graph G, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
+template <incidence_graph G, class VVF = void, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class dfs_vertex_range : public dfs_base<G, Cancelable, Stack> {
 public:
@@ -145,10 +144,14 @@ public:
   using vertex_iterator  = vertex_iterator_t<graph_type>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
-  using dfs_range_type   = dfs_vertex_range<graph_type>;
+  using dfs_range_type   = dfs_vertex_range<graph_type, VVF, Cancelable, Stack>;
+
+  using vertex_value_func = VVF;
+  using vertex_value_type = invoke_result_t<VVF, vertex_reference>;
 
 public:
-  dfs_vertex_range(graph_type& g, vertex_id_type seed = 0) : base_type(g, seed) {}
+  dfs_vertex_range(graph_type& g, vertex_id_type seed, const VVF& value_fn)
+        : base_type(g, seed), value_fn_(&value_fn) {}
   dfs_vertex_range()                        = default;
   dfs_vertex_range(const dfs_vertex_range&) = delete; // can be expensive to copy
   dfs_vertex_range(dfs_vertex_range&&)      = default;
@@ -158,6 +161,108 @@ public:
   dfs_vertex_range& operator=(dfs_vertex_range&&) = default;
 
 public:
+  struct end_sentinel {};
+
+  class iterator {
+  public:
+    using iterator_category = input_iterator_tag;
+    using value_type        = vertex_view<const vertex_id_type, vertex_type&, vertex_value_type>;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using rvalue_reference  = value_type&&;
+    using pointer           = value_type*;
+    using const_pointer     = value_type*;
+    using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
+    using difference_type   = ranges::range_difference_t<vertex_range_t<graph_type>>;
+
+  private:
+    // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
+    // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
+    using shadow_vertex_type = remove_reference_t<vertex_reference>;
+    using shadow_value_type =
+          vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+
+  public:
+    iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
+    iterator()                = default;
+    iterator(const iterator&) = default;
+    iterator(iterator&&)      = default;
+    ~iterator()               = default;
+
+    iterator& operator=(const iterator&) = default;
+    iterator& operator=(iterator&&) = default;
+
+    iterator& operator++() {
+      the_range_->advance();
+      return *this;
+    }
+    iterator operator++(int) const {
+      iterator temp(*this);
+      ++*this;
+      return temp;
+    }
+
+    reference operator*() const noexcept {
+      auto& g            = *the_range_->graph_;
+      auto&& [u_id, uvi] = the_range_->S_.top();
+      auto& v            = target(g, *uvi);
+      value_             = {target_id(g, *uvi), &v, invoke(*the_range_->value_fn_, v)};
+      return reinterpret_cast<reference>(value_);
+    }
+
+    constexpr bool operator==(const end_sentinel&) const noexcept {
+      if constexpr (Cancelable)
+        return the_range_->S_.empty() || (the_range_->cancel_ == cancel_search::cancel_all);
+      else
+        return the_range_->S_.empty();
+    }
+    constexpr bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
+
+  private:
+    mutable shadow_value_type value_     = {};
+    dfs_range_type*           the_range_ = nullptr;
+  };
+
+  auto begin() { return iterator(*this); }
+  auto begin() const { return iterator(*this); }
+  auto cbegin() const { return iterator(*this); }
+
+  auto end() { return end_sentinel(); }
+  auto end() const { return end_sentinel(); }
+  auto cend() const { return end_sentinel(); }
+
+private:
+  const VVF* value_fn_ = nullptr;
+}; // namespace std::graph::views
+
+
+template <incidence_graph G, bool Cancelable, class Stack>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+class dfs_vertex_range<G, void, Cancelable, Stack> : public dfs_base<G, Cancelable, Stack> {
+public:
+  using base_type        = dfs_base<G, Cancelable, Stack>;
+  using graph_type       = G;
+  using vertex_type      = vertex_t<G>;
+  using vertex_id_type   = vertex_id_t<graph_type>;
+  using vertex_reference = vertex_reference_t<graph_type>;
+  using vertex_iterator  = vertex_iterator_t<graph_type>;
+  using edge_reference   = edge_reference_t<G>;
+  using edge_iterator    = vertex_edge_iterator_t<graph_type>;
+  using dfs_range_type   = dfs_vertex_range<graph_type, void, Cancelable, Stack>;
+
+public:
+  dfs_vertex_range(graph_type& g, vertex_id_type seed) : base_type(g, seed) {}
+  dfs_vertex_range()                        = default;
+  dfs_vertex_range(const dfs_vertex_range&) = delete; // can be expensive to copy
+  dfs_vertex_range(dfs_vertex_range&&)      = default;
+  ~dfs_vertex_range()                       = default;
+
+  dfs_vertex_range& operator=(const dfs_vertex_range&) = delete;
+  dfs_vertex_range& operator=(dfs_vertex_range&&) = default;
+
+public:
+  struct end_sentinel {};
+
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
@@ -174,12 +279,10 @@ public:
     // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_vertex_type = remove_reference_t<vertex_reference>;
-    using shadow_value_type =
-          vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, void>; //_detail::ref_to_ptr<vertex_value_type>
+    using shadow_value_type  = vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, void>;
 
   public:
-    iterator(const dfs_vertex_range<graph_type>& range)
-          : the_range_(&const_cast<dfs_vertex_range<graph_type>&>(range)) {}
+    iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
     iterator()                = default;
     iterator(const iterator&) = default;
     iterator(iterator&&)      = default;
@@ -205,7 +308,102 @@ public:
       return reinterpret_cast<reference>(value_);
     }
 
-    struct end_sentinel {};
+    bool operator==(const end_sentinel&) const noexcept {
+      if constexpr (Cancelable)
+        return the_range_->S_.empty() || (the_range_->cancel_ == cancel_search::cancel_all);
+      else
+        return the_range_->S_.empty();
+    }
+    bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
+
+  private:
+    mutable shadow_value_type value_     = {};
+    dfs_range_type*           the_range_ = nullptr;
+  };
+
+  auto begin() { return iterator(*this); }
+  auto begin() const { return iterator(*this); }
+  auto cbegin() const { return iterator(*this); }
+
+  auto end() { return end_sentinel(); }
+  auto end() const { return end_sentinel(); }
+  auto cend() const { return end_sentinel(); }
+}; // namespace std::graph::views
+
+
+//---------------------------------------------------------------------------------------
+/// depth-first search range for edges, given a single seed vertex.
+///
+template <incidence_graph G, class EVF = void, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+class dfs_edge_range : public dfs_base<G, Cancelable, Stack> {
+public:
+  using base_type           = dfs_base<G, Cancelable, Stack>;
+  using graph_type          = G;
+  using vertex_id_type      = vertex_id_t<graph_type>;
+  using vertex_iterator     = vertex_iterator_t<graph_type>;
+  using edge_reference_type = edge_reference_t<graph_type>;
+  using dfs_range_type      = dfs_edge_range<G, EVF, Cancelable, Stack>;
+
+  using edge_value_func = EVF;
+  using edge_value_type = invoke_result_t<EVF, edge_reference_type>;
+
+public:
+  dfs_edge_range(G& g, vertex_id_type seed, const EVF& value_fn) : base_type(g, seed), value_fn_(&value_fn) {}
+
+  dfs_edge_range()                      = default;
+  dfs_edge_range(const dfs_edge_range&) = delete; // can be expensive to copy
+  dfs_edge_range(dfs_edge_range&&)      = default;
+  ~dfs_edge_range()                     = default;
+
+  dfs_edge_range& operator=(const dfs_edge_range&) = delete;
+  dfs_edge_range& operator=(dfs_edge_range&&) = default;
+
+  struct end_sentinel {};
+
+  class iterator {
+  public:
+    using iterator_category = input_iterator_tag;
+    using value_type        = edge_view<const vertex_id_type, false, edge_reference_type, edge_value_type>;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using rvalue_reference  = value_type&&;
+    using pointer           = value_type*;
+    using const_pointer     = value_type*;
+    using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
+    using difference_type   = ranges::range_difference_t<vertex_range_t<graph_type>>;
+
+  private:
+    // avoid difficulty in undefined vertex reference value in value_type
+    // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
+    using shadow_edge_type  = remove_reference_t<edge_reference_type>;
+    using shadow_value_type = edge_view<vertex_id_type, false, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+
+  public:
+    iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
+    iterator()                = default;
+    iterator(const iterator&) = default;
+    iterator(iterator&&)      = default;
+    ~iterator()               = default;
+
+    iterator& operator=(const iterator&) = default;
+    iterator& operator=(iterator&&) = default;
+
+    iterator& operator++() {
+      the_range_->advance();
+      return *this;
+    }
+    iterator operator++(int) const {
+      iterator temp(*this);
+      ++*this;
+      return temp;
+    }
+
+    reference operator*() const noexcept {
+      auto&& [u_id, uvi] = the_range_->S_.top();
+      value_             = {target_id(*the_range_->graph_, *uvi), &*uvi, invoke(*the_range_->value_fn_, *uvi)};
+      return reinterpret_cast<reference>(value_);
+    }
 
     bool operator==(const end_sentinel&) const noexcept {
       if constexpr (Cancelable)
@@ -224,28 +422,27 @@ public:
   auto begin() const { return iterator(*this); }
   auto cbegin() const { return iterator(*this); }
 
-  auto end() { return typename iterator::end_sentinel(); }
-  auto end() const { return typename iterator::end_sentinel(); }
-  auto cend() const { return typename iterator::end_sentinel(); }
-}; // namespace std::graph::views
+  auto end() { return end_sentinel(); }
+  auto end() const { return end_sentinel(); }
+  auto cend() const { return end_sentinel(); }
 
+private:
+  const EVF* value_fn_ = nullptr;
+};
 
-//---------------------------------------------------------------------------------------
-/// depth-first search range for edges, given a single seed vertex.
-///
-template <incidence_graph G, bool Cancelable = false, class Stack = stack<dfs_elem<G>>>
+template <incidence_graph G, bool Cancelable, class Stack>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_edge_range : public dfs_base<G, Cancelable, Stack> {
+class dfs_edge_range<G, void, Cancelable, Stack> : public dfs_base<G, Cancelable, Stack> {
 public:
   using base_type           = dfs_base<G, Cancelable, Stack>;
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
-  using dfs_range_type      = dfs_edge_range<G, Cancelable, Stack>;
+  using dfs_range_type      = dfs_edge_range<G, void, Cancelable, Stack>;
 
 public:
-  dfs_edge_range(G& g, vertex_id_type seed = 0) : base_type(g, seed) {}
+  dfs_edge_range(G& g, vertex_id_type seed) : base_type(g, seed) {}
 
   dfs_edge_range()                      = default;
   dfs_edge_range(const dfs_edge_range&) = delete; // can be expensive to copy
@@ -254,6 +451,8 @@ public:
 
   dfs_edge_range& operator=(const dfs_edge_range&) = delete;
   dfs_edge_range& operator=(dfs_edge_range&&) = default;
+
+  struct end_sentinel {};
 
   class iterator {
   public:
@@ -274,8 +473,7 @@ public:
     using shadow_value_type = edge_view<vertex_id_type, false, shadow_edge_type*, void>;
 
   public:
-    iterator(const dfs_edge_range<G, Cancelable, Stack>& range)
-          : the_range_(&const_cast<dfs_edge_range<G, Cancelable, Stack>&>(range)) {}
+    iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
     iterator()                = default;
     iterator(const iterator&) = default;
     iterator(iterator&&)      = default;
@@ -300,8 +498,6 @@ public:
       return reinterpret_cast<reference>(value_);
     }
 
-    struct end_sentinel {};
-
     bool operator==(const end_sentinel&) const noexcept {
       if constexpr (Cancelable)
         return the_range_->S_.empty() || (the_range_->cancel_ == cancel_search::cancel_all);
@@ -319,9 +515,9 @@ public:
   auto begin() const { return iterator(*this); }
   auto cbegin() const { return iterator(*this); }
 
-  auto end() { return typename iterator::end_sentinel(); }
-  auto end() const { return typename iterator::end_sentinel(); }
-  auto cend() const { return typename iterator::end_sentinel(); }
+  auto end() { return end_sentinel(); }
+  auto end() const { return end_sentinel(); }
+  auto cend() const { return end_sentinel(); }
 };
 
 } // namespace std::graph::views

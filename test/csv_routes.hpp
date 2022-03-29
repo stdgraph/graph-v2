@@ -395,7 +395,8 @@ std::string quoted_utf8(const char* s);
 
 class ostream_indenter {
 public:
-  ostream_indenter(int level) : level_(level) {}
+  explicit ostream_indenter(int level) : level_(level) {}
+  explicit ostream_indenter(size_t level) : level_(static_cast<int>(level)) {}
   ostream_indenter()                        = default;
   ostream_indenter(const ostream_indenter&) = default;
   ~ostream_indenter()                       = default;

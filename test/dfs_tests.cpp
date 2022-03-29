@@ -72,9 +72,9 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
   auto frankfurt_id = find_frankfurt_id(g);
 
   SECTION("bfs_vertex_range is an input view") {
-    dfs_vertex_range dfs(g, frankfurt_id);
-    auto             it1 = dfs.begin();
-    using I              = decltype(it1);
+    dfs_vertex_range<G, void> dfs(g, frankfurt_id);
+    auto                      it1 = dfs.begin();
+    using I                       = decltype(it1);
 
     auto it2 = it1;            // copyable
     I    it3(it1);             // copy-constuctible
@@ -164,9 +164,9 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
 #elif TEST_OPTION == TEST_OPTION_TEST
   SECTION("bfs_vertex_range test content") {
 
-    dfs_vertex_range dfs(g, frankfurt_id);
-    auto             city     = dfs.begin();
-    int              city_cnt = 0;
+    dfs_vertex_range<G, void> dfs(g, frankfurt_id);
+    auto                      city     = dfs.begin();
+    int                       city_cnt = 0;
 
     if (city != dfs.end()) {
       auto&& [uid, u] = *city;
@@ -243,6 +243,19 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
     REQUIRE(9 == city_cnt);
   }
 #endif
+
+  SECTION("bfs_vertex_range with vertex value function") {
+    int                                city_cnt = 0;
+    auto                               vvf      = [&g](vertex_reference_t<G> u) { return vertex_value(g, u); };
+    dfs_vertex_range<G, decltype(vvf)> dfs(g, frankfurt_id, vvf);
+    //cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
+    for (auto&& [uid, u, city_name] : dfs) {
+      //ostream_indenter indent(size(dfs));
+      //cout << indent << "[" << uid << "] " << city_name << endl;
+      ++city_cnt;
+    }
+    REQUIRE(9 == city_cnt);
+  }
 }
 
 TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
@@ -254,9 +267,9 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
   auto frankfurt_id = find_frankfurt_id(g);
 
   SECTION("bfs_edge_range is an input view") {
-    dfs_edge_range dfs(g, frankfurt_id);
-    auto           it1 = dfs.begin();
-    using I            = decltype(it1);
+    dfs_edge_range<G, void> dfs(g, frankfurt_id);
+    auto                    it1 = dfs.begin();
+    using I                     = decltype(it1);
 
     auto it2 = it1;            // copyable
     I    it3(it1);             // copy-constuctible
@@ -343,9 +356,9 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
   }
 #elif TEST_OPTION == TEST_OPTION_TEST
   SECTION("bfs_edge_range test content") {
-    dfs_edge_range dfs(g, frankfurt_id);
-    auto           route    = dfs.begin();
-    int            city_cnt = 0;
+    dfs_edge_range<G, void> dfs(g, frankfurt_id);
+    auto                    route    = dfs.begin();
+    int                     city_cnt = 0;
 
     if (route != dfs.end()) {
       auto&& [vid, uv] = *route;
@@ -431,4 +444,29 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
     REQUIRE(9 == city_cnt);
   }
 #endif
+
+  SECTION("dfs_edge_range with vertex value function") {
+    auto                             evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
+    dfs_edge_range<G, decltype(evf)> dfs(g, frankfurt_id, evf);
+    int                              city_cnt = 0;
+    //cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
+    for (auto&& [vid, uv, km] : dfs) {
+      ostream_indenter indent(dfs.size());
+      //cout << indent << "--> [" << vid << "] " << vertex_value(g, target(g, uv)) << ' ' << km << "km" << endl;
+      ++city_cnt;
+    }
+    REQUIRE(city_cnt == 9);
+    /* Output:
+        [0] Frankfürt (seed)
+          --> [1] Mannheim 85km
+            --> [2] Karlsruhe 80km
+              --> [3] Augsburg 250km
+                --> [8] München 84km
+          --> [4] Würzburg 217km
+            --> [5] Nürnberg 103km
+              --> [9] Stuttgart 183km
+            --> [7] Erfurt 186km
+          --> [6] Kassel 173km
+    */
+  }
 }
