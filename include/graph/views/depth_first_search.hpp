@@ -84,7 +84,7 @@ public:
   constexpr void          cancel(cancel_search cancel_type) noexcept requires Cancelable { cancel_ = cancel_type; }
   constexpr cancel_search canceled() noexcept requires Cancelable { return cancel_; }
 
-protected : void advance() {
+protected : void advance() requires directed_incidence_graph<graph_type> {
     auto is_unvisited = [this](edge_reference vw) -> bool { return colors_[target_id(*graph_, vw)] == white; };
 
     // next level in search
@@ -120,12 +120,67 @@ protected : void advance() {
     }
   }
 
-protected:
-  graph_type*          graph_;
-  Stack                S_;
-  vector<three_colors> colors_;
-  cancel_search        cancel_ = cancel_search::continue_search;
-}; // namespace std::graph::views
+  static vertex_id_type undir_source_id(const graph_type& g,
+                                        edge_reference    e,
+                                        vertex_id_type    src) requires undirected_incidence_graph<graph_type> {
+    if (source_id(g, e) != src)
+      return source_id(g, e);
+    else
+      return target_id(g, e);
+  }
+
+  static vertex_id_type undir_target_id(const graph_type& g,
+                                        edge_reference    e,
+                                        vertex_id_type    src) requires undirected_incidence_graph<graph_type> {
+    if (target_id(g, e) != src)
+      return target_id(g, e);
+    else
+      return source_id(g, e);
+  }
+
+  void advance() requires undirected_incidence_graph<graph_type> {
+    // next level in search
+    auto [u_id, uvi]    = S_.top();
+    vertex_id_type v_id = target_id(*graph_, *uvi);
+    edge_iterator  vwi  = ranges::find_if(edges(*graph_, v_id), [this, v_id](edge_reference vw) -> bool {
+      return colors_[undir_target_id(*graph_, vw, v_id)] == white;
+      }); // find first unvisited edge of v
+
+    // unvisited edge found for vertex v?
+    if (vwi != ranges::end(edges(*graph_, v_id))) {
+      S_.push(stack_elem{v_id, vwi});
+      vertex_id_type w_id = undir_target_id(*graph_, *vwi, v_id);
+      colors_[w_id]       = grey; // visited w
+    }
+    // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
+    else {
+      colors_[v_id] = black; // finished with v
+      S_.pop();
+      while (!S_.empty()) {
+        auto [x_id, xyi] = S_.top();
+        S_.pop();
+        xyi = ranges::find_if(++xyi, ranges::end(edges(*graph_, x_id)), [this, x_id](edge_reference xy) -> bool {
+          return colors_[undir_target_id(*graph_, xy, x_id)] == white;
+        });
+
+        // unvisted edge found for vertex x?
+        if (xyi != ranges::end(edges(*graph_, x_id))) {
+          S_.push({x_id, xyi});
+          vertex_id_type y_id = undir_target_id(*graph_, *xyi, x_id);
+          colors_[y_id]       = grey; // visited y
+          break;
+        } else {
+          colors_[x_id] = black; // finished with x
+        }
+      }
+    }
+  }
+
+protected : graph_type* graph_;
+  Stack                 S_;
+  vector<three_colors>  colors_;
+  cancel_search         cancel_ = cancel_search::continue_search;
+};
 
 
 //---------------------------------------------------------------------------------------
@@ -203,10 +258,16 @@ public:
     }
 
     reference operator*() const noexcept {
-      auto& g            = *the_range_->graph_;
-      auto&& [u_id, uvi] = the_range_->S_.top();
-      auto& v            = target(g, *uvi);
-      value_             = {target_id(g, *uvi), &v, invoke(*the_range_->value_fn_, v)};
+      auto& g             = *the_range_->graph_;
+      auto&& [u_id, uvi]  = the_range_->S_.top();
+      vertex_id_type v_id = 0;
+      if constexpr (directed_incidence_graph<graph_type>) {
+        v_id = target_id(g, *uvi);
+      } else {
+        v_id = undir_target_id(g, *uvi, u_id);
+      }
+      auto& v = *find_vertex(g, v_id);
+      value_  = {v_id, &v, invoke(*the_range_->value_fn_, v)};
       return reinterpret_cast<reference>(value_);
     }
 
@@ -233,7 +294,7 @@ public:
 
 private:
   const VVF* value_fn_ = nullptr;
-}; // namespace std::graph::views
+};
 
 
 template <incidence_graph G, bool Cancelable, class Stack>
@@ -304,7 +365,14 @@ public:
     reference operator*() const noexcept {
       auto& g            = *the_range_->graph_;
       auto&& [u_id, uvi] = the_range_->S_.top();
-      value_             = {target_id(g, *uvi), &target(g, *uvi)};
+      vertex_id_type v_id = 0;
+      if constexpr (directed_incidence_graph<graph_type>) {
+        v_id = target_id(g, *uvi);
+      } else {
+        v_id = undir_target_id(g, *uvi, u_id);
+      }
+      auto& v = *find_vertex(g, v_id);
+      value_  = {v_id, &v};
       return reinterpret_cast<reference>(value_);
     }
 
@@ -328,7 +396,7 @@ public:
   auto end() { return end_sentinel(); }
   auto end() const { return end_sentinel(); }
   auto cend() const { return end_sentinel(); }
-}; // namespace std::graph::views
+};
 
 
 //---------------------------------------------------------------------------------------
@@ -409,7 +477,11 @@ public:
       if constexpr (Sourced) {
         value_.source_id = u_id;
       }
-      value_.target_id = target_id(*the_range_->graph_, *uvi);
+      if constexpr (directed_incidence_graph<graph_type>) {
+        value_.target_id = target_id(*the_range_->graph_, *uvi);
+      } else {
+        value_.target_id = undir_target_id(*the_range_->graph_, *uvi, u_id);
+      }
       value_.edge      = &*uvi;
       value_.value     = invoke(*the_range_->value_fn_, *uvi);
       return reinterpret_cast<reference>(value_);
@@ -507,7 +579,11 @@ public:
       if constexpr (Sourced) {
         value_.source_id = u_id;
       }
-      value_.target_id = target_id(*the_range_->graph_, *uvi);
+      if constexpr (directed_incidence_graph<graph_type>) {
+        value_.target_id = target_id(*the_range_->graph_, *uvi);
+      } else {
+        value_.target_id = undir_target_id(*the_range_->graph_, *uvi, u_id);
+      }
       value_.edge      = &*uvi;
       return reinterpret_cast<reference>(value_);
     }

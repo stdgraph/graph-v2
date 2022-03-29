@@ -41,7 +41,7 @@
       - [x] validate results & add unit tests
       - [ ] support Cancelable
       - [x] support VVF
-      - [ ] support undirected_graph<G>
+      - [x] support undirected_graph<G>
       - [x] support begin, end, depth/size, empty, swap free functions
       - [x] verify it is a std::ranges::view<>
       - [ ] create CPOs
@@ -50,7 +50,7 @@
       - [ ] support Cancelable
       - [x] support EVF
       - [x] support Sourced
-      - [ ] support undirected_graph<G>
+      - [x] support undirected_graph<G>
       - [x] support begin, end, depth/size, empty, swap free functions
       - [x] verify it is a std::ranges::view<>
       - [ ] create CPOs
