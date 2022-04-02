@@ -5,13 +5,13 @@
 	top=1.0in,
 	right=0.9in,
 	bottom=1.0in]{geometry}
-
 \usepackage{soul}
 \usepackage{times}
-
-
+\usepackage[scaled=.90]{helvet} % Use helvetica for sf and scale to proper size
 
 %% \usepackage{url}  %% use hyperref instead
+
+%% Define colors
 \usepackage[hyperref]{xcolor}
 
 \definecolor{light-gray}{gray}{0.95}
@@ -26,34 +26,36 @@
 \definecolor{bs_a_href}{HTML}{034575}
 \definecolor{comment}{HTML}{0000A0}
 
-
+%% Customize section headings
 \usepackage{titlesec}
 \titleformat*{\section}{\normalfont\Large\bfseries\color{bs_h1_h2_h3}}
 \titleformat*{\subsection}{\normalfont\large\bfseries\color{bs_h1_h2_h3}}
 \titleformat*{\subsubsection}{\normalfont\normalsize\bfseries\color{bs_h1_h2_h3}}
 
+%% Customize hyperlinks
 \usepackage{hyperref}
 \hypersetup{
   colorlinks = true,
   linkcolor = bs_h1_h2_h3% {0 .35 .61} % 005A9C
 }
 
-
+%% Customize code formatting
 \usepackage{listings}
 \lstset
 {
-	language=[11]C++,
-	backgroundcolor=\color{bs_highlight_background},
-	basicstyle=\ttfamily,
-	breaklines=true,
-	commentstyle=\color{bs_comment_single},
-        keywordstyle=\color{bs_keyword},
-        identifierstyle=\color{bs_name_function},
-	frame=single,
-	framerule=0pt,
-	showstringspaces=false
+  language=[11]C++,
+  backgroundcolor=\color{bs_highlight_background},
+  basicstyle=\ttfamily,
+  breaklines=true,
+  commentstyle=\color{bs_comment_single},
+  keywordstyle=\color{bs_keyword},
+  identifierstyle=\color{bs_name_function},
+  frame=single,
+  framerule=0pt,
+  showstringspaces=false
 }
 
+%% Keywords for C++20
 \lstset{
   morekeywords = {
     char8_t,
@@ -73,6 +75,8 @@
 %%     module
 %%   }
 %% }
+
+%% Shortcut for inline code
 \newcommand{\tcode}[1]{\lstinline[breaklines=true]{#1}}
 
 \newcommand{\comment}[2]{{\color{comment}[{\sc #1:} \textsf{#2}]}}
