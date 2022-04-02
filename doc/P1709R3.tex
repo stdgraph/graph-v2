@@ -1,30 +1,89 @@
 \documentclass[10pt,onecolumn]{article}
 
 \usepackage[
-	left=0.5in,
-	top=0.5in,
-	right=0.5in,
-	bottom=0.75in]{geometry}
-\usepackage{listings}
+	left=0.9in,
+	top=1.0in,
+	right=0.9in,
+	bottom=1.0in]{geometry}
 \usepackage{soul}
-\usepackage{Times}
-\usepackage{url}
-\usepackage{xcolor}
+\usepackage{times}
+\usepackage[scaled=.90]{helvet} % Use helvetica for sf and scale to proper size
+
+%% \usepackage{url}  %% use hyperref instead
+
+%% Define colors
+\usepackage[hyperref]{xcolor}
 
 \definecolor{light-gray}{gray}{0.95}
 \definecolor{medium-gray}{gray}{0.33}
 
+\definecolor{bs_keyword}{HTML}{D33682}
+\definecolor{bs_name_function}{HTML}{268BD2}
+\definecolor{bs_comment_single}{HTML}{2AA198}
+\definecolor{bs_name}{HTML}{2AA198}
+\definecolor{bs_highlight_background}{HTML}{F2F2F2}
+\definecolor{bs_h1_h2_h3}{HTML}{005A9C}
+\definecolor{bs_a_href}{HTML}{034575}
+\definecolor{comment}{HTML}{0000A0}
+
+%% Customize section headings
+\usepackage{titlesec}
+\titleformat*{\section}{\normalfont\Large\bfseries\color{bs_h1_h2_h3}}
+\titleformat*{\subsection}{\normalfont\large\bfseries\color{bs_h1_h2_h3}}
+\titleformat*{\subsubsection}{\normalfont\normalsize\bfseries\color{bs_h1_h2_h3}}
+
+%% Customize hyperlinks
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks = true,
+  linkcolor = bs_h1_h2_h3% {0 .35 .61} % 005A9C
+}
+
+%% Customize code formatting
+\usepackage{listings}
 \lstset
 {
-	language=C++,
-	backgroundcolor=\color{light-gray},
-	basicstyle=\ttfamily,
-	breaklines=true,
-	commentstyle=\color{medium-gray},
-	frame=single,
-	framerule=0pt,
-	showstringspaces=false
+  language=[11]C++,
+  backgroundcolor=\color{bs_highlight_background},
+  basicstyle=\ttfamily,
+  breaklines=true,
+  commentstyle=\color{bs_comment_single},
+  keywordstyle=\color{bs_keyword},
+  identifierstyle=\color{bs_name_function},
+  frame=single,
+  framerule=0pt,
+  showstringspaces=false
 }
+
+%% Keywords for C++20
+\lstset{
+  morekeywords = {
+    char8_t,
+    concept,
+    co_await,
+    co_return,
+    co_yield,
+    requires,
+    import,
+    module
+  }
+}
+
+%% \lstset{
+%%   emph = { % [20]
+%%     import,
+%%     module
+%%   }
+%% }
+
+%% Shortcut for inline code
+\newcommand{\tcode}[1]{\lstinline[breaklines=true]{#1}}
+
+\newcommand{\comment}[2]{{\color{comment}[{\sc #1:} \textsf{#2}]}}
+\newcommand{\phil}[1]{\comment{Phil}{#1}}
+\newcommand{\andrew}[1]{\comment{Andrew}{#1}}
+
+
 
 \begin{document}
 
@@ -40,7 +99,7 @@
 	Richard Dosselmann (University of Regina)\\
 	Michael Wong (Codeplay)\\
 	Matthew Galati (SAS Institute)\\	
-	Andrew Lumsdaine (PNNL/University of Washington)\\
+	Andrew Lumsdaine (TileDB, Inc./PNNL/University of Washington)\\
 	Jens Maurer\\
 	Domagoj Saric\\
 	Jesun Firoz\\
@@ -57,6 +116,7 @@
 	&\texttt{dosselmr@cs.uregina.ca}\\
 	&\texttt{michael@codeplay.com}\\
 	&\texttt{Matthew.Galati@sas.com}\\
+	&\texttt{Andrew.Lumsdaine@tiledb.com}\\
 \textbf{Reply to:}
 	&\texttt{\textbf{phil.ratzloff@sas.com}}\\
 \end{tabular}
@@ -73,7 +133,7 @@ This document proposes the addition of a \textbf{graph data structure} and \text
 
 \subsection{Revision History}
 \subsubsection*{P1709R3}
-Simplifiy the Graph API by focusing on functionality needed for an incidence graph, removing mutable functions and removing unnecessary functions. Replaced the \texttt{vertex\_vertex\_range} and \texttt{edge\_range} with \texttt{neighbors} and \texttt{edgelist} Graph Views and added new \texttt{vertexlist} and \texttt{incidence} views. Simplified concepts and graph traits.
+Simplifiy the Graph API by focusing on functionality needed for an incidence graph, removing mutable functions and removing unnecessary functions. Replaced the \tcode{vertex_vertex_range} and \tcode{edge_range} with \tcode{neighbors} and \tcode{edgelist} Graph Views and added new \tcode{vertexlist} and \tcode{incidence} views. Simplified concepts and graph traits.
 
 \subsubsection*{P1709R2}
 Define the \textbf{uniform API} for undirected and directed algorithms (an extended API also exists for directed graphs). Added \textbf{concepts} for undirected, directed and bidirected graphs. Refined \textbf{DFS} and \textbf{BFS} range definitions from prototype experience. Refined \textbf{shortest paths} and \textbf{transitive closure} algorithms from input and prototype experience.
@@ -156,7 +216,7 @@ TBA
 \subsection{Graph Types, Traits, Concepts and Functions}
 TBA
 
-\subsection{csr\_graph Data Structure}
+\subsection{\tcode{csr_graph} Data Structure}
 TBA
 
 \section{Design Decisions}
@@ -170,30 +230,30 @@ underlying graph with the following characteristics:
 \begin{enumerate}
 \item All functions are Customization Point Objects (CPO) that can be overridden to integrate a graph with this library. 
 6-9 functions must be overridden for a graph data structure to fully integrate with this library, and more functions are available if needed. This proposal includes 
-csr\_graph, a static graph for performance, that demonstrates how CPOs are overridden.
+\tcode{csr_graph}, a static graph for performance, that demonstrates how CPOs are overridden.
 \item The graph types are defined by the return types of the graph functions, or derivative of them.
-\item User-defined value types can be defined for the edge, vertex and graph types. A type of \texttt{void} is assumed if no type has been defined.
+\item User-defined value types can be defined for the edge, vertex and graph types. A type of \tcode{void} is assumed if no type has been defined.
 Unlike existing containers in the standard, the type is optional. Not all algorithms require values on an edge or vertex, simply using the relationships
 between vertices as defined by edges.
 \end{enumerate}
 
 Graph Views are built on top of the Graph API and provide common ways for algorithms to iterate through the objects of a graph:
 \begin{enumerate}
-\item \texttt{views::vertexlist(g)} returns a range of \texttt{views::vertex\_view}, for the vertices in the graph. 
-\item \texttt{views::incidence(g,u)} returns a range of \texttt{views::edge\_view}, for the edges of a source vertex.
-\item \texttt{views::neighbors(g,u)} returns a range of \texttt{views::neighbor\_view}, for the neighboring vertices of a source vertex.
-\item \texttt{views::edgelist(g)} returns a range of \texttt{views::edge\_view}, for all the edges of a graph. 
+\item \tcode{views::vertexlist(g)} returns a range of \tcode{views::vertex_view}, for the vertices in the graph. 
+\item \tcode{views::incidence(g,u)} returns a range of \tcode{views::edge_view}, for the edges of a source vertex.
+\item \tcode{views::neighbors(g,u)} returns a range of \tcode{views::neighbor_view}, for the neighboring vertices of a source vertex.
+\item \tcode{views::edgelist(g)} returns a range of \tcode{views::edge_view}, for all the edges of a graph. 
 \end{enumerate}
 
 Graph Algorithms use Graph Views (and the Graph API as needed) to traverse the graph to acheive its goal. If an algorithm needs a value from 
-a vertex or edge, it should accept a function object that retreives the value. It should never call vertex\_value(g,u) or edge\_value(g,uv)
+a vertex or edge, it should accept a function object that retreives the value. It should never call \tcode{vertex_value(g,u)} or \tcode{edge_value(g,uv)}
 directly.
 
 Like the Standard Telmplate Library (STL), algorithms and data structures can be implemented independently and be used interchangeably,
 as long as the data structure meets the concept constraints defined by an algorithm.
 
 A graph can be tagged with type aliases to describe underlying characteristics that can be used by an algorithm. Two examples
-in this proposal include \texttt{is\_undirected\_edge\_v<E>} and \texttt{is\_adjacency\_matrix\_v<G>}.
+in this proposal include \tcode{is_undirected_edge_v<E>} and \tcode{is_adjacency_matrix_v<G>}.
 
 \subsection{Separation of Graph Algorithm and Data Structure Requirements}
 
@@ -201,9 +261,9 @@ There are a wide variety of ways to represent a graph that can include both outg
 sparse vertex ids, non-numeric vertex ids, etc. However, it is necessary to constrain the design to focus on providing reasonable 
 value for the widely accepted algorithms currently available for graphs. With that in mind, the following guidelines have been established.
 \begin{enumerate}
-\item Graph data structures are assumed to have vertices in a sized \texttt{forward\_range}, and edges in an unsized \texttt{forward\_range}.
-\item Algorithms in this proposal will target a subset of graphs with vertices in a sized \texttt{random\_acccess\_range} with 
-integral ids, and edges will be in a \texttt{forward\_range}, for simplicity and performance. Algorithms may require edges to be sized as
+\item Graph data structures are assumed to have vertices in a sized \tcode{forward_range}, and edges in an unsized \tcode{forward_range}.
+\item Algorithms in this proposal will target a subset of graphs with vertices in a sized \tcode{random_acccess_range} with 
+integral ids, and edges will be in a \tcode{forward_range}, for simplicity and performance. Algorithms may require edges to be sized as
 needed. It is anticipated that future algorithm proposals will continue to follow these requirements.
 \item Views follow the same requirements as the algorithms.
 \end{enumerate}
@@ -213,39 +273,45 @@ can leverage the underlying design. For instance, the following should be possib
 
 \begin{enumerate}
 \item Incoming edges could exist for vertices, in addition to the existing incidence, or outgoing, edges for a bi-directed graph.
-\item Vertices could be stored in a map, unordered\_map or similar data structure for sparse, non-contiguous ids.
-\item Non-integral ids could be used, such as strings or compound types, that follow the comparison requirements of the vertex container.
+\item Vertices could be stored in a \tcode{map}, \tcode{unordered_map} or similar data structure for sparse, non-contiguous ids.
+\andrew{I (strongly) think this should not be allowed.  If the outer range of a graph is required to be a random-access range, it won't be.  The reason I don't think it should be allowed is that having non-constant time lookup of vertices in the outer range will change the computational complexity of the algorithms---something users will not expect.}
+\item Non-integral ids could be used, such as strings or compound types, that follow the comparison requirements of the vertex container.  \andrew{Similarly here---if this results in non-constant time lookup it is changing the algorithmic complexity.}
 \item Edges could be stored in a map or set, ordered on the neighbor id, for faster neighbor lookup.
+  \andrew{Similarly here.  Traversal of a neighbor list must be linear time in number of neighbors for correct algorithmic complexity.}
 \end{enumerate}
 
 Such features can be important for embedded graph implementations in domain-specific cases and this proposal should not prevent them. 
 Future papers could consider proposing these features.
+\andrew{We could consider allowing these kinds of things, with suitable warnings in the documentation about computational complexity.  This is similar to doing \tcode{binary_search} on a forward range---I guess the standard allows it, but in the fine print the standard notes that \tcode{binary_search} is then a linear search rather than a binary search.}
 
 \subsection{Customization Point Objects}
 All functions for the Graph API, Views and Algorithms are defined as Customization Point Objects (CPO), allowing them to be overriden for
-specific graphs. tag\_invoke is used to implement the CPO functions.
+specific graphs. \tcode{tag_invoke} is used to implement the CPO functions.
 
 \subsection{Namespaces and Headers}
 Graph algorithms, views and data structures are unique and not easily interchanged with other elements of the standard library. For
 instance, graph algorithms wouldn't be used on a non-graph range. For this reason it is recommended to have them in their own 
-namespaces. Suggestions for namespaces are \texttt{std::graph} and
-\texttt{std::ranges::graph} for the root namespace. The graph namespaces proposed include
-\\
-\hspace*{20mm}\texttt{graph}\\
-\hspace*{20mm}\texttt{graph::access}\\
-\hspace*{20mm}\texttt{graph::views}\\
-\hspace*{20mm}\texttt{graph::views::access}\\
-\\
-Proposed headers include\\
-\hspace*{20mm}\texttt{<graph>}\\
-\hspace*{20mm}\texttt{<graph\_view>}\\
-\hspace*{20mm}\texttt{<graph\_algorithm>}\\
-\hspace*{20mm}\texttt{<csr\_graph>}\\
+namespaces. Suggestions for namespaces are \tcode{std::graph} and
+\tcode{std::ranges::graph} for the root namespace. The graph namespaces proposed include
+\begin{itemize}
+\item[]\tcode{graph}
+\item[]\tcode{graph::access}
+\item[]\tcode{graph::views}
+\item[]\tcode{graph::views::access}
+\end{itemize}
+
+Proposed headers include
+\begin{itemize}
+\item[]\tcode{<graph>}
+\item[]\tcode{<graph_view>}
+\item[]\tcode{<graph_algorithm>}
+\item[]\tcode{<csr_graph>}
+\end{itemize}
 
 \section{Technical Specifications}
 TBA
 
-\subsection{Header \texttt{<graph>} synopsis [graph.syn]}
+\subsection{Header \tcode{<graph>} synopsis [graph.syn]}
 
 \begin{lstlisting}
 namespace std::graph {
@@ -312,7 +378,7 @@ auto vertex_value (G& g, vertex_reference_t<G>);
 \item Remarks: TBA.
 \end{itemize}
 
-\subsection{Header \texttt{<graph\_view>} synopsis [graph.syn]}
+\subsection{Header \tcode{<graph_view>} synopsis [graph.syn]}
 
 \begin{lstlisting}
 namespace std::graph::views {
@@ -336,7 +402,7 @@ auto edgelist(G& g);
 }
 \end{lstlisting}
 
-\subsection{Header \texttt{<graph\_algorithm>} synopsis [graph.syn]}
+\subsection{Header \tcode{<graph_algorithm>} synopsis [graph.syn]}
 
 \begin{lstlisting}
 namespace std::graph {
@@ -354,7 +420,7 @@ auto depth_first_search(G& g, vertex_reference_t<G> seed);
 }
 \end{lstlisting}
 
-\subsection{Header \texttt{<csr\_graph>} synopsis [graph.syn]}
+\subsection{Header \tcode{<csr_graph>} synopsis [graph.syn]}
 
 \begin{lstlisting}
 namespace std::graph {
