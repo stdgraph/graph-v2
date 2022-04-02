@@ -11,8 +11,9 @@
     - [ ] **view concepts: vertex_view, edge_view, neighbor_view returned from graph views**
     - [ ] **function concepts: VVF, EVF**
   - [ ] Graph API
-    - [ ] depth()? bfs, dfs
-    - [ ] cancel()? bfs, dfs
+    - [x] depth() CPO? bfs, dfs: size(xfs)
+    - [x] cancel() CPO? bfs, dfs: no, member only
+    - [ ] internal_target_id(g,uv) which just retrieves id, and target_id uses it swaps target_id/source_id for undirected graphs?
   - [ ] Views
     - [ ] vertexlist
       - [ ] Copy VVF to iterator (not reference)
@@ -41,7 +42,7 @@
       - [x] validate results & add unit tests
       - [x] support Cancelable
       - [x] support VVF
-      - [x] support undirected_graph<G>
+      - [x] support undirected_graph\<G\>
       - [x] support begin, end, depth/size, empty, swap free functions
       - [x] verify it is a std::ranges::view<>
       - [ ] create CPOs
@@ -118,6 +119,7 @@
   - [ ] boost::graph
   - [ ] NWGraph
   - [ ] Lemon
+  - [ ] Simple ABC implementation with boost::intrusive to demonstrate embedded use of graph
 - C\+\+20 and C\+\+23
   - [ ] modules
   - [ ] coroutines (simplify DFS, BFS & TopoSort?)
@@ -128,6 +130,7 @@
     - [x] Add Getting Started
   - [ ] P1709
     - [x] Google Doc --> LaTex
+    - [ ] Reivew P2300 WRT format & structure
     - [ ] Design Decisions
       - [x] Library Organization
       - [x] Separation of Graph Algorithm and Data Structure Requirements
@@ -139,6 +142,8 @@
       - [ ] \<incidence\>
       - [ ] \<neighbors\>
       - [ ] \<edgelist\>
+      - [ ] \<depth_first_search\>
+      - [ ] \<breadth_first_search\>
       - [ ] \<graph_algorithm\>
       - [ ] \<csr_graph\>
 - Feedback

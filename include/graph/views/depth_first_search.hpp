@@ -11,7 +11,12 @@
 //           for(auto&& [vid,uv]     : edges_depth_first_search(g,seed))
 //           for(auto&& [vid,uv,val] : edges_depth_first_search(g,seed,evf))
 //
-// (need to add examples for Sourced and Cancelable after they're implemented)
+// (need to add examples for Sourced after they're implemented)
+//
+// size(dfs) returns the depth of the current search (the size of the internal stack)
+// 
+// dfs.cancel(cancel_search::cancel_branch) will stop searching from the current vertex
+// dfs.cancel(cancel_search::cancel_all) will stop searching and the iterator will be at the end()
 //
 
 #include "../graph.hpp"
