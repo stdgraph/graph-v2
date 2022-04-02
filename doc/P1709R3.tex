@@ -37,10 +37,10 @@
 \vspace{12pt}
 \normalsize
 	Phillip Ratzloff (SAS Institute)\\
+	Andrew Lumsdaine (PNNL/University of Washington)\\
 	Richard Dosselmann (University of Regina)\\
 	Michael Wong (Codeplay)\\
 	Matthew Galati (SAS Institute)\\	
-	Andrew Lumsdaine (PNNL/University of Washington)\\
 	Jens Maurer\\
 	Domagoj Saric\\
 	Jesun Firoz\\
@@ -49,7 +49,7 @@
 \vspace{32pt}
 \begin{tabular}{ll}
 \textbf{Document Number:} & P1709R3\\
-\textbf{Date:} & \hl{April 14}, 2022 (mailing)\\ 
+\textbf{Date:} & \hl{May 12}, 2022 (mailing)\\ 
 \textbf{Project:} & ISO JTC1/SC22/WG21: Programming Language C++\\
 \textbf{Audience:} & SG19, WG21, LEWG\\
 \textbf{Emails:}
@@ -69,9 +69,9 @@
 \clearpage
 
 \section{Introduction}
-This document proposes the addition of a \textbf{graph data structure} and \textbf{graph algorithms} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed algorithms, views, graph functions and data structures.
+This document proposes the addition of a \textbf{graph data structure} and \textbf{graph algorithms} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed algorithms, views, functions and data structures.
 
-\subsection{Revision History}
+\section{Revision History}
 \subsubsection*{P1709R3}
 Simplifiy the Graph API by focusing on functionality needed for an incidence graph, removing mutable functions and removing unnecessary functions. Replaced the \texttt{vertex\_vertex\_range} and \texttt{edge\_range} with \texttt{neighbors} and \texttt{edgelist} Graph Views and added new \texttt{vertexlist} and \texttt{incidence} views. Simplified concepts and graph traits.
 
@@ -84,6 +84,23 @@ Rewrite with a focus on a \textbf{purely functional design}, emphasizing the alg
 \subsubsection*{P1709R0}
 Focus on \textbf{object-oriented API} for data structures and example code for a few algorithms.
 
+\section{Design - Introduction}
+\section{Design - user side}
+\subsection{Algorithms}
+\subsection{Views}
+\subsection{Concepts and traits}
+\subsection{Functions}
+\section{Design - graph data structure side}
+\section{Specification}
+\section{Library introduction [library]}
+\section{Graph introduction [graph]}
+\section{algorithms [graph.algorithms]}
+\section{views [graph.views]}
+\section{customization points [graph.functions]}
+
+
+\section{Introduction}
+\subsection{Revision History}
 \section{Impact on the Standard}
 This proposal is a pure \textbf{library} extension.
 

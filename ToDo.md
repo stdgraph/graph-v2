@@ -5,6 +5,7 @@
 ### ToDo 
 - API
   - [ ] Common
+    - [ ] Apply tag_invoke design in P2300
   - [x] Ranges
   - [ ] Concepts and type_traits
     - [x] graph: incidence_graph, sourced_incidence_graph, adjacency_matrix, undirected_incidence_graph
@@ -217,6 +218,7 @@
 - [ ] The default for edges(g,uid) CPO isn't being found by msvc or gcc. Is there a way to only have to override one version of edges(g,)?
 - [ ] Use of access namespace is required by CPO and exposed when specializing the functions. Acceptable? Better way?
 - [ ] Are bfs & bfs algorithms, views or ranges?
+- [ ] Are graphs containers (WRT the standard)? 
 
 ## Resolved
 ### ToDo Completed
