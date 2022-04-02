@@ -8,8 +8,10 @@
 
 \usepackage{soul}
 \usepackage{times}
-%% \usepackage{url}
 
+
+
+%% \usepackage{url}  %% use hyperref instead
 \usepackage[hyperref]{xcolor}
 
 \definecolor{light-gray}{gray}{0.95}
@@ -22,6 +24,8 @@
 \definecolor{bs_highlight_background}{HTML}{F2F2F2}
 \definecolor{bs_h1_h2_h3}{HTML}{005A9C}
 \definecolor{bs_a_href}{HTML}{034575}
+\definecolor{comment}{HTML}{0000A0}
+
 
 \usepackage{titlesec}
 \titleformat*{\section}{\normalfont\Large\bfseries\color{bs_h1_h2_h3}}
@@ -69,10 +73,9 @@
 %%     module
 %%   }
 %% }
-\newcommand{\tcode}[1]{\lstinline{#1}}
+\newcommand{\tcode}[1]{\lstinline[breaklines=true]{#1}}
 
-
-\newcommand{\comment}[2]{[{\sc #1:} \textsf{#2}]}
+\newcommand{\comment}[2]{{\color{comment}[{\sc #1:} \textsf{#2}]}}
 \newcommand{\phil}[1]{\comment{Phil}{#1}}
 \newcommand{\andrew}[1]{\comment{Andrew}{#1}}
 
