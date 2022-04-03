@@ -17,10 +17,12 @@
 \definecolor{light-gray}{gray}{0.95}
 \definecolor{medium-gray}{gray}{0.33}
 
-\definecolor{bs_keyword}{HTML}{D33682}
-\definecolor{bs_name_function}{HTML}{268BD2}
-\definecolor{bs_comment_single}{HTML}{2AA198}
-\definecolor{bs_name}{HTML}{2AA198}
+\definecolor{bs_keyword}{HTML}{990055} % {D33682} 
+\definecolor{bs_name_function}{HTML}{0077AA} % {268BD2}
+\definecolor{bs_comment_single}{HTML}{708090} % {2AA198}
+\definecolor{bs_name}{HTML}{0077AA} % {2AA198}
+\definecolor{bs_number}{HTML}{000000}
+\definecolor{bs_string}{HTML}{A67F59}
 \definecolor{bs_highlight_background}{HTML}{F2F2F2}
 \definecolor{bs_h1_h2_h3}{HTML}{005A9C}
 \definecolor{bs_a_href}{HTML}{034575}
@@ -45,11 +47,12 @@
 {
   language=[11]C++,
   backgroundcolor=\color{bs_highlight_background},
-  basicstyle=\ttfamily,
+  basicstyle=\ttfamily, % \bf\ttfamily,
   breaklines=true,
   commentstyle=\color{bs_comment_single},
   keywordstyle=\color{bs_keyword},
   identifierstyle=\color{bs_name_function},
+  stringstyle=\color{bs_string},
   frame=single,
   framerule=0pt,
   showstringspaces=false
