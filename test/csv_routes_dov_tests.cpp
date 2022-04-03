@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/algorithm/dijkstra_book.hpp"
+#include "graph/algorithm/dijkstra_clrs.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/neighbors.hpp"
 #include "graph/container/dynamic_graph.hpp"
@@ -68,7 +68,7 @@ auto find_frankfurt(G&& g) {
 }
 
 
-TEST_CASE("Germany routes CSV+dov dijkstra_book", "[csv][dov][germany][dijkstra][book]") {
+TEST_CASE("Germany routes CSV+dov dijkstra_clrs", "[csv][dov][germany][dijkstra][clrs]") {
   init_console();
   using G  = routes_dov_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -76,7 +76,7 @@ TEST_CASE("Germany routes CSV+dov dijkstra_book", "[csv][dov][germany][dijkstra]
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
   auto weight       = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
-  auto result       = std::graph::dijkstra_book(g, frankfurt_id, weight);
+  auto result       = std::graph::dijkstra_clrs(g, frankfurt_id, weight);
 }
 
 TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {

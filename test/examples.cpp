@@ -1,7 +1,6 @@
 #include <catch2/catch.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/algorithm/dijkstra_book.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/incidence.hpp"
 #include "graph/views/neighbors.hpp"

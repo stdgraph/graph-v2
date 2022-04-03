@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/algorithm/dijkstra_book.hpp"
+#include "graph/algorithm/dijkstra_clrs.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/neighbors.hpp"
 //#include "graph/view/edgelist_view.hpp"
@@ -53,7 +53,7 @@ auto find_frankfurt(G&& g) {
 }
 
 
-TEST_CASE("Germany routes CSV+vofl dijkstra_book", "[csv][vofl][germany][dijkstra][book]") {
+TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstra][clrs]") {
   init_console();
   using G  = routes_volf_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -61,7 +61,7 @@ TEST_CASE("Germany routes CSV+vofl dijkstra_book", "[csv][vofl][germany][dijkstr
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
   auto weight       = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
-  auto result       = std::graph::dijkstra_book(g, frankfurt_id, weight);
+  auto result       = std::graph::dijkstra_clrs(g, frankfurt_id, weight);
 }
 
 
