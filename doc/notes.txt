@@ -8,3 +8,6 @@ in the "usage" section to the top of the template, replacing "\usepackage{Times}
 
 https://www.overleaf.com/
 Online latex tool. Useful for shared documents.
+
+http://eel.is/c++draft/
+Current working draft

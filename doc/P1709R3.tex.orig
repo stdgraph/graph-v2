@@ -96,10 +96,14 @@
 \vspace{12pt}
 \normalsize
 	Phillip Ratzloff (SAS Institute)\\
-	Andrew Lumsdaine (TileDB/University of Washington)\\
+	Andrew Lumsdaine (PNNL/University of Washington)\\
 	Richard Dosselmann (University of Regina)\\
 	Michael Wong (Codeplay)\\
 	Matthew Galati (SAS Institute)\\	
+<<<<<<< HEAD
+=======
+	Andrew Lumsdaine (TileDB, Inc./PNNL/University of Washington)\\
+>>>>>>> master
 	Jens Maurer\\
 	Domagoj Saric\\
 	Jesun Firoz\\
@@ -112,13 +116,13 @@
 \textbf{Project:} & ISO JTC1/SC22/WG21: Programming Language C++\\
 \textbf{Audience:} & SG19, WG21, LEWG\\
 \textbf{Emails:}
-	&\texttt{Phil.Ratzloff@sas.com}\\
-	&\texttt{Andrew.Lumsdaine@tiledb.com}\\
+	&\texttt{phil.ratzloff@sas.com}\\
 	&\texttt{dosselmr@cs.uregina.ca}\\
 	&\texttt{michael@codeplay.com}\\
 	&\texttt{Matthew.Galati@sas.com}\\
+	&\texttt{Andrew.Lumsdaine@tiledb.com}\\
 \textbf{Reply to:}
-	&\texttt{\textbf{Phil.Ratzloff@sas.com}}\\
+	&\texttt{\textbf{phil.ratzloff@sas.com}}\\
 \end{tabular}
 \vfill
 ~
@@ -129,51 +133,9 @@
 \clearpage
 
 \section{Introduction}
-This document proposes the addition of a \textbf{graph data structure} and \textbf{graph algorithms} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed algorithms, views, graph functions and data structures.
+This document proposes the addition of a \textbf{graph data structure} and \textbf{graph algorithms} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed algorithms, views, functions and data structures.
 
-\subsection{Motivation}
-A graph data structure, used in ML and other \textbf{scientific} domains, as well as \textbf{industrial} and \textbf{general} programming, does \textbf{not} presently exist in the C++ standard. In ML, a graph forms the underlying structure of an \textbf{artificial neural network} (ANN). In a \textbf{game}, a graph can be used to
-represent the \textbf{map} of a game world. In \textbf{business} environments, graphs arise as \textbf{entity relationship diagrams} (ERD) or \textbf{data flow diagrams} (DFD). In the realm of \textbf{social media}, a graph represents a \textbf{social network}.
-
-\subsection{Priorities}
-\begin{itemize}
-\item Have algorithm syntax that is simple, expressive and easy to understand.
-\item Define views for common traversal of a graph including vertexlist, incidence, neighbors, edgelist, depth-first search and breadth-first search.
-\item Support high-performance algorithms and data structures.
-\begin{itemize}
-\item Algorithms in this proposal require vertices to be in random access containers with an integral vertex\_id.
-\end{itemize}
-\item But, don't prevent the ability to extend the design externally or in future proposals. Examples include
-\begin{itemize}
-\item Allow for incoming edges on a vertex.
-\item Allow for vertices in non-random-access containers like map and unordered\_map, and with non-integral keys, with the understanding that 
-doing so will result in performance that will be less than ideal. While such functionality is not expected to be included in any proposal in a future 
-standard, graphs in the wide world can use such data structures and the design should accomodate them. Toward this goal, graph concepts only
-require vertices to be a forward\_range and algorithms need to define their requirements as random\_access\_range and integral<vertex\_key<G>>.
-\end{itemize}
-\item Support optional user-defined value types on an edge, vertex and/or the graph itself.
-\item Make it easy to adapt existing graph data structures to the library.
-\item Define useful type aliases to tag graphs that algorithms can take advantage of, such as undirected\_edge and adjacency\_matrix.
-\item Provide an initial suite of useful functionality that includes algorithms, views and at least one graph data structure.
-\end{itemize}
-
-\subsection{Examples: Example 1}
-\subsection{Examples: Example 2}
-
-\subsection{What this proposal is  \textbf{not}}
-This paper limits itself to incidence graphs only. It does not include hypergraphs.
-
-\hl{TBD: Bipartite graphs?}
-
-
-\subsection{Prior Art}
-boost::graph \\
-\hl{Other?}
-
-\subsubsection{Inspirations}
-NWGraph
-
-\subsection{Revision History}
+\section{Revision History}
 \subsubsection*{P1709R3}
 Simplifiy the Graph API by focusing on functionality needed for an incidence graph, removing mutable functions and removing unnecessary functions. Replaced the \tcode{vertex_vertex_range} and \tcode{edge_range} with \tcode{neighbors} and \tcode{edgelist} Graph Views and added new \tcode{vertexlist} and \tcode{incidence} views. Simplified concepts and graph traits.
 
@@ -189,42 +151,10 @@ Focus on \textbf{object-oriented API} for data structures and example code for a
 \section{Design - Introduction}
 \section{Design - user side}
 \subsection{Algorithms}
-\subsection{Shortest Paths}
-\paragraph{Dijkstra's Algorithm}
-Dijkstra's algorithm \cite{REF_} ...
-
-\paragraph{Bellman-Ford Algorithm}
-The Bellman-Ford algorithm \cite{REF_} ...
-
-\subsubsection{Components}
-\paragraph{Connected Components}
-Connected components \cite{REF_} ...
-
-\paragraph{Strongly Connected Components}
-Strongly connected components \cite{REF_} ...
-
-\paragraph{Biconnected Components}
-Biconnected components \cite{REF_} ...
-
-\paragraph{Articulation Points}
-Articulation points \cite{REF_} ...
-
-\subsubsection{Transitive Closure}
-Transitive closure \cite{REF_} ...
-\paragraph{dfs\_transitive\_closure}
-\paragraph{warshall\_transitive\_closure}
-
 \subsection{Views}
-\subsubsection{vertexlist view}
-\subsubsection{incidence view}
-\subsubsection{neighbor view}
-\subsubsection{edgelist view}
-\subsubsection{depth\_first\_search views}
-\subsubsection{breadth\_first\_search views}
 \subsection{Concepts and traits}
 \subsection{Functions}
 \section{Design - graph data structure side}
-\subsection{Function Specialization}
 \section{Specification}
 \section{Library introduction [library]}
 \section{Graph introduction [graph]}
@@ -233,15 +163,51 @@ Transitive closure \cite{REF_} ...
 \section{customization points [graph.functions]}
 
 
-\section{Old Introduction (Content after this will be moved above or removed)}
+\section{Introduction}
+\subsection{Revision History}
 \section{Impact on the Standard}
 This proposal is a pure \textbf{library} extension.
+
+\section{Motivation and Scope}
+A graph data structure, used in ML and other \textbf{scientific} domains, as well as \textbf{industrial} and \textbf{general} programming, does \textbf{not} presently exist in the C++ standard. In ML, a graph forms the underlying structure of an \textbf{artificial neural network} (ANN). In a \textbf{game}, a graph can be used to
+represent the \textbf{map} of a game world. In \textbf{business} environments, graphs arise as \textbf{entity relationship diagrams} (ERD) or \textbf{data flow diagrams} (DFD). In the realm of \textbf{social media}, a graph represents a \textbf{social network}.
+
+This paper limits itself to incidence graphs only. It does not include hypergraphs.
+
+\hl{TBD: Bipartite graphs?}
 
 \subsection{Graph}
  A \textit{graph} \cite{REF_graph} $G = (V, E)$ is a set of \textit{vertices} \cite{REF_graph} $V$, \textbf{points} in a space, and \textit{edges} \cite{REF_graph} $E$, \textbf{links} between these vertices. Edges may or may not be \textbf{oriented}, that is, \textit{directed} \cite{REF_graph} or \textit{undirected} \cite{REF_graph}, respectively. Moreover, edges may be \textit{weighted} \cite{REF_graph}, that is, assigned a value. Both \textbf{static} and \textbf{dynamic} implementations of a graph exist, specifically a (static) \textbf{matrix}, each having the typical advantages and disadvantages associated with static and dynamic data structures.
 
 \subsection{Algorithms}
 TBA
+
+\subsubsection{Depth-First Search}
+The depth-first search \cite{REF_graph} (DFS) ...
+
+\subsubsection{Breadth-First Search}
+The breadth-First search \cite{REF_graph} (BFS) ...
+
+\subsubsection{Dijkstra's Algorithm}
+Dijkstra's algorithm \cite{REF_} ...
+
+\subsubsection{Bellman-Ford Algorithm}
+The Bellman-Ford algorithm \cite{REF_} ...
+
+\subsubsection{Connected Components}
+Connected components \cite{REF_} ...
+
+\subsubsection{Strongly Connected Components}
+Strongly connected components \cite{REF_} ...
+
+\subsubsection{Biconnected Components}
+Biconnected components \cite{REF_} ...
+
+\subsubsection{Articulation Points}
+Articulation points \cite{REF_} ...
+
+\subsubsection{Transitive Closure}
+Transitive closure \cite{REF_} ...
 
 %\subsubsection{Other Algorithms}
 %The following algorithms have been identified for consideration in (an) \textbf{additional} paper(s).
@@ -330,20 +296,14 @@ can leverage the underlying design. For instance, the following should be possib
 \item Incoming edges could exist for vertices, in addition to the existing incidence, or outgoing, edges for a bi-directed graph.
 \item Vertices could be stored in a \tcode{map}, \tcode{unordered_map} or similar data structure for sparse, non-contiguous ids.
 \andrew{I (strongly) think this should not be allowed.  If the outer range of a graph is required to be a random-access range, it won't be.  The reason I don't think it should be allowed is that having non-constant time lookup of vertices in the outer range will change the computational complexity of the algorithms---something users will not expect.}
-\phil{I support that all algorithms in the standard will require a random access range, but the requirement for it belongs on the algorithm, not the outer range itself. Allowing the outer range to be bidirectional will allow the use of data structures and algoritthms to be used
-outside the standard that don't offer the same performance guarantees (e.g. O(log n) access). Accepting that the performance of such a situation is less than optimal, it is better than having nothing at all if we prevent it from happening.}
-\item Non-integral ids could be used, such as strings or compound types, that follow the comparison requirements of the vertex container.  \andrew{Similarly here---if this results in non-constant time lookup it is changing the algorithmic complexity.} 
-\phil{I expect algorithms in the standard to always use integral id's and is part of the algorithms, not the data structures.  This is a similar argument as before, where we should support a broader set of functionality outside of the standard.}
+\item Non-integral ids could be used, such as strings or compound types, that follow the comparison requirements of the vertex container.  \andrew{Similarly here---if this results in non-constant time lookup it is changing the algorithmic complexity.}
 \item Edges could be stored in a map or set, ordered on the neighbor id, for faster neighbor lookup.
   \andrew{Similarly here.  Traversal of a neighbor list must be linear time in number of neighbors for correct algorithmic complexity.}
-  \phil{Use of map or set will not impact linear time for traversing edges in this case. Again, this is to support broader functionality outside of the standard.}
 \end{enumerate}
 
 Such features can be important for embedded graph implementations in domain-specific cases and this proposal should not prevent them. 
 Future papers could consider proposing these features.
 \andrew{We could consider allowing these kinds of things, with suitable warnings in the documentation about computational complexity.  This is similar to doing \tcode{binary_search} on a forward range---I guess the standard allows it, but in the fine print the standard notes that \tcode{binary_search} is then a linear search rather than a binary search.}
-\phil{I don't expect us to use it. I suppose we could make a statement that anything that goes outside of the O(1) for vertices would have an impact, but it's outside of our design.} 
-\phil{What I'm stating isn't anything different than I've said already. Maybe it needs to be restated to assure the reader?}
 
 \subsection{Customization Point Objects}
 All functions for the Graph API, Views and Algorithms are defined as Customization Point Objects (CPO), allowing them to be overriden for
