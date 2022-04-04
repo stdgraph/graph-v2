@@ -10,4 +10,11 @@ https://www.overleaf.com/
 Online latex tool. Useful for shared documents.
 
 http://eel.is/c++draft/
+https://github.com/cplusplus/draft
 Current working draft
+
+http://tug.ctan.org/macros/latex/contrib/minted/minted.pdf
+minted package for code formatting
+
+https://github.com/josuttis/jthread
+for tex defs?

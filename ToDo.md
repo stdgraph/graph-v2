@@ -34,11 +34,6 @@
       - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
       - [x] verify it is a std\::ranges\::view<>
-- Algorithms
-  - [ ] Common
-  - [ ] Ranges
-    - [ ] **bfs_vertex_range**
-    - [ ] **bfs_edge_range**
     - [ ] **dfs_vertex_range**
       - [x] validate results & add unit tests
       - [x] support Cancelable
@@ -56,6 +51,12 @@
       - [x] support begin, end, depth/size, empty, swap free functions
       - [x] verify it is a std::ranges::view<>
       - [ ] create CPOs
+    - [ ] **bfs_vertex_range**
+    - [ ] **bfs_edge_range**
+    - [ ] topological_sort_vertex_range
+    - [ ] topological_sort_edge_range
+- Algorithms
+  - [ ] Common
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra book (impl from AndrewL)
@@ -66,16 +67,28 @@
       - [ ] strongly_connected_components
       - [ ] biconnected_components
       - [ ] articulation_points
-    - [ ] Transitive Closure
-      - [ ] dfs_transitive_closure
-      - [ ] warshall_transitive_closure
-        - [x] implement
-        - [ ] validate & add unit tests
-      - [ ] warshall_transitive_closure (parallel)
-    - [ ] Edgelist algorithms (prove design; not for P1709)
-      - [ ] Maximal Independent Set (edgelist) (from NWGraph --> Matt)
-      - [ ] Union Find (edgelist)
-    - [ ] copy (g1 --> g2) (not for P1709)
+    - [ ] Other considerations
+      - [ ] copy (g1 --> g2) (not for P1709)
+      - [ ] Edgelist algorithms (prove design; not for P1709)
+        - [ ] Maximal Independent Set (edgelist) (from NWGraph --> Matt)
+        - [ ] Union Find (edgelist)
+      - [ ] page_rank
+      - [ ] betweenness_centrality
+      - [ ] triangle_count
+      - [ ] Minimum spanning tree
+        - [ ] kruskell_minimum_spanning_tree
+        - [ ] prim_minimum_spanning_tree
+      - [ ] Community Detection
+        - [ ] Louvain
+        - [ ] Label propagation
+      - [ ] Subgraph isomorphism (pattern match)
+    - [ ] Deferred
+      - [ ] Transitive Closure
+        - [ ] dfs_transitive_closure
+        - [ ] warshall_transitive_closure (single-threaded)
+          - [x] implement
+          - [ ] validate & add unit
+        - [ ] warshall_transitive_closure (parallel)
 - Containers (data structures)
     - [x] csr_graph (for P1709)
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
