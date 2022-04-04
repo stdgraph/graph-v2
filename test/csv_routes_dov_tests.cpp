@@ -76,7 +76,14 @@ TEST_CASE("Germany routes CSV+dov dijkstra_clrs", "[csv][dov][germany][dijkstra]
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
   auto weight       = [&g](std::ranges::range_reference_t<vertex_edge_range_t<G>> uv) { return edge_value(g, uv); };
-  auto result       = std::graph::dijkstra_clrs(g, frankfurt_id, weight);
+
+  std::vector<std::graph::vertex_id_t<G>> predecessors(size(g));
+
+  // Remark(Andrew): edge_value_t should be a value
+  std::vector<std::remove_reference<std::graph::edge_value_t<G>>::type> distances(size(g));
+
+  std::graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors);
+  std::graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
 }
 
 TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
