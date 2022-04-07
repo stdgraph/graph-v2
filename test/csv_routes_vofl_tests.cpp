@@ -25,6 +25,8 @@ using std::graph::vertex_id_t;
 using std::graph::vertex_value_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
+using std::graph::edge_reference_t;
+using std::graph::edge_value_t;
 
 using std::graph::graph_value;
 using std::graph::vertices;
@@ -58,15 +60,15 @@ TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstr
   using G  = routes_volf_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
-  auto frankfurt    = find_frankfurt(g);
-  auto frankfurt_id = find_frankfurt_id(g);
-  using neighbor_type = std::ranges::range_reference_t<vertex_edge_range_t<G>>;
-  auto weight       = [&g](neighbor_type uv) { return edge_value(g, uv); };
+  auto frankfurt      = find_frankfurt(g);
+  auto frankfurt_id   = find_frankfurt_id(g);
+  using neighbor_type = edge_reference_t<G>;
+  auto weight         = [&g](neighbor_type uv) { return edge_value(g, uv); };
 
   std::vector<std::graph::vertex_id_t<G>> predecessors(size(g));
 
   // Remark(Andrew): edge_value_t should be a value
-  std::vector<std::remove_reference<std::graph::edge_value_t<G>>::type> distances(size(g));
+  std::vector<std::remove_reference_t<edge_value_t<G>>> distances(size(g));
 
   std::graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors);
   std::graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
