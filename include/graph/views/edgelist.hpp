@@ -241,7 +241,7 @@ private: // member variables
 template <class G, class EVF>
 using edgelist_view = ranges::subrange<edgelist_iterator<G, EVF>, vertex_iterator_t<G>>;
 
-namespace access {
+namespace tag_invoke {
   // ranges
   TAG_INVOKE_DEF(edgelist); // edgelist(g)                 -> edges[uid,vid,uv]
                             // edgelist(g,fn)              -> edges[uid,vid,uv,value]
@@ -266,7 +266,7 @@ namespace access {
     {edgelist(g, uid, vid, evf)};
   };
 
-} // namespace access
+} // namespace tag_invoke
 
 //
 // edgelist(g)
@@ -275,8 +275,8 @@ namespace access {
 template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g) {
-  if constexpr (access::_has_edgelist_g_adl<G>) {
-    return access::edgelist(g);
+  if constexpr (tag_invoke::_has_edgelist_g_adl<G>) {
+    return tag_invoke::edgelist(g);
   } else {
     using iterator_type = edgelist_iterator<G, void>;
     return edgelist_view<G, void>(iterator_type(g), ranges::end(vertices(g)));
@@ -287,8 +287,8 @@ template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last) {
   assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));
-  if constexpr (access::_has_edgelist_g_uid_adl<G>)
-    return access::edgelist(g, first, last);
+  if constexpr (tag_invoke::_has_edgelist_g_uid_adl<G>)
+    return tag_invoke::edgelist(g, first, last);
   else {
     using iterator_type = edgelist_iterator<G, void>;
     return edgelist_view<G, void>(iterator_type(g, find_vertex(g, first)), find_vertex(g, last));
@@ -303,8 +303,8 @@ constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last) {
 template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g, const EVF& evf) {
-  if constexpr (access::_has_edgelist_g_evf_adl<G, EVF>) {
-    return access::edgelist(g, evf);
+  if constexpr (tag_invoke::_has_edgelist_g_evf_adl<G, EVF>) {
+    return tag_invoke::edgelist(g, evf);
   } else {
     using iterator_type = edgelist_iterator<G, EVF>;
     return edgelist_view<G, EVF>(iterator_type(g, evf), ranges::end(vertices(g)));
@@ -315,8 +315,8 @@ template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last, const EVF& evf) {
   assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));
-  if constexpr (access::_has_edgelist_g_uid_evf_adl<G, EVF>)
-    return access::edgelist(g, first, last, evf);
+  if constexpr (tag_invoke::_has_edgelist_g_uid_evf_adl<G, EVF>)
+    return tag_invoke::edgelist(g, first, last, evf);
   else {
     using iterator_type = edgelist_iterator<G, EVF>;
     return edgelist_view<G, void>(iterator_type(g, find_vertex(g, first)), find_vertex(g, last), evf);

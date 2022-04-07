@@ -5,7 +5,7 @@
 ### ToDo 
 - API
   - [ ] Common
-    - [ ] Apply tag_invoke design in P2300
+    - [x] Apply tag_invoke design in P2300
   - [x] Ranges
   - [ ] Concepts and type_traits
     - [x] graph: incidence_graph, sourced_incidence_graph, adjacency_matrix, undirected_incidence_graph

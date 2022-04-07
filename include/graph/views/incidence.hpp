@@ -215,7 +215,7 @@ private: // member variables
 template <class G, bool Sourced, class EVF>
 using incidence_view = ranges::subrange<incidence_iterator<G, Sourced, EVF>, vertex_edge_iterator_t<G>>;
 
-namespace access {
+namespace tag_invoke {
   // ranges
   TAG_INVOKE_DEF(incidence); // incidence(g,uid)            -> edges[vid,v]
                              // incidence(g,uid,fn)         -> edges[vid,v,value]
@@ -242,7 +242,7 @@ namespace access {
     {sourced_incidence(g, uid, evf)};
   };
 
-} // namespace access
+} // namespace tag_invoke
 
 //
 // incidence(g,u)
@@ -251,8 +251,8 @@ namespace access {
 template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_id_t<G> uid) {
-  if constexpr (access::_has_incidence_g_uid_adl<G>)
-    return access::incidence(g, uid);
+  if constexpr (tag_invoke::_has_incidence_g_uid_adl<G>)
+    return tag_invoke::incidence(g, uid);
   else
     return incidence_view<G, false, void>(incidence_iterator<G, false, void>(g, uid), ranges::end(edges(g, uid)));
 }
@@ -264,8 +264,8 @@ constexpr auto incidence(G&& g, vertex_id_t<G> uid) {
 template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-  if constexpr (access::_has_incidence_g_uid_evf_adl<G, EVF>)
-    return access::incidence(g, uid, evf);
+  if constexpr (tag_invoke::_has_incidence_g_uid_evf_adl<G, EVF>)
+    return tag_invoke::incidence(g, uid, evf);
   else
     return incidence_view<G, false, EVF>(incidence_iterator<G, false, EVF>(g, uid, evf), ranges::end(edges(g, uid)));
 }
@@ -278,8 +278,8 @@ constexpr auto incidence(G&& g, vertex_id_t<G> uid, const EVF& evf) {
 template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_incidence(G&& g, vertex_id_t<G> uid) {
-  if constexpr (access::_has_sourced_incidence_g_uid_adl<G>)
-    return access::sourced_incidence(g, uid);
+  if constexpr (tag_invoke::_has_sourced_incidence_g_uid_adl<G>)
+    return tag_invoke::sourced_incidence(g, uid);
   else
     return incidence_view<G, true, void>(incidence_iterator<G, true, void>(g, uid), ranges::end(edges(g, uid)));
 }
@@ -291,8 +291,8 @@ constexpr auto sourced_incidence(G&& g, vertex_id_t<G> uid) {
 template <incidence_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_incidence(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-  if constexpr (access::_has_sourced_incidence_g_uid_evf_adl<G, EVF>)
-    return access::sourced_incidence(g, uid, evf);
+  if constexpr (tag_invoke::_has_sourced_incidence_g_uid_evf_adl<G, EVF>)
+    return tag_invoke::sourced_incidence(g, uid, evf);
   else
     return incidence_view<G, true, EVF>(incidence_iterator<G, true, EVF>(g, uid, evf), ranges::end(edges(g, uid)));
 }

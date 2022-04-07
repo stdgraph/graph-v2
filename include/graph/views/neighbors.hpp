@@ -230,7 +230,7 @@ private: // member variables
 template <incidence_graph G, bool Sourced, class VVF>
 using neighbors_view = ranges::subrange<neighbor_iterator<G, Sourced, VVF>, vertex_edge_iterator_t<G>>;
 
-namespace access {
+namespace tag_invoke {
   // ranges
   TAG_INVOKE_DEF(neighbors); // neighbors(g,uid)            -> edges[vid,uv]
                              // neighbors(g,uid,fn)         -> edges[vid,uv,value]
@@ -257,7 +257,7 @@ namespace access {
     {sourced_neighbors(g, uid, vvf)};
   };
 
-} // namespace access
+} // namespace tag_invoke
 
 //
 // neighbors(g,uid)
@@ -265,8 +265,8 @@ namespace access {
 template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_id_t<G> uid) {
-  if constexpr (access::_has_neighbors_g_uid_adl<G>)
-    return access::neighbors(g, uid);
+  if constexpr (tag_invoke::_has_neighbors_g_uid_adl<G>)
+    return tag_invoke::neighbors(g, uid);
   else {
     using iterator_type = neighbor_iterator<G, false, void>;
     return neighbors_view<G, false, void>(iterator_type(g, uid), ranges::end(edges(g, uid)));
@@ -280,8 +280,8 @@ constexpr auto neighbors(G&& g, vertex_id_t<G> uid) {
 template <incidence_graph G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-  if constexpr (access::_has_neighbors_g_uid_evf_adl<G, VVF>)
-    return access::neighbors(g, uid, vvf);
+  if constexpr (tag_invoke::_has_neighbors_g_uid_evf_adl<G, VVF>)
+    return tag_invoke::neighbors(g, uid, vvf);
   else {
     using iterator_type = neighbor_iterator<G, false, VVF>;
     return neighbors_view<G, false, VVF>(iterator_type(g, uid, vvf), ranges::end(edges(g, uid)));
@@ -294,8 +294,8 @@ constexpr auto neighbors(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
 template <incidence_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_neighbors(G&& g, vertex_id_t<G> uid) {
-  if constexpr (access::_has_sourced_neighbors_g_uid_adl<G>)
-    return access::sourced_neighbors(g, uid);
+  if constexpr (tag_invoke::_has_sourced_neighbors_g_uid_adl<G>)
+    return tag_invoke::sourced_neighbors(g, uid);
   else {
     using iterator_type = neighbor_iterator<G, true, void>;
     return neighbors_view<G, true, void>(iterator_type(g, uid), ranges::end(edges(g, uid)));
@@ -309,8 +309,8 @@ constexpr auto sourced_neighbors(G&& g, vertex_id_t<G> uid) {
 template <incidence_graph G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto sourced_neighbors(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-  if constexpr (access::_has_sourced_neighbors_g_uid_evf_adl<G, VVF>)
-    return access::sourced_neighbors(g, uid, vvf);
+  if constexpr (tag_invoke::_has_sourced_neighbors_g_uid_evf_adl<G, VVF>)
+    return tag_invoke::sourced_neighbors(g, uid, vvf);
   else {
     using iterator_type = neighbor_iterator<G, true, VVF>;
     return neighbors_view<G, true, VVF>(iterator_type(g, uid, vvf), ranges::end(edges(g, uid)));
