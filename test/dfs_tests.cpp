@@ -258,7 +258,7 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
   }
 
   SECTION("bfs_vertex_range can do cancel_all") {
-    int                                city_cnt = 0;
+    int                 city_cnt = 0;
     dfs_vertex_range<G> dfs(g, frankfurt_id);
     for (auto&& [uid, u] : dfs) {
       ++city_cnt;
@@ -544,7 +544,7 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
   }
 
   SECTION("dfs_edge_range can do cancel_all") {
-    int                 city_cnt = 0;
+    int               city_cnt = 0;
     dfs_edge_range<G> dfs(g, frankfurt_id);
     for (auto&& [vid, uv] : dfs) {
       ++city_cnt;
@@ -555,7 +555,7 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
   }
   SECTION("dfs_edge_range can do cancel_branch") {
     //cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
-    int                 city_cnt = 0;
+    int               city_cnt = 0;
     dfs_edge_range<G> dfs(g, frankfurt_id);
     for (auto&& [vid, uv] : dfs) {
       ostream_indenter indent(size(dfs));
@@ -567,3 +567,60 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
     REQUIRE(6 == city_cnt);
   }
 }
+
+// This is only to illustrate an idea. I expect it to be deleted after 7/26/22-ish.
+#if 0
+namespace std::graph {
+template <class G, class I, class DistanceT>
+requires convertible_to<iter_value_t<I>, vertex_id_t<G>>
+struct shortest_path {
+  ranges::subrange<I>         path;      // range of vertex_id_t<G>
+  ranges::subrange<DistanceT> distances; // ranges of matching distances
+};
+
+template <class G, class I> // specialization when distances aren't needed
+requires convertible_to<iter_value_t<I>, vertex_id_t<G>>
+struct shortest_path<G, I, void> {
+  ranges::subrange<I> path; // range of vertex_id_t<G>
+};
+
+
+template <incidence_graph G,
+          typename OutIter,
+          typename DistFnc,
+          typename DistanceT = invoke_result_t<DistFnc>,
+          typename Stack     = deque<vertex_id_t<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
+      is_arithmetic_v<invoke_result_t<DistFnc, edge_reference_t<G>>> && //
+      output_iterator<OutIter,
+                      shortest_path<G, ranges::iterator_t<Stack>, invoke_result_t<DistFnc, edge_reference_t<G>>>>
+void dijkstra_shortest_distances(G& g, vertex_id_t<G> seed, OutIter result_iter) {} // returns paths & distances
+
+
+template <incidence_graph G, typename OutIter, typename Stack = deque<vertex_id_t<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && //
+      output_iterator < OutIter,
+      shortest_path < G, ranges::iterator_t<Stack>,
+int >> void dijkstra_shortest_paths(G& g, vertex_id_t<G> seed, OutIter result_iter) {} // returns paths only
+
+
+
+void shortest_paths_example() {
+  using G  = routes_vol_graph_type;
+  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
+
+  auto frankfurt    = find_frankfurt(g);
+  auto frankfurt_id = find_frankfurt_id(g);
+
+  //using short_path_t  = shortest_path<G, vertex_iterator_t<G>, int>;
+  //using short_paths_t = vector<short_path_t>;
+  //short_paths_t short_paths;
+
+  vector<vertex_id_t<G>>         path;
+  vector<vector<vertex_id_t<G>>> paths;
+  //dijkstra_shortest_paths(g, 1, back_inserter(path));
+}
+} // namespace std::graph
+#endif ///
+
+TEST_CASE("shortest paths demo", "[dynamic][bfs][vertex]") {}

@@ -60,15 +60,14 @@
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra book (impl from AndrewL)
-      - [ ] **dijkstra_shortest_paths**
-      - [ ] **bellman_ford_shortest paths**
+      - [ ] **dijkstra_shortest_path**
+      - [ ] **bellman_ford_shortest_path**
     - [ ] Components
       - [ ] connected_components
       - [ ] strongly_connected_components
       - [ ] biconnected_components
       - [ ] articulation_points
-    - [ ] Other considerations
-      - [ ] copy (g1 --> g2) (not for P1709)
+    - [ ] Others to consider
       - [ ] Edgelist algorithms (prove design; not for P1709)
         - [ ] Maximal Independent Set (edgelist) (from NWGraph --> Matt)
         - [ ] Union Find (edgelist)
@@ -82,6 +81,8 @@
         - [ ] Louvain
         - [ ] Label propagation
       - [ ] Subgraph isomorphism (pattern match)
+    - [ ] Other (not for P1709)
+      - [ ] copy (g1 --> g2) (not for P1709)
     - [ ] Deferred
       - [ ] Transitive Closure
         - [ ] dfs_transitive_closure
@@ -103,6 +104,7 @@
     - [ ] bipartite_graph<V1,V2,V3>
     - [ ] undirected_adjacency_list
     - [ ] directed_adjacency_vector
+    - [ ] adaptor for range of ranges (e.g. vector<list<T>>)
 - [ ] Testing Patterns
   - [x] Validate content
   - [ ] Validate graph API
@@ -128,6 +130,7 @@
   - [ ] Add processes to build & run unit tests on checkin
   - [ ] Make graph-v2 public. Requirements
     - [ ] 2+ algorithms implemented
+    - [x] bfs or dfs implemented
     - [ ] README.md with Description + Getting Started
 - Feature & performance comparison
   - [ ] boost::graph
