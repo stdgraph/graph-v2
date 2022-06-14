@@ -56,6 +56,7 @@ include(cmake/StaticAnalyzers.cmake)
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ON)
 option(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
+option(ENABLE_EXAMPLES "Enable Example Builds" ON)
 
 # Very basic PCH example
 option(ENABLE_PCH "Enable Precompiled Headers" OFF)
@@ -93,6 +94,10 @@ if(ENABLE_TESTING)
   message("Building Tests. Be sure to check out test/constexpr_tests for constexpr testing")
   set(TEST_DATA_ROOT_DIR "${CMAKE_SOURCE_DIR}/data/")
   add_subdirectory(test)
+endif()
+
+if(ENABLE_EXAMPLES)
+  add_subdirectory(example)
 endif()
 
 #if(ENABLE_FUZZING)

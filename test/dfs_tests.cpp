@@ -110,8 +110,7 @@ TEST_CASE("dfs vertex test", "[dynamic][dfs][vertex]") {
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("bfs_vertex_range output") {
-    dfs_vertex_range dfs(g, frankfurt_id);
-    dfs_vertex_range dfs(g, frankfurt_id);
+    dfs_vertex_range<G, void> dfs(g, frankfurt_id);
 
     int cnt = 0;
     cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
@@ -291,9 +290,9 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
   auto frankfurt_id = find_frankfurt_id(g);
 
   SECTION("bfs_edge_range is an input view") {
-    dfs_edge_range<G, void> dfs(g, frankfurt_id);
-    auto                    it1 = dfs.begin();
-    using I                     = decltype(it1);
+    dfs_edge_range<G> dfs(g, frankfurt_id);
+    auto              it1 = dfs.begin();
+    using I               = decltype(it1);
 
     auto it2 = it1;            // copyable
     I    it3(it1);             // copy-constuctible
@@ -327,8 +326,8 @@ TEST_CASE("dfs edge test", "[dynamic][dfs][edge]") {
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("dfs_edge_range output") {
-    dfs_edge_range dfs(g, frankfurt_id);
-    int            cnt = 0;
+    dfs_edge_range<G> dfs(g, frankfurt_id);
+    int               cnt = 0;
     cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
     for (auto&& [vid, uv] : dfs) {
       ostream_indenter indent(static_cast<int>(dfs.depth()));

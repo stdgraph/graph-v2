@@ -35,7 +35,7 @@ macro(run_conan)
                       REMOTE conancenter
                       SETTINGS ${settings})
 
-  find_package(boost)
+  find_package(Boost)
   find_package(catch2)
   find_package(fmt)
 

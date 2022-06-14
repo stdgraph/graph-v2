@@ -5,13 +5,13 @@
 //
 // neighbors(g,u) -> neighbor_view<VId,Sourced,E,EV> -> {[source_id,] target_id, vertex& [,value]}
 //
-// given:    auto vvf = [&g](vertex_reference_t<G> u) { return vertex_value(g,u); }
+// given:    auto vvf = [&g](vertex_reference_t<G> v) { return vertex_value(g,v); }
 // 
-// examples: for([vid, uv]             : neighbors(g,uid))
-//           for([vid, uv, value]      : neighbors(g,uid,vvf))
+// examples: for([vid, v]             : neighbors(g,uid))
+//           for([vid, v, value]      : neighbors(g,uid,vvf))
 // 
-//           for([uid, vid, uv]        : sourced_neighbors(g,uid))
-//           for([uid, vid, uv, value] : sourced_neighbors(g,uid,vvf))
+//           for([uid, vid, v]        : sourced_neighbors(g,uid))
+//           for([uid, vid, v, value] : sourced_neighbors(g,uid,vvf))
 //
 namespace std::graph::views {
 

@@ -2,6 +2,7 @@
 
 # Catch.cmake is in C:/Users/pratz/.conan/data/catch2/2.13.7/_/_/package/5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9/lib/cmake/Catch2
 #message("CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}" )
+#find_file(ctch "Catch.cmake" REQUIRED) # this succeeds
 #include("Catch.cmake")
 
 add_compile_definitions(TEST_DATA_ROOT_DIR="${TEST_DATA_ROOT_DIR}")

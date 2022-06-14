@@ -7,10 +7,10 @@
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(uv); }
 // 
 // examples: for([uid, vid, uv]        : edgelist(g))
-//           for([uid, vid, uv]        : edgelist(g,evf))
+//           for([uid, vid, uv, value] : edgelist(g,evf))
 // 
-//           for([uid, vid, uv, value] : edgelist(g,uid,vid))
-//           for([uid, vid, uv, value] : edgelist(g,uid,vid,evf))
+//           for([uid, vid, uv]        : edgelist(g,uid))
+//           for([uid, vid, uv, value] : edgelist(g,uid,evf))
 //
 namespace std::graph::views {
 
