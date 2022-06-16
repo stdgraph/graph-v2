@@ -30,7 +30,7 @@ namespace tag_invoke {
   TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices]
 
   TAG_INVOKE_DEF(edges); // edges(g,u) -> [incidence edges]
-                         // edges(g,uid) -> [incidence edges]
+                         // edges(g,uid) -> [incidence edges]; default = edges(u,*find_vertex(g,uid))
 
   // graph value
   TAG_INVOKE_DEF(graph_value); // graph_value(g) -> GV&

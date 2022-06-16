@@ -7,10 +7,14 @@
 //
 // given:    vvf = [&g](vertex_reference_t<G> u) -> decl_type(vertex_value(g)) { return vertex_value(g,u);}
 //           (trailing return type is required if defined inline as vertexlist parameter)
+// 
+//           vertex_iterator<G> first = ..., last = ...;
 //
 // examples: for(auto&& [uid, u]      : vertexlist(g))
 //         : for(auto&& [uid, u, val] : vertexlist(g,vvf)
-//
+// 
+//         : for(auto&& [uid, u]      : vertexlist(g, first, last))
+//         : for(auto&& [uid, u, val] : vertexlist(g, first, last, vvf)
 //
 namespace std::graph::views {
 

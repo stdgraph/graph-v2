@@ -5,12 +5,14 @@
 // edgelist(g,u) -> edge_view<VId,true,E,EV> -> {source_id, target_id, edge& [,value]}
 //
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(uv); }
-// 
+//
+//           vertex_id<G> first_id = ..., last_id = ...;
+//
 // examples: for([uid, vid, uv]        : edgelist(g))
-//           for([uid, vid, uv, value] : edgelist(g,evf))
-// 
-//           for([uid, vid, uv]        : edgelist(g,uid))
-//           for([uid, vid, uv, value] : edgelist(g,uid,evf))
+//           for([uid, vid, uv]        : edgelist(g,evf))
+//
+//           for([uid, vid, uv, value] : edgelist(g,first_id,last_id))
+//           for([uid, vid, uv, value] : edgelist(g,first_id,last_id,evf))
 //
 namespace std::graph::views {
 

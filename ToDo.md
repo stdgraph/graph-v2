@@ -21,7 +21,8 @@
       - [ ] Accept VVF(g,u) & allow vertex_value?
       - [x] verify it is a std\::ranges\::view<>
     - [ ] incidence
-      - [ ] **unit tests for Sourced edges (sourced and unsourced graph)**
+      - [ ] **sourced_incidence() functions no longer needed since uid is passed (redundant with returned uid)**
+      - [ ] unit tests for Sourced edges (sourced and unsourced graph)
       - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
       - [x] verify it is a std\::ranges\::view<>
@@ -180,7 +181,7 @@
     - [ ] Algorithms: bfs + dfs + dijkstra|bellman_ford + warshall_transitive_closure
     - [ ] DoxyGen output OK
   - [ ] Sep-2022 CppCon
-  - [ ] Oct-2022 WG21 Kona
+  - [ ] Nov-2022 WG21 Kona
   - [ ] Feb-2025 deadline for C++26
 
 ### Issues
