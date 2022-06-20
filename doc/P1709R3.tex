@@ -71,6 +71,7 @@
   morekeywords = {
     char8_t,
     concept,
+    consteval,
     co_await,
     co_return,
     co_yield,
@@ -367,9 +368,9 @@ namespaces. Suggestions for namespaces are \tcode{std::graph} and
 \tcode{std::ranges::graph} for the root namespace. The graph namespaces proposed include
 \begin{itemize}
 \item[]\tcode{graph}
-\item[]\tcode{graph::access}
+\item[]\tcode{graph::tag_invoke}
 \item[]\tcode{graph::views}
-\item[]\tcode{graph::views::access}
+\item[]\tcode{graph::views::tag_invoke}
 \end{itemize}
 
 Proposed headers include
@@ -391,15 +392,89 @@ namespace std::graph {
 // ...
 
 template <typename G>
-auto vertices (G& g);
+auto vertices(G&& g);
 
 template <typename G>
-auto vertex_id(G& g, vertex_iterator_t<G>);
+auto vertex_id(G&& g, vertex_iterator_t<G>);
 
 template <typename G>
-auto vertex_value(G& g, vertex_reference_t<G>);
+auto vertex_value(G&& g, vertex_reference_t<G>);
 
 // ...
+
+template <class G>
+inline constexpr bool is_adjacency_matrix_v = false;
+
+template <class E>
+inline constexpr bool is_undirected_edge_v = false;
+
+template <class G>
+concept vertex_range = ranges::forward_range<vertex_range_t<G>> && 
+                                   ranges::sized_range<vertex_range_t<G>> &&
+requires(G&& g, vertex_iterator_t<G> ui) {
+  { vertices(g) } -> ranges::forward_range;
+  vertex_id(g, ui);
+};
+
+template <class G, class ER>
+concept targeted_edge = ranges::forward_range<ER> && 
+requires(G&& g, ranges::range_reference_t<ER> uv) {
+  target_id(g, uv);
+  target(g, uv);
+};
+
+template <class G, class ER>
+concept sourced_edge = 
+requires(G&& g, ranges::range_reference_t<ER> uv) {
+  source_id(g, uv);
+  source(g, uv);
+};
+
+template <class G>
+concept incidence_graph = vertex_range<G> && 
+                          targeted_edge<G, vertex_edge_range_t<G>> &&   
+requires(
+      G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
+  { edges(g, u) } -> ranges::forward_range;
+  { edges(g, uid) } -> ranges::forward_range;
+};
+
+template <class G>
+concept sourced_incidence_graph = incidence_graph<G> && sourced_edge<G, vertex_edge_range_t<G>> &&
+      requires(G&& g, edge_reference_t<G> uv) {
+  edge_id(g, uv);
+};
+
+template <class G>
+concept undirected_incidence_graph = sourced_incidence_graph<G> && is_undirected_edge_v<edge_t<G>>;
+
+template <class G>
+concept directed_incidence_graph = !undirected_incidence_graph<G>;
+
+template <class G>
+concept adjacency_matrix = is_adjacency_matrix_v<G>;
+
+template <class G>
+concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
+  {degree(g, u)};
+};
+
+template <class G>
+concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
+  { find_vertex(g, uid) } -> forward_iterator;
+};
+
+template <class G>
+concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
+  { find_vertex_edge(g, u, vid) } -> forward_iterator;
+  { find_vertex_edge(g, uid, vid) } -> forward_iterator;
+};
+
+template <class G>
+concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
+  { contains_edge(g, uid, vid) } -> convertible_to<bool>;
+};
+
 }
 \end{lstlisting}
 
@@ -409,7 +484,7 @@ auto vertex_value(G& g, vertex_reference_t<G>);
 
 \begin{lstlisting}
 template <typename G>
-auto vertices (G& g);
+auto vertices(G&& g);
 \end{lstlisting}
 %
 \begin{itemize}
@@ -424,7 +499,7 @@ auto vertices (G& g);
 
 \begin{lstlisting}
 template <typename G>
-auto vertex_id (G& g, vertex_iterator_t<G>);
+auto vertex_id (G&& g, vertex_iterator_t<G>);
 \end{lstlisting}
 %
 \begin{itemize}
@@ -439,7 +514,7 @@ auto vertex_id (G& g, vertex_iterator_t<G>);
 
 \begin{lstlisting}
 template <typename G>
-auto vertex_value (G& g, vertex_reference_t<G>);
+auto vertex_value (G&& g, vertex_reference_t<G>);
 \end{lstlisting}
 %
 \begin{itemize}
@@ -458,19 +533,22 @@ namespace std::graph::views {
 // ...
 
 template <typename G>
-auto vertexlist(G& g);
+auto vertexlist(G&& g);
 
 template <typename G>
-auto incidence(G& g, vertex_reference_t<G>);
+auto incidence(G&& g, vertex_reference_t<G>);
 
 template <typename G>
-auto neighbors(G& g, vertex_reference_t<G>);
+auto neighbors(G&& g, vertex_reference_t<G>);
 
 template <typename G>
-auto edgelist(G& g);
-
+auto edgelist(G&& g);
 
 // ...
+// vertices_depth_first_search
+// edges_depth_first_search
+// vertices_breadth_first_search
+// edges_breadth_first_search
 }
 \end{lstlisting}
 
@@ -479,13 +557,7 @@ auto edgelist(G& g);
 \begin{lstlisting}
 namespace std::graph {
 
-// ...
-
-template <typename G>
-auto breath_first_search(G& g, vertex_reference_t<G> seed);
-
-template <typename G>
-auto depth_first_search(G& g, vertex_reference_t<G> seed);
+// ...tag_invoke
 
 
 // ...

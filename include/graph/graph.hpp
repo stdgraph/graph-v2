@@ -39,6 +39,24 @@ namespace std::graph {
 // evf     - edge value function: evf(uv) -> value
 
 /// <summary>
+/// Override for a graph type where edges are defined densely in a matrix to allow for
+/// optimized algorithms can take advantage of the memory layout.
+///
+/// Example:
+///  namespace my_namespace {
+///      template<class X>
+///      class my_graph { ... };
+///  }
+///  namespace std::graph {
+///     template<class X>
+///     inline constexpr bool is_adjacency_matrix_v<my_namespace::my_graph<X>> = true;
+///  }
+/// </summary>
+/// <typeparam name="G"></typeparam>
+template <class G>
+inline constexpr bool is_adjacency_matrix_v = false;
+
+/// <summary>
 /// Override for an edge type where source and target are unordered
 /// For instance, given:
 ///      vertex_iterator_t<G> ui = ...;
@@ -58,24 +76,6 @@ namespace std::graph {
 /// <typeparam name="E">The edge type with unordered source and target</typeparam>
 template <class E>
 inline constexpr bool is_undirected_edge_v = false;
-
-/// <summary>
-/// Override for a graph type where edges are defined densely in a matrix to allow for
-/// optimized algorithms can take advantage of the memory layout.
-///
-/// Example:
-///  namespace my_namespace {
-///      template<class X>
-///      class my_graph { ... };
-///  }
-///  namespace std::graph {
-///     template<class X>
-///     inline constexpr bool is_adjacency_matrix_v<my_namespace::my_graph<X>> = true;
-///  }
-/// </summary>
-/// <typeparam name="G"></typeparam>
-template <class G>
-inline constexpr bool is_adjacency_matrix_v = false;
 
 //
 // graph concepts
