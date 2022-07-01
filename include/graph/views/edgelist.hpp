@@ -9,9 +9,9 @@
 //           vertex_id<G> first_id = ..., last_id = ...;
 //
 // examples: for([uid, vid, uv]        : edgelist(g))
-//           for([uid, vid, uv]        : edgelist(g,evf))
+//           for([uid, vid, uv, value] : edgelist(g,evf))
 //
-//           for([uid, vid, uv, value] : edgelist(g,first_id,last_id))
+//           for([uid, vid, uv]        : edgelist(g,first_id,last_id))
 //           for([uid, vid, uv, value] : edgelist(g,first_id,last_id,evf))
 //
 namespace std::graph::views {

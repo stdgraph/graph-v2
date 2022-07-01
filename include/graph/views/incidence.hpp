@@ -10,9 +10,6 @@
 // examples: for([vid, uv]        : incidence(g,uid))
 //           for([vid, uv, value] : incidence(g,uid,evf))
 //
-//           for([uid, vid, uv]        : sourced_incidence(g,uid))
-//           for([uid, vid, uv, value] : sourced_incidence(g,uid,evf))
-//
 namespace std::graph::views {
 
 
@@ -228,20 +225,6 @@ namespace tag_invoke {
   concept _has_incidence_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const EVF& evf) {
     {incidence(g, uid, evf)};
   };
-
-  TAG_INVOKE_DEF(sourced_incidence); // sourced_incidence(g,uid)    -> edges[uid,vid,v]
-                                     // sourced_incidence(g,uid,fn) -> edges[uid,vid,v,value]
-
-  template <class G>
-  concept _has_sourced_incidence_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-    {sourced_incidence(g, uid)};
-  };
-  template <class G, class EVF>
-  concept _has_sourced_incidence_g_uid_evf_adl = vertex_range<G> &&
-        requires(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-    {sourced_incidence(g, uid, evf)};
-  };
-
 } // namespace tag_invoke
 
 //
@@ -268,33 +251,6 @@ constexpr auto incidence(G&& g, vertex_id_t<G> uid, const EVF& evf) {
     return tag_invoke::incidence(g, uid, evf);
   else
     return incidence_view<G, false, EVF>(incidence_iterator<G, false, EVF>(g, uid, evf), ranges::end(edges(g, uid)));
-}
-
-
-//
-// sourced_incidence(g,u)
-// sourced_incidence(g,uid)
-//
-template <incidence_graph G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto sourced_incidence(G&& g, vertex_id_t<G> uid) {
-  if constexpr (tag_invoke::_has_sourced_incidence_g_uid_adl<G>)
-    return tag_invoke::sourced_incidence(g, uid);
-  else
-    return incidence_view<G, true, void>(incidence_iterator<G, true, void>(g, uid), ranges::end(edges(g, uid)));
-}
-
-
-//
-// sourced_incidence(g,uid,evf)
-//
-template <incidence_graph G, class EVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto sourced_incidence(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-  if constexpr (tag_invoke::_has_sourced_incidence_g_uid_evf_adl<G, EVF>)
-    return tag_invoke::sourced_incidence(g, uid, evf);
-  else
-    return incidence_view<G, true, EVF>(incidence_iterator<G, true, EVF>(g, uid, evf), ranges::end(edges(g, uid)));
 }
 
 

@@ -10,9 +10,6 @@
 // examples: for([vid, v]             : neighbors(g,uid))
 //           for([vid, v, value]      : neighbors(g,uid,vvf))
 // 
-//           for([uid, vid, v]        : sourced_neighbors(g,uid))
-//           for([uid, vid, v, value] : sourced_neighbors(g,uid,vvf))
-//
 namespace std::graph::views {
 
 
@@ -243,20 +240,6 @@ namespace tag_invoke {
   concept _has_neighbors_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
     {neighbors(g, uid, vvf)};
   };
-
-  TAG_INVOKE_DEF(sourced_neighbors); // sourced_neighbors(g,uid)    -> edges[uid,vid,uv]
-                                     // sourced_neighbors(g,uid,fn) -> edges[uid,vid,uv,value]
-
-  template <class G>
-  concept _has_sourced_neighbors_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-    {sourced_neighbors(g, uid)};
-  };
-  template <class G, class VVF>
-  concept _has_sourced_neighbors_g_uid_evf_adl = vertex_range<G> &&
-        requires(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-    {sourced_neighbors(g, uid, vvf)};
-  };
-
 } // namespace tag_invoke
 
 //
@@ -285,35 +268,6 @@ constexpr auto neighbors(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
   else {
     using iterator_type = neighbor_iterator<G, false, VVF>;
     return neighbors_view<G, false, VVF>(iterator_type(g, uid, vvf), ranges::end(edges(g, uid)));
-  }
-}
-
-//
-// sourced_neighbors(g,uid)
-//
-template <incidence_graph G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto sourced_neighbors(G&& g, vertex_id_t<G> uid) {
-  if constexpr (tag_invoke::_has_sourced_neighbors_g_uid_adl<G>)
-    return tag_invoke::sourced_neighbors(g, uid);
-  else {
-    using iterator_type = neighbor_iterator<G, true, void>;
-    return neighbors_view<G, true, void>(iterator_type(g, uid), ranges::end(edges(g, uid)));
-  }
-}
-
-
-//
-// sourced_neighbors(g,uid,vvf)
-//
-template <incidence_graph G, class VVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto sourced_neighbors(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-  if constexpr (tag_invoke::_has_sourced_neighbors_g_uid_evf_adl<G, VVF>)
-    return tag_invoke::sourced_neighbors(g, uid, vvf);
-  else {
-    using iterator_type = neighbor_iterator<G, true, VVF>;
-    return neighbors_view<G, true, VVF>(iterator_type(g, uid, vvf), ranges::end(edges(g, uid)));
   }
 }
 
