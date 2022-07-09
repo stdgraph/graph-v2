@@ -15,6 +15,7 @@ using std::input_iterator;
 using std::graph::vertex_t;
 using std::graph::vertex_id_t;
 using std::graph::vertex_value_t;
+using std::graph::vertex_reference_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
 using std::graph::edge_value_t;
@@ -220,7 +221,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
   SECTION("non-const vertexlist with vertex_fn") {
     // Note: must include trailing return type on lambda
     size_t cnt       = 0;
-    auto   vertex_fn = [&g](vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
+    auto   vertex_fn = [&g](vertex_reference_t<G> u) -> std::string& { return vertex_value(g, u); };
     for (auto&& [uid, u, val] : std::graph::views::vertexlist(g, vertex_fn)) {
       ++cnt;
     }
@@ -231,11 +232,11 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
     using G2   = const G;
     G2&    g2  = g;
     size_t cnt = 0;
-    for (auto&& [uid, u, val] : std::graph::views::vertexlist(
-               g2, [&g2](const vertex_t<G>& u) -> const std::string& { return vertex_value(g2, u); })) {
+    auto vertex_fn = [&g2](vertex_reference_t<G2> u) -> const std::string& { return vertex_value(g2, u); };
+    for (auto&& [uid, u, val] : std::graph::views::vertexlist(g2, vertex_fn)) {
       ++cnt;
     }
-    REQUIRE(cnt == size(vertices(g)));
+    REQUIRE(cnt == size(vertices(g2)));
   }
 
   SECTION("vertexlist is a forward view") {

@@ -36,7 +36,7 @@ macro(run_conan)
                       SETTINGS ${settings})
 
   find_package(Boost)
-  find_package(catch2)
+  find_package(Catch2)
   find_package(fmt)
 
 endmacro()

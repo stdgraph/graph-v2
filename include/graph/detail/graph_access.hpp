@@ -32,6 +32,27 @@ namespace std::graph {
 //  load_graph(g,erng,vrng,eproj,vproj)
 //
 
+/// <summary>
+/// Override for a graph type where edges are defined densely in a matrix to allow for
+/// optimized algorithms can take advantage of the memory layout.
+///
+/// Example:
+///  namespace my_namespace {
+///      template<class X>
+///      class my_graph { ... };
+///  }
+///  namespace std::graph {
+///     template<class X>
+///     inline constexpr bool is_adjacency_matrix_v<my_namespace::my_graph<X>> = true;
+///  }
+/// </summary>
+/// <typeparam name="G"></typeparam>
+template <class G>
+inline constexpr bool is_adjacency_matrix_v = false;
+
+template <class G>
+concept adjacency_matrix = is_adjacency_matrix_v<G>;
+
 
 //
 // vertices(g) -> vertex_range_t<G>
@@ -327,7 +348,7 @@ namespace tag_invoke {
 
 template <class G>
 auto contains_edge(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-  if constexpr (tag_invoke::_has_contains_edge_adl(g, uid, vid))
+  if constexpr (tag_invoke::_has_contains_edge_adl<G>)
     return tag_invoke::contains_edge(g, uid, vid);
   else if constexpr (adjacency_matrix<G>) {
     return uid < ranges::size(vertices(g)) && vid < ranges::size(vertices(g));

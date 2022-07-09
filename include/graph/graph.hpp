@@ -38,23 +38,6 @@ namespace std::graph {
 // uvi     - edge_iterator (use std::optional?)
 // evf     - edge value function: evf(uv) -> value
 
-/// <summary>
-/// Override for a graph type where edges are defined densely in a matrix to allow for
-/// optimized algorithms can take advantage of the memory layout.
-///
-/// Example:
-///  namespace my_namespace {
-///      template<class X>
-///      class my_graph { ... };
-///  }
-///  namespace std::graph {
-///     template<class X>
-///     inline constexpr bool is_adjacency_matrix_v<my_namespace::my_graph<X>> = true;
-///  }
-/// </summary>
-/// <typeparam name="G"></typeparam>
-template <class G>
-inline constexpr bool is_adjacency_matrix_v = false;
 
 /// <summary>
 /// Override for an edge type where source and target are unordered
@@ -123,9 +106,6 @@ concept undirected_incidence_graph = sourced_incidence_graph<G> && is_undirected
 
 template <class G>
 concept directed_incidence_graph = !undirected_incidence_graph<G>;
-
-template <class G>
-concept adjacency_matrix = is_adjacency_matrix_v<G>;
 
 //
 // property concepts
