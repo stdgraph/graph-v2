@@ -21,12 +21,13 @@
       - [ ] Accept VVF(g,u) & allow vertex_value?
       - [x] verify it is a std\::ranges\::view<>
     - [ ] incidence
-      - [ ] **sourced_incidence() functions no longer needed since uid is passed (redundant with returned uid)**
+      - [x] sourced_incidence() functions no longer needed since uid is passed (redundant with returned uid)
       - [ ] unit tests for Sourced edges (sourced and unsourced graph)
       - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
       - [x] verify it is a std\::ranges\::view<>
     - [ ] neighbors
+      - [x] sourced_neighbors() functions no longer needed since uid is passed (redundant with returned uid)
       - [ ] **unit tests for Sourced edges (sourced and unsourced graph)**
       - [ ] Copy VVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>

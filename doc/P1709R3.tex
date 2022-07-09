@@ -141,42 +141,49 @@
 \clearpage
 
 \section{Introduction}
-This document proposes the addition of a \textbf{graph data structure} and \textbf{graph algorithms} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed algorithms, views, graph functions and data structures.
+This document proposes the addition of \textbf{graph algorithms}, \textbf{graph views} and a \textbf{graph data structure} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed algorithms, views, graph functions and data structures.
 
 \subsection{Motivation}
 A graph data structure, used in ML and other \textbf{scientific} domains, as well as \textbf{industrial} and \textbf{general} programming, does \textbf{not} presently exist in the C++ standard. In ML, a graph forms the underlying structure of an \textbf{artificial neural network} (ANN). In a \textbf{game}, a graph can be used to
 represent the \textbf{map} of a game world. In \textbf{business} environments, graphs arise as \textbf{entity relationship diagrams} (ERD) or \textbf{data flow diagrams} (DFD). In the realm of \textbf{social media}, a graph represents a \textbf{social network}.
 
+\subsection{Definitions}
+adjacency graph, edgelist, vertex, edge
+
 \subsection{Priorities}
 \begin{itemize}
-\item Have algorithm syntax that is simple, expressive and easy to understand.
-\item Define views for common traversal of a graph including vertexlist, incidence, neighbors, edgelist, depth-first search and breadth-first search.
-\item Support high-performance algorithms and data structures.
+\item Follow the separation of algorithms, views, ranges and data structures established by the standard library.
+\item Graph algorithms have the following characteristics
 \begin{itemize}
+\item Support syntax that is simple, expressive and easy to understand. This should not compromise the ability to write high-performance algorithms.
 \item Algorithms in this proposal require vertices to be in random access containers with an integral vertex\_id.
 \end{itemize}
-\item But, don't prevent the ability to extend the design externally or in future proposals. Examples include
+\item Define views for common traversal of a graph including vertexlist, incidence edges on a vertex, neighboring vertices of a vertex, edgelist, depth-first search and breadth-first search.
+\item A graph can be implemented in a wide variety of ways and a common data model is required that can represent them. The graph data model in this proposal supports the following features
 \begin{itemize}
-\item Allow for incoming edges on a vertex.
-\item Allow for vertices in non-random-access containers like map and unordered\_map, and with non-integral keys, with the understanding that 
-doing so will result in performance that will be less than ideal. While such functionality is not expected to be included in any proposal in a future 
-standard, graphs in the wide world can use such data structures and the design should accomodate them. Toward this goal, graph concepts only
-require vertices to be a forward\_range and algorithms need to define their requirements as random\_access\_range and integral<vertex\_key<G>>.
+\item An adjacency graph data structure, which is an outer range of vertices with an inner range of outgoing (a.k.a. incidence) edges on each vertex. 
+\item An edgelist data structure, which is all edges in a graph (e.g. edgelist view), or as container with a source\_id, target\_id and optional value.
+\item Definition of concepts, types, type aliases, and functions used by views and algorithms. This is referred to as the \textbf{Graph API}.
+\begin{itemize}
+\item Graphs external to the standard can override a subset of the functions (customization point objects) to adapt the graph for use by the standard algorithms and views.
+\item Type aliases can be overridden for each graph data structure to give additional information that can be used by algorithms to refine their behavior, such as adjacency\_matrix and undirected\_edge.
 \end{itemize}
-\item Support optional user-defined value types on an edge, vertex and/or the graph itself.
-\item Make it easy to adapt existing graph data structures to the library.
-\item Define useful type aliases to tag graphs that algorithms can take advantage of, such as undirected\_edge and adjacency\_matrix.
-\item Provide an initial suite of useful functionality that includes algorithms, views and at least one graph data structure.
+\item Support of optional user-defined value types on an edge, vertex and/or the graph itself.
+\item Allow for useful extensions of the data model in future proposals or in external graph implementations. Examples include supporting incoming edges on a vertex, storing vertices in non-random-access containers, and vertices with non-integral keys.
+\end{itemize}
+\item Provide an initial suite of useful functionality that includes algorithms, views and one graph data structure.
 \end{itemize}
 
-\subsection{Examples: Example 1}
-\subsection{Examples: Example 2}
+\subsection{Examples}
+\subsubsection{Example: End User}
+\subsubsection{Example: Algorithm}
 
 \subsection{What this proposal is  \textbf{not}}
-This paper limits itself to incidence graphs only. It does not include hypergraphs.
+This paper limits itself to adjacency graphs only, including an outer range of vertices with an inner range of outgoing edges on each vertex. It also includes an edgelist of all edges in the graph. It does not include incoming edges on a vertex, though that could be a future extension.
+
+It does not include hypergraphs.
 
 \hl{TBD: Bipartite graphs?}
-
 
 \subsection{Prior Art}
 boost::graph \\
@@ -187,6 +194,7 @@ NWGraph
 
 \subsection{Revision History}
 \subsubsection*{P1709R3}
+\hl{R3 was never published.}
 Simplifiy the Graph API by focusing on functionality needed for an incidence graph, removing mutable functions and removing unnecessary functions. Replaced the \tcode{vertex_vertex_range} and \tcode{edge_range} with \tcode{neighbors} and \tcode{edgelist} Graph Views and added new \tcode{vertexlist} and \tcode{incidence} views. Simplified concepts and graph traits.
 
 \subsubsection*{P1709R2}
@@ -199,9 +207,9 @@ Rewrite with a focus on a \textbf{purely functional design}, emphasizing the alg
 Focus on \textbf{object-oriented API} for data structures and example code for a few algorithms.
 
 \section{Design - Introduction}
-\section{Design - user side}
+\section{Design - User Side}
 \subsection{Algorithms}
-\subsection{Shortest Paths}
+\subsubsection{Shortest Paths}
 \paragraph{Dijkstra's Algorithm}
 Dijkstra's algorithm \cite{REF_} ...
 
@@ -221,10 +229,17 @@ Biconnected components \cite{REF_} ...
 \paragraph{Articulation Points}
 Articulation points \cite{REF_} ...
 
-\subsubsection{Transitive Closure}
-Transitive closure \cite{REF_} ...
-\paragraph{dfs\_transitive\_closure}
-\paragraph{warshall\_transitive\_closure}
+\subsubsection{[Other Algorithms}
+\paragraph{[TBD] page\_rank}
+\paragraph{[TBD] betweenness\_centrality}
+\paragraph{[TBD] triangle\_count}
+\paragraph{[TBD] subgraph\_isomorphism}
+\subsubsection{Minimum Spanning Tree}
+\paragraph{[TBD] kruskell\_minimum\_spanning\_tree}
+\paragraph{[TBD] prim\_minimum\_spanning\_tree}
+\subsubsection{Community Detection}
+\paragraph{[TBD] Louvain}
+\paragraph{[TBD] Label propagation}
 
 \subsection{Views}
 \subsubsection{vertexlist view}
@@ -233,8 +248,10 @@ Transitive closure \cite{REF_} ...
 \subsubsection{edgelist view}
 \subsubsection{depth\_first\_search views}
 \subsubsection{breadth\_first\_search views}
-\subsection{Concepts and traits}
-\subsection{Functions}
+\subsection{Graph API}
+\subsubsection{Concepts and traits}
+\subsubsection{Types}
+\subsubsection{Functions}
 \section{Design - graph data structure side}
 \subsection{Function Specialization}
 \section{Specification}

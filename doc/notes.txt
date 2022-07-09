@@ -18,3 +18,34 @@ minted package for code formatting
 
 https://github.com/josuttis/jthread
 for tex defs?
+
+
+
+WSL Install (Ubunutu22)
+-----------------------------------------------------------------------
+sudo apt install build-essential
+sudo apt install gdb
+sudo apt install cmake
+sudo apt install ninja-build
+sudo apt install clang-14
+sudo apt install clang-tools-14
+sudo apt install clang-format-14
+sudo apt install python-is-python3
+sudo apt install python3-pip
+pip install conan (re-login to have $HOME/.local/bin added to $PATH)
+code . (automatically downloads & installs vscode)
+
+git clone git@github.com:pratzl/graph-v2.git
+cd graph-v2
+git submodule update --init --recursive
+
+mkdir build
+cd build
+cmake ../
+
+VSCode extensions
+C/C++ for Visual Studio Code
+CMake
+CMake Tools
+Remote - WSL
+Remote - SSL

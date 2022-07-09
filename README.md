@@ -49,15 +49,19 @@ test suite after it has the header and fully supports concepts.
 1. C++20 compliant compiler that fully supports concepts and ranges. 
    gcc 11 and the latest version of MSVC have been used for development. 
    Others may also work but haven't been tested.
-2. CMake 20 or later (needed for CMake Presets)
-3. Python3
-4. Conan package manager (Python: pip install conan)
+2. gdb
+3. CMake 20 or later (needed for CMake Presets)
+4. ninja-build
+5. clang-format
+6. Python3
+7. Conan package manager (Python: pip install conan)
 
 #### Cloning & Building
 
 ```C++
 git clone https://github.com/pratzl/graph-v2.git
 cd graph-v2
+git submodule update --init --recursive
 mkdir build
 cd build
 cmake ../???
@@ -74,10 +78,11 @@ The following library(s) are dependencies and are loaded as git sub-modules
 The following libraries will automatically be installed by Conan
 
 1. Catch2 unit test framework
-
-Other Useful Tools
-
-1. clang-format
+2. Boost
+3. docopt
+4. fmt
+5. range-v3
+6. spdlog
 
 ## Description
 
