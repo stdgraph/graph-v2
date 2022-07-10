@@ -2,6 +2,11 @@
 
 namespace std::graph::views {
 
+// Common types for DFS & BFS views
+enum three_colors : int8_t { black, white, grey }; // { finished, undiscovered, discovered }
+enum struct cancel_search : int8_t { continue_search, cancel_branch, cancel_all };
+
+
 //
 // vertex_view
 // for(auto&& [uid, u]        : vertexlist(g))

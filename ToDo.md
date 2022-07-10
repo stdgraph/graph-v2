@@ -21,14 +21,10 @@
       - [ ] Accept VVF(g,u) & allow vertex_value?
       - [x] verify it is a std\::ranges\::view<>
     - [ ] incidence
-      - [x] sourced_incidence() functions no longer needed since uid is passed (redundant with returned uid)
-      - [ ] unit tests for Sourced edges (sourced and unsourced graph)
       - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
       - [x] verify it is a std\::ranges\::view<>
     - [ ] neighbors
-      - [x] sourced_neighbors() functions no longer needed since uid is passed (redundant with returned uid)
-      - [ ] **unit tests for Sourced edges (sourced and unsourced graph)**
       - [ ] Copy VVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
       - [x] verify it is a std\::ranges\::view<>
@@ -36,15 +32,15 @@
       - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
       - [x] verify it is a std\::ranges\::view<>
-    - [ ] **dfs_vertex_range**
+    - [x] vertices_depth_first_search_view
       - [x] validate results & add unit tests
       - [x] support Cancelable
       - [x] support VVF
       - [x] support undirected_graph\<G\>
       - [x] support begin, end, depth/size, empty, swap free functions
       - [x] verify it is a std::ranges::view<>
-      - [ ] create CPOs
-    - [ ] **dfs_edge_range**
+      - [x] create CPOs
+    - [x] edges_depth_first_search_view
       - [x] validate results & add unit tests
       - [x] support Cancelable
       - [x] support EVF
@@ -52,7 +48,7 @@
       - [x] support undirected_graph<G>
       - [x] support begin, end, depth/size, empty, swap free functions
       - [x] verify it is a std::ranges::view<>
-      - [ ] create CPOs
+      - [x] create CPOs: edges, sourced_edges
     - [ ] **bfs_vertex_range**
     - [ ] **bfs_edge_range**
     - [ ] topological_sort_vertex_range
@@ -254,9 +250,8 @@
   - [x] vertexlist
   - [x] edgelist
   - [x] incidence
-  - [x] sourced_incidence
   - [x] neighbors
-  - [x] sourced_neighbors
+  - [x] depth_first_search: vertices, edges & sourced_edges
 - Algorithms
 - Containers (data structures)
     - [x] dynamic_graph (adjustable to different vertex & edge containers)

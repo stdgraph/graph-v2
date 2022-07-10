@@ -3,7 +3,8 @@
 #include "views_utility.hpp"
 
 //
-// incidence(g,u) -> edge_view<VId,Sourced,E,EV> -> {[source_id,] target_id, edge& [,value]}
+// incidence(g,u)     -> edge_view<VId,Sourced,E,EV> -> {[source_id,] target_id, edge&}
+// incidence(g,u,evf) -> edge_view<VId,Sourced,E,EV> -> {[source_id,] target_id, edge&,value}
 //
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g,uv) };
 // 
@@ -228,7 +229,6 @@ namespace tag_invoke {
 } // namespace tag_invoke
 
 //
-// incidence(g,u)
 // incidence(g,uid)
 //
 template <incidence_graph G>

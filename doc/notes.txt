@@ -41,7 +41,8 @@ git submodule update --init --recursive
 
 mkdir build
 cd build
-cmake ../
+cmake --build ../ --preset linux-gcc-debug --target test  
+cmake --build /home/phil/graph-v2/out/build/linux-gcc-debug --config Debug --target tests
 
 VSCode extensions
 C/C++ for Visual Studio Code

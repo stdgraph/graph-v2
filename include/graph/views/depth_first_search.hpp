@@ -3,7 +3,7 @@
 //
 // inspired by new_dfs_range.hpp from NWGraph
 //
-// depth-first search graph algorithms for vertices and edges.
+// depth-first search graph views for vertices and edges.
 //
 // examples: for(auto&& [uid,u]     : vertices_depth_first_search(g,seed))
 //           for(auto&& [uid,u,val] : vertices_depth_first_search(g,seed,vvf))
@@ -11,12 +11,15 @@
 //           for(auto&& [vid,uv]     : edges_depth_first_search(g,seed))
 //           for(auto&& [vid,uv,val] : edges_depth_first_search(g,seed,evf))
 //
-// (need to add examples for Sourced after they're implemented)
+//           for(auto&& [uid,vid,uv]     : sourced_edges_depth_first_search(g,seed))
+//           for(auto&& [vid,vid,uv,val] : sourced_edges_depth_first_search(g,seed,evf))
 //
-// size(dfs) returns the depth of the current search (the size of the internal stack)
+// Given dfs is one of the depth-first views above, the following functions are also available.
 // 
-// dfs.cancel(cancel_search::cancel_branch) will stop searching from the current vertex
-// dfs.cancel(cancel_search::cancel_all) will stop searching and the iterator will be at the end()
+//  size(dfs) returns the depth of the current search (the size of the internal stack)
+//
+//  dfs.cancel(cancel_search::cancel_branch) will stop searching from the current vertex
+//  dfs.cancel(cancel_search::cancel_all) will stop searching and the iterator will be at the end()
 //
 
 #include "../graph.hpp"
@@ -30,20 +33,17 @@
 
 namespace std::graph::views {
 
-// features to consider:
-
-enum three_colors : int8_t { black, white, grey }; // { finished, undiscovered, discovered }
-enum struct cancel_search : int8_t { continue_search, cancel_branch, cancel_all };
-
-
+/// <summary>
+/// The element in a depth-first search stack.
+/// </summary>
 template <incidence_graph G>
-struct dfs_elem {
+struct dfs_element {
   vertex_id_t<G>            u_id;
   vertex_edge_iterator_t<G> uv;
 };
 
 //---------------------------------------------------------------------------------------
-/// depth-first search range for vertices, given a single seed vertex.
+/// depth-first search view for vertices, given a single seed vertex.
 ///
 
 template <incidence_graph G, class Stack>
@@ -60,15 +60,15 @@ public:
 
 private:
   using graph_ref_type = reference_wrapper<graph_type>;
-  using stack_elem     = dfs_elem<graph_type>;
+  using stack_elem     = dfs_element<graph_type>;
 
   using parent_alloc = typename allocator_traits<typename Stack::container_type::allocator_type>::template rebind_alloc<
         vertex_id_type>;
 
 public:
-  dfs_base(graph_type& g, vertex_id_type seed = 0) : graph_(&g), colors_(ranges::size(vertices(g)), white) {
-    if (seed < ranges::size(vertices(*graph_)) && !ranges::empty(edges(*graph_, seed))) {
-      edge_iterator uv = ranges::begin(edges(*graph_, seed));
+  dfs_base(graph_type& g, vertex_id_type seed = 0) : graph_(g), colors_(ranges::size(vertices(g)), white) {
+    if (seed < ranges::size(vertices(graph_)) && !ranges::empty(edges(graph_, seed))) {
+      edge_iterator uv = ranges::begin(edges(graph_, seed));
       S_.push(stack_elem{seed, uv});
       colors_[seed] = grey;
     }
@@ -79,7 +79,7 @@ public:
   ~dfs_base()               = default;
 
   dfs_base& operator=(const dfs_base&) = delete;
-  dfs_base& operator=(dfs_base&&) = default;
+  dfs_base& operator=(dfs_base&&)      = default;
 
   constexpr bool empty() const noexcept { return S_.empty(); }
 
@@ -91,25 +91,25 @@ public:
 
 protected:
   void advance() requires directed_incidence_graph<graph_type> {
-    auto is_unvisited = [this](edge_reference vw) -> bool { return colors_[target_id(*graph_, vw)] == white; };
+    auto is_unvisited = [this](edge_reference vw) -> bool { return colors_[target_id(graph_, vw)] == white; };
 
     // next level in search
     auto [u_id, uvi]    = S_.top();
-    vertex_id_type v_id = target_id(*graph_, *uvi);
+    vertex_id_type v_id = target_id(graph_, *uvi);
 
-    edge_iterator vwi = ranges::end(edges(*graph_, v_id));
+    edge_iterator vwi = ranges::end(edges(graph_, v_id));
     switch (cancel_) {
     case cancel_search::continue_search:
       // find first unvisited edge of v
-      vwi = ranges::find_if(edges(*graph_, v_id), is_unvisited);
+      vwi = ranges::find_if(edges(graph_, v_id), is_unvisited);
       break;
     case cancel_search::cancel_branch: {
       cancel_       = cancel_search::continue_search;
       colors_[v_id] = black; // finished with v
 
       // Continue with sibling?
-      uvi = ranges::find_if(++uvi, ranges::end(edges(*graph_, u_id)), is_unvisited);
-      if (uvi != ranges::end(edges(*graph_, u_id))) {
+      uvi = ranges::find_if(++uvi, ranges::end(edges(graph_, u_id)), is_unvisited);
+      if (uvi != ranges::end(edges(graph_, u_id))) {
         S_.top().uv = uvi;
         return;
       }
@@ -122,9 +122,9 @@ protected:
     }
 
     // unvisited edge found for vertex v?
-    if (vwi != ranges::end(edges(*graph_, v_id))) {
+    if (vwi != ranges::end(edges(graph_, v_id))) {
       S_.push(stack_elem{v_id, vwi});
-      vertex_id_type w_id = target_id(*graph_, *vwi);
+      vertex_id_type w_id = target_id(graph_, *vwi);
       colors_[w_id]       = grey; // visited w
     }
     // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
@@ -134,12 +134,12 @@ protected:
       while (!S_.empty()) {
         auto [x_id, xyi] = S_.top();
         S_.pop();
-        xyi = ranges::find_if(++xyi, ranges::end(edges(*graph_, x_id)), is_unvisited);
+        xyi = ranges::find_if(++xyi, ranges::end(edges(graph_, x_id)), is_unvisited);
 
         // unvisted edge found for vertex x?
-        if (xyi != ranges::end(edges(*graph_, x_id))) {
+        if (xyi != ranges::end(edges(graph_, x_id))) {
           S_.push({x_id, xyi});
-          vertex_id_type y_id = target_id(*graph_, *xyi);
+          vertex_id_type y_id = target_id(graph_, *xyi);
           colors_[y_id]       = grey; // visited y
           break;
         } else {
@@ -161,14 +161,14 @@ protected:
   void advance() requires undirected_incidence_graph<graph_type> {
     // next level in search
     auto [u_id, uvi]    = S_.top();
-    vertex_id_type v_id = target_id(*graph_, *uvi);
+    vertex_id_type v_id = target_id(graph_, *uvi);
 
-    edge_iterator vwi = ranges::end(edges(*graph_, v_id));
+    edge_iterator vwi = ranges::end(edges(graph_, v_id));
     switch (cancel_) {
     case cancel_search::continue_search:
       // find first unvisited edge of v
-      vwi = ranges::find_if(edges(*graph_, v_id), [this, v_id](edge_reference vw) -> bool {
-        return colors_[undir_target_id(*graph_, vw, v_id)] == white;
+      vwi = ranges::find_if(edges(graph_, v_id), [this, v_id](edge_reference vw) -> bool {
+        return colors_[undir_target_id(graph_, vw, v_id)] == white;
       });
       break;
     case cancel_search::cancel_branch: {
@@ -177,9 +177,9 @@ protected:
 
       // Continue with sibling?
       uvi = ranges::find_if(++uvi, [this, u_id](edge_reference uv) -> bool {
-        return colors_[undir_target_id(*graph_, uv, u_id)] == white;
-                });
-      if (uvi != ranges::end(edges(*graph_, u_id))) {
+        return colors_[undir_target_id(graph_, uv, u_id)] == white;
+      });
+      if (uvi != ranges::end(edges(graph_, u_id))) {
         S_.top().uv = uvi;
         return;
       }
@@ -192,9 +192,9 @@ protected:
     }
 
     // unvisited edge found for vertex v?
-    if (vwi != ranges::end(edges(*graph_, v_id))) {
+    if (vwi != ranges::end(edges(graph_, v_id))) {
       S_.push(stack_elem{v_id, vwi});
-      vertex_id_type w_id = undir_target_id(*graph_, *vwi, v_id);
+      vertex_id_type w_id = undir_target_id(graph_, *vwi, v_id);
       colors_[w_id]       = grey; // visited w
     }
     // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
@@ -204,14 +204,14 @@ protected:
       while (!S_.empty()) {
         auto [x_id, xyi] = S_.top();
         S_.pop();
-        xyi = ranges::find_if(++xyi, ranges::end(edges(*graph_, x_id)), [this, x_id](edge_reference xy) -> bool {
-          return colors_[undir_target_id(*graph_, xy, x_id)] == white;
+        xyi = ranges::find_if(++xyi, ranges::end(edges(graph_, x_id)), [this, x_id](edge_reference xy) -> bool {
+          return colors_[undir_target_id(graph_, xy, x_id)] == white;
         });
 
         // unvisted edge found for vertex x?
-        if (xyi != ranges::end(edges(*graph_, x_id))) {
+        if (xyi != ranges::end(edges(graph_, x_id))) {
           S_.push({x_id, xyi});
-          vertex_id_type y_id = undir_target_id(*graph_, *xyi, x_id);
+          vertex_id_type y_id = undir_target_id(graph_, *xyi, x_id);
           colors_[y_id]       = grey; // visited y
           break;
         } else {
@@ -221,10 +221,11 @@ protected:
     }
   }
 
-protected : graph_type* graph_;
-  Stack                 S_;
-  vector<three_colors>  colors_;
-  cancel_search         cancel_ = cancel_search::continue_search;
+protected:
+  _detail::ref_to_ptr<graph_type&> graph_;
+  Stack                            S_;
+  vector<three_colors>             colors_;
+  cancel_search                    cancel_ = cancel_search::continue_search;
 };
 
 
@@ -232,9 +233,9 @@ protected : graph_type* graph_;
 /// depth-first search range for vertices, given a single seed vertex.
 ///
 
-template <incidence_graph G, class VVF = void, class Stack = stack<dfs_elem<G>>>
+template <incidence_graph G, class VVF = void, class Stack = stack<dfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_vertex_range : public dfs_base<G, Stack> {
+class vertices_depth_first_search_view : public dfs_base<G, Stack> {
 public:
   using base_type        = dfs_base<G, Stack>;
   using graph_type       = G;
@@ -244,21 +245,21 @@ public:
   using vertex_iterator  = vertex_iterator_t<graph_type>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
-  using dfs_range_type   = dfs_vertex_range<graph_type, VVF, Stack>;
+  using dfs_range_type   = vertices_depth_first_search_view<graph_type, VVF, Stack>;
 
   using vertex_value_func = VVF;
   using vertex_value_type = invoke_result_t<VVF, vertex_reference>;
 
 public:
-  dfs_vertex_range(graph_type& g, vertex_id_type seed, const VVF& value_fn)
+  vertices_depth_first_search_view(graph_type& g, vertex_id_type seed, const VVF& value_fn)
         : base_type(g, seed), value_fn_(&value_fn) {}
-  dfs_vertex_range()                        = default;
-  dfs_vertex_range(const dfs_vertex_range&) = delete; // can be expensive to copy
-  dfs_vertex_range(dfs_vertex_range&&)      = default;
-  ~dfs_vertex_range()                       = default;
+  vertices_depth_first_search_view()                                        = default;
+  vertices_depth_first_search_view(const vertices_depth_first_search_view&) = delete; // can be expensive to copy
+  vertices_depth_first_search_view(vertices_depth_first_search_view&&)      = default;
+  ~vertices_depth_first_search_view()                                       = default;
 
-  dfs_vertex_range& operator=(const dfs_vertex_range&) = delete;
-  dfs_vertex_range& operator=(dfs_vertex_range&&) = default;
+  vertices_depth_first_search_view& operator=(const vertices_depth_first_search_view&) = delete;
+  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&)      = default;
 
 public:
   struct end_sentinel {};
@@ -290,7 +291,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -303,7 +304,7 @@ public:
     }
 
     reference operator*() const noexcept {
-      auto& g             = *the_range_->graph_;
+      auto& g             = the_range_->graph_;
       auto&& [u_id, uvi]  = the_range_->S_.top();
       vertex_id_type v_id = 0;
       if constexpr (directed_incidence_graph<graph_type>) {
@@ -339,7 +340,7 @@ private:
 
 template <incidence_graph G, class Stack>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_vertex_range<G, void, Stack> : public dfs_base<G, Stack> {
+class vertices_depth_first_search_view<G, void, Stack> : public dfs_base<G, Stack> {
 public:
   using base_type        = dfs_base<G, Stack>;
   using graph_type       = G;
@@ -349,17 +350,17 @@ public:
   using vertex_iterator  = vertex_iterator_t<graph_type>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
-  using dfs_range_type   = dfs_vertex_range<graph_type, void, Stack>;
+  using dfs_range_type   = vertices_depth_first_search_view<graph_type, void, Stack>;
 
 public:
-  dfs_vertex_range(graph_type& g, vertex_id_type seed) : base_type(g, seed) {}
-  dfs_vertex_range()                        = default;
-  dfs_vertex_range(const dfs_vertex_range&) = delete; // can be expensive to copy
-  dfs_vertex_range(dfs_vertex_range&&)      = default;
-  ~dfs_vertex_range()                       = default;
+  vertices_depth_first_search_view(graph_type& g, vertex_id_type seed) : base_type(g, seed) {}
+  vertices_depth_first_search_view()                                        = default;
+  vertices_depth_first_search_view(const vertices_depth_first_search_view&) = delete; // can be expensive to copy
+  vertices_depth_first_search_view(vertices_depth_first_search_view&&)      = default;
+  ~vertices_depth_first_search_view()                                       = default;
 
-  dfs_vertex_range& operator=(const dfs_vertex_range&) = delete;
-  dfs_vertex_range& operator=(dfs_vertex_range&&) = default;
+  vertices_depth_first_search_view& operator=(const vertices_depth_first_search_view&) = delete;
+  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&)      = default;
 
 public:
   struct end_sentinel {};
@@ -390,7 +391,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -403,7 +404,7 @@ public:
     }
 
     reference operator*() const noexcept {
-      auto& g             = *the_range_->graph_;
+      auto& g             = the_range_->graph_;
       auto&& [u_id, uvi]  = the_range_->S_.top();
       vertex_id_type v_id = 0;
       if constexpr (directed_incidence_graph<graph_type>) {
@@ -435,32 +436,33 @@ public:
 
 
 //---------------------------------------------------------------------------------------
-/// depth-first search range for edges, given a single seed vertex.
+/// depth-first search view for edges, given a single seed vertex.
 ///
-template <incidence_graph G, class EVF = void, bool Sourced = false, class Stack = stack<dfs_elem<G>>>
+template <incidence_graph G, class EVF = void, bool Sourced = false, class Stack = stack<dfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_edge_range : public dfs_base<G, Stack> {
+class edges_depth_first_search_view : public dfs_base<G, Stack> {
 public:
   using base_type           = dfs_base<G, Stack>;
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
-  using dfs_range_type      = dfs_edge_range<G, EVF, Sourced, Stack>;
+  using dfs_range_type      = edges_depth_first_search_view<G, EVF, Sourced, Stack>;
 
   using edge_value_func = EVF;
   using edge_value_type = invoke_result_t<EVF, edge_reference_type>;
 
 public:
-  dfs_edge_range(G& g, vertex_id_type seed, const EVF& value_fn) : base_type(g, seed), value_fn_(&value_fn) {}
+  edges_depth_first_search_view(G& g, vertex_id_type seed, const EVF& value_fn)
+        : base_type(g, seed), value_fn_(&value_fn) {}
 
-  dfs_edge_range()                      = default;
-  dfs_edge_range(const dfs_edge_range&) = delete; // can be expensive to copy
-  dfs_edge_range(dfs_edge_range&&)      = default;
-  ~dfs_edge_range()                     = default;
+  edges_depth_first_search_view()                                     = default;
+  edges_depth_first_search_view(const edges_depth_first_search_view&) = delete; // can be expensive to copy
+  edges_depth_first_search_view(edges_depth_first_search_view&&)      = default;
+  ~edges_depth_first_search_view()                                    = default;
 
-  dfs_edge_range& operator=(const dfs_edge_range&) = delete;
-  dfs_edge_range& operator=(dfs_edge_range&&) = default;
+  edges_depth_first_search_view& operator=(const edges_depth_first_search_view&) = delete;
+  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&)      = default;
 
   struct end_sentinel {};
 
@@ -491,7 +493,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -509,9 +511,9 @@ public:
         value_.source_id = u_id;
       }
       if constexpr (directed_incidence_graph<graph_type>) {
-        value_.target_id = target_id(*the_range_->graph_, *uvi);
+        value_.target_id = target_id(the_range_->graph_, *uvi);
       } else {
-        value_.target_id = undir_target_id(*the_range_->graph_, *uvi, u_id);
+        value_.target_id = undir_target_id(the_range_->graph_, *uvi, u_id);
       }
       value_.edge  = &*uvi;
       value_.value = invoke(*the_range_->value_fn_, *uvi);
@@ -540,25 +542,25 @@ private:
 
 template <incidence_graph G, bool Sourced, class Stack>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class dfs_edge_range<G, void, Sourced, Stack> : public dfs_base<G, Stack> {
+class edges_depth_first_search_view<G, void, Sourced, Stack> : public dfs_base<G, Stack> {
 public:
   using base_type           = dfs_base<G, Stack>;
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
-  using dfs_range_type      = dfs_edge_range<G, void, Sourced, Stack>;
+  using dfs_range_type      = edges_depth_first_search_view<G, void, Sourced, Stack>;
 
 public:
-  dfs_edge_range(G& g, vertex_id_type seed) : base_type(g, seed) {}
+  edges_depth_first_search_view(G& g, vertex_id_type seed) : base_type(g, seed) {}
 
-  dfs_edge_range()                      = default;
-  dfs_edge_range(const dfs_edge_range&) = delete; // can be expensive to copy
-  dfs_edge_range(dfs_edge_range&&)      = default;
-  ~dfs_edge_range()                     = default;
+  edges_depth_first_search_view()                                     = default;
+  edges_depth_first_search_view(const edges_depth_first_search_view&) = delete; // can be expensive to copy
+  edges_depth_first_search_view(edges_depth_first_search_view&&)      = default;
+  ~edges_depth_first_search_view()                                    = default;
 
-  dfs_edge_range& operator=(const dfs_edge_range&) = delete;
-  dfs_edge_range& operator=(dfs_edge_range&&) = default;
+  edges_depth_first_search_view& operator=(const edges_depth_first_search_view&) = delete;
+  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&)      = default;
 
   struct end_sentinel {};
 
@@ -588,7 +590,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -606,9 +608,9 @@ public:
         value_.source_id = u_id;
       }
       if constexpr (directed_incidence_graph<graph_type>) {
-        value_.target_id = target_id(*the_range_->graph_, *uvi);
+        value_.target_id = target_id(the_range_->graph_, *uvi);
       } else {
-        value_.target_id = undir_target_id(*the_range_->graph_, *uvi, u_id);
+        value_.target_id = undir_target_id(the_range_->graph_, *uvi, u_id);
       }
       value_.edge = &*uvi;
       return reinterpret_cast<reference>(value_);
@@ -630,6 +632,118 @@ public:
   auto end() const { return end_sentinel(); }
   auto cend() const { return end_sentinel(); }
 };
+
+namespace tag_invoke {
+  // vertices_depth_first_search CPO
+  TAG_INVOKE_DEF(vertices_depth_first_search); // vertices_depth_first_search(g,seed)    -> vertices[vid,v]
+                                               // vertices_depth_first_search(g,seed,fn) -> vertices[vid,v,value]
+
+  template <class G>
+  concept _has_vtx_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed) {
+    {vertices_depth_first_search(g, seed)};
+  };
+  template <class G, class VVF>
+  concept _has_vtx_dfs_vvf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const VVF& vvf) {
+    {vertices_depth_first_search(g, seed, vvf)};
+  };
+
+  // edges_depth_first_search CPO
+  //  sourced_edges_depth_first_search
+  TAG_INVOKE_DEF(edges_depth_first_search);         // edges_depth_first_search(g,seed)    -> edges[vid,v]
+                                                    // edges_depth_first_search(g,seed,fn) -> edges[vid,v,value]
+  TAG_INVOKE_DEF(sourced_edges_depth_first_search); // sourced_edges_depth_first_search(g,seed)    -> edges[uid,vid,v]
+        // sourced_edges_depth_first_search(g,seed,fn) -> edges[uid,vid,v,value]
+
+  template <class G>
+  concept _has_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed) {
+    {edges_depth_first_search(g, seed)};
+  };
+  template <class G, class EVF>
+  concept _has_edg_dfs_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf) {
+    {edges_depth_first_search(g, seed, evf)};
+  };
+
+  template <class G>
+  concept _has_src_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed) {
+    {sourced_edges_depth_first_search(g, seed)};
+  };
+  template <class G, class EVF>
+  concept _has_src_edg_dfs_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf) {
+    {sourced_edges_depth_first_search(g, seed, evf)};
+  };
+
+} // namespace tag_invoke
+
+
+//
+// vertices_depth_first_search(g,uid)
+// vertices_depth_first_search(g,uid,vvf)
+//
+template <incidence_graph G, class Stack = stack<dfs_element<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed) {
+  if constexpr (tag_invoke::_has_vtx_dfs_adl<G>)
+    return tag_invoke::vertices_depth_first_search(g, seed);
+  else
+    return vertices_depth_first_search_view<G, void, Stack>(g, seed);
+}
+
+template <incidence_graph G, class VVF, class Stack = stack<dfs_element<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
+      is_invocable_v<VVF, vertex_reference_t<G>>
+constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const VVF& vvf) {
+  if constexpr (tag_invoke::_has_vtx_dfs_vvf_adl<G, VVF>)
+    return tag_invoke::vertices_depth_first_search(g, seed, vvf);
+  else
+    return vertices_depth_first_search_view<G, VVF, Stack>(g, seed, vvf);
+}
+
+//
+// edges_depth_first_search(g,uid)
+// edges_depth_first_search(g,uid,evf)
+//
+template <incidence_graph G, class Stack = stack<dfs_element<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed) {
+  if constexpr (tag_invoke::_has_edg_dfs_adl<G>)
+    return tag_invoke::edges_depth_first_search(g, seed);
+  else
+    return edges_depth_first_search_view<G, void, false, Stack>(g, seed);
+}
+
+template <incidence_graph G, class EVF, class Stack = stack<dfs_element<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
+      is_invocable_v<EVF, edge_reference_t<G>>
+constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf) {
+  if constexpr (tag_invoke::_has_edg_dfs_evf_adl<G, EVF>)
+    return tag_invoke::edges_depth_first_search(g, seed, evf);
+  else
+    return edges_depth_first_search_view<G, EVF, false, Stack>(g, seed, evf);
+}
+
+//
+// sourced_edges_depth_first_search(g,uid)
+// sourced_edges_depth_first_search(g,uid,evf)
+//
+template <incidence_graph G, class Stack = stack<dfs_element<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+constexpr auto sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed) {
+  if constexpr (tag_invoke::_has_src_edg_dfs_adl<G>)
+    return tag_invoke::sourced_edges_depth_first_search(g, seed);
+  else
+    return edges_depth_first_search_view<G, void, true, Stack>(g, seed);
+}
+
+template <incidence_graph G, class EVF, class Stack = stack<dfs_element<G>>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
+      is_invocable_v<EVF, edge_reference_t<G>>
+constexpr auto sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf) {
+  if constexpr (tag_invoke::_has_src_edg_dfs_evf_adl<G, EVF>)
+    return tag_invoke::sourced_edges_depth_first_search(g, seed, evf);
+  else
+    return edges_depth_first_search_view<G, EVF, true, Stack>(g, seed, evf);
+}
+
 
 } // namespace std::graph::views
 
