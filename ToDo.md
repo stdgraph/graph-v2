@@ -93,6 +93,7 @@
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [x] Support VV=void
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
+      - [ ] Support EV=void
     - [ ] dynamic_graph
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
