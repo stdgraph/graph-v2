@@ -14,7 +14,6 @@
   - [ ] Graph API
     - [x] depth() CPO? bfs, dfs: size(xfs)
     - [x] cancel() CPO? bfs, dfs: no, member only
-    - [ ] internal_target_id(g,uv) which just retrieves id, and target_id uses it swaps target_id/source_id for undirected graphs?
   - [ ] Views
     - [ ] vertexlist
       - [ ] Copy VVF to iterator (not reference)
@@ -67,7 +66,7 @@
       - [ ] articulation_points
     - [ ] Others to consider
       - [ ] Edgelist algorithms (prove design; not for P1709)
-        - [ ] Maximal Independent Set (edgelist) (from NWGraph --> Matt)
+        - [ ] Maximal Independent Set (edgelist)
         - [ ] Union Find (edgelist)
       - [ ] page_rank
       - [ ] betweenness_centrality
@@ -92,8 +91,8 @@
     - [x] csr_graph (for P1709)
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [x] Support VV=void
-      - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
       - [ ] Support EV=void
+      - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] dynamic_graph
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
@@ -102,8 +101,8 @@
     - [ ] constexpr graph based on std::array
     - [ ] bipartite_graph<V1,V2,V3>
     - [ ] undirected_adjacency_list
-    - [ ] directed_adjacency_vector
-    - [ ] adaptor for range of ranges (e.g. vector<list<T>>)
+    - [x] directed_adjacency_vector (retired)
+    - [ ] adaptor for range of ranges (e.g. vector\<list\<T\>\>)
 - [ ] Testing Patterns
   - [x] Validate content
   - [ ] Validate graph API
@@ -125,6 +124,7 @@
   - [ ] Validate address sanitizer build
   - [ ] Support Clang (waiting for full concepts support)
   - [ ] Performance tests
+  - [ ] Use sphinx for code documentation
 - github - graph-v2
   - [ ] Add processes to build & run unit tests on checkin
   - [ ] Make graph-v2 public. Requirements
@@ -174,7 +174,7 @@
   - [ ] tag_invoke design & use (access namespace, tag names, etc.)
 - Readiness
   - [ ] **Publish in github**
-    - [ ] add license file
+    - [x] add license file (boost)
     - [ ] README.md completion
     - [ ] Algorithms: bfs + dfs + dijkstra|bellman_ford + warshall_transitive_closure
     - [ ] DoxyGen output OK
@@ -184,20 +184,15 @@
 
 ### Issues
 - [ ] SG19 Questions/Input
-- [ ] Can't run tests in VS+WSL2 (they will run in VSCode, but is slow)
-  - [ ] Submit a defect to MS?
 - [ ] csv_parser
   - [ ] CSVReader doesn't conform to the C++20 input_range or forward_range concepts; can't define load functions properly
     - [ ] What's missing? const types; other?
-  - [ ] leading & trailing spaces for quoted values aren't ignored
+    - [ ] Author has acknowledged it could be valuable but hasn't made any commitments to do that
+  - [ ] leading & trailing spaces for quoted values aren't ignored (std CSV format; author won't change)
   - [ ] can it be reused for multi-pass?
-  - [x] Fork: No response to issues submitted
 - [ ] Are the CSR vertex & edge types different? (requirement of incidence and adjacency concepts)
-- [ ] If we have an access namespace, do we need a container namespace?
-- [ ] Should operator\[\](n) -> vertex& be a requirement for a graph?
+- [ ] Should operator\[\](n) -> vertex& be a requirement for a graph? (Used by NWGraph)
 - [ ] Can std::array be used as a basis for a constexpr graph? What would the graph be?
-- [ ] Can CSR edges have a void value? (e.g. no v vector)
-- [ ] How easy is it to write a view w/o the graph API?
 - [ ] How to validate constexpr? (need to use std::array)
 - [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VId. How to adapt existing graphs?
 - [ ] Can transform_view be used in place of the projections in the graph views?
@@ -292,3 +287,7 @@
 - [x] key vs. id? "key" is a better term, but id has been used extensively in boost and other graph libraries and will be easier for people to recognize
 - [x] Do we need a run-time function to check for undirectedness, in addition to is_undirected_edge_v<EV>? Is it a run-time property for some graphs?
         A: We'll only support compile-time. If someone needs run-time they can create a wrapper for is_undirected_edge_v to use
+- [x] Can CSR edges have a void value? (e.g. no v vector): yes
+- [x] If we have an access namespace, do we need a container namespace? 
+        A: "access" has been renamed "tag_invoke" and is a different purpose than a container namespace
+           we don't need a separate container namespace
