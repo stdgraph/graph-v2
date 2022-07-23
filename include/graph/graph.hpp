@@ -14,14 +14,14 @@ namespace std::graph {
 // Template parameters:
 // G   - Graph
 // GV  - Graph Value (user-defined or void)
-// 
+//
 // V   - Vertex type
 // VId - Vertex Id type
 // VV  - Vertex Value (user-defined or void)
 // VR  - Vertex Range
 // VI  - Vertex Iterator
 // VVF - Vertex Value Function: vvf(u) -> value
-// 
+//
 // E   - Edge type
 // EV  - Edge Value (user-defined or void)
 // ER  - Edge Range
@@ -33,7 +33,7 @@ namespace std::graph {
 // uid,vid - vertex ids
 // ui,vi   - vertex iterators
 // vvf     - vertex value function: vvf(u) -> value
-// 
+//
 // uv      - edge reference
 // uvi     - edge_iterator (use std::optional?)
 // evf     - edge value function: evf(uv) -> value
@@ -70,20 +70,25 @@ concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized
   vertex_id(g, ui);
 };
 
-template <class G, class ER>
-concept targeted_edge = ranges::forward_range<ER> && requires(G&& g, ranges::range_reference_t<ER> uv) {
+template <class G, class E>
+concept targeted_edge = requires(G&& g, E& uv) {
   target_id(g, uv);
   target(g, uv);
 };
 
-template <class G, class ER>
-concept sourced_edge = requires(G&& g, ranges::range_reference_t<ER> uv) {
+template <class G, class E>
+concept sourced_edge = requires(G&& g, E& uv) {
   source_id(g, uv);
   source(g, uv);
 };
+template <class G, class E>
+struct is_sourced_edge : public integral_constant<bool, sourced_edge<G, E>> {};
+template <class G, class E>
+inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
+
 
 template <class G>
-concept incidence_graph = vertex_range<G> && targeted_edge<G, vertex_edge_range_t<G>> && requires(
+concept incidence_graph = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(
       G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
   { edges(g, u) } -> ranges::forward_range;
   { edges(g, uid) } -> ranges::forward_range;
@@ -92,7 +97,7 @@ concept incidence_graph = vertex_range<G> && targeted_edge<G, vertex_edge_range_
 //      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
 template <class G>
-concept sourced_incidence_graph = incidence_graph<G> && sourced_edge<G, vertex_edge_range_t<G>> &&
+concept sourced_incidence_graph = incidence_graph<G> && sourced_edge<G, edge_t<G>> &&
       requires(G&& g, edge_reference_t<G> uv) {
   edge_id(g, uv);
 #  ifdef ENABLE_OTHER_FNC
@@ -133,6 +138,60 @@ template <class G>
 concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
   { contains_edge(g, uid, vid) } -> convertible_to<bool>;
 };
+
+
+/// <summary>
+/// Override for a graph type where source_id and target_id are unordered
+/// on an edge so views and algorithms know to choose the correct target
+/// based on where they came from.
+///
+/// An unordered edge implies sourced_edge<G> is true so that an algorithm can
+/// decide if source_id(g,uv) or target_id(g,uv) is the true target, based on
+/// where the algorithm came from.
+///
+/// If a graph container implementation has a run-time property of ordered or
+/// unordered (e.g. it can't be determined at compile-time) then unordered_edge<G,E>
+/// should be true_type. The only consequence is that an additional if is done to
+/// check whether source_id or target_id is used for the target in this library. 
+/// The container implementation can still preserve its implementation of order,
+/// assuming it always includes a source_id on the edge.
+/// 
+/// Example:
+///  namespace my_namespace {
+///      template <class T>
+///      class my_graph { ... };
+///      template class< T>
+///      class my_edge { int src_id; int tgt_id; ... };
+///  }
+///  namespace std::graph {
+///     template<class T>
+///     struct define_unordered_edge<my_namespace::my_graph<T>, my_namespace::my_edge<T>> : public true_type {};
+///  }
+/// </summary>
+/// <typeparam name="G">Graph</typeparam>
+///
+
+template <class E>
+struct define_unordered_edge : public false_type {}; // specialized for graph container edge
+
+template <class G, class E>
+struct is_unordered_edge : public conjunction<define_unordered_edge<E>, is_sourced_edge<G, E>> {};
+
+template <class G, class E>
+inline constexpr bool is_unordered_edge_v = is_unordered_edge<G, E>::value;
+
+template <class G, class E>
+struct is_ordered_edge : public negation<is_unordered_edge<G,E>> {};
+
+template <class G, class E>
+inline constexpr bool is_ordered_edge_v = is_ordered_edge<G, E>::value;
+
+template<class G, class E>
+concept unordered_edge = is_unordered_edge_v<G, E>;
+
+template <class G, class E>
+concept ordered_edge = is_ordered_edge_v<G, E>;
+
 
 } // namespace std::graph
 
