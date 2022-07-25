@@ -15,7 +15,7 @@
 //           for(auto&& [vid,vid,uv,val] : sourced_edges_depth_first_search(g,seed,evf))
 //
 // Given dfs is one of the depth-first views above, the following functions are also available.
-// 
+//
 //  size(dfs) returns the depth of the current search (the size of the internal stack)
 //
 //  dfs.cancel(cancel_search::cancel_branch) will stop searching from the current vertex
@@ -79,7 +79,7 @@ public:
   ~dfs_base()               = default;
 
   dfs_base& operator=(const dfs_base&) = delete;
-  dfs_base& operator=(dfs_base&&)      = default;
+  dfs_base& operator=(dfs_base&&) = default;
 
   constexpr bool empty() const noexcept { return S_.empty(); }
 
@@ -90,95 +90,40 @@ public:
   constexpr cancel_search canceled() noexcept { return cancel_; }
 
 protected:
-  void advance() requires directed_incidence_graph<graph_type> {
-    auto is_unvisited = [this](edge_reference vw) -> bool { return colors_[target_id(graph_, vw)] == white; };
-
-    // next level in search
-    auto [u_id, uvi]    = S_.top();
-    vertex_id_type v_id = target_id(graph_, *uvi);
-
-    edge_iterator vwi = ranges::end(edges(graph_, v_id));
-    switch (cancel_) {
-    case cancel_search::continue_search:
-      // find first unvisited edge of v
-      vwi = ranges::find_if(edges(graph_, v_id), is_unvisited);
-      break;
-    case cancel_search::cancel_branch: {
-      cancel_       = cancel_search::continue_search;
-      colors_[v_id] = black; // finished with v
-
-      // Continue with sibling?
-      uvi = ranges::find_if(++uvi, ranges::end(edges(graph_, u_id)), is_unvisited);
-      if (uvi != ranges::end(edges(graph_, u_id))) {
-        S_.top().uv = uvi;
-        return;
-      }
-      // drop thru to unwind the stack to the parent
-    } break;
-    case cancel_search::cancel_all:
-      while (!S_.empty())
-        S_.pop();
-      return;
-    }
-
-    // unvisited edge found for vertex v?
-    if (vwi != ranges::end(edges(graph_, v_id))) {
-      S_.push(stack_elem{v_id, vwi});
-      vertex_id_type w_id = target_id(graph_, *vwi);
-      colors_[w_id]       = grey; // visited w
-    }
-    // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
-    else {
-      colors_[v_id] = black; // finished with v
-      S_.pop();
-      while (!S_.empty()) {
-        auto [x_id, xyi] = S_.top();
-        S_.pop();
-        xyi = ranges::find_if(++xyi, ranges::end(edges(graph_, x_id)), is_unvisited);
-
-        // unvisted edge found for vertex x?
-        if (xyi != ranges::end(edges(graph_, x_id))) {
-          S_.push({x_id, xyi});
-          vertex_id_type y_id = target_id(graph_, *xyi);
-          colors_[y_id]       = grey; // visited y
-          break;
-        } else {
-          colors_[x_id] = black; // finished with x
-        }
-      }
-    }
+  constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type) const requires directed_incidence_graph<graph_type> {
+    return target_id(graph_, uv);
   }
-
-  static vertex_id_type undir_target_id(const graph_type& g,
-                                        edge_reference    e,
-                                        vertex_id_type    src) requires undirected_incidence_graph<graph_type> {
-    if (target_id(g, e) != src)
-      return target_id(g, e);
+  constexpr vertex_id_type real_target_id(edge_reference uv,
+                                vertex_id_type src) const requires undirected_incidence_graph<graph_type> {
+    if (target_id(graph_, uv) != src)
+      return target_id(graph_, uv);
     else
-      return source_id(g, e);
+      return source_id((graph_), uv);
   }
 
-  void advance() requires undirected_incidence_graph<graph_type> {
+  constexpr vertex_edge_iterator_t<G> find_unvisited(vertex_id_t<G> uid, vertex_edge_iterator_t<G> first) {
+    return ranges::find_if(first, ranges::end(edges(graph_, uid)), [this, uid](edge_reference uv) -> bool {
+      return colors_[real_target_id(uv, uid)] == white;
+    });
+  }
+
+  constexpr void advance() {
     // next level in search
     auto [u_id, uvi]    = S_.top();
-    vertex_id_type v_id = target_id(graph_, *uvi);
+    vertex_id_type v_id = real_target_id(*uvi, u_id);
 
     edge_iterator vwi = ranges::end(edges(graph_, v_id));
     switch (cancel_) {
     case cancel_search::continue_search:
       // find first unvisited edge of v
-      vwi = ranges::find_if(edges(graph_, v_id), [this, v_id](edge_reference vw) -> bool {
-        return colors_[undir_target_id(graph_, vw, v_id)] == white;
-      });
+      vwi = find_unvisited(v_id, ranges::begin(edges(graph_, v_id)));
       break;
     case cancel_search::cancel_branch: {
       cancel_       = cancel_search::continue_search;
       colors_[v_id] = black; // finished with v
 
       // Continue with sibling?
-      uvi = ranges::find_if(++uvi, [this, u_id](edge_reference uv) -> bool {
-        return colors_[undir_target_id(graph_, uv, u_id)] == white;
-      });
+      uvi = find_unvisited(u_id, ++uvi);
       if (uvi != ranges::end(edges(graph_, u_id))) {
         S_.top().uv = uvi;
         return;
@@ -194,7 +139,7 @@ protected:
     // unvisited edge found for vertex v?
     if (vwi != ranges::end(edges(graph_, v_id))) {
       S_.push(stack_elem{v_id, vwi});
-      vertex_id_type w_id = undir_target_id(graph_, *vwi, v_id);
+      vertex_id_type w_id = real_target_id(*vwi, v_id);
       colors_[w_id]       = grey; // visited w
     }
     // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
@@ -204,14 +149,12 @@ protected:
       while (!S_.empty()) {
         auto [x_id, xyi] = S_.top();
         S_.pop();
-        xyi = ranges::find_if(++xyi, ranges::end(edges(graph_, x_id)), [this, x_id](edge_reference xy) -> bool {
-          return colors_[undir_target_id(graph_, xy, x_id)] == white;
-        });
+        xyi = find_unvisited(x_id, ++xyi);
 
         // unvisted edge found for vertex x?
         if (xyi != ranges::end(edges(graph_, x_id))) {
           S_.push({x_id, xyi});
-          vertex_id_type y_id = undir_target_id(graph_, *xyi, x_id);
+          vertex_id_type y_id = real_target_id(*xyi, x_id);
           colors_[y_id]       = grey; // visited y
           break;
         } else {
@@ -259,7 +202,7 @@ public:
   ~vertices_depth_first_search_view()                                       = default;
 
   vertices_depth_first_search_view& operator=(const vertices_depth_first_search_view&) = delete;
-  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&)      = default;
+  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&) = default;
 
 public:
   struct end_sentinel {};
@@ -291,7 +234,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&)      = default;
+    iterator& operator=(iterator&&) = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -306,14 +249,9 @@ public:
     reference operator*() const noexcept {
       auto& g             = the_range_->graph_;
       auto&& [u_id, uvi]  = the_range_->S_.top();
-      vertex_id_type v_id = 0;
-      if constexpr (directed_incidence_graph<graph_type>) {
-        v_id = target_id(g, *uvi);
-      } else {
-        v_id = undir_target_id(g, *uvi, u_id);
-      }
-      auto& v = *find_vertex(g, v_id);
-      value_  = {v_id, &v, invoke(*the_range_->value_fn_, v)};
+      vertex_id_type v_id = the_range_->real_target_id(*uvi, u_id);
+      auto&          v    = *find_vertex(g, v_id);
+      value_              = {v_id, &v, invoke(*the_range_->value_fn_, v)};
       return reinterpret_cast<reference>(value_);
     }
 
@@ -360,7 +298,7 @@ public:
   ~vertices_depth_first_search_view()                                       = default;
 
   vertices_depth_first_search_view& operator=(const vertices_depth_first_search_view&) = delete;
-  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&)      = default;
+  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&) = default;
 
 public:
   struct end_sentinel {};
@@ -391,7 +329,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&)      = default;
+    iterator& operator=(iterator&&) = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -406,14 +344,9 @@ public:
     reference operator*() const noexcept {
       auto& g             = the_range_->graph_;
       auto&& [u_id, uvi]  = the_range_->S_.top();
-      vertex_id_type v_id = 0;
-      if constexpr (directed_incidence_graph<graph_type>) {
-        v_id = target_id(g, *uvi);
-      } else {
-        v_id = undir_target_id(g, *uvi, u_id);
-      }
-      auto& v = *find_vertex(g, v_id);
-      value_  = {v_id, &v};
+      vertex_id_type v_id = the_range_->real_target_id(*uvi, u_id);
+      auto&          v    = *find_vertex(g, v_id);
+      value_              = {v_id, &v};
       return reinterpret_cast<reference>(value_);
     }
 
@@ -462,7 +395,7 @@ public:
   ~edges_depth_first_search_view()                                    = default;
 
   edges_depth_first_search_view& operator=(const edges_depth_first_search_view&) = delete;
-  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&)      = default;
+  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&) = default;
 
   struct end_sentinel {};
 
@@ -493,7 +426,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&)      = default;
+    iterator& operator=(iterator&&) = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -510,13 +443,9 @@ public:
       if constexpr (Sourced) {
         value_.source_id = u_id;
       }
-      if constexpr (directed_incidence_graph<graph_type>) {
-        value_.target_id = target_id(the_range_->graph_, *uvi);
-      } else {
-        value_.target_id = undir_target_id(the_range_->graph_, *uvi, u_id);
-      }
-      value_.edge  = &*uvi;
-      value_.value = invoke(*the_range_->value_fn_, *uvi);
+      value_.target_id = the_range_->real_target_id(*uvi, u_id);
+      value_.edge      = &*uvi;
+      value_.value     = invoke(*the_range_->value_fn_, *uvi);
       return reinterpret_cast<reference>(value_);
     }
 
@@ -560,7 +489,7 @@ public:
   ~edges_depth_first_search_view()                                    = default;
 
   edges_depth_first_search_view& operator=(const edges_depth_first_search_view&) = delete;
-  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&)      = default;
+  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&) = default;
 
   struct end_sentinel {};
 
@@ -590,7 +519,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&)      = default;
+    iterator& operator=(iterator&&) = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -607,12 +536,8 @@ public:
       if constexpr (Sourced) {
         value_.source_id = u_id;
       }
-      if constexpr (directed_incidence_graph<graph_type>) {
-        value_.target_id = target_id(the_range_->graph_, *uvi);
-      } else {
-        value_.target_id = undir_target_id(the_range_->graph_, *uvi, u_id);
-      }
-      value_.edge = &*uvi;
+      value_.target_id = the_range_->real_target_id(*uvi, u_id);
+      value_.edge      = &*uvi;
       return reinterpret_cast<reference>(value_);
     }
 
