@@ -33,6 +33,14 @@ namespace std::graph {
 //
 
 /// <summary>
+/// Graph reference of graph type G.
+/// </summary>
+/// <typeparam name="G">Graph</typeparam>
+template <class G>
+using graph_reference_t = add_lvalue_reference<G>;
+
+
+/// <summary>
 /// Override for a graph type where edges are defined densely in a matrix to allow for
 /// optimized algorithms can take advantage of the memory layout.
 ///
@@ -42,25 +50,29 @@ namespace std::graph {
 ///      class my_graph { ... };
 ///  }
 ///  namespace std::graph {
-///     template<class X>
-///     inline constexpr bool is_adjacency_matrix_v<my_namespace::my_graph<X>> = true;
+///     template<>
+///     struct is_adjacency_matrix<my_namespace::my_graph<X>> : true_type;
 ///  }
 /// </summary>
-/// <typeparam name="G"></typeparam>
-template <class G>
-inline constexpr bool is_adjacency_matrix_v = false;
+/// <typeparam name="G">Graph</typeparam>
+///
 
 template <class G>
-concept adjacency_matrix = is_adjacency_matrix_v<G>;
+struct adjacency_matrix : public false_type {}; // specialized for graph container
 
+template <class G>
+struct is_adjacency_matrix : public adjacency_matrix<G> {};
+
+template <class G>
+inline constexpr bool is_adjacency_matrix_v = is_adjacency_matrix<G>::value;
 
 //
 // vertices(g) -> vertex_range_t<G>
 //
-// vertex_range_t<G>    = decltype(vertices(g))
-// vertex_iterator_t<G> = ranges::iterator_t<vertex_range_t<G>>
-// vertex_t             = ranges::range_value_t<vertex_range_t<G>>
-// vertex_reference_t   = ranges::range_reference_t<vertex_range_t<G>>
+// vertex_range_t<G>     = decltype(vertices(g))
+// vertex_iterator_t<G>  = ranges::iterator_t<vertex_range_t<G>>
+// vertex_t<G>           = ranges::range_value_t<vertex_range_t<G>>
+// vertex_reference_t<G> = ranges::range_reference_t<vertex_range_t<G>>
 //
 namespace tag_invoke {
   TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices]
@@ -350,7 +362,7 @@ template <class G>
 auto contains_edge(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
   if constexpr (tag_invoke::_has_contains_edge_adl<G>)
     return tag_invoke::contains_edge(g, uid, vid);
-  else if constexpr (adjacency_matrix<G>) {
+  else if constexpr (is_adjacency_matrix_v<G>) {
     return uid < ranges::size(vertices(g)) && vid < ranges::size(vertices(g));
   }
   else {

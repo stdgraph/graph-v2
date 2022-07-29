@@ -12,9 +12,13 @@
     - [ ] **view concepts: vertex_view, edge_view, neighbor_view returned from graph views**
     - [ ] **function concepts: VVF, EVF**
   - [ ] Graph API
-    - [x] depth() CPO? bfs, dfs: size(xfs)
+    - [ ] depth() CPO? bfs, dfs. size() is different; depth for BFS takes extra work and is diff concept.
     - [x] cancel() CPO? bfs, dfs: no, member only
+    - [ ] replace is_undirected_edge_v<G> & undirected_incidence_graph<G> with is_unordered_edge_v<G>
   - [ ] Views
+    - [ ] \<all\>
+      - [ ] view classes should be in std::graph
+      - [ ] view functions should be in std::graph::view
     - [ ] vertexlist
       - [ ] Copy VVF to iterator (not reference)
       - [ ] Accept VVF(g,u) & allow vertex_value?
@@ -39,6 +43,8 @@
       - [x] support begin, end, depth/size, empty, swap free functions
       - [x] verify it is a std::ranges::view<>
       - [x] create CPOs
+      - [x] Use real_target_id(g,uv,src) for both directed_incidence_graph & undirected_incidence_graph to consolidate code
+      - [ ] colors_ should use same allocator as Stack; add ctor that takes Stack
     - [x] edges_depth_first_search_view
       - [x] validate results & add unit tests
       - [x] support Cancelable
@@ -48,6 +54,8 @@
       - [x] support begin, end, depth/size, empty, swap free functions
       - [x] verify it is a std::ranges::view<>
       - [x] create CPOs: edges, sourced_edges
+      - [x] Use real_target_id(g,uv,src) for both directed_incidence_graph & undirected_incidence_graph to consolidate code
+      - [ ] colors_ should use same allocator as Stack; add ctor that takes Stack
     - [ ] **bfs_vertex_range**
     - [ ] **bfs_edge_range**
     - [ ] topological_sort_vertex_range
@@ -129,7 +137,7 @@
   - [ ] Add processes to build & run unit tests on checkin
   - [ ] Make graph-v2 public. Requirements
     - [ ] 2+ algorithms implemented
-    - [x] bfs or dfs implemented
+    - [ ] bfs and dfs implemented
     - [ ] README.md with Description + Getting Started
 - Feature & performance comparison
   - [ ] boost::graph
@@ -146,11 +154,14 @@
     - [x] Add Getting Started
   - [ ] P1709
     - [x] Google Doc --> LaTex
-    - [ ] Reivew P2300 WRT format & structure
+    - [ ] Review P2300 WRT format & structure
+        - [ ] Add reference to P2300
+        - [ ] Defer specification of parallel algos until executors have been accepted (see Notes.md)
+        - [ ] CPO usage (copy from P2300 5.9, 8.1.1, 8.1.2)
     - [ ] Design Decisions
       - [x] Library Organization
       - [x] Separation of Graph Algorithm and Data Structure Requirements
-      - [ ] Graph Function override overview
+      - [ ] Graph Function specialization overview & example
     - [ ] Algorithms
     - [ ] Technical Specifications
       - [ ] \<graph\>
@@ -194,8 +205,7 @@
 - [ ] Should operator\[\](n) -> vertex& be a requirement for a graph? (Used by NWGraph)
 - [ ] Can std::array be used as a basis for a constexpr graph? What would the graph be?
 - [ ] How to validate constexpr? (need to use std::array)
-- [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VId. How to adapt existing graphs?
-- [ ] Can transform_view be used in place of the projections in the graph views?
+- [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VId. Will this be an issue for existing graphs? If so, how to adapt them?
 - [ ] How to support bipartite graphs using different vertex types?
   - [x] Requires definition of 2+ types of vertices. How to define vertex type: compile-time vs. run-time?
     - [x] vertices are stored as a range of range of vertices, where the outer range is the type of vertex
@@ -226,9 +236,7 @@
 - [ ] Should we worry about row-major & column-major ordering of adjacency_matrix? always assume row-major?
 - [ ] Is there a way for EVF to take both edge_value and fnc obj? (same for VVF & vertex_value)
 - [ ] The default for edges(g,uid) CPO isn't being found by msvc or gcc. Is there a way to only have to override one version of edges(g,)?
-- [ ] Use of access namespace is required by CPO and exposed when specializing the functions. Acceptable? Better way?
-- [ ] Are bfs & bfs algorithms, views or ranges?
-- [ ] Are graphs containers (WRT the standard)? 
+- [ ] Should we have a graph_reference_t<G> type alias?
 
 ## Resolved
 ### ToDo Completed
@@ -291,3 +299,10 @@
 - [x] If we have an access namespace, do we need a container namespace? 
         A: "access" has been renamed "tag_invoke" and is a different purpose than a container namespace
            we don't need a separate container namespace
+- [x] Are bfs & bfs algorithms, views or ranges? WRT P1709 they are Views.
+- [x] Are graphs containers (WRT the standard)? 
+        A: They are containers because they contain the data that is being operated on. They are more complex than 
+        existing containers because they include multiple ranges.
+- [x] Use of tag_invoke namespace is required by CPO and exposed when specializing the functions. Acceptable? Better way?
+        A: It is a requirement and is being used as part of P2300. We'll follow their lead.
+- [x] Can transform_view be used in place of the projections in the graph views? No
