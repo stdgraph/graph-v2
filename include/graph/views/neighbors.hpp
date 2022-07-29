@@ -24,9 +24,9 @@ class neighbor_iterator;
 /// <typeparam name="VVF">Edge Value Function</typeparam>
 template <incidence_graph G, bool Sourced, class VVF>
 class neighbor_iterator
-      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
+      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_edge<G, edge_t<G>> )>;
 
   using graph_type            = G;
   using vertex_type           = vertex_t<graph_type>;
@@ -74,7 +74,7 @@ public:
     // const in this functions signature causes target() to always return a const value, which isn't always what we want
     // shadow_vertex_type has correct constness based on the G template parameter
 
-    if constexpr (undirected_incidence_graph<G>) {
+    if constexpr (unordered_edge<G, edge_type>) {
       static_assert(sourced_incidence_graph<G>);
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
         value_.source_id = source_id(g_.*iter_);
@@ -127,9 +127,9 @@ private: // member variables
 
 template <incidence_graph G, bool Sourced>
 class neighbor_iterator<G, Sourced, void>
-      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
+      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type            = G;
   using vertex_type           = vertex_t<graph_type>;
@@ -175,7 +175,7 @@ public:
     // const in this functions signature causes target() to always return a const value, which isn't always what we want
     // shadow_vertex_type has correct constness based on the G template parameter
 
-    if constexpr (undirected_incidence_graph<G>) {
+    if constexpr (unordered_edge<G, edge_type>) {
       static_assert(sourced_incidence_graph<G>);
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
         value_.source_id = source_id(g_.*iter_);

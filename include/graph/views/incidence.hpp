@@ -24,9 +24,9 @@ class incidence_iterator;
 /// <typeparam name="EVF">Edge Value Function</typeparam>
 template <incidence_graph G, bool Sourced, class EVF>
 class incidence_iterator
-      : source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
+      : source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
@@ -70,7 +70,7 @@ protected:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (undirected_incidence_graph<G>) {
+    if constexpr (unordered_edge<G, edge_type>) {
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
         value_.source_id = source_id(g_, *iter_);
         value_.target_id = target_id(g_, *iter_);
@@ -119,9 +119,9 @@ private: // member variables
 
 template <incidence_graph G, bool Sourced>
 class incidence_iterator<G, Sourced, void>
-      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)> {
+      : public source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || undirected_incidence_graph<G>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_incidence_graph<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
@@ -164,7 +164,7 @@ public:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (undirected_incidence_graph<G>) {
+    if constexpr (unordered_edge<G, edge_type>) {
       static_assert(sourced_incidence_graph<G>);
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
         value_.source_id = source_id(g_.*iter_);

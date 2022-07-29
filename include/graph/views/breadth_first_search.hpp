@@ -29,6 +29,7 @@ public:
   using vertex_id_type   = vertex_id_t<graph_type>;
   using vertex_reference = vertex_reference_t<graph_type>;
   using vertex_iterator  = vertex_iterator_t<graph_type>;
+  using edge_type        = edge_t<G>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
 
@@ -91,12 +92,11 @@ public:
   constexpr cancel_search canceled() noexcept { return cancel_; }
 
 protected:
-  constexpr vertex_id_type real_target_id(edge_reference uv,
-                                          vertex_id_type) const requires directed_incidence_graph<graph_type> {
+  constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type) const requires ordered_edge<G, edge_type> {
     return target_id(graph_, uv);
   }
   constexpr vertex_id_type real_target_id(edge_reference uv,
-                                          vertex_id_type src) const requires undirected_incidence_graph<graph_type> {
+                                          vertex_id_type src) const requires unordered_edge<G, edge_type> {
     if (target_id(graph_, uv) != src)
       return target_id(graph_, uv);
     else
@@ -169,6 +169,7 @@ public:
   using vertex_id_type   = vertex_id_t<graph_type>;
   using vertex_reference = vertex_reference_t<graph_type>;
   using vertex_iterator  = vertex_iterator_t<graph_type>;
+  using edge_type        = edge_t<G>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
   using bfs_range_type   = bfs_vertex_range<graph_type, VVF, Queue>;
@@ -238,7 +239,7 @@ public:
       auto&&         u_id = the_range_->Q_.front();
       auto&&         uvi  = the_range_->uv_;
       vertex_id_type v_id = 0;
-      if constexpr (directed_incidence_graph<graph_type>) {
+      if constexpr (ordered_edge<graph_type, edge_type>) {
         v_id = target_id(g, *uvi);
       } else {
         v_id = undir_target_id(g, *uvi, u_id);
@@ -279,6 +280,7 @@ public:
   using vertex_id_type   = vertex_id_t<graph_type>;
   using vertex_reference = vertex_reference_t<graph_type>;
   using vertex_iterator  = vertex_iterator_t<graph_type>;
+  using edge_type        = edge_t<G>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
   using bfs_range_type   = bfs_vertex_range<graph_type, void, Queue>;
@@ -343,7 +345,7 @@ public:
       auto&&         u_id = the_range_->Q_.top();
       auto&&         uvi  = the_range_->uv_;
       vertex_id_type v_id = 0;
-      if constexpr (directed_incidence_graph<graph_type>) {
+      if constexpr (ordered_edge<graph_type, edge_type>) {
         v_id = target_id(g, *uvi);
       } else {
         v_id = undir_target_id(g, *uvi, u_id);
@@ -382,6 +384,7 @@ public:
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
+  using edge_type           = edge_t<G>;
   using edge_reference_type = edge_reference_t<graph_type>;
   using bfs_range_type      = bfs_edge_range<G, EVF, Sourced, Queue>;
 
@@ -449,7 +452,7 @@ public:
       if constexpr (Sourced) {
         value_.source_id = u_id;
       }
-      if constexpr (directed_incidence_graph<graph_type>) {
+      if constexpr (ordered_edge<graph_type, edge_type>) {
         value_.target_id = target_id(*the_range_->graph_, *uvi);
       } else {
         value_.target_id = undir_target_id(*the_range_->graph_, *uvi, u_id);
@@ -487,6 +490,7 @@ public:
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
+  using edge_type           = edge_t<G>;
   using edge_reference_type = edge_reference_t<graph_type>;
   using bfs_range_type      = bfs_edge_range<G, void, Sourced, Queue>;
 
@@ -550,7 +554,7 @@ public:
       if constexpr (Sourced) {
         value_.source_id = u_id;
       }
-      if constexpr (directed_incidence_graph<graph_type>) {
+      if constexpr (ordered_edge<graph_type, edge_type>) {
         value_.target_id = target_id(*the_range_->graph_, *uvi);
       } else {
         value_.target_id = undir_target_id(*the_range_->graph_, *uvi, u_id);

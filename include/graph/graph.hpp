@@ -106,12 +106,6 @@ concept sourced_incidence_graph = incidence_graph<G> && sourced_edge<G, edge_t<G
 #  endif
 };
 
-template <class G>
-concept undirected_incidence_graph = sourced_incidence_graph<G> && is_undirected_edge_v<edge_t<G>>;
-
-template <class G>
-concept directed_incidence_graph = !undirected_incidence_graph<G>;
-
 //
 // property concepts
 //
@@ -181,13 +175,16 @@ template <class G, class E>
 inline constexpr bool is_unordered_edge_v = is_unordered_edge<G, E>::value;
 
 template <class G, class E>
+concept unordered_edge = is_unordered_edge_v<G, E>;
+
+//
+// is_ordered_edge, ordered_edge
+//
+template <class G, class E>
 struct is_ordered_edge : public negation<is_unordered_edge<G,E>> {};
 
 template <class G, class E>
 inline constexpr bool is_ordered_edge_v = is_ordered_edge<G, E>::value;
-
-template<class G, class E>
-concept unordered_edge = is_unordered_edge_v<G, E>;
 
 template <class G, class E>
 concept ordered_edge = is_ordered_edge_v<G, E>;

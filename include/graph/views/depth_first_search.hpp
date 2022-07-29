@@ -55,6 +55,7 @@ public:
   using vertex_id_type   = vertex_id_t<graph_type>;
   using vertex_reference = vertex_reference_t<graph_type>;
   using vertex_iterator  = vertex_iterator_t<graph_type>;
+  using edge_type        = edge_t<G>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
 
@@ -90,11 +91,11 @@ public:
   constexpr cancel_search canceled() noexcept { return cancel_; }
 
 protected:
-  constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type) const requires directed_incidence_graph<graph_type> {
+  constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type) const requires ordered_edge<G, edge_type> {
     return target_id(graph_, uv);
   }
   constexpr vertex_id_type real_target_id(edge_reference uv,
-                                vertex_id_type src) const requires undirected_incidence_graph<graph_type> {
+                                          vertex_id_type src) const requires unordered_edge<G, edge_type> {
     if (target_id(graph_, uv) != src)
       return target_id(graph_, uv);
     else
