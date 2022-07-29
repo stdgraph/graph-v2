@@ -8,6 +8,7 @@
 \usepackage{soul}
 \usepackage{times}
 \usepackage[scaled=.90]{helvet} % Use helvetica for sf and scale to proper size
+\usepackage{amssymb} % for checkmark
 
 %% \usepackage{url}  %% use hyperref instead
 
@@ -218,34 +219,40 @@ Rewrite with a focus on a \textbf{purely functional design}, emphasizing the alg
 \subsubsection*{P1709R0}
 Focus on \textbf{object-oriented API} for data structures and example code for a few algorithms.
 
+\subsection{Future Directions}
+% algorithms: 
+% views: 
+% containers: adjacency matrix
+% data model: incoming edges on a vertex
+
 \section{Design - Introduction}
 
 Table \ref{tab:name_conv} shows the naming conventions used throughout this document. 
 
 \begin{table}[h!]
 \begin{center}
-{\begin{tabular}{l l l p{6cm}}
+{\begin{tabular}{l l l p{7cm}}
 \hline
-    \textbf{Template} & & & \\
-    \textbf{Parameter} & \textbf{Type Alias} & \textbf{Variable Names} & \textbf{Description} \\
+    \textbf{Template} & & \textbf{Variable} & \\
+    \textbf{Parameter} & \textbf{Type Alias} & \textbf{Names} & \textbf{Description} \\
 \hline
     \tcode{G} & & & Graph \\
     & \tcode{graph_reference_t<G>} & \tcode{g} & Graph reference \\
     \tcode{GV} &  & & Graph Value, value or reference \\
 \hline
     \tcode{V} & \tcode{vertex_t<G>} & & Vertex \\
-    & \tcode{vertex_reference_t<G>} & \tcode{u, v, x, y} & Vertex reference \\
-    \tcode{VId} & \tcode{vertex_id_t<G>} & \tcode{uid, vid} & Vertex id \\
-    \tcode{VV} &  \tcode{vertex_value_t<G>} & & Vertex Value, value or reference \\
+    & \tcode{vertex_reference_t<G>} & \tcode{u, v, x, y} & Vertex reference. \tcode{u} is the source (or only) vertex. \tcode{v} is the target vertex. \\
+    \tcode{VId} & \tcode{vertex_id_t<G>} & \tcode{uid, vid} & Vertex id. \tcode{uid} is the source (or only) vertex id. \tcode{vid} is the target vertex id. \\
+    \tcode{VV} &  \tcode{vertex_value_t<G>} & & Vertex Value, value or reference. This can be either the user-defined value on a vertex, or a value returned by a function object (e.g. \tcode{VVF}) that is related to the vertex. \\
     \tcode{VR} &  \tcode{vertex_range_t<G>} & & Vertex Range \\
-    \tcode{VI} & \tcode{vertex_iterator_t<G>} & \tcode{ui, vi} & Vertex Iterator \\
+    \tcode{VI} & \tcode{vertex_iterator_t<G>} & \tcode{ui, vi} & Vertex Iterator. \tcode{ui} is the source (or only) vertex. \tcode{vi} is the target vertex. \\
     \tcode{VVF} & & \tcode{vvf} & Vertex Value Function: vvf(u) $\rightarrow$ value \\
 \hline
     \tcode{E} & \tcode{edge_t<G>} & & Edge \\
-    & \tcode{edge_reference_t<G>} & \tcode{uv, vw} & Edge reference \\
-    \tcode{EV} &  \tcode{edge_value_t<G>} & & Edge Value, value or reference \\
+    & \tcode{edge_reference_t<G>} & \tcode{uv, vw} & Edge reference. \tcode{uv} is an edge from vertices \tcode{u} to \tcode{v}. \tcode{vw} is an edge from vertices \tcode{v} to \tcode{w}.  \\
+    \tcode{EV} &  \tcode{edge_value_t<G>} & & Edge Value, value or reference. This can be either the user-defined value on an edge, or a value returned by a function object (e.g. \tcode{EVF}) that is related to the edge. \\
     \tcode{ER} &  \tcode{vertex_edge_range_t<G>} & & Edge Range for edges of a vertex \\
-    \tcode{EI} & \tcode{vertex_edge_iterator_t<G>} & \tcode{uvi, vwi} & Edge Iterator for an edge of a vertex \\
+    \tcode{EI} & \tcode{vertex_edge_iterator_t<G>} & \tcode{uvi, vwi} & Edge Iterator for an edge of a vertex. \tcode{uvi} is an iterator for an edge from vertices \tcode{u} to \tcode{v}. \tcode{vwi} is an iterator for an edge from vertices \tcode{v} to \tcode{w}. \\
     \tcode{EVF} & & \tcode{evf} & Edge Value Function: evf(uv) $\rightarrow$ value \\
 \hline
 \end{tabular}}
@@ -261,7 +268,10 @@ Table \ref{tab:name_conv} shows the naming conventions used throughout this docu
 %% adjacency graph, vertex, edge
 %% incidence, neighbors (adjacency)
 %% optional user-defined values for edge, vertex, graph
+
 \subsubsection{Edge List}
+% range with source_id & target_id members, and optional value member(s)
+% edgelist view
 
 \subsection{Examples}
 \subsubsection{Example: User}
@@ -302,13 +312,239 @@ Articulation points \cite{REF_} ...
 \paragraph{[TBD] Label propagation}
 
 \subsection{Views}
-\subsubsection{vertexlist views}
-\subsubsection{incidence views}
-\subsubsection{neighbors views}
-\subsubsection{edgelist views}
-\subsubsection{depth\_first\_search views}
-\subsubsection{breadth\_first\_search views}
-\subsubsection{topological\_sort views}
+\subsubsection{Return Types}
+Views return one of the types in this section, providing a consistent set of values. They are templated so that the view can adjust the actual values returned to be appropriate for its use. The following examples show the general design and how it's used. While it focuses on vertexlist to iterate over all vertices, it applies to all view functions.
+
+\begin{lstlisting}
+// the type of uu is vertex_view<vertex_id_t<G>, vertex_reference_t<G>, void>
+for(auto&& uu : vertexlist(g)) {
+  vertex_id<G>          id = uu.id;
+  vertex_reference_t<G> u  = uu.vertex;
+  // ... do something interesting
+}
+\end{lstlisting}
+
+Structured bindings make it simpler.
+\begin{lstlisting}
+for(auto&& [id, u] : vertexlist(g)) {
+  // ... do something interesting
+}
+\end{lstlisting}
+
+A function object can also be passed to return a value from the vertex. In this case, \tcode{vertexlist(g)} returns \tcode{vertex_view<vertex_id_t<G>, vertex_reference_t<G>, decltype(vvf(u))>}.
+\begin{lstlisting}
+// the type returned by vertexlist is 
+// vertex_view<vertex_id_t<G>, 
+//             vertex_reference_t<G>, 
+//             decltype(vvf(vertex_reference_t<G>))>
+auto vvf = [&g](vertex_reference_t<G> u) { return vertex_value(g,u); };
+for(auto&& [id, u, value] : vertexlist(g, vvf)) {
+  // ... do something interesting
+}
+\end{lstlisting}
+
+\paragraph{\tcode{struct vertex_view<Vid, V, VV>}}\label{vertex-view}\mbox{} \\
+\tcode{vertex_view} is used to return vertex information. It is used by \tcode{vertexlist(g)}, \tcode{vertices_breadth_first_search(g,u)}, \tcode{vertices_depth_first_search(g,u)} and others. The \tcode{id} member always exists.
+
+\begin{lstlisting}
+template <class VId, class V, class VV>
+struct vertex_view {
+  VId id;     // vertex_id_t<G>, always exists
+  V   vertex; // vertex_reference_t<t>
+  VV  value;
+};
+\end{lstlisting}
+
+Specializations are defined with \tcode{V}=void or \tcode{VV}=void to suppress the existance of their associated member variables, giving the following valid combinations in Table \ref{tab:vertex-view} . For instance, the second entry, \tcode{vertex_view<VId, V>} has two members \tcode{\{VId id; V vertex;\}}.
+\begin{table}[h!]
+\begin{center}
+%\resizebox{\textwidth}{!}
+{\begin{tabular}{l |c c c}
+\hline
+    \multicolumn{1}{l}{\textbf{Template Arguments}}
+    &
+    \multicolumn{3}{c}{\textbf{Members}} \\
+    %\textbf{Template Arguments} & id & vertex & value \\
+\hline
+    \tcode{vertex_view<VId, V, VV>} & \tcode{id} & \tcode{vertex} & \tcode{value} \\
+    \tcode{vertex_view<VId, V>} & \tcode{id} & \tcode{vertex} & \\
+    \tcode{vertex_view<VId, VV>} & \tcode{id} & & \tcode{value} \\
+    \tcode{vertex_view<VId>} & \tcode{id} & & \\
+\hline
+\end{tabular}}
+\caption{\tcode{vertex_view} Members}
+\label{tab:vertex-view}
+\end{center}
+\end{table}
+
+\paragraph{\tcode{struct edge_view<VId, Sourced, E, EV>}}\label{edge-view}\mbox{} \\
+\tcode{edge_view} is used to return edge information. It is used by \tcode{incidence(g,u)}, \tcode{edgelist(g)}, \tcode{edges_breadth_first_search(g,u)}, \tcode{edges_depth_first_search(g,u)} and others. When \tcode{Sourced}=true, the \tcode{source_id} member is included with type \tcode{VId}. The \tcode{target_id} member always exists.
+
+\begin{lstlisting}
+template <class VId, bool Sourced, class E, class EV>
+struct edge_view {
+  VId source_id; // vertex_id_t<G>
+  VId target_id; // vertex_id_t<G>, always exists
+  E   edge;      // edge_reference_t<G>
+  EV  value;
+};
+\end{lstlisting}
+
+Specializations are defined with \tcode{Sourced}=true\(|\)false, \tcode{E}=void or \tcode{EV}=void to suppress the existance of the associated member variables, giving the following valid combinations in Table \ref{tab:edge-view} . For instance, the second entry, \tcode{edge_view<VId,true,E>} has three members \tcode{\{VId source_id; VId target_id; E edge;\}}.
+\begin{table}[h!]
+\begin{center}
+%\resizebox{\textwidth}{!}
+{\begin{tabular}{l |c c c c}
+\hline
+    \multicolumn{1}{l}{\textbf{Template Arguments}}
+    &
+    \multicolumn{4}{c}{\textbf{Members}} \\
+    %\textbf{Template Arguments} & id & edge & value \\
+\hline
+    \tcode{edge_view<VId, true, E, EV>} & \tcode{source_id} & \tcode{target_id} & \tcode{edge} & \tcode{value} \\
+    \tcode{edge_view<VId, true, E>} & \tcode{source_id} & \tcode{target_id} & \tcode{edge} & \\
+    \tcode{edge_view<VId, true, EV>} & \tcode{source_id} & \tcode{target_id} & & \tcode{value} \\
+    \tcode{edge_view<VId, true>} & \tcode{source_id} & \tcode{target_id} & & \\
+    \tcode{edge_view<VId, false, E, EV>} & & \tcode{target_id} & \tcode{edge} & \tcode{value} \\
+    \tcode{edge_view<VId, false, E>} & & \tcode{target_id} & \tcode{edge} & \\
+    \tcode{edge_view<VId, false, EV>} & & \tcode{target_id} & & \tcode{value} \\
+    \tcode{edge_view<VId, false>} & & \tcode{target_id} & & \\
+\hline
+\end{tabular}}
+\caption{\tcode{edge_view} Members}
+\label{tab:edge-view}
+\end{center}
+\end{table}
+
+\paragraph{\tcode{struct neighbor_view<VId, Sourced, V, VV>}}\label{neighbor-view}\mbox{} \\
+\tcode{neighbor_view} is used to return information for a neighbor vertex, through an edge. It is used by \tcode{neighbors(g,u)}. When \tcode{Sourced}=true, the \tcode{source_id} member is included with type \tcode{VId}. The \tcode{target_id} member always exists.
+
+\begin{lstlisting}
+template <class VId, bool Sourced, class V, class VV>
+struct neighbor_view {
+  VId source_id;  // vertex_id_t<G>
+  VId target_id;  // vertex_id_t<G>, always exists
+  V   target;     // vertex_reference_t<G>
+  VV  value;
+};
+\end{lstlisting}
+
+Specializations are defined with \tcode{Sourced}=true\(|\)false, \tcode{E}=void or \tcode{EV}=void to suppress the existance of the associated member variables, giving the following valid combinations in Table \ref{tab:neighbor-view} . For instance, the second entry, \tcode{neighbor_view<VId,true,E>} has three members \tcode{\{VId source_id; VId target_id; V neighbor;\}}.
+\begin{table}[h!]
+\begin{center}
+%\resizebox{\textwidth}{!}
+{\begin{tabular}{l |c c c c}
+\hline
+    \multicolumn{1}{l}{\textbf{Template Arguments}}
+    &
+    \multicolumn{4}{c}{\textbf{Members}} \\
+\hline
+    \tcode{neighbor_view<VId, true, E, EV>} & \tcode{source_id} & \tcode{target_id} & \tcode{neighbor} & \tcode{value} \\
+    \tcode{neighbor_view<VId, true, E>} & \tcode{source_id} & \tcode{target_id} & \tcode{neighbor} & \\
+    \tcode{neighbor_view<VId, true, EV>} & \tcode{source_id} & \tcode{target_id} & & \tcode{value} \\
+    \tcode{neighbor_view<VId, true>} & \tcode{source_id} & \tcode{target_id} & & \\
+    \tcode{neighbor_view<VId, false, E, EV>} & & \tcode{target_id} & \tcode{neighbor} & \tcode{value} \\
+    \tcode{neighbor_view<VId, false, E>} & & \tcode{target_id} & \tcode{neighbor} & \\
+    \tcode{neighbor_view<VId, false, EV>} & & \tcode{target_id} & & \tcode{value} \\
+    \tcode{neighbor_view<VId, false>} & & \tcode{target_id} & & \\
+\hline
+\end{tabular}}
+\caption{\tcode{neighbor_view} Members}
+\label{tab:neighbor-view}
+\end{center}
+\end{table}
+
+\subsubsection{vertexlist Views}
+\phil{Missing overloads for vertex range}
+
+\tcode{vertexlist} views iterate over a range of vertices, returning a \tcode{vertex_view} on each iteration. 
+Table \ref{tab:vertexlist} shows the vertexlist functions overloads and their return values. \tcode{first} and \tcode{last} are vertex iterators.
+
+\begin{table}[h!]
+\begin{center}
+%\resizebox{\textwidth}{!}
+{\begin{tabular}{l l}
+\hline
+    \textbf{Example} & \textbf{Return} \\
+\hline
+    \tcode{for(auto\&\& [uid,u] : vertexlist(g))} & \tcode{vertex_view<VId,V,void>} \\
+    \tcode{for(auto\&\& [uid,u,val] : vertexlist(g,vvf))} & \tcode{vertex_view<VId,V,VV>} \\
+    \tcode{for(auto\&\& [uid,u] : vertexlist(g,first,last))} & \tcode{vertex_view<VId,V,void>} \\
+    \tcode{for(auto\&\& [uid,u,val] : vertexlist(g,first,last,vvf))} & \tcode{vertex_view<VId,V,VV>} \\
+\hline
+\end{tabular}}
+\caption{\tcode{vertexlist} View Functions}
+\label{tab:vertexlist}
+\end{center}
+\end{table}
+
+\subsubsection{incidence Views}
+\tcode{incidence} views iterate over a range of adjacent edges of a vertex, returning a \tcode{edge_view} on each iteration. 
+Table \ref{tab:incidence} shows the \tcode{incidence} function overloads and their return values. 
+
+Since the source vertex \tcode{u} is available when calling an \tcode{incidence} function, there's no need to include sourced versions of the function to include \tcode{source_id} in the output.
+
+\begin{table}[h!]
+\begin{center}
+%\resizebox{\textwidth}{!}
+{\begin{tabular}{l l}
+\hline
+    \textbf{Example} & \textbf{Return} \\
+\hline
+    \tcode{for(auto\&\& [vid,uv] : incidence(g,u))} & \tcode{edge_view<VId,false,E,void>} \\
+    \tcode{for(auto\&\& [vid,uv,val] : incidence(g,uv,evf))} & \tcode{edge_view<VId,false,E,EV>} \\
+\hline
+\end{tabular}}
+\caption{\tcode{incidence} View Functions}
+\label{tab:incidence}
+\end{center}
+\end{table}
+
+\subsubsection{neighbors Views}
+\tcode{neighbors} views iterate over a range of edges for a vertex, returning a \tcode{vertex_view} of each neighboring target vertex on each iteration. 
+Table \ref{tab:neighbors} shows the \tcode{neighbors} function overloads and their return values. 
+
+Since the source vertex \tcode{u} is available when calling a \tcode{neighbors} function, there's no need to include sourced versions of the function to include \tcode{source_id} in the output.
+
+\begin{table}[h!]
+\begin{center}
+%\resizebox{\textwidth}{!}
+{\begin{tabular}{l l}
+\hline
+    \textbf{Example} & \textbf{Return} \\
+\hline
+    \tcode{for(auto\&\& [vid,v] : neighbors(g,u))} & \tcode{vertex_view<VId,false,V,void>} \\
+    \tcode{for(auto\&\& [vid,v,val] : neighbors(g,u,evf))} & \tcode{vertex_view<VId,false,V,VV>} \\
+\hline
+\end{tabular}}
+\caption{\tcode{neighbors} View Functions}
+\label{tab:neighbors}
+\end{center}
+\end{table}
+
+\subsubsection{edgelist Views}
+\tcode{edgelist} views iterate over all edges for all vertices, returning a \tcode{edge_view} on each iteration. 
+Table \ref{tab:edgelist} shows the \tcode{edgelist} function overloads and their return values. 
+
+\begin{table}[h!]
+\begin{center}
+%\resizebox{\textwidth}{!}
+{\begin{tabular}{l l}
+\hline
+    \textbf{Example} & \textbf{Return} \\
+\hline
+    \tcode{for(auto\&\& [uid,vid,uv] : edgelist(g))} & \tcode{edge_view<VId,true,E,void>} \\
+    \tcode{for(auto\&\& [uid,vid,uv,val] : edgelist(g,evf))} & \tcode{edge_view<VId,true,E,EV>} \\
+\hline
+\end{tabular}}
+\caption{\tcode{edgelist} View Functions}
+\label{tab:edgelist}
+\end{center}
+\end{table}
+
+\subsubsection{depth\_first\_search Views}
+\subsubsection{breadth\_first\_search Views}
+\subsubsection{topological\_sort Views}
 
 \subsection{Graph Container Interface}
 The Graph Container Interface defines the primitive concepts, traits, types and functions used to define and access an adacency graph, no matter its internal design and organization. Thus, it is designed to reflect all forms of adjacency graphs including a vector of lists, CSR graph and adjacency matrix, whether they are in the standard or external to the standard.
@@ -318,6 +554,30 @@ All algorithms in this proposal require that vertices are stored in random acces
 The Graph Container Interface is designed to support a wider scope of graph containers than required by the views and algorithms in this proposal. This enables for future growth of the graph data model (e.g. incoming edges on a vertex), or as a framework for graph implementations outside of the standard. For instance, existing implementations may have requirements that cause them to define features with looser constraints, such as sparse vertex\_ids, non-integral vertex\_ids, or storing vertices in associative bi-directional containers (e.g. std::map or std::unordered\_map). Such features require specialized implementations for views and algorithms. The performance for such algorithms will be sub-optimal, but is preferrable to run them on the existing container rather than loading the graph into a high-performance graph container and then running the algorithm on it, where the loading time can far outweigh the time to run the sub-optimal algorithm. To achieve this, care has been taken to make sure that the use of concepts chosen is appropriate for algorithm, view and container.
 
 \subsubsection{Concepts}
+Table \ref{tab:graph_concepts} summarizes the concepts in the Graph Container Interface, allowing views and algorithms to verify a graph implementation has the expected requirements for an \tcode{adjacency_graph} or \tcode{sourced_adjacency_graph}.
+
+Sourced edges have a source\_id on them in addition to a target\_id. A \tcode{sourced_adjacency_graph} has sourced edges.
+
+% is_sourced_edge and is_sourced_edge_v structs are not included the table for brevity. We may want to add them in the future for completeness.
+\begin{table}[h!]
+\begin{center}
+%\resizebox{\textwidth}{!}
+{\begin{tabular}{l L{12.0cm}}
+\hline
+    \textbf{Concept} & \textbf{Definition} \\
+\hline
+    \tcode{vertex_range<G>} & \tcode{vertices(g)} returns a sized, forward\_range; \tcode{vertex_id(g,ui)} exists\\
+    \tcode{targeted_edge<G>} & \tcode{target_id(g,uv)} and \tcode{target(g,uv)} exist\\
+    \tcode{sourced_edge<G>} & \tcode{source_id(g,uv)} and \tcode{source(g,uv)} exist\\
+    \tcode{adjacency_graph<G>} & \tcode{vertex_range<G>} and \tcode{targeted_edge<G,edge<G>>} and \tcode{edges(g,_)} functions return a forward\_range\\
+    \tcode{sourced_adjacency_graph<G>} & \tcode{adjacency_graph<G>} and \tcode{sourced_edge<G, edge_t<G>>} and \tcode{edge_id(g,uv)} exists \\
+\hline
+\end{tabular}}
+\caption{Graph Container Interface Concepts}
+\label{tab:graph_concepts}
+\end{center}
+\end{table}
+
 \subsubsection{Traits}
 Table \ref{tab:graph_traits} summarizes the type traits in the Graph Container Interface, allowing views and algorithms to query the graph's characteristics.
 
@@ -326,24 +586,26 @@ Table \ref{tab:graph_traits} summarizes the type traits in the Graph Container I
 %\resizebox{\textwidth}{!}
 {\begin{tabular}{l l L{7.0cm}}
 \hline
-    \textbf{Trait} & \textbf{Definition} & \textbf{Comment} \\
+    \textbf{Trait} & \textbf{Type} & \textbf{Comment} \\
 \hline
     \tcode{has_degree<G>} & concept & Is the \tcode{degree(g,u)} function available? \\
     \tcode{has_find_vertex<G>} & concept & Are the \tcode{find_vertex(g,_)} functions available? \\
-    \tcode{has_find_vertex_edge<G>} & concept & \\
-    \tcode{has_contains_edge<G>} & concept & \\
+    \tcode{has_find_vertex_edge<G>} & concept & Are the \tcode{find_vertex_edge(g,_)} functions available?\\
+    \tcode{has_contains_edge<G>} & concept & Is the \tcode{contains_edge(g,uid,vid)} function available?\\
 \hline
-    \tcode{unordered_edge<G,E> : false_type} & struct & Specialize for edge implementation to be \tcode{true_type} for unordered edges \\
-    \tcode{is_unordered_edge<G,E>} & struct & \\
+    \tcode{define_unordered_edge<G,E> : false_type} & struct & Specialize for edge implementation to derive from \tcode{true_type} for unordered edges \\
+    \tcode{is_unordered_edge<G,E>} & struct & \tcode{conjunction<define_unordered_edge<E>, is_sourced_edge<G, E>>} \\
     \tcode{is_unordered_edge_v<G,E>} & type alias & \\
+    \tcode{unordered_edge<G,E>} & concept & \\
 \hline
     \tcode{is_ordered_edge<G,E>} & struct & \tcode{negation<is_unordered_edge<G,E>>} \\
     \tcode{is_ordered_edge_v<G,E>} & type alias & \\
+    \tcode{ordered_edge<G,E>} & concept & \\
 \hline
-    \tcode{adjacency_matrix<G> : false_type} & struct & Specialize for graph implementation to be \tcode{true_type} for edges stored as a square 2-dimensional array \\
-    %\tcode{unordered_edge<G>} & struct & \\
+    \tcode{define_adjacency_matrix<G> : false_type} & struct & Specialize for graph implementation to derive from \tcode{true_type} for edges stored as a square 2-dimensional array \\
     \tcode{is_adjacency_matrix<G>} & struct & \\
     \tcode{is_adjacency_matrix_v<G>} & type alias & \\
+    \tcode{adjacency_matrix<G>} & concept & \\
 \hline
 \end{tabular}}
 \caption{Graph Container Interface Type Traits}
@@ -382,7 +644,7 @@ The type aliases are defined by either a function specialization for the underly
     \tcode{edge_reference_t<G>} & \tcode{range_reference_t<vertex_edge_range_t<G>>} & \\    
     \tcode{edge_value_t<G>} & \tcode{decltype(edge_value(g))} & optional \\
 \hdashline
-    \multicolumn{3}{c}{The following are only available when the optional \tcode{source_id(g,uv)} is defined for the edge} \\
+    \multicolumn{3}{c}{The following is only available when the optional \tcode{source_id(g,uv)} is defined for the edge} \\
 \hdashline
     \tcode{edge_id_t<G>} & \tcode{decltype(pair(source_id(g,uv),target_id(g,uv)))} & \\    
 \hline
@@ -451,12 +713,6 @@ If the concept requirements for the default implementation aren't met by the gra
 Edgelists are assumed to be either be an edgelist view of an adjacency graph, or a standard range with source\_id and target\_id values. There is no need for additional functions when a range is used.
 
 \subsection{csr\_graph Graph Container}
-
-\subsection{Future Directions}
-% algorithms: 
-% views: 
-% containers: adjacency matrix
-% data model: incoming edges on a vertex
 
 \section{Design - Graph Container Author}
 \subsection{Customization Points}

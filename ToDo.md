@@ -16,13 +16,14 @@
     - [x] cancel() CPO? bfs, dfs: no, member only
     - [ ] replace is_undirected_edge_v<G> & undirected_incidence_graph<G> with is_unordered_edge_v<G>
   - [ ] Views
-    - [ ] \<all\>
-      - [ ] view classes should be in std::graph
-      - [ ] view functions should be in std::graph::view
+    - [ ] view classes should be in std::graph
+    - [ ] view functions should be in std::graph::view
     - [ ] vertexlist
       - [ ] Copy VVF to iterator (not reference)
       - [ ] Accept VVF(g,u) & allow vertex_value?
       - [x] verify it is a std\::ranges\::view<>
+      - [ ] Implement vertexlist(g,vr)
+      - [ ] Implement vertexlist(g,vr,vvf)
     - [ ] incidence
       - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>

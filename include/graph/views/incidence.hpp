@@ -3,13 +3,16 @@
 #include "views_utility.hpp"
 
 //
-// incidence(g,u)     -> edge_view<VId,Sourced,E,EV> -> {[source_id,] target_id, edge&}
-// incidence(g,u,evf) -> edge_view<VId,Sourced,E,EV> -> {[source_id,] target_id, edge&,value}
+// incidence(g,u)     -> edge_view<VId,false,E,EV> -> {target_id, edge&}
+// incidence(g,u,evf) -> edge_view<VId,false,E,EV> -> {target_id, edge&, value}
 //
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g,uv) };
 // 
 // examples: for([vid, uv]        : incidence(g,uid))
 //           for([vid, uv, value] : incidence(g,uid,evf))
+//
+// Since u is passed to incidence(), there's no need to include Sourced versions of
+// incidence().
 //
 namespace std::graph::views {
 

@@ -58,13 +58,16 @@ using graph_reference_t = add_lvalue_reference<G>;
 ///
 
 template <class G>
-struct adjacency_matrix : public false_type {}; // specialized for graph container
+struct define_adjacency_matrix : public false_type {}; // specialized for graph container
 
 template <class G>
-struct is_adjacency_matrix : public adjacency_matrix<G> {};
+struct is_adjacency_matrix : public define_adjacency_matrix<G> {};
 
 template <class G>
 inline constexpr bool is_adjacency_matrix_v = is_adjacency_matrix<G>::value;
+
+template <class G>
+concept adjacency_matrix = is_adjacency_matrix_v<G>;
 
 //
 // vertices(g) -> vertex_range_t<G>

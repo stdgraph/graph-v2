@@ -3,13 +3,16 @@
 #include "views_utility.hpp"
 
 //
-// neighbors(g,u) -> neighbor_view<VId,Sourced,E,EV> -> {[source_id,] target_id, vertex& [,value]}
+// neighbors(g,u) -> neighbor_view<VId,false,E,EV> -> {target_id, vertex& [,value]}
 //
 // given:    auto vvf = [&g](vertex_reference_t<G> v) { return vertex_value(g,v); }
 // 
 // examples: for([vid, v]             : neighbors(g,uid))
 //           for([vid, v, value]      : neighbors(g,uid,vvf))
 // 
+// Since u is passed to incidence(), there's no need to include Sourced versions of
+// incidence().
+//
 namespace std::graph::views {
 
 
