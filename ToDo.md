@@ -8,7 +8,7 @@
     - [x] Apply tag_invoke design in P2300
   - [x] Ranges
   - [ ] Concepts and type_traits
-    - [x] graph: incidence_graph, sourced_incidence_graph, adjacency_matrix, undirected_incidence_graph
+    - [x] graph: adjacency_graph, sourced_adjacency_graph, adjacency_matrix, undirected_incidence_graph
     - [ ] **view concepts: vertex_view, edge_view, neighbor_view returned from graph views**
     - [ ] **function concepts: VVF, EVF**
   - [ ] Graph API

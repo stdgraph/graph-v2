@@ -88,7 +88,7 @@ inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
 
 
 template <class G>
-concept incidence_graph = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(
+concept adjacency_graph = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(
       G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
   { edges(g, u) } -> ranges::forward_range;
   { edges(g, uid) } -> ranges::forward_range;
@@ -97,7 +97,7 @@ concept incidence_graph = vertex_range<G> && targeted_edge<G, edge_t<G>> && requ
 //      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
 template <class G>
-concept sourced_incidence_graph = incidence_graph<G> && sourced_edge<G, edge_t<G>> &&
+concept sourced_adjacency_graph = adjacency_graph<G> && sourced_edge<G, edge_t<G>> &&
       requires(G&& g, edge_reference_t<G> uv) {
   edge_id(g, uv);
 #  ifdef ENABLE_OTHER_FNC

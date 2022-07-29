@@ -15,12 +15,12 @@
 namespace std::graph::views {
 
 
-template <incidence_graph G>
+template <adjacency_graph G>
 struct bfs_element {
   vertex_id_t<G> u_id;
 };
 
-template <incidence_graph G, class Queue>
+template <adjacency_graph G, class Queue>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class bfs_base : public ranges::view_base {
 public:
@@ -159,7 +159,7 @@ protected:
 /// breadth-first search range for vertices, given a single seed vertex.
 ///
 
-template <incidence_graph G, class VVF = void, class Queue = queue<bfs_element<G>>>
+template <adjacency_graph G, class VVF = void, class Queue = queue<bfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class bfs_vertex_range : public bfs_base<G, Queue> {
 public:
@@ -270,7 +270,7 @@ private:
 };
 
 
-template <incidence_graph G, class Queue>
+template <adjacency_graph G, class Queue>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class bfs_vertex_range<G, void, Queue> : public bfs_base<G, Queue> {
 public:
@@ -376,7 +376,7 @@ public:
 //---------------------------------------------------------------------------------------
 /// breadth-first search range for edges, given a single seed vertex.
 ///
-template <incidence_graph G, class EVF = void, bool Sourced = false, class Queue = queue<bfs_element<G>>>
+template <adjacency_graph G, class EVF = void, bool Sourced = false, class Queue = queue<bfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class bfs_edge_range : public bfs_base<G, Queue> {
 public:
@@ -482,7 +482,7 @@ private:
   const EVF* value_fn_ = nullptr;
 };
 
-template <incidence_graph G, bool Sourced, class Queue>
+template <adjacency_graph G, bool Sourced, class Queue>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class bfs_edge_range<G, void, Sourced, Queue> : public bfs_base<G, Queue> {
 public:
@@ -627,7 +627,7 @@ namespace tag_invoke {
 // vertices_breadth_first_search(g,uid)
 // vertices_breadth_first_search(g,uid,vvf)
 //
-template <incidence_graph G, class Queue = queue<bfs_element<G>>>
+template <adjacency_graph G, class Queue = queue<bfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed) {
   if constexpr (tag_invoke::_has_vtx_bfs_adl<G>)
@@ -636,7 +636,7 @@ constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed) {
     return vertices_breadth_first_search_view<G, void, Queue>(g, seed);
 }
 
-template <incidence_graph G, class VVF, class Queue = queue<bfs_element<G>>>
+template <adjacency_graph G, class VVF, class Queue = queue<bfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       is_invocable_v<VVF, vertex_reference_t<G>>
 constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed, const VVF& vvf) {
@@ -650,7 +650,7 @@ constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed, const V
 // edges_breadth_first_search(g,uid)
 // edges_breadth_first_search(g,uid,evf)
 //
-template <incidence_graph G, class Queue = queue<bfs_element<G>>>
+template <adjacency_graph G, class Queue = queue<bfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed) {
   if constexpr (tag_invoke::_has_edg_bfs_adl<G>)
@@ -659,7 +659,7 @@ constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed) {
     return edges_breadth_first_search_view<G, void, false, Queue>(g, seed);
 }
 
-template <incidence_graph G, class EVF, class Queue = queue<bfs_element<G>>>
+template <adjacency_graph G, class EVF, class Queue = queue<bfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       is_invocable_v<EVF, edge_reference_t<G>>
 constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf) {
@@ -673,7 +673,7 @@ constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const EVF&
 // sourced_edges_breadth_first_search(g,uid)
 // sourced_edges_breadth_first_search(g,uid,evf)
 //
-template <incidence_graph G, class Queue = queue<bfs_element<G>>>
+template <adjacency_graph G, class Queue = queue<bfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 constexpr auto sourced_edges_breadth_first_search(G&& g, vertex_id_t<G> seed) {
   if constexpr (tag_invoke::_has_src_edg_bfs_adl<G>)
@@ -682,7 +682,7 @@ constexpr auto sourced_edges_breadth_first_search(G&& g, vertex_id_t<G> seed) {
     return edges_breadth_first_search_view<G, void, true, Queue>(g, seed);
 }
 
-template <incidence_graph G, class EVF, class Queue = queue<bfs_element<G>>>
+template <adjacency_graph G, class EVF, class Queue = queue<bfs_element<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       is_invocable_v<EVF, edge_reference_t<G>>
 constexpr auto sourced_edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf) {
@@ -719,7 +719,7 @@ struct bfs_edge_view {
 //----------------------------------------------------------------------------------------
 /// breadth-first search range for vertices, given a single seed vertex.
 ///
-template <incidence_graph G, typename A = allocator<char>>
+template <adjacency_graph G, typename A = allocator<char>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class breadth_first_search_vertex_range {
 public:
@@ -750,7 +750,7 @@ public:
 ///
 /// requires bi-directional edges to get last edge on a vertex
 ///
-template <incidence_graph G, typename A = allocator<char>>
+template <adjacency_graph G, typename A = allocator<char>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class breadth_first_search_edge_range {
 public:

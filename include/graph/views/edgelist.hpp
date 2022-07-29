@@ -17,11 +17,11 @@
 namespace std::graph::views {
 
 
-template <incidence_graph G, class EVF = void>
+template <adjacency_graph G, class EVF = void>
 class edgelist_iterator;
 
 
-template <incidence_graph G>
+template <adjacency_graph G>
 class edgelist_iterator_base {
   using vertex_iterator = vertex_iterator_t<G>;
   using edge_iterator   = vertex_edge_iterator_t<G>;
@@ -67,7 +67,7 @@ protected:
 /// </summary>
 /// <typeparam name="G">Graph type</typeparam>
 /// <typeparam name="EVF">Edge Value Function</typeparam>
-template <incidence_graph G, class EVF>
+template <adjacency_graph G, class EVF>
 class edgelist_iterator : public edgelist_iterator_base<G> {
 public:
   using base_type = edgelist_iterator_base<G>;
@@ -155,7 +155,7 @@ private: // member variables
 };
 
 
-template <incidence_graph G>
+template <adjacency_graph G>
 class edgelist_iterator<G, void> : public edgelist_iterator_base<G> {
 public:
   using base_type = edgelist_iterator_base<G>;
@@ -251,19 +251,19 @@ namespace tag_invoke {
                             // edgelist(g,uid,vid,fn)    -> edges[uid,vid,uv,value]
 
   template <class G>
-  concept _has_edgelist_g_adl = incidence_graph<G> && requires(G&& g) {
+  concept _has_edgelist_g_adl = adjacency_graph<G> && requires(G&& g) {
     {edgelist(g)};
   };
   template <class G>
-  concept _has_edgelist_g_uid_adl = incidence_graph<G> && requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
+  concept _has_edgelist_g_uid_adl = adjacency_graph<G> && requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
     {edgelist(g, uid, vid)};
   };
   template <class G, class EVF>
-  concept _has_edgelist_g_evf_adl = incidence_graph<G> && requires(G&& g, const EVF& evf) {
+  concept _has_edgelist_g_evf_adl = adjacency_graph<G> && requires(G&& g, const EVF& evf) {
     {edgelist(g, evf)};
   };
   template <class G, class EVF>
-  concept _has_edgelist_g_uid_evf_adl = incidence_graph<G> &&
+  concept _has_edgelist_g_uid_evf_adl = adjacency_graph<G> &&
         requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, const EVF& evf) {
     {edgelist(g, uid, vid, evf)};
   };
@@ -274,7 +274,7 @@ namespace tag_invoke {
 // edgelist(g)
 // edgelist(g,uid,vid)
 //
-template <incidence_graph G>
+template <adjacency_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g) {
   if constexpr (tag_invoke::_has_edgelist_g_adl<G>) {
@@ -285,7 +285,7 @@ constexpr auto edgelist(G&& g) {
   }
 }
 
-template <incidence_graph G>
+template <adjacency_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last) {
   assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));
@@ -302,7 +302,7 @@ constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last) {
 // edgelist(g,u,evf)
 // edgelist(g,uid,evf)
 //
-template <incidence_graph G, class EVF>
+template <adjacency_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g, const EVF& evf) {
   if constexpr (tag_invoke::_has_edgelist_g_evf_adl<G, EVF>) {
@@ -313,7 +313,7 @@ constexpr auto edgelist(G&& g, const EVF& evf) {
   }
 }
 
-template <incidence_graph G, class EVF>
+template <adjacency_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last, const EVF& evf) {
   assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));

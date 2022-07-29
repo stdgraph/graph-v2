@@ -42,7 +42,7 @@ constexpr auto print_types(Ts...) {
 
 
 // The index into weight vector stored as the first property
-template <incidence_graph             G,
+template <adjacency_graph             G,
           ranges::random_access_range DM,
           ranges::random_access_range PM,
           class WF = std::function<ranges::range_value_t<DM>(edge_reference_t<G>)>>

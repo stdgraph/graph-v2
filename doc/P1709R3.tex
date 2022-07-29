@@ -585,7 +585,7 @@ requires(G&& g, ranges::range_reference_t<ER> uv) {
 };
 
 template <class G>
-concept incidence_graph = vertex_range<G> && 
+concept adjacency_graph = vertex_range<G> && 
                           targeted_edge<G, vertex_edge_range_t<G>> &&   
 requires(
       G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
@@ -594,13 +594,13 @@ requires(
 };
 
 template <class G>
-concept sourced_incidence_graph = incidence_graph<G> && sourced_edge<G, vertex_edge_range_t<G>> &&
+concept sourced_adjacency_graph = adjacency_graph<G> && sourced_edge<G, vertex_edge_range_t<G>> &&
       requires(G&& g, edge_reference_t<G> uv) {
   edge_id(g, uv);
 };
 
 template <class G>
-concept undirected_incidence_graph = sourced_incidence_graph<G> && is_undirected_edge_v<edge_t<G>>;
+concept undirected_incidence_graph = sourced_adjacency_graph<G> && is_undirected_edge_v<edge_t<G>>;
 
 template <class G>
 concept directed_incidence_graph = !undirected_incidence_graph<G>;
