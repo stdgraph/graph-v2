@@ -569,7 +569,56 @@ Table \ref{tab:dfs} shows the functions and their return values.
 \end{table}
 
 \subsubsection{breadth\_first\_search Views}
+breadth\_first\_search views iterate over the vertices and edges from a given seed vertex, returning a \tcode{vertex_view} or \tcode{edge_view} on each iteration when it is first encountered, depending on the function used. 
+Table \ref{tab:bfs} shows the functions and their return values.
+
+\begin{table}[h!]
+\begin{center}
+\resizebox{\textwidth}{!}
+{\begin{tabular}{l l}
+\hline
+    \textbf{Example} & \textbf{Return} \\
+\hline
+    \tcode{for(auto\&\& [vid,v] : vertices_breadth_first_search(g,seed))} & \tcode{vertex_view<VId,V,void>} \\
+    \tcode{for(auto\&\& [vid,v,val] : vertices_breadth_first_search(g,seed,vvf))} & \tcode{vertex_view<VId,V,VV>} \\
+\hline
+    \tcode{for(auto\&\& [vid,uv] : edges_breadth_first_search(g,seed))} & \tcode{edge_view<VId,false,E,void>} \\
+    \tcode{for(auto\&\& [vid,uv,val] : edges_breadth_first_search(g,seed,evf))} & \tcode{edge_view<VId,false,E,EV>} \\
+\hline
+    \tcode{for(auto\&\& [uid,vid,uv] : sourced_edges_breadth_first_search(g,seed))} & \tcode{edge_view<VId,true,E,void>} \\
+    \tcode{for(auto\&\& [uid,vid,uv,val] : sourced_edges_breadth_first_search(g,seed,evf))} & \tcode{edge_view<VId,true,E,EV>} \\
+\hline
+\end{tabular}}
+\caption{breadth\_first\_search View Functions}
+\label{tab:bfs}
+\end{center}
+\end{table}
+
 \subsubsection{topological\_sort Views}
+topological\_sort views iterate over the vertices and edges from a given seed vertex, returning a \tcode{vertex_view} or \tcode{edge_view} on each iteration when it is first encountered, depending on the function used. 
+Table \ref{tab:topo_sort} shows the functions and their return values.
+
+\begin{table}[h!]
+\begin{center}
+\resizebox{\textwidth}{!}
+{\begin{tabular}{l l}
+\hline
+    \textbf{Example} & \textbf{Return} \\
+\hline
+    \tcode{for(auto\&\& [vid,v] : vertices_topological_sort(g,seed))} & \tcode{vertex_view<VId,V,void>} \\
+    \tcode{for(auto\&\& [vid,v,val] : vertices_topological_sort(g,seed,vvf))} & \tcode{vertex_view<VId,V,VV>} \\
+\hline
+    \tcode{for(auto\&\& [vid,uv] : edges_topological_sort(g,seed))} & \tcode{edge_view<VId,false,E,void>} \\
+    \tcode{for(auto\&\& [vid,uv,val] : edges_topological_sort(g,seed,evf))} & \tcode{edge_view<VId,false,E,EV>} \\
+\hline
+    \tcode{for(auto\&\& [uid,vid,uv] : sourced_edges_topological_sort(g,seed))} & \tcode{edge_view<VId,true,E,void>} \\
+    \tcode{for(auto\&\& [uid,vid,uv,val] : sourced_edges_topological_sort(g,seed,evf))} & \tcode{edge_view<VId,true,E,EV>} \\
+\hline
+\end{tabular}}
+\caption{topological\_sort View Functions}
+\label{tab:topo_sort}
+\end{center}
+\end{table}
 
 \subsection{Graph Container Interface}
 The Graph Container Interface defines the primitive concepts, traits, types and functions used to define and access an adacency graph, no matter its internal design and organization. Thus, it is designed to reflect all forms of adjacency graphs including a vector of lists, CSR graph and adjacency matrix, whether they are in the standard or external to the standard.
