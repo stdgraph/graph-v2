@@ -5,14 +5,14 @@
 //
 // depth-first search graph views for vertices and edges.
 //
-// examples: for(auto&& [uid,u]     : vertices_depth_first_search(g,seed))
-//           for(auto&& [uid,u,val] : vertices_depth_first_search(g,seed,vvf))
+// examples: for(auto&& [vid,v]     : vertices_depth_first_search(g,seed))
+//           for(auto&& [vid,v,val] : vertices_depth_first_search(g,seed,vvf))
 //
 //           for(auto&& [vid,uv]     : edges_depth_first_search(g,seed))
 //           for(auto&& [vid,uv,val] : edges_depth_first_search(g,seed,evf))
 //
 //           for(auto&& [uid,vid,uv]     : sourced_edges_depth_first_search(g,seed))
-//           for(auto&& [vid,vid,uv,val] : sourced_edges_depth_first_search(g,seed,evf))
+//           for(auto&& [uid,vid,uv,val] : sourced_edges_depth_first_search(g,seed,evf))
 //
 // Given dfs is one of the depth-first views above, the following functions are also available.
 //
