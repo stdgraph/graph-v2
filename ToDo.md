@@ -18,6 +18,7 @@
   - [ ] Views
     - [ ] view classes should be in std::graph
     - [ ] view functions should be in std::graph::view
+    - [ ] add range overloads to appropriate views (DFS, BFS, topo_sort, etc.)
     - [ ] vertexlist
       - [ ] Copy VVF to iterator (not reference)
       - [ ] Accept VVF(g,u) & allow vertex_value?
@@ -102,6 +103,7 @@
       - [x] Support VV=void
       - [ ] Support EV=void
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
+      - [ ] Add ctor with initializer_list for simple demo
     - [ ] dynamic_graph
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...

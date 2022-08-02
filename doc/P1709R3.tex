@@ -128,9 +128,11 @@
 \vspace{32pt}
 \begin{tabular}{ll}
 \textbf{Document Number:} & P1709R3\\
-\textbf{Date:} & \hl{May 12}, 2022 (mailing)\\ 
+\textbf{Date:} & \hl{September 13}, 2022 (mailing)\\ 
 \textbf{Project:} & ISO JTC1/SC22/WG21: Programming Language C++\\
 \textbf{Audience:} & SG19, WG21, LEWG\\
+\textbf{Source:} & \href{https://github.com/pratzl/graph-v2}{Github} \\
+\textbf{Issue Tracking:} & \href{https://github.com/pratzl/graph-v2/issues}{Github} \\
 \textbf{Emails:}
 	&\texttt{Phil.Ratzloff@sas.com}\\
 	&\texttt{Andrew.Lumsdaine@tiledb.com}\\
@@ -188,6 +190,8 @@ This paper limits itself to adjacency graphs only, including an outer range of v
 underlying graph container implementation.
 
 Hypergraphs are not supported.
+
+Parallel versions of the algorithms are not included for several reasons. The executors proposal in P2300r5 \cite{REF_P2300r5} is expected to introduce new and better ways to do parallel algorithms beyond that used in the parallel STL algorithms and we would like to wait for finalization of that proposal before committing to parallel implementations. Secondly, many graph algorithms don't benefit from parallel implementations so there is less need to offer an implementation. Lastly, it will help limit the size of this proposal which is already looking to be large without it. It is expected that future proposals will be submitted for parallel graph algorithms. 
 
 \subsection{Prior Art}
 boost::graph \\
@@ -261,7 +265,7 @@ Table \ref{tab:name_conv} shows the naming conventions used throughout this docu
 \end{center}
 \end{table}
 
-\subsection{Graph Data Model}
+\subsection{Graph Data Models}
 \subsubsection{Adjacency Graph}
  A \textit{graph} \cite{REF_graph} $G = (V, E)$ is a set of \textit{vertices} \cite{REF_graph} $V$, \textbf{points} in a space, and \textit{edges} \cite{REF_graph} $E$, \textbf{links} between these vertices. Edges may or may not be \textbf{oriented}, that is, \textit{directed} \cite{REF_graph} or \textit{undirected} \cite{REF_graph}, respectively. Moreover, edges may be \textit{weighted} \cite{REF_graph}, that is, assigned a value. Both \textbf{static} and \textbf{dynamic} implementations of a graph exist, specifically a (static) \textbf{matrix}, each having the typical advantages and disadvantages associated with static and dynamic data structures.
 
@@ -279,37 +283,36 @@ Table \ref{tab:name_conv} shows the naming conventions used throughout this docu
 
 \section{Design - User Side}
 \subsection{Algorithms}
-\subsubsection{Shortest Paths}
-\paragraph{Dijkstra's Algorithm}
+%Algorithms with [TBD] are candidates to consider but having been decided for being in the paper
+%We are targeting the paper to be under 50pp
+
+\subsubsection{Dijkstra's Shortest Path}
 Dijkstra's algorithm \cite{REF_} ...
 
-\paragraph{Bellman-Ford Algorithm}
+\subsubsection{Bellman-Ford Shortest Path}
 The Bellman-Ford algorithm \cite{REF_} ...
 
-\subsubsection{Components}
-\paragraph{Connected Components}
+\subsubsection{Connected Components}
 Connected components \cite{REF_} ...
 
-\paragraph{Strongly Connected Components}
+\subsubsection{Strongly Connected Components}
 Strongly connected components \cite{REF_} ...
 
-\paragraph{Biconnected Components}
+\subsubsection{Biconnected Components}
 Biconnected components \cite{REF_} ...
 
-\paragraph{Articulation Points}
+\subsubsection{Articulation Points}
 Articulation points \cite{REF_} ...
 
-\subsubsection{Other Algorithms}
-\paragraph{[TBD] page\_rank}
-\paragraph{[TBD] betweenness\_centrality}
-\paragraph{[TBD] triangle\_count}
-\paragraph{[TBD] subgraph\_isomorphism}
+\subsubsection{[TBD] Page Rank}
+\subsubsection{[TBD] Betweenness Centrality}
+\subsubsection{[TBD] Triangle Count}
+\subsubsection{[TBD] Subgraph Isomorphism}
 \subsubsection{Minimum Spanning Tree}
-\paragraph{[TBD] kruskell\_minimum\_spanning\_tree}
-\paragraph{[TBD] prim\_minimum\_spanning\_tree}
-\subsubsection{Community Detection}
-\paragraph{[TBD] Louvain}
-\paragraph{[TBD] Label propagation}
+\subsubsection{[TBD] Kruskell Minimum Spanning Tree}
+\subsubsection{[TBD] Prim Minimum Spanning Tree}
+\subsubsection{[TBD] Louvain (Community Detection)}
+\subsubsection{[TBD] Label propagation (Community Detection)}
 
 \subsection{Views}
 \subsubsection{Return Types}
@@ -787,10 +790,11 @@ If the concept requirements for the default implementation aren't met by the gra
 Edgelists are assumed to be either be an edgelist view of an adjacency graph, or a standard range with source\_id and target\_id values. There is no need for additional functions when a range is used.
 
 \subsection{csr\_graph Graph Container}
+The csr\_graph is a high-performance, static graph container that uses (\href{https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_\%28CSR\%2C_CRS_or_Yale_format\%29}{Compressed Sparse Row}) format to store it's vertices, edges and associated values. Once constructed, it cannot be modified.
 
 \section{Design - Graph Container Author}
 \subsection{Customization Points}
-\phil{This section has been shamelessly copied from P2300r5 with text specific to executors removed or replaced with graph-specific text}
+We follow the lead of P2300r5 \cite{REF_P2300r5} section 5.9 for our implementation of customization points. The text in this section has been taken from that paper and modified to be specific to graphs.
 
 The contemporary technique for customization in the Standard Library is customization point objects. A customization point object, will it look for member functions and then for nonmember functions with the same name as the customization point, and calls those if they match. This is the technique used by the C++20 ranges library. However, it has several unfortunate consequences:
 
@@ -802,7 +806,7 @@ universal adapter types much harder - and this proposal uses quite a lot of thos
 every customization point object that uses the ranges scheme reserves the name for all types in all namespaces.
 \end{enumerate}
 
-This paper proposes to instead use the mechanism described in \href{https://latex-tutorial.com/tutorials/hyperlinks/}{tag\_invoke: A general pattern for supporting customisable functions}:
+This paper proposes to instead use the mechanism described in \href{https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1895r0.pdf}{tag\_invoke: A general pattern for supporting customisable functions}:
 \tcode{tag_invoke}; the wording for \tcode{tag_invoke} has been incorporated into the proposed specification in this paper.
 
 In short, instead of using globally reserved names, \tcode{tag_invoke} uses the type of the customization point object itself as the mechanism to find customizations. 
