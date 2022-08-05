@@ -4,41 +4,36 @@
 #include <concepts>
 #include <type_traits>
 
-#include "detail/graph_access.hpp"
+#include "detail/graph_cpo.hpp"
 
+
+// Naming Conventions
+//
+// Template
+// Parameter Variables      Description
+// --------- -------------- ----------------------------------------------------
+// G         g              Graph
+// GV                       Graph Value (user-defined or void)
+//
+// V         u,v,x,y        Vertex
+// VId       uid,vid,seed   Vertex Id
+// VV                       Vertex Value (user-defined or void)
+// VR                       Vertex Range
+// VI        ui,vi          Vertex Iterator
+// VVF                      Vertex Value Function: vvf(u) -> value
+//
+// E                        Edge type
+//           uv,vw          Edge reference
+// EV                       Edge Value (user-defined or void)
+// ER                       Edge Range
+// EI        uvi,vwi        Edge iterator
+// EVF       evf            Edge Value Function: evf(uv) -> value
+//
 
 #ifndef GRAPH_HPP
 #  define GRAPH_HPP
 
 namespace std::graph {
-// Template parameters:
-// G   - Graph
-// GV  - Graph Value (user-defined or void)
-//
-// V   - Vertex type
-// VId - Vertex Id type
-// VV  - Vertex Value (user-defined or void)
-// VR  - Vertex Range
-// VI  - Vertex Iterator
-// VVF - Vertex Value Function: vvf(u) -> value
-//
-// E   - Edge type
-// EV  - Edge Value (user-defined or void)
-// ER  - Edge Range
-// EVF - Edge Value Function: evf(uv) -> value
-
-// Parameters:
-// g       - graph reference
-// u,v,x,y - vertex references
-// uid,vid - vertex ids
-// ui,vi   - vertex iterators
-// vvf     - vertex value function: vvf(u) -> value
-//
-// uv      - edge reference
-// uvi     - edge_iterator (use std::optional?)
-// evf     - edge value function: evf(uv) -> value
-
-
 /// <summary>
 /// Override for an edge type where source and target are unordered
 /// For instance, given:
@@ -100,10 +95,6 @@ template <class G>
 concept sourced_adjacency_graph = adjacency_graph<G> && sourced_edge<G, edge_t<G>> &&
       requires(G&& g, edge_reference_t<G> uv) {
   edge_id(g, uv);
-#  ifdef ENABLE_OTHER_FNC
-  other_id(g, uv, uid);
-  other_vertex(g, uv, u);
-#  endif
 };
 
 //

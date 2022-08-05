@@ -4,6 +4,7 @@
 // inspired by new_dfs_range.hpp from NWGraph
 //
 // depth-first search graph views for vertices and edges.
+// All functions have an allocator parameter (not shown) for internally defined containers.
 //
 // examples: for(auto&& [vid,v]     : vertices_depth_first_search(g,seed))
 //           for(auto&& [vid,v,val] : vertices_depth_first_search(g,seed,vvf))
@@ -46,7 +47,7 @@ struct dfs_element {
 /// depth-first search view for vertices, given a single seed vertex.
 ///
 
-template <adjacency_graph G, class Stack>
+template <adjacency_graph G, class Stack, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class dfs_base : public ranges::view_base {
 public:
@@ -67,7 +68,8 @@ private:
         vertex_id_type>;
 
 public:
-  dfs_base(graph_type& g, vertex_id_type seed = 0) : graph_(g), colors_(ranges::size(vertices(g)), white) {
+  dfs_base(graph_type& g, vertex_id_type seed, const Alloc& alloc)
+        : graph_(g), colors_(ranges::size(vertices(g)), white, alloc) {
     if (seed < ranges::size(vertices(graph_)) && !ranges::empty(edges(graph_, seed))) {
       edge_iterator uv = ranges::begin(edges(graph_, seed));
       S_.push(stack_elem{seed, uv});
@@ -80,7 +82,7 @@ public:
   ~dfs_base()               = default;
 
   dfs_base& operator=(const dfs_base&) = delete;
-  dfs_base& operator=(dfs_base&&) = default;
+  dfs_base& operator=(dfs_base&&)      = default;
 
   constexpr bool empty() const noexcept { return S_.empty(); }
 
@@ -177,11 +179,11 @@ protected:
 /// depth-first search range for vertices, given a single seed vertex.
 ///
 
-template <adjacency_graph G, class VVF = void, class Stack = stack<dfs_element<G>>>
+template <adjacency_graph G, class VVF = void, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class vertices_depth_first_search_view : public dfs_base<G, Stack> {
+class vertices_depth_first_search_view : public dfs_base<G, Stack, Alloc> {
 public:
-  using base_type        = dfs_base<G, Stack>;
+  using base_type        = dfs_base<G, Stack, Alloc>;
   using graph_type       = G;
   using vertex_type      = vertex_t<G>;
   using vertex_id_type   = vertex_id_t<graph_type>;
@@ -189,21 +191,24 @@ public:
   using vertex_iterator  = vertex_iterator_t<graph_type>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
-  using dfs_range_type   = vertices_depth_first_search_view<graph_type, VVF, Stack>;
+  using dfs_range_type   = vertices_depth_first_search_view<graph_type, VVF, Stack, Alloc>;
 
   using vertex_value_func = VVF;
   using vertex_value_type = invoke_result_t<VVF, vertex_reference>;
 
 public:
-  vertices_depth_first_search_view(graph_type& g, vertex_id_type seed, const VVF& value_fn)
-        : base_type(g, seed), value_fn_(&value_fn) {}
+  vertices_depth_first_search_view(graph_type&    g,
+                                   vertex_id_type seed,
+                                   const VVF&     value_fn,
+                                   const Alloc&   alloc = Alloc())
+        : base_type(g, seed, alloc), value_fn_(&value_fn) {}
   vertices_depth_first_search_view()                                        = default;
   vertices_depth_first_search_view(const vertices_depth_first_search_view&) = delete; // can be expensive to copy
   vertices_depth_first_search_view(vertices_depth_first_search_view&&)      = default;
   ~vertices_depth_first_search_view()                                       = default;
 
   vertices_depth_first_search_view& operator=(const vertices_depth_first_search_view&) = delete;
-  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&) = default;
+  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&)      = default;
 
 public:
   struct end_sentinel {};
@@ -235,7 +240,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -277,11 +282,11 @@ private:
 };
 
 
-template <adjacency_graph G, class Stack>
+template <adjacency_graph G, class Stack, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class vertices_depth_first_search_view<G, void, Stack> : public dfs_base<G, Stack> {
+class vertices_depth_first_search_view<G, void, Stack, Alloc> : public dfs_base<G, Stack, Alloc> {
 public:
-  using base_type        = dfs_base<G, Stack>;
+  using base_type        = dfs_base<G, Stack, Alloc>;
   using graph_type       = G;
   using vertex_type      = vertex_t<G>;
   using vertex_id_type   = vertex_id_t<graph_type>;
@@ -289,17 +294,18 @@ public:
   using vertex_iterator  = vertex_iterator_t<graph_type>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
-  using dfs_range_type   = vertices_depth_first_search_view<graph_type, void, Stack>;
+  using dfs_range_type   = vertices_depth_first_search_view<graph_type, void, Stack, Alloc>;
 
 public:
-  vertices_depth_first_search_view(graph_type& g, vertex_id_type seed) : base_type(g, seed) {}
+  vertices_depth_first_search_view(graph_type& g, vertex_id_type seed, const Alloc& alloc = Alloc())
+        : base_type(g, seed, alloc) {}
   vertices_depth_first_search_view()                                        = default;
   vertices_depth_first_search_view(const vertices_depth_first_search_view&) = delete; // can be expensive to copy
   vertices_depth_first_search_view(vertices_depth_first_search_view&&)      = default;
   ~vertices_depth_first_search_view()                                       = default;
 
   vertices_depth_first_search_view& operator=(const vertices_depth_first_search_view&) = delete;
-  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&) = default;
+  vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&)      = default;
 
 public:
   struct end_sentinel {};
@@ -330,7 +336,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -372,23 +378,27 @@ public:
 //---------------------------------------------------------------------------------------
 /// depth-first search view for edges, given a single seed vertex.
 ///
-template <adjacency_graph G, class EVF = void, bool Sourced = false, class Stack = stack<dfs_element<G>>>
+template <adjacency_graph G,
+          class EVF    = void,
+          bool Sourced = false,
+          class Stack  = stack<dfs_element<G>>,
+          class Alloc  = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class edges_depth_first_search_view : public dfs_base<G, Stack> {
+class edges_depth_first_search_view : public dfs_base<G, Stack, Alloc> {
 public:
-  using base_type           = dfs_base<G, Stack>;
+  using base_type           = dfs_base<G, Stack, Alloc>;
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
-  using dfs_range_type      = edges_depth_first_search_view<G, EVF, Sourced, Stack>;
+  using dfs_range_type      = edges_depth_first_search_view<G, EVF, Sourced, Stack, Alloc>;
 
   using edge_value_func = EVF;
   using edge_value_type = invoke_result_t<EVF, edge_reference_type>;
 
 public:
-  edges_depth_first_search_view(G& g, vertex_id_type seed, const EVF& value_fn)
-        : base_type(g, seed), value_fn_(&value_fn) {}
+  edges_depth_first_search_view(G& g, vertex_id_type seed, const EVF& value_fn, const Alloc& alloc = Alloc())
+        : base_type(g, seed, alloc), value_fn_(&value_fn) {}
 
   edges_depth_first_search_view()                                     = default;
   edges_depth_first_search_view(const edges_depth_first_search_view&) = delete; // can be expensive to copy
@@ -396,7 +406,7 @@ public:
   ~edges_depth_first_search_view()                                    = default;
 
   edges_depth_first_search_view& operator=(const edges_depth_first_search_view&) = delete;
-  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&) = default;
+  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&)      = default;
 
   struct end_sentinel {};
 
@@ -427,7 +437,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -470,19 +480,19 @@ private:
   const EVF* value_fn_ = nullptr;
 };
 
-template <adjacency_graph G, bool Sourced, class Stack>
+template <adjacency_graph G, bool Sourced, class Stack, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class edges_depth_first_search_view<G, void, Sourced, Stack> : public dfs_base<G, Stack> {
+class edges_depth_first_search_view<G, void, Sourced, Stack, Alloc> : public dfs_base<G, Stack, Alloc> {
 public:
-  using base_type           = dfs_base<G, Stack>;
+  using base_type           = dfs_base<G, Stack, Alloc>;
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
-  using dfs_range_type      = edges_depth_first_search_view<G, void, Sourced, Stack>;
+  using dfs_range_type      = edges_depth_first_search_view<G, void, Sourced, Stack, Alloc>;
 
 public:
-  edges_depth_first_search_view(G& g, vertex_id_type seed) : base_type(g, seed) {}
+  edges_depth_first_search_view(G& g, vertex_id_type seed, const Alloc& alloc = Alloc()) : base_type(g, seed, alloc) {}
 
   edges_depth_first_search_view()                                     = default;
   edges_depth_first_search_view(const edges_depth_first_search_view&) = delete; // can be expensive to copy
@@ -490,7 +500,7 @@ public:
   ~edges_depth_first_search_view()                                    = default;
 
   edges_depth_first_search_view& operator=(const edges_depth_first_search_view&) = delete;
-  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&) = default;
+  edges_depth_first_search_view& operator=(edges_depth_first_search_view&&)      = default;
 
   struct end_sentinel {};
 
@@ -520,7 +530,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -564,13 +574,14 @@ namespace tag_invoke {
   TAG_INVOKE_DEF(vertices_depth_first_search); // vertices_depth_first_search(g,seed)    -> vertices[vid,v]
                                                // vertices_depth_first_search(g,seed,fn) -> vertices[vid,v,value]
 
-  template <class G>
-  concept _has_vtx_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed) {
-    {vertices_depth_first_search(g, seed)};
+  template <class G, class A>
+  concept _has_vtx_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
+    {vertices_depth_first_search(g, seed, alloc)};
   };
-  template <class G, class VVF>
-  concept _has_vtx_dfs_vvf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const VVF& vvf) {
-    {vertices_depth_first_search(g, seed, vvf)};
+  template <class G, class VVF, class A>
+  concept _has_vtx_dfs_vvf_adl = vertex_range<G> &&
+        requires(G&& g, vertex_id_t<G> seed, const VVF& vvf, const A& alloc) {
+    {vertices_depth_first_search(g, seed, vvf, alloc)};
   };
 
   // edges_depth_first_search CPO
@@ -580,94 +591,96 @@ namespace tag_invoke {
   TAG_INVOKE_DEF(sourced_edges_depth_first_search); // sourced_edges_depth_first_search(g,seed)    -> edges[uid,vid,v]
         // sourced_edges_depth_first_search(g,seed,fn) -> edges[uid,vid,v,value]
 
-  template <class G>
-  concept _has_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed) {
-    {edges_depth_first_search(g, seed)};
+  template <class G, class A>
+  concept _has_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
+    {edges_depth_first_search(g, seed, alloc)};
   };
-  template <class G, class EVF>
-  concept _has_edg_dfs_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf) {
-    {edges_depth_first_search(g, seed, evf)};
-  };
-
-  template <class G>
-  concept _has_src_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed) {
-    {sourced_edges_depth_first_search(g, seed)};
-  };
-  template <class G, class EVF>
-  concept _has_src_edg_dfs_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf) {
-    {sourced_edges_depth_first_search(g, seed, evf)};
+  template <class G, class EVF, class A>
+  concept _has_edg_dfs_evf_adl = vertex_range<G> &&
+        requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
+    {edges_depth_first_search(g, seed, evf, alloc)};
   };
 
+  template <class G, class A>
+  concept _has_src_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
+    {sourced_edges_depth_first_search(g, seed, alloc)};
+  };
+  template <class G, class EVF, class A>
+  concept _has_src_edg_dfs_evf_adl = vertex_range<G> &&
+        requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
+    {sourced_edges_depth_first_search(g, seed, evf, alloc)};
+  };
 } // namespace tag_invoke
 
 
 //
-// vertices_depth_first_search(g,uid)
-// vertices_depth_first_search(g,uid,vvf)
+// vertices_depth_first_search(g,uid,alloc)
+// vertices_depth_first_search(g,uid,vvf,alloc)
 //
-template <adjacency_graph G, class Stack = stack<dfs_element<G>>>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed) {
-  if constexpr (tag_invoke::_has_vtx_dfs_adl<G>)
-    return tag_invoke::vertices_depth_first_search(g, seed);
+template <adjacency_graph G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
+constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
+  if constexpr (tag_invoke::_has_vtx_dfs_adl<G, Alloc>)
+    return tag_invoke::vertices_depth_first_search(g, seed, alloc);
   else
-    return vertices_depth_first_search_view<G, void, Stack>(g, seed);
+    return vertices_depth_first_search_view<G, void, Stack>(g, seed, alloc);
 }
 
-template <adjacency_graph G, class VVF, class Stack = stack<dfs_element<G>>>
+template <adjacency_graph G, class VVF, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-      is_invocable_v<VVF, vertex_reference_t<G>>
-constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const VVF& vvf) {
-  if constexpr (tag_invoke::_has_vtx_dfs_vvf_adl<G, VVF>)
-    return tag_invoke::vertices_depth_first_search(g, seed, vvf);
+      invocable<VVF, vertex_reference_t<G>> && _detail::is_allocator_v<Alloc>
+constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const VVF& vvf, const Alloc& alloc = Alloc()) {
+  if constexpr (tag_invoke::_has_vtx_dfs_vvf_adl<G, VVF, Alloc>)
+    return tag_invoke::vertices_depth_first_search(g, seed, vvf, alloc);
   else
-    return vertices_depth_first_search_view<G, VVF, Stack>(g, seed, vvf);
+    return vertices_depth_first_search_view<G, VVF, Stack>(g, seed, vvf, alloc);
 }
 
 //
-// edges_depth_first_search(g,uid)
-// edges_depth_first_search(g,uid,evf)
+// edges_depth_first_search(g,uid,alloc)
+// edges_depth_first_search(g,uid,evf,alloc)
 //
-template <adjacency_graph G, class Stack = stack<dfs_element<G>>>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed) {
-  if constexpr (tag_invoke::_has_edg_dfs_adl<G>)
-    return tag_invoke::edges_depth_first_search(g, seed);
+template <adjacency_graph G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
+constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
+  if constexpr (tag_invoke::_has_edg_dfs_adl<G, Alloc>)
+    return tag_invoke::edges_depth_first_search(g, seed, alloc);
   else
-    return edges_depth_first_search_view<G, void, false, Stack>(g, seed);
+    return edges_depth_first_search_view<G, void, false, Stack>(g, seed, alloc);
 }
 
-template <adjacency_graph G, class EVF, class Stack = stack<dfs_element<G>>>
+template <adjacency_graph G, class EVF, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-      is_invocable_v<EVF, edge_reference_t<G>>
-constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf) {
-  if constexpr (tag_invoke::_has_edg_dfs_evf_adl<G, EVF>)
-    return tag_invoke::edges_depth_first_search(g, seed, evf);
+      invocable<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
+constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, const Alloc& alloc = Alloc()) {
+  if constexpr (tag_invoke::_has_edg_dfs_evf_adl<G, EVF, Alloc>)
+    return tag_invoke::edges_depth_first_search(g, seed, evf, alloc);
   else
-    return edges_depth_first_search_view<G, EVF, false, Stack>(g, seed, evf);
+    return edges_depth_first_search_view<G, EVF, false, Stack>(g, seed, evf, alloc);
 }
 
 //
-// sourced_edges_depth_first_search(g,uid)
-// sourced_edges_depth_first_search(g,uid,evf)
+// sourced_edges_depth_first_search(g,uid,alloc)
+// sourced_edges_depth_first_search(g,uid,evf,alloc)
 //
-template <adjacency_graph G, class Stack = stack<dfs_element<G>>>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-constexpr auto sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed) {
-  if constexpr (tag_invoke::_has_src_edg_dfs_adl<G>)
-    return tag_invoke::sourced_edges_depth_first_search(g, seed);
+template <adjacency_graph G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
+constexpr auto sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
+  if constexpr (tag_invoke::_has_src_edg_dfs_adl<G, Alloc>)
+    return tag_invoke::sourced_edges_depth_first_search(g, seed, alloc);
   else
-    return edges_depth_first_search_view<G, void, true, Stack>(g, seed);
+    return edges_depth_first_search_view<G, void, true, Stack>(g, seed, alloc);
 }
 
-template <adjacency_graph G, class EVF, class Stack = stack<dfs_element<G>>>
+template <adjacency_graph G, class EVF, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-      is_invocable_v<EVF, edge_reference_t<G>>
-constexpr auto sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf) {
-  if constexpr (tag_invoke::_has_src_edg_dfs_evf_adl<G, EVF>)
-    return tag_invoke::sourced_edges_depth_first_search(g, seed, evf);
+      invocable<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
+constexpr auto
+sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, const Alloc& alloc = Alloc()) {
+  if constexpr (tag_invoke::_has_src_edg_dfs_evf_adl<G, EVF, Alloc>)
+    return tag_invoke::sourced_edges_depth_first_search(g, seed, evf, alloc);
   else
-    return edges_depth_first_search_view<G, EVF, true, Stack>(g, seed, evf);
+    return edges_depth_first_search_view<G, EVF, true, Stack>(g, seed, evf, alloc);
 }
 
 

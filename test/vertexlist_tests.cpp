@@ -198,6 +198,12 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
+
+    cnt = 0;
+    for (auto&& [uid, u] : std::graph::views::vertexlist(g, vertices(g))) {
+      ++cnt;
+    }
+    REQUIRE(cnt == size(vertices(g)));
   }
 
   SECTION("const vertexlist") {
@@ -216,6 +222,12 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
+
+    cnt = 0;
+    for (auto&& [uid, u] : std::graph::views::vertexlist(g2, vertices(g2))) {
+      ++cnt;
+    }
+    REQUIRE(cnt == size(vertices(g)));
   }
 
   SECTION("non-const vertexlist with vertex_fn") {
@@ -226,13 +238,19 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
+
+    cnt = 0;
+    for (auto&& [uid, u, val] : std::graph::views::vertexlist(g, vertices(g), vertex_fn)) {
+      ++cnt;
+    }
+    REQUIRE(cnt == size(vertices(g)));
   }
   SECTION("const vertexlist with vertex_fn") {
     // Note: must include trailing return type on lambda
-    using G2   = const G;
-    G2&    g2  = g;
-    size_t cnt = 0;
-    auto vertex_fn = [&g2](vertex_reference_t<G2> u) -> const std::string& { return vertex_value(g2, u); };
+    using G2         = const G;
+    G2&    g2        = g;
+    size_t cnt       = 0;
+    auto   vertex_fn = [&g2](vertex_reference_t<G2> u) -> const std::string& { return vertex_value(g2, u); };
     for (auto&& [uid, u, val] : std::graph::views::vertexlist(g2, vertex_fn)) {
       ++cnt;
     }
