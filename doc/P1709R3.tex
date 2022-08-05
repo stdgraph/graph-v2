@@ -186,8 +186,8 @@ This proposal is a pure \textbf{library} extension.
 \subsection{What this proposal is  \textbf{not}}
 This paper limits itself to adjacency graphs only, including an outer range of vertices with an inner range of outgoing edges on each vertex. It also includes an edgelist of all edges in the graph, either as a edgelist view or a simple range with a source\_id and target\_id. It does not include incoming edges on a vertex, though that could be a future extension.
 
-\hl{Bipartite graphs aren't supported directly.} They can be implemented using a runtime-assigned property on a vertex and are a characteristic of the
-underlying graph container implementation.
+\hl{Bipartite graphs.} 
+\phil{Andrew and I have agreed on general implementation. We need to add implementation, and to this proposal if there is room. }
 
 Hypergraphs are not supported.
 
@@ -248,15 +248,16 @@ Table \ref{tab:name_conv} shows the naming conventions used throughout this docu
     & \tcode{vertex_reference_t<G>} & \tcode{u,v,x,y} & Vertex reference. \tcode{u} is the source (or only) vertex. \tcode{v} is the target vertex. \\
     \tcode{VId} & \tcode{vertex_id_t<G>} & \tcode{uid,vid,seed} & Vertex id. \tcode{uid} is the source (or only) vertex id. \tcode{vid} is the target vertex id. \\
     \tcode{VV} &  \tcode{vertex_value_t<G>} & & Vertex Value, value or reference. This can be either the user-defined value on a vertex, or a value returned by a function object (e.g. \tcode{VVF}) that is related to the vertex. \\
-    \tcode{VR} &  \tcode{vertex_range_t<G>} & & Vertex Range \\
-    \tcode{VI} & \tcode{vertex_iterator_t<G>} & \tcode{ui,vi} & Vertex Iterator. \tcode{ui} is the source (or only) vertex. \tcode{vi} is the target vertex. \\
+    \tcode{VR} &  \tcode{vertex_range_t<G>} & \tcode{ur,vr} & Vertex Range \\
+    \tcode{VI} & \tcode{vertex_iterator_t<G>} & \tcode{ui,vi} & Vertex Iterator. \tcode{ui} is the source (or only) vertex. \\
+                    &  & \tcode{first,last} & \tcode{vi} is the target vertex. \\
     \tcode{VVF} & & \tcode{vvf} & Vertex Value Function: vvf(u) $\rightarrow$ value \\
 \hline
     \tcode{E} & \tcode{edge_t<G>} & & Edge \\
     & \tcode{edge_reference_t<G>} & \tcode{uv,vw} & Edge reference. \tcode{uv} is an edge from vertices \tcode{u} to \tcode{v}. \tcode{vw} is an edge from vertices \tcode{v} to \tcode{w}.  \\
     \tcode{EV} &  \tcode{edge_value_t<G>} & & Edge Value, value or reference. This can be either the user-defined value on an edge, or a value returned by a function object (e.g. \tcode{EVF}) that is related to the edge. \\
     \tcode{ER} &  \tcode{vertex_edge_range_t<G>} & & Edge Range for edges of a vertex \\
-    \tcode{EI} & \tcode{vertex_edge_iterator_t<G>} & \tcode{uvi vwi} & Edge Iterator for an edge of a vertex. \tcode{uvi} is an iterator for an edge from vertices \tcode{u} to \tcode{v}. \tcode{vwi} is an iterator for an edge from vertices \tcode{v} to \tcode{w}. \\
+    \tcode{EI} & \tcode{vertex_edge_iterator_t<G>} & \tcode{uvi,vwi} & Edge Iterator for an edge of a vertex. \tcode{uvi} is an iterator for an edge from vertices \tcode{u} to \tcode{v}. \tcode{vwi} is an iterator for an edge from vertices \tcode{v} to \tcode{w}. \\
     \tcode{EVF} & & \tcode{evf} & Edge Value Function: evf(uv) $\rightarrow$ value \\
 \hline
 \end{tabular}}
@@ -315,6 +316,8 @@ Articulation points \cite{REF_} ...
 \subsubsection{[TBD] Label propagation (Community Detection)}
 
 \subsection{Views}
+The views in this section provide comman ways that algorithms use to traverse graphs. They are a simple as iterating through the set of vertices, or more complex ways such as depth-first search and breadth-first search. The also provide a consistent and reliable way to access related elements using the View Return Types, and guaranteeing expected values, such as that the target is really the target on unordered edges.
+
 \subsubsection{Return Types}
 Views return one of the types in this section, providing a consistent set of values. They are templated so that the view can adjust the actual values returned to be appropriate for its use. The following examples show the general design and how it's used. While it focuses on vertexlist to iterate over all vertices, it applies to all view functions.
 
@@ -458,8 +461,7 @@ Specializations are defined with \tcode{Sourced}=true\(|\)false, \tcode{E}=void 
 \end{table}
 
 \subsubsection{vertexlist Views}
-\phil{Missing overloads for vertex range}
-
+\
 \tcode{vertexlist} views iterate over a range of vertices, returning a \tcode{vertex_view} on each iteration. 
 Table \ref{tab:vertexlist} shows the vertexlist functions overloads and their return values. \tcode{first} and \tcode{last} are vertex iterators.
 
@@ -474,6 +476,8 @@ Table \ref{tab:vertexlist} shows the vertexlist functions overloads and their re
     \tcode{for(auto\&\& [uid,u,val] : vertexlist(g,vvf))} & \tcode{vertex_view<VId,V,VV>} \\
     \tcode{for(auto\&\& [uid,u] : vertexlist(g,first,last))} & \tcode{vertex_view<VId,V,void>} \\
     \tcode{for(auto\&\& [uid,u,val] : vertexlist(g,first,last,vvf))} & \tcode{vertex_view<VId,V,VV>} \\
+    \tcode{for(auto\&\& [uid,u] : vertexlist(g,vr))} & \tcode{vertex_view<VId,V,void>} \\
+    \tcode{for(auto\&\& [uid,u,val] : vertexlist(g,vr,vvf))} & \tcode{vertex_view<VId,V,VV>} \\
 \hline
 \end{tabular}}
 \caption{\tcode{vertexlist} View Functions}
@@ -549,6 +553,8 @@ Table \ref{tab:edgelist} shows the \tcode{edgelist} function overloads and their
 depth\_first\_search views iterate over the vertices and edges from a given seed vertex, returning a \tcode{vertex_view} or \tcode{edge_view} on each iteration when it is first encountered, depending on the function used. 
 Table \ref{tab:dfs} shows the functions and their return values.
 
+While not shown in the examples, all functions have a final, optional allocator parameter that defaults to \tcode{std::allocator<bool>}. It is used for containers that are internal to the view. The \tcode{<bool>} argument has no particular meaning.
+
 \begin{table}[h!]
 \begin{center}
 \resizebox{\textwidth}{!}
@@ -575,6 +581,8 @@ Table \ref{tab:dfs} shows the functions and their return values.
 breadth\_first\_search views iterate over the vertices and edges from a given seed vertex, returning a \tcode{vertex_view} or \tcode{edge_view} on each iteration when it is first encountered, depending on the function used. 
 Table \ref{tab:bfs} shows the functions and their return values.
 
+While not shown in the examples, all functions have a final, optional allocator parameter that defaults to \tcode{std::allocator<bool>}. It is used for containers that are internal to the view. The \tcode{<bool>} argument has no particular meaning.
+
 \begin{table}[h!]
 \begin{center}
 \resizebox{\textwidth}{!}
@@ -600,6 +608,8 @@ Table \ref{tab:bfs} shows the functions and their return values.
 \subsubsection{topological\_sort Views}
 topological\_sort views iterate over the vertices and edges from a given seed vertex, returning a \tcode{vertex_view} or \tcode{edge_view} on each iteration when it is first encountered, depending on the function used. 
 Table \ref{tab:topo_sort} shows the functions and their return values.
+
+While not shown in the examples, all functions have a final, optional allocator parameter that defaults to \tcode{std::allocator<bool>}. It is used for containers that are internal to the view. The \tcode{<bool>} argument has no particular meaning.
 
 \begin{table}[h!]
 \begin{center}
@@ -790,7 +800,7 @@ If the concept requirements for the default implementation aren't met by the gra
 Edgelists are assumed to be either be an edgelist view of an adjacency graph, or a standard range with source\_id and target\_id values. There is no need for additional functions when a range is used.
 
 \subsection{csr\_graph Graph Container}
-The csr\_graph is a high-performance, static graph container that uses (\href{https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_\%28CSR\%2C_CRS_or_Yale_format\%29}{Compressed Sparse Row}) format to store it's vertices, edges and associated values. Once constructed, it cannot be modified.
+The csr\_graph is a high-performance, static graph container that uses \href{https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_\%28CSR\%2C_CRS_or_Yale_format\%29}{Compressed Sparse Row} format to store it's vertices, edges and associated values. Once constructed, it cannot be modified.
 
 \section{Design - Graph Container Author}
 \subsection{Customization Points}

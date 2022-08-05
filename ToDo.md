@@ -23,8 +23,8 @@
       - [ ] Copy VVF to iterator (not reference)
       - [ ] Accept VVF(g,u) & allow vertex_value?
       - [x] verify it is a std\::ranges\::view<>
-      - [ ] Implement vertexlist(g,vr)
-      - [ ] Implement vertexlist(g,vr,vvf)
+      - [x] Implement vertexlist(g,vr)
+      - [x] Implement vertexlist(g,vr,vvf)
     - [ ] incidence
       - [ ] Copy EVF to iterator (not reference)
       - [ ] unit tests for undirected_graph\<G\>
@@ -110,8 +110,8 @@
       - [ ] graph with map-based vertices (requires different algorithm impl)
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] constexpr graph based on std::array
-    - [ ] bipartite_graph<V1,V2,V3>
-    - [ ] undirected_adjacency_list
+    - [ ] partite_csr_graph<EV,VV,GV,VId,Alloc> where EV & VV are tuples of the sample size, and each element defines the type used in the partition
+    - [ ] undirected_adjacency_list<EV,VV,GV,VId,Alloc>
     - [x] directed_adjacency_vector (retired)
     - [ ] adaptor for range of ranges (e.g. vector\<list\<T\>\>)
 - [ ] Testing Patterns
@@ -209,37 +209,9 @@
 - [ ] Can std::array be used as a basis for a constexpr graph? What would the graph be?
 - [ ] How to validate constexpr? (need to use std::array)
 - [ ] CSR showed that there can be issues when an "edge" type is just an int, which is the same as the VId. Will this be an issue for existing graphs? If so, how to adapt them?
-- [ ] How to support bipartite graphs using different vertex types?
-  - [x] Requires definition of 2+ types of vertices. How to define vertex type: compile-time vs. run-time?
-    - [x] vertices are stored as a range of range of vertices, where the outer range is the type of vertex
-    - [x] compile-time requires additional type parameter; confusing and too invasive to interface
-  - [ ] Need proof-of-concept graph data structure to demonstrate
-  - [ ] Option 1: extend API & Views with the type (or hidden if not used)
-    - [ ] keeps uniformity of vertex type
-    - [ ] may require use of variant for vertex_value type (having a unique value__type per vertex type significantly increases API complexity)
-    - [ ] API extensions
-      - [ ] vertices(g,type)
-      - [ ] find_vertex(g,id,type)
-      - [ ] vertex_type(g,u), or vertex_type(g,ui) (like vertex_id)
-      - [ ] target_type(g,uv), source_type(g,uv)
-    - [ ] View exensions
-      - [ ] vertex_view would need to include vertex type
-      - [ ] edge_view would need to include target & source vertex type (with the id)
-      - [ ] neighbor_view would need to include target vertex type
-      - [ ] These extensions could be a template parameter based on the underlying type of graph; they would be absent if not needed
-      - [ ] How to efficiently iterate through vertices of a specific type?
-  - [ ] Option 2: use existing vertex_id to be a pair<vtx_type,vtx_id>
-    - [ ] Can the existing design adapt to this? (Best option if it can be made to work)
-    - [ ] keeps uniformity of vertex type
-    - [ ] may require use of variant for vertex_value type
-    - [ ] How well would it adapt to existing bipartite graphs?
-  - [ ] Option 3: use C++ types to distinguish vertex types
-    - [ ] invasive to the existing design and would make it significantly more complicated
-    - [ ] would delay existing design by months and there's no guarantee to be successful
 - [ ] Should we worry about row-major & column-major ordering of adjacency_matrix? always assume row-major?
 - [ ] Is there a way for EVF to take both edge_value and fnc obj? (same for VVF & vertex_value)
 - [ ] The default for edges(g,uid) CPO isn't being found by msvc or gcc. Is there a way to only have to override one version of edges(g,)?
-- [ ] Should we have a graph_reference_t<G> type alias?
 
 ## Resolved
 ### ToDo Completed
@@ -309,3 +281,14 @@
 - [x] Use of tag_invoke namespace is required by CPO and exposed when specializing the functions. Acceptable? Better way?
         A: It is a requirement and is being used as part of P2300. We'll follow their lead.
 - [x] Can transform_view be used in place of the projections in the graph views? No
+- [x] How to support bipartite (or N-partite) graphs using different vertex value types?
+      A: Given a csr_graph, EV and VV can be tuples of the same length. 
+         The number of elements in the tuples determine the number of partitions.
+         Values are stored seprately from structure and can be stored in a tuple of vectors.
+         Additional vectors are kept for the starting index in the vertices & edges structures for each partition.
+         For instance, VV=tuple<int32_t,double,bool> and EV=tuple<int32_t, int32_t, void> the vertex values would be
+         stored in tuple<vector<int32_t>, vector<double>, vector<bool>>, and the edge values would be stored as
+         tuple<vector<int32_t>, vector<int32_t>, vector<void>>. (void may need to be replaced with a concrete novalue struct).
+      B: Given a more standard adjacency structure, variant could be used instead of a tuple. For instance, using the same,
+         EV and VV tuple types, they would be translated into variant<int32_t,double,bool> and variant<int32_t, int32_t, void>.
+- [x] Should we have a graph_reference_t<G> type alias? Yes

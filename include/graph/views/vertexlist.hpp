@@ -7,14 +7,17 @@
 //
 // given:    vvf = [&g](vertex_reference_t<G> u) -> decl_type(vertex_value(g)) { return vertex_value(g,u);}
 //           (trailing return type is required if defined inline as vertexlist parameter)
-// 
+//
 //           vertex_iterator<G> first = ..., last = ...;
 //
 // examples: for(auto&& [uid, u]      : vertexlist(g))
 //         : for(auto&& [uid, u, val] : vertexlist(g,vvf)
-// 
+//
 //         : for(auto&& [uid, u]      : vertexlist(g, first, last))
 //         : for(auto&& [uid, u, val] : vertexlist(g, first, last, vvf)
+//
+//         : for(auto&& [uid, u]      : vertexlist(g, vr))
+//         : for(auto&& [uid, u, val] : vertexlist(g, vr, vvf)
 //
 namespace std::graph::views {
 
@@ -63,7 +66,7 @@ public:
   constexpr ~vertexlist_iterator()                          = default;
 
   constexpr vertexlist_iterator& operator=(const vertexlist_iterator&) = default;
-  constexpr vertexlist_iterator& operator=(vertexlist_iterator&&) = default;
+  constexpr vertexlist_iterator& operator=(vertexlist_iterator&&)      = default;
 
 public:
   constexpr reference operator*() const {
@@ -135,7 +138,7 @@ public:
   constexpr ~vertexlist_iterator()                          = default;
 
   constexpr vertexlist_iterator& operator=(const vertexlist_iterator&) = default;
-  constexpr vertexlist_iterator& operator=(vertexlist_iterator&&) = default;
+  constexpr vertexlist_iterator& operator=(vertexlist_iterator&&)      = default;
 
 public:
   constexpr reference operator*() const {
@@ -201,6 +204,19 @@ namespace tag_invoke {
     {vertexlist(g, ui, vi, fn)};
   };
 
+  template <class G, class VR>
+  concept _has_vertexlist_vrng_adl = vertex_range<G> && ranges::random_access_range<VR> &&
+        requires(G&& g, vertex_range_t<G>& vr) {
+    {vertexlist(g, vr)};
+  };
+
+  template <class G, class VR, class VVF>
+  concept _has_vertexlist_vrng_fn_adl = vertex_range<G> && ranges::random_access_range<VR> &&
+        convertible_to<ranges::range_value_t<VR>, vertex_t<G>> && requires(G&& g, VR&& vr, const VVF& fn) {
+    invocable<VVF, vertex_reference_t<G>>;
+    {vertexlist(g, vr, fn)};
+  };
+
 
 } // namespace tag_invoke
 
@@ -210,7 +226,7 @@ namespace tag_invoke {
 template <adjacency_graph G>
 constexpr auto vertexlist(G&& g) {
   if constexpr (tag_invoke::_has_vertexlist_g_adl<G>)
-    return tag_invoke::vertexlist(g);
+    return tag_invoke::vertexlist(forward<G>(g));
   else
     return vertexlist_view<G>(vertices(forward<G>(g)));
 }
@@ -234,7 +250,7 @@ requires ranges::random_access_range<vertex_range_t<G>>
 constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
   using iterator_type = vertexlist_iterator<G>;
   if constexpr (tag_invoke::_has_vertexlist_i_i_adl<G>)
-    return tag_invoke::vertexlist(g, first, last);
+    return tag_invoke::vertexlist(forward<G>(g), first, last);
   else
     return vertexlist_view<G>(iterator_type(first, static_cast<vertex_id_t<G>>(first - begin(vertices(g)))), last);
 }
@@ -244,10 +260,43 @@ requires ranges::random_access_range<vertex_range_t<G>> && invocable<VVF, vertex
 constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
   if constexpr (tag_invoke::_has_vertexlist_i_i_fn_adl<G, VVF>)
-    return tag_invoke::vertexlist(g, first, last, value_fn);
-  else
-    return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, first), last,
-                                   (first - begin(vertices(forward<G>(g)))));
+    return tag_invoke::vertexlist(forward<G>(g), first, last, value_fn);
+  else {
+    auto first_id = static_cast<vertex_id_t<G>>(first - begin(vertices(g)));
+    return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, first), last, first_id);
+  }
+}
+
+//
+// vertexlist(g, ur, [,proj])
+//
+template <adjacency_graph G, ranges::random_access_range VR>
+requires ranges::random_access_range<vertex_range_t<G>>
+constexpr auto vertexlist(G&& g, VR&& vr) {
+  using iterator_type = vertexlist_iterator<G>;
+  if constexpr (tag_invoke::_has_vertexlist_vrng_adl<G,VR>)
+    return tag_invoke::vertexlist(forward<G>(g), forward<VR>(vr));
+  else {
+    auto first    = ranges::begin(vr);
+    auto last     = ranges::end(vr);
+    auto first_id = static_cast<vertex_id_t<G>>(first - begin(vertices(g)));
+    return vertexlist_view<G>(iterator_type(first, first_id), last);
+  }
+}
+
+template <adjacency_graph G, ranges::random_access_range VR, class VVF>
+requires invocable<VVF, vertex_reference_t<G>> &&
+      convertible_to<ranges::iterator_t<VR>, vertex_iterator_t<G>> // allow for ranges::subrange of vertices
+constexpr auto vertexlist(G&& g, VR&& vr, const VVF& value_fn) {
+  using iterator_type = vertexlist_iterator<G, VVF>;
+  if constexpr (tag_invoke::_has_vertexlist_vrng_fn_adl<G, VR, VVF>)
+    return tag_invoke::vertexlist(forward(g), forward(vr), value_fn);
+  else {
+    auto first    = ranges::begin(vr);
+    auto last     = ranges::end(vr);
+    auto first_id = static_cast<vertex_id_t<G>>(first - begin(vertices(g)));
+    return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, first, first_id), last);
+  }
 }
 
 
