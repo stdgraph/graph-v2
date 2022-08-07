@@ -101,9 +101,9 @@
     - [x] csr_graph (for P1709)
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [x] Support VV=void
-      - [ ] Support EV=void
+      - [x] Support EV=void
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
-      - [ ] Add ctor with initializer_list for simple demo
+      - [x] Add ctor with initializer_list for simple demo
     - [ ] dynamic_graph
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...

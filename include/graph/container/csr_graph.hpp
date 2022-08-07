@@ -54,8 +54,7 @@ constexpr auto max_vertex_id(const ERng& erng, const EProj& eprojection) {
 // forward declarations
 //
 template <class EV = bool, class VV = void, class GV = void, integral VId = uint32_t, class Alloc = allocator<uint32_t>>
-requires(!is_void_v<EV>) //
-      class csr_graph;
+class csr_graph;
 
 /// <summary>
 /// Wrapper struct for the row index to distinguish it from a vertex_id_type (VId).
@@ -175,19 +174,20 @@ public:
   constexpr reference       operator[](size_type pos) { return v_[pos]; }
   constexpr const_reference operator[](size_type pos) const { return v_[pos]; }
 
+private:
   friend constexpr vertex_value_type&
   tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
     auto            uidx     = g.index_of(u);
     csr_row_values& row_vals = g;
-    return row_vals[uidx];
+    return row_vals.v_[uidx];
   }
   friend constexpr const vertex_value_type&
   tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
     auto                  uidx     = g.index_of(u);
     const csr_row_values& row_vals = g;
-    return row_vals[uidx];
+    return row_vals.v_[uidx];
   }
 
 private:
@@ -229,8 +229,13 @@ public: // Operations
 /// <typeparam name="Alloc">Allocator type</typeparam>
 template <class EV, class VV, class GV, integral VId, class Alloc>
 class csr_col_values {
+  using col_type           = csr_col<VId>; // target_id
+  using col_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<col_type>;
+  using col_index_vector   = vector<col_type, col_allocator_type>;
+
 public:
-  using graph_type      = csr_graph<EV, EV, GV, VId, Alloc>;
+  using graph_type      = csr_graph<EV, VV, GV, VId, Alloc>;
+  using edge_type       = col_type; // index into v_
   using edge_value_type = EV;
   using allocator_type  = typename allocator_traits<Alloc>::template rebind_alloc<edge_value_type>;
   using vector_type     = vector<edge_value_type, allocator_type>;
@@ -274,6 +279,21 @@ public: // Operations
 public:
   constexpr reference       operator[](size_type pos) { return v_[pos]; }
   constexpr const_reference operator[](size_type pos) const { return v_[pos]; }
+
+private:
+  // edge_value(g,uv)
+  friend constexpr edge_value_type&
+  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, graph_type& g, edge_type& uv) {
+    auto            uv_idx   = g.index_of(uv);
+    csr_col_values& col_vals = g;
+    return col_vals.v_[uv_idx];
+  }
+  friend constexpr const edge_value_type&
+  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, const graph_type& g, const edge_type& uv) {
+    auto                  uv_idx   = g.index_of(uv);
+    const csr_col_values& col_vals = g;
+    return col_vals.v_[uv_idx];
+  }
 
 private:
   vector_type v_;
@@ -335,8 +355,8 @@ public: // Types
   using vertices_type       = ranges::subrange<ranges::iterator_t<row_index_vector>>;
   using const_vertices_type = ranges::subrange<ranges::iterator_t<const row_index_vector>>;
 
-  using edge_value_type  = EV;
   using edge_type        = col_type; // index into v_
+  using edge_value_type  = EV;
   using edges_type       = ranges::subrange<ranges::iterator_t<col_index_vector>>;
   using const_edges_type = ranges::subrange<ranges::iterator_t<const col_index_vector>>;
 
@@ -496,7 +516,6 @@ public: // Operations
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr void load_edges(ERng&& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
     // should only be loading into an empty graph
-    static_assert(!is_void_v<EV>);
     assert(row_index_.empty() && col_index_.empty() && static_cast<col_values_base&>(*this).empty());
 
     // Nothing to do?
@@ -577,7 +596,7 @@ public: // Operations
       row_index_.resize(static_cast<size_t>(edge.source_id) + 1,
                         vertex_type{static_cast<vertex_id_type>(static_cast<col_values_base&>(*this).size())});
       col_index_.push_back(edge_type{edge.target_id});
-      if (!is_void_v<EV>)
+      if constexpr (!is_void_v<EV>)
         static_cast<col_values_base&>(*this).push_back(edge.value);
       last_uid = edge.source_id;
       max_vid  = max(max_vid, edge.target_id);
@@ -638,8 +657,11 @@ public: // Operations
     return row_index_.begin() + id;
   }
 
-  constexpr vertex_id_type index_of(const vertex_type& u) const noexcept {
+  constexpr vertex_id_type index_of(const row_type& u) const noexcept {
     return static_cast<vertex_id_type>(&u - row_index_.data());
+  }
+  constexpr vertex_id_type index_of(const col_type& v) const noexcept {
+    return static_cast<vertex_id_type>(&v - col_index_.data());
   }
 
 public: // Operators
@@ -719,19 +741,8 @@ private: // tag_invoke properties
     return g.row_index_[uv.index];
   }
 
-  // edge_value(g,uv)
-  friend constexpr edge_value_type&
-  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, graph_type& g, edge_type& uv) noexcept {
-    size_t uv_idx = static_cast<size_t>(&uv - g.col_index_.data());
-    return static_cast<col_values_base&>(g)[uv_idx];
-  }
-  friend constexpr const edge_value_type&
-  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    size_t uv_idx = static_cast<size_t>(&uv - g.col_index_.data());
-    return static_cast<const col_values_base&>(g)[uv_idx];
-  }
-
   friend row_values_base;
+  friend col_values_base;
 };
 
 
@@ -745,13 +756,10 @@ private: // tag_invoke properties
 /// <typeparam name="VId">Vertex Id type. This must be large enough for the total edges and the total vertices.</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, class GV, integral VId, class Alloc>
-requires(!is_void_v<EV>) //
-      class csr_graph : public csr_graph_base<EV, VV, GV, VId, Alloc> {
+class csr_graph : public csr_graph_base<EV, VV, GV, VId, Alloc> {
 public: // Types
   using graph_type = csr_graph<EV, VV, GV, VId, Alloc>;
   using base_type  = csr_graph_base<EV, VV, GV, VId, Alloc>;
-
-  using edge_value_type = EV;
 
   using vertex_id_type    = VId;
   using vertex_value_type = VV;
@@ -857,13 +865,10 @@ private: // Member variables
 /// <typeparam name="VId">Vertex Id type. This must be large enough for the total edges and the total vertices.</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
 template <class EV, class VV, integral VId, class Alloc>
-requires(!is_void_v<EV>) //
-      class csr_graph<EV, VV, void, VId, Alloc> : public csr_graph_base<EV, VV, void, VId, Alloc> {
+class csr_graph<EV, VV, void, VId, Alloc> : public csr_graph_base<EV, VV, void, VId, Alloc> {
 public: // Types
   using graph_type = csr_graph<EV, VV, void, VId, Alloc>;
   using base_type  = csr_graph_base<EV, VV, void, VId, Alloc>;
-
-  using edge_value_type = EV;
 
   using vertex_id_type    = VId;
   using vertex_value_type = VV;
