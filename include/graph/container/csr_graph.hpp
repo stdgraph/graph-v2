@@ -88,8 +88,13 @@ struct csr_col {
 /// <typeparam name="Alloc">Allocator type</typeparam>
 template <class EV, class VV, class GV, integral VId, class Alloc>
 class csr_row_values {
+  using row_type           = csr_row<VId>; // index into col_index_
+  using row_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<row_type>;
+  using row_index_vector   = vector<row_type, row_allocator_type>;
+
 public:
   using graph_type        = csr_graph<EV, VV, GV, VId, Alloc>;
+  using vertex_type       = row_type;
   using vertex_value_type = VV;
   using allocator_type    = typename allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
   using vector_type       = vector<vertex_value_type, allocator_type>;
@@ -112,7 +117,7 @@ public:
   constexpr ~csr_row_values()                     = default;
 
   constexpr csr_row_values& operator=(const csr_row_values&) = default;
-  constexpr csr_row_values& operator=(csr_row_values&&) = default;
+  constexpr csr_row_values& operator=(csr_row_values&&)      = default;
 
 
 public: // Properties
@@ -169,6 +174,21 @@ public: // Operations
 public:
   constexpr reference       operator[](size_type pos) { return v_[pos]; }
   constexpr const_reference operator[](size_type pos) const { return v_[pos]; }
+
+  friend constexpr vertex_value_type&
+  tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, graph_type& g, vertex_type& u) {
+    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
+    auto            uidx     = g.index_of(u);
+    csr_row_values& row_vals = g;
+    return row_vals[uidx];
+  }
+  friend constexpr const vertex_value_type&
+  tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
+    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
+    auto                  uidx     = g.index_of(u);
+    const csr_row_values& row_vals = g;
+    return row_vals[uidx];
+  }
 
 private:
   vector_type v_;
@@ -233,7 +253,7 @@ public:
   constexpr ~csr_col_values()                     = default;
 
   constexpr csr_col_values& operator=(const csr_col_values&) = default;
-  constexpr csr_col_values& operator=(csr_col_values&&) = default;
+  constexpr csr_col_values& operator=(csr_col_values&&)      = default;
 
 
 public: // Properties
@@ -332,7 +352,7 @@ public: // Construction/Destruction
   constexpr ~csr_graph_base()                     = default;
 
   constexpr csr_graph_base& operator=(const csr_graph_base&) = default;
-  constexpr csr_graph_base& operator=(csr_graph_base&&) = default;
+  constexpr csr_graph_base& operator=(csr_graph_base&&)      = default;
 
   constexpr csr_graph_base(const Alloc& alloc)
         : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {}
@@ -618,6 +638,10 @@ public: // Operations
     return row_index_.begin() + id;
   }
 
+  constexpr vertex_id_type index_of(const vertex_type& u) const noexcept {
+    return static_cast<vertex_id_type>(&u - row_index_.data());
+  }
+
 public: // Operators
   constexpr vertex_type&       operator[](vertex_id_type id) noexcept { return row_index_[id]; }
   constexpr const vertex_type& operator[](vertex_id_type id) const noexcept { return row_index_[id]; }
@@ -642,23 +666,9 @@ private: // tag_invoke properties
       return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
 
-  friend vertex_id_type tag_invoke(::std::graph::tag_invoke::vertex_id_fn_t, const csr_graph_base& g, const_iterator ui) {
+  friend vertex_id_type
+  tag_invoke(::std::graph::tag_invoke::vertex_id_fn_t, const csr_graph_base& g, const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.row_index_.begin());
-  }
-
-  friend constexpr vertex_value_type&
-  tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, graph_type& g, vertex_type& u) {
-    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
-    auto             uidx     = static_cast<size_t>(&u - g.row_index_.data());
-    row_values_base& row_vals = g;
-    return row_vals[uidx];
-  }
-  friend constexpr const vertex_value_type&
-  tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
-    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
-    auto                   uidx     = static_cast<size_t>(&u - g.row_index_.data());
-    const row_values_base& row_vals = g;
-    return row_vals[uidx];
   }
 
   friend constexpr edges_type tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, vertex_type& u) {
@@ -679,7 +689,8 @@ private: // tag_invoke properties
     return const_edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
   }
 
-  friend constexpr edges_type tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, const vertex_id_type uid) {
+  friend constexpr edges_type
+  tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, const vertex_id_type uid) {
     assert(static_cast<size_t>(uid + 1) < g.row_index_.size());                      // in row_index_ bounds?
     assert(static_cast<size_t>(g.row_index_[uid + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + g.row_index_[uid].index,
@@ -699,7 +710,8 @@ private: // tag_invoke properties
   tag_invoke(::std::graph::tag_invoke::target_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
     return uv.index;
   }
-  friend constexpr vertex_type& tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
+  friend constexpr vertex_type&
+  tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
     return g.row_index_[uv.index];
   }
   friend constexpr const vertex_type&
@@ -718,6 +730,8 @@ private: // tag_invoke properties
     size_t uv_idx = static_cast<size_t>(&uv - g.col_index_.data());
     return static_cast<const col_values_base&>(g)[uv_idx];
   }
+
+  friend row_values_base;
 };
 
 
@@ -752,7 +766,7 @@ public: // Construction/Destruction
   constexpr ~csr_graph()                = default;
 
   constexpr csr_graph& operator=(const csr_graph&) = default;
-  constexpr csr_graph& operator=(csr_graph&&) = default;
+  constexpr csr_graph& operator=(csr_graph&&)      = default;
 
   // csr_graph(      alloc)
   // csr_graph(gv&,  alloc)
@@ -822,7 +836,9 @@ public: // Construction/Destruction
         : base_type(ilist, alloc) {}
 
 private: // tag_invoke properties
-  friend constexpr value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, graph_type& g) { return g.value_; }
+  friend constexpr value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, graph_type& g) {
+    return g.value_;
+  }
   friend constexpr const value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, const graph_type& g) {
     return g.value_;
   }
@@ -862,7 +878,7 @@ public: // Construction/Destruction
   constexpr ~csr_graph()                = default;
 
   constexpr csr_graph& operator=(const csr_graph&) = default;
-  constexpr csr_graph& operator=(csr_graph&&) = default;
+  constexpr csr_graph& operator=(csr_graph&&)      = default;
 
   template <ranges::forward_range ERng, class EProj = identity>
   requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>

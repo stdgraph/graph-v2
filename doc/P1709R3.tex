@@ -128,7 +128,7 @@
 \vspace{32pt}
 \begin{tabular}{ll}
 \textbf{Document Number:} & P1709R3\\
-\textbf{Date:} & \hl{September 13}, 2022 (mailing)\\ 
+\textbf{Date:} & \hl{TBD}, 2022 (mailing)\\ 
 \textbf{Project:} & ISO JTC1/SC22/WG21: Programming Language C++\\
 \textbf{Audience:} & SG19, WG21, LEWG\\
 \textbf{Source:} & \href{https://github.com/pratzl/graph-v2}{Github} \\
@@ -187,7 +187,7 @@ This proposal is a pure \textbf{library} extension.
 This paper limits itself to adjacency graphs only, including an outer range of vertices with an inner range of outgoing edges on each vertex. It also includes an edgelist of all edges in the graph, either as a edgelist view or a simple range with a source\_id and target\_id. It does not include incoming edges on a vertex, though that could be a future extension.
 
 \hl{Bipartite graphs.} 
-\phil{Andrew and I have agreed on general implementation. We need to add implementation, and to this proposal if there is room. }
+\phil{Andrew and I have agreed on general implementation direction for an N-partite. We need to add implementation, and to this proposal if there is room.}
 
 Hypergraphs are not supported.
 
@@ -242,12 +242,12 @@ Table \ref{tab:name_conv} shows the naming conventions used throughout this docu
 \hline
     \tcode{G} & & & Graph \\
     & \tcode{graph_reference_t<G>} & \tcode{g} & Graph reference \\
-    \tcode{GV} &  & & Graph Value, value or reference \\
+    \tcode{GV} &  & \tcode{val} & Graph Value, value or reference \\
 \hline
     \tcode{V} & \tcode{vertex_t<G>} & & Vertex \\
     & \tcode{vertex_reference_t<G>} & \tcode{u,v,x,y} & Vertex reference. \tcode{u} is the source (or only) vertex. \tcode{v} is the target vertex. \\
     \tcode{VId} & \tcode{vertex_id_t<G>} & \tcode{uid,vid,seed} & Vertex id. \tcode{uid} is the source (or only) vertex id. \tcode{vid} is the target vertex id. \\
-    \tcode{VV} &  \tcode{vertex_value_t<G>} & & Vertex Value, value or reference. This can be either the user-defined value on a vertex, or a value returned by a function object (e.g. \tcode{VVF}) that is related to the vertex. \\
+    \tcode{VV} &  \tcode{vertex_value_t<G>} & \tcode{val} & Vertex Value, value or reference. This can be either the user-defined value on a vertex, or a value returned by a function object (e.g. \tcode{VVF}) that is related to the vertex. \\
     \tcode{VR} &  \tcode{vertex_range_t<G>} & \tcode{ur,vr} & Vertex Range \\
     \tcode{VI} & \tcode{vertex_iterator_t<G>} & \tcode{ui,vi} & Vertex Iterator. \tcode{ui} is the source (or only) vertex. \\
                     &  & \tcode{first,last} & \tcode{vi} is the target vertex. \\
@@ -255,7 +255,7 @@ Table \ref{tab:name_conv} shows the naming conventions used throughout this docu
 \hline
     \tcode{E} & \tcode{edge_t<G>} & & Edge \\
     & \tcode{edge_reference_t<G>} & \tcode{uv,vw} & Edge reference. \tcode{uv} is an edge from vertices \tcode{u} to \tcode{v}. \tcode{vw} is an edge from vertices \tcode{v} to \tcode{w}.  \\
-    \tcode{EV} &  \tcode{edge_value_t<G>} & & Edge Value, value or reference. This can be either the user-defined value on an edge, or a value returned by a function object (e.g. \tcode{EVF}) that is related to the edge. \\
+    \tcode{EV} &  \tcode{edge_value_t<G>} & \tcode{val} & Edge Value, value or reference. This can be either the user-defined value on an edge, or a value returned by a function object (e.g. \tcode{EVF}) that is related to the edge. \\
     \tcode{ER} &  \tcode{vertex_edge_range_t<G>} & & Edge Range for edges of a vertex \\
     \tcode{EI} & \tcode{vertex_edge_iterator_t<G>} & \tcode{uvi,vwi} & Edge Iterator for an edge of a vertex. \tcode{uvi} is an iterator for an edge from vertices \tcode{u} to \tcode{v}. \tcode{vwi} is an iterator for an edge from vertices \tcode{v} to \tcode{w}. \\
     \tcode{EVF} & & \tcode{evf} & Edge Value Function: evf(uv) $\rightarrow$ value \\
