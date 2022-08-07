@@ -46,7 +46,7 @@
       - [x] verify it is a std::ranges::view<>
       - [x] create CPOs
       - [x] Use real_target_id(g,uv,src) for both directed_incidence_graph & undirected_incidence_graph to consolidate code
-      - [ ] colors_ should use same allocator as Stack; add ctor that takes Stack
+      - [x] Add allocator parameter & use with _colors
     - [x] edges_depth_first_search_view
       - [x] validate results & add unit tests
       - [x] support Cancelable
@@ -57,7 +57,7 @@
       - [x] verify it is a std::ranges::view<>
       - [x] create CPOs: edges, sourced_edges
       - [x] Use real_target_id(g,uv,src) for both directed_incidence_graph & undirected_incidence_graph to consolidate code
-      - [ ] colors_ should use same allocator as Stack; add ctor that takes Stack
+      - [x] Add allocator parameter & use with _colors
     - [ ] **bfs_vertex_range**
     - [ ] **bfs_edge_range**
     - [ ] topological_sort_vertex_range
