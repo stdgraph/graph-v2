@@ -1,35 +1,37 @@
 digraph routes {
   overlap = scalexy
   splines = curved
-  0 [shape=oval,label="Frankfürt [0]"]
-   0 -> 1 [arrowhead=vee,xlabel="85 km", fontcolor=blue]
-   0 -> 4 [arrowhead=vee,xlabel="217 km", fontcolor=blue]
-   0 -> 6 [arrowhead=vee,xlabel="173 km", fontcolor=blue]
+  bgcolor = "transparent"
 
-  1 [shape=oval,label="Mannheim [1]"]
-   1 -> 2 [arrowhead=vee,xlabel="80 km", fontcolor=blue]
+  0 [shape=oval,label="Frankfürt [0]", fontcolor=white, color=white]
+   0 -> 1 [arrowhead=vee,xlabel="85 km", fontcolor=blue, color="white"]
+   0 -> 4 [arrowhead=vee,xlabel="217 km", fontcolor=blue, color="white"]
+   0 -> 6 [arrowhead=vee,xlabel="173 km", fontcolor=blue, color="white"]
 
-  2 [shape=oval,label="Karlsruhe [2]"]
-   2 -> 3 [arrowhead=vee,xlabel="250 km", fontcolor=blue]
+  1 [shape=oval,label="Mannheim [1]", fontcolor=white, color=white]
+   1 -> 2 [arrowhead=vee,xlabel="80 km", fontcolor=blue, color="white"]
 
-  3 [shape=oval,label="Augsburg [3]"]
-   3 -> 8 [arrowhead=vee,xlabel="84 km", fontcolor=blue]
+  2 [shape=oval,label="Karlsruhe [2]", fontcolor=white, color=white]
+   2 -> 3 [arrowhead=vee,xlabel="250 km", fontcolor=blue, color="white"]
 
-  4 [shape=oval,label="Würzburg [4]"]
-   4 -> 5 [arrowhead=vee,xlabel="103 km", fontcolor=blue]
-   4 -> 7 [arrowhead=vee,xlabel="186 km", fontcolor=blue]
+  3 [shape=oval,label="Augsburg [3]", fontcolor=white, color=white]
+   3 -> 8 [arrowhead=vee,xlabel="84 km", fontcolor=blue, color="white"]
 
-  5 [shape=oval,label="Nürnberg [5]"]
-   5 -> 8 [arrowhead=vee,xlabel="167 km", fontcolor=blue]
-   5 -> 9 [arrowhead=vee,xlabel="183 km", fontcolor=blue]
+  4 [shape=oval,label="Würzburg [4]", fontcolor=white, color=white]
+   4 -> 5 [arrowhead=vee,xlabel="103 km", fontcolor=blue, color="white"]
+   4 -> 7 [arrowhead=vee,xlabel="186 km", fontcolor=blue, color="white"]
 
-  6 [shape=oval,label="Kassel [6]"]
-   6 -> 8 [arrowhead=vee,xlabel="502 km", fontcolor=blue]
+  5 [shape=oval,label="Nürnberg [5]", fontcolor=white, color=white]
+   5 -> 8 [arrowhead=vee,xlabel="167 km", fontcolor=blue, color="white"]
+   5 -> 9 [arrowhead=vee,xlabel="183 km", fontcolor=blue, color="white"]
 
-  7 [shape=oval,label="Erfurt [7]"]
+  6 [shape=oval,label="Kassel [6]", fontcolor=white, color=white]
+   6 -> 8 [arrowhead=vee,xlabel="502 km", fontcolor=blue, color="white"]
 
-  8 [shape=oval,label="München [8]"]
+  7 [shape=oval,label="Erfurt [7]", fontcolor=white, color=white]
 
-  9 [shape=oval,label="Stuttgart [9]"]
+  8 [shape=oval,label="München [8]", fontcolor=white, color=white]
+
+  9 [shape=oval,label="Stuttgart [9]", fontcolor=white, color=white]
 
 }

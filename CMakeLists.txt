@@ -93,6 +93,7 @@ if(ENABLE_TESTING)
   enable_testing()
   message("Building Tests. Be sure to check out test/constexpr_tests for constexpr testing")
   set(TEST_DATA_ROOT_DIR "${CMAKE_SOURCE_DIR}/data/")
+  set(TEST_OUTPUT_ROOT_DIR "${CMAKE_SOURCE_DIR}/test/")
   add_subdirectory(test)
 endif()
 

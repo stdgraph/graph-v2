@@ -68,6 +68,8 @@ auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOr
   return std::pair(std::move(lbl_vec), reader.n_rows()); // return (unique lbls, num rows read)
 }
 
+enum struct directedness : int8_t { directed, undirected };
+
 enum struct name_order_policy : int8_t {
   order_found,        // id assigned when first encountered as source or target
   source_order_found, // id assigned when first encountered as source only; names that are only targets appear at end
@@ -249,7 +251,8 @@ auto load_graph(csv::string_view csv_file) {
 /// <returns></returns>
 template <typename G>
 auto load_ordered_graph(csv::string_view        csv_file,
-                        const name_order_policy order_policy = name_order_policy::alphabetical) {
+                        const name_order_policy order_policy         = name_order_policy::alphabetical,
+                        const bool              add_reversed_src_tgt = false) {
   using namespace std::graph;
   using std::ranges::range_value_t;
   using std::ranges::iterator_t;
@@ -263,6 +266,8 @@ auto load_ordered_graph(csv::string_view        csv_file,
   using vertex_id_type    = vertex_id_t<G>;
   using vertex_value_type = vertex_value_t<G>;
   using edge_value_type   = edge_value_t<G>; //std::remove_cvref<edge_value_t<G>>;
+
+  //assert(!add_reversed_src_tgt || (add_reversed_src_tgt && order_policy != name_order_policy::source_order_found));
 
   csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
 
@@ -293,6 +298,8 @@ auto load_ordered_graph(csv::string_view        csv_file,
     }
 
     row_deq.push_back({source_iter, target_iter, value});
+    if (add_reversed_src_tgt)
+      row_deq.push_back({target_iter, source_iter, value});
   }
 
   // Assign unique vertex ids to each label (assigned in label order)
@@ -449,8 +456,9 @@ OS& operator<<(OS& os, const ostream_indenter& indent) {
 /// <param name="g">Grape instance</param>
 /// <param name="filename">Graphviz filename to output</param>
 template <class G>
-void output_routes_graphviz(const G& g, std::string_view filename) {
+void output_routes_graphviz(const G& g, std::string_view filename, const directedness dir) {
   using namespace std::graph;
+  using namespace std::literals;
   std::string   fn(filename);
   std::ofstream of(fn);
   assert(of.is_open());
@@ -458,6 +466,7 @@ void output_routes_graphviz(const G& g, std::string_view filename) {
   //of << "\xBB\xBF"; // UTF-8 lead chars for UTF-8
 
   // nodesep=0.5; doesn't help
+  std::string_view arrowhead = (dir == directedness::directed ? "arrowhead=vee"sv : "arrowhead=none"sv);
 
   of << "digraph routes {\n"
      << "  overlap = scalexy\n"
@@ -467,7 +476,7 @@ void output_routes_graphviz(const G& g, std::string_view filename) {
     of << "  " << uid << " [shape=oval,label=\"" << vertex_value(g, u) << " [" << uid << "]\"]\n";
     for (auto&& [vid, uv] : views::incidence(g, uid)) {
       auto&& v = target(g, uv);
-      of << "   " << uid << " -> " << vid << " [arrowhead=vee,xlabel=\"" << edge_value(g, uv)
+      of << "   " << uid << " -> " << vid << " [" << arrowhead << ",xlabel=\"" << edge_value(g, uv)
          << " km\", fontcolor=blue]\n";
     }
     of << std::endl;

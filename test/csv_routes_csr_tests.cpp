@@ -5,7 +5,6 @@
 #include "graph/views/neighbors.hpp"
 #include "graph/container/csr_graph.hpp"
 #include <cassert>
-#include <variant>
 
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
 #define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file
@@ -73,9 +72,6 @@ TEST_CASE("CSR void EV test", "[csr][capabilities]") {
   });
 
   graph_value(g) = "Germany Routes";
-
-  using V = std::variant<int,double,int,std::monostate,std::monostate>;
-  V vv;
 }
 
 TEST_CASE("CSR void VV test", "[csr][capabilities]") {

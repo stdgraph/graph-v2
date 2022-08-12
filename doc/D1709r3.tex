@@ -155,7 +155,8 @@
 \subsection*{P1709R3}
 This was a major redesign that incorporated all the experience and input from the past 3 years.
 \begin{itemize}
-\item Reduce the scope to focus on an edge list and incidence graph with outgoing edges only, and remove mutable interface functions. The distinction between directed and undirected graphs was replaced by overridable types of unordered and ordered edges for a graph implementation type.
+\item Reduce the scope to focus on an edge list and adjacency graph with outgoing edges only, and remove mutable interface functions. 
+\item Replace directed and undirected concepts with overridable types of unordered\_edge for a graph implementation type.
 \item Simplify the Graph Container types and functions. In particular, const and non-const variations were consolidated to a single definition to handle both cases 
 when appropriate.
 \item All Graph Container Interface functions are customization points.
