@@ -53,7 +53,11 @@ constexpr auto max_vertex_id(const ERng& erng, const EProj& eprojection) {
 //
 // forward declarations
 //
-template <class EV = bool, class VV = void, class GV = void, integral VId = uint32_t, class Alloc = allocator<uint32_t>>
+template <class    EV    = bool, 
+          class    VV    = void, 
+          class    GV    = void, 
+          integral VId   = uint32_t, 
+          class    Alloc = allocator<uint32_t>>
 class csr_graph;
 
 /// <summary>

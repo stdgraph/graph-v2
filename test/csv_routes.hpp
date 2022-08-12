@@ -35,6 +35,7 @@
 #include <string_view>
 #include <iomanip>
 #include <ostream>
+#include <optional>
 
 void init_console(); // init cout for UTF-8
 

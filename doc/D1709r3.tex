@@ -112,33 +112,34 @@
 \vfill
 \begin{center}
 \LARGE
-\textbf{P1709R3 Graph Library}\\
+\textbf{\hl{D1709r3} Graph Library}\\
 \vspace{12pt}
 \normalsize
 	Phillip Ratzloff (SAS Institute)\\
 	Andrew Lumsdaine (TileDB/University of Washington)\\
-	Richard Dosselmann (University of Regina)\\
-	Michael Wong (Codeplay)\\
-	Matthew Galati (SAS Institute)\\	
-	Jens Maurer\\
-	Domagoj Saric\\
-	Jesun Firoz\\
-	Kevin Deweese\\
 \end{center}
 \vspace{32pt}
 \begin{tabular}{ll}
-\textbf{Document Number:} & P1709R3\\
+\textbf{Document Number:} & \hl{D1709r3} \\
 \textbf{Date:} & \hl{TBD}, 2022 (mailing)\\ 
 \textbf{Project:} & ISO JTC1/SC22/WG21: Programming Language C++\\
 \textbf{Audience:} & SG19, WG21, LEWG\\
 \textbf{Source:} & \href{https://github.com/pratzl/graph-v2}{Github} \\
 \textbf{Issue Tracking:} & \href{https://github.com/pratzl/graph-v2/issues}{Github} \\
+\textbf{Contributors:}
+	&Richard Dosselmann (University of Regina)\\
+	&Michael Wong (Codeplay)\\
+	&Matthew Galati (Amazon)\\	
+	&Jens Maurer\\
+	&Domagoj Saric\\
+	&Jesun Firoz\\
+	&Kevin Deweese\\
 \textbf{Emails:}
 	&\texttt{Phil.Ratzloff@sas.com}\\
 	&\texttt{Andrew.Lumsdaine@tiledb.com}\\
 	&\texttt{dosselmr@cs.uregina.ca}\\
 	&\texttt{michael@codeplay.com}\\
-	&\texttt{Matthew.Galati@sas.com}\\
+	&\texttt{magalati@amazon.com}\\
 \textbf{Reply to:}
 	&\texttt{\textbf{Phil.Ratzloff@sas.com}}\\
 \end{tabular}
@@ -150,6 +151,28 @@
 
 \clearpage
 
+\section*{Revision History}
+\subsection*{P1709R3}
+This was a major redesign that incorporated all the experience and input from the past 3 years.
+\begin{itemize}
+\item Reduce the scope to focus on an edge list and incidence graph with outgoing edges only, and remove mutable interface functions. The distinction between directed and undirected graphs was replaced by overridable types of unordered and ordered edges for a graph implementation type.
+\item Simplify the Graph Container types and functions. In particular, const and non-const variations were consolidated to a single definition to handle both cases 
+when appropriate.
+\item All Graph Container Interface functions are customization points.
+\item Introduce Views, inspired by NWGraph design, resulting in simpler and cleaner interfaces to traverse a graph, and simplifying the container interface design.
+\item Revisit the algorithms to be considered. transitive\_closure has been dropped. The final list hasn't been finalized yet.
+\item Replace the two container implementations with csr\_graph.
+\end{itemize}
+
+\subsection*{P1709R2}
+Define the \textbf{uniform API} for undirected and directed algorithms (an extended API also exists for directed graphs). Added \textbf{concepts} for undirected, directed and bidirected graphs. Refined \textbf{DFS} and \textbf{BFS} range definitions from prototype experience. Refined \textbf{shortest paths} and \textbf{transitive closure} algorithms from input and prototype experience.
+
+\subsection*{P1709R1}
+Rewrite with a focus on a \textbf{purely functional design}, emphasizing the algorithms and graph API. Also added \textbf{concepts} and \textbf{ranges} into the design. Addressed concerns from Cologne review to change to functional design.
+
+\subsection*{P1709R0}
+Focus on \textbf{object-oriented API} for data structures and example code for a few algorithms.
+
 \section{Introduction}
 This document proposes the addition of \textbf{graph algorithms}, \textbf{graph views}, \textbf{graph container interface} and a \textbf{graph container implementation} to the C++ library to support \textbf{machine learning} (ML), as well as other applications. ML is a large and growing field, both in the \textbf{research community} and \textbf{industry}, that has received a great deal of attention in recent years. This paper presents an \textbf{interface} of the proposed algorithms, views, graph functions and containers.
 
@@ -159,6 +182,9 @@ represent the \textbf{map} of a game world. In \textbf{business} environments, g
 
 \subsection{Impact on the Standard}
 This proposal is a pure \textbf{library} extension.
+
+\subsection{Interaction wtih Other Papers}
+There is no interaction with other proposals to the standard.
 
 \subsection{Goals and Priorities}
 \begin{itemize}
@@ -186,8 +212,7 @@ This proposal is a pure \textbf{library} extension.
 \subsection{What this proposal is  \textbf{not}}
 This paper limits itself to adjacency graphs only, including an outer range of vertices with an inner range of outgoing edges on each vertex. It also includes an edgelist of all edges in the graph, either as a edgelist view or a simple range with a source\_id and target\_id. It does not include incoming edges on a vertex, though that could be a future extension.
 
-\hl{Bipartite graphs.} 
-\phil{Andrew and I have agreed on general implementation direction for an N-partite. We need to add implementation, and to this proposal if there is room.}
+\hl{Bipartite graphs} are being investigated. A general design has been established and it needs to be implemented to validate that it will work and see what areas of the design are impacted.
 
 Hypergraphs are not supported.
 
@@ -200,30 +225,10 @@ boost::graph \\
 \subsubsection{Inspiration}
 NWGraph
 
-\subsection{Revision History}
-\subsubsection*{P1709R3}
-This was a major redesign that incorporated all the experience and input from the past 3 years.
-\begin{itemize}
-\item Reduce the scope to focus on an incidence graph with outgoing edges only, and remove mutable interface functions. The distinction between directed and undirected graphs was replaced by overridable types of unordered and ordered edges for a graph implementation type.
-\item Simplify the types and interface functions. In particular, const and non-const variations were consolidated to a single definition to handle both cases 
-when appropriate.
-\item Introduce Views, inspired by NWGraph design, with simpler and cleaner interfaces to traverse a graph, and simplifying the container interface design.
-\item Revisit the algorithms to be considered. transitive\_closure has been dropped. The final list hasn't been finalized yet.
-\item Replace the two container implementations with csr\_graph.
-\end{itemize}
-
-\phil{Though there were several revisions of R3 reviewed by SG19, it was never published. This is the real R3.}
-
-\subsubsection*{P1709R2}
-Define the \textbf{uniform API} for undirected and directed algorithms (an extended API also exists for directed graphs). Added \textbf{concepts} for undirected, directed and bidirected graphs. Refined \textbf{DFS} and \textbf{BFS} range definitions from prototype experience. Refined \textbf{shortest paths} and \textbf{transitive closure} algorithms from input and prototype experience.
-
-\subsubsection*{P1709R1}
-Rewrite with a focus on a \textbf{purely functional design}, emphasizing the algorithms and graph API. Also added \textbf{concepts} and \textbf{ranges} into the design. Addressed concerns from Cologne review to change to functional design.
-
-\subsubsection*{P1709R0}
-Focus on \textbf{object-oriented API} for data structures and example code for a few algorithms.
+\subsection{Alternatives}
 
 \subsection{Future Directions}
+
 % algorithms: 
 % views: 
 % containers: adjacency matrix
@@ -286,6 +291,7 @@ Table \ref{tab:name_conv} shows the naming conventions used throughout this docu
 \subsection{Algorithms}
 %Algorithms with [TBD] are candidates to consider but having been decided for being in the paper
 %We are targeting the paper to be under 50pp
+\phil{Algorithms marked [TBD] are provisional and may be moved to a separate proposal to keep the size of this proposal manageable}
 
 \subsubsection{Dijkstra's Shortest Path}
 Dijkstra's algorithm \cite{REF_} ...
@@ -389,7 +395,7 @@ Specializations are defined with \tcode{V}=void or \tcode{VV}=void to suppress t
 \begin{lstlisting}
 template <class VId, bool Sourced, class E, class EV>
 struct edge_view {
-  VId source_id; // vertex_id_t<G>
+  VId source_id; // vertex_id_t<G>, exists when SourceId==true
   VId target_id; // vertex_id_t<G>, always exists
   E   edge;      // edge_reference_t<G>
   EV  value;
@@ -435,7 +441,7 @@ struct neighbor_view {
 };
 \end{lstlisting}
 
-Specializations are defined with \tcode{Sourced}=true\(|\)false, \tcode{E}=void or \tcode{EV}=void to suppress the existance of the associated member variables, giving the following valid combinations in Table \ref{tab:neighbor-view} . For instance, the second entry, \tcode{neighbor_view<VId,true,E>} has three members \tcode{\{VId source_id; VId target_id; V neighbor;\}}.
+Specializations are defined with \tcode{Sourced}=true\(|\)false, \tcode{E}=void or \tcode{EV}=void to suppress the existance of the associated member variables, giving the following valid combinations in Table \ref{tab:neighbor-view} . For instance, the second entry, \tcode{neighbor_view<VId,true,E>} has three members \tcode{\{VId source_id; VId target_id; V target;\}}.
 \begin{table}[h!]
 \begin{center}
 %\resizebox{\textwidth}{!}
@@ -445,12 +451,12 @@ Specializations are defined with \tcode{Sourced}=true\(|\)false, \tcode{E}=void 
     &
     \multicolumn{4}{c}{\textbf{Members}} \\
 \hline
-    \tcode{neighbor_view<VId, true, E, EV>} & \tcode{source_id} & \tcode{target_id} & \tcode{neighbor} & \tcode{value} \\
-    \tcode{neighbor_view<VId, true, E, void>} & \tcode{source_id} & \tcode{target_id} & \tcode{neighbor} & \\
+    \tcode{neighbor_view<VId, true, E, EV>} & \tcode{source_id} & \tcode{target_id} & \tcode{target} & \tcode{value} \\
+    \tcode{neighbor_view<VId, true, E, void>} & \tcode{source_id} & \tcode{target_id} & \tcode{target} & \\
     \tcode{neighbor_view<VId, true, void, EV>} & \tcode{source_id} & \tcode{target_id} & & \tcode{value} \\
     \tcode{neighbor_view<VId, true, void, void>} & \tcode{source_id} & \tcode{target_id} & & \\
-    \tcode{neighbor_view<VId, false, E, EV>} & & \tcode{target_id} & \tcode{neighbor} & \tcode{value} \\
-    \tcode{neighbor_view<VId, false, E, void>} & & \tcode{target_id} & \tcode{neighbor} & \\
+    \tcode{neighbor_view<VId, false, E, EV>} & & \tcode{target_id} & \tcode{target} & \tcode{value} \\
+    \tcode{neighbor_view<VId, false, E, void>} & & \tcode{target_id} & \tcode{target} & \\
     \tcode{neighbor_view<VId, false, void, EV>} & & \tcode{target_id} & & \tcode{value} \\
     \tcode{neighbor_view<VId, false, void, void>} & & \tcode{target_id} & & \\
 \hline
@@ -459,6 +465,54 @@ Specializations are defined with \tcode{Sourced}=true\(|\)false, \tcode{E}=void 
 \label{tab:neighbor-view}
 \end{center}
 \end{table}
+
+\subsubsection{Common Types and Functions for ``Search'' }
+The depth\_first\_search, breadth\_first\_search, and toplogical\_sort searches there are a number of common types and functions that apply to them. 
+
+Here are the types and functions for cancelling a search, getting the current depth of the search, and active elements in the search (e.g. number of vertices in a stack or queue).
+\begin{lstlisting}
+// enum used to define how to cancel a search
+enum struct cancel_search : int8_t { 
+  continue_search, // no change (ignored)
+  cancel_branch,   // stops searching from current vertex
+  cancel_all       // stops searching and dfs will be at end()
+};
+
+// stop searching from current vertex
+template<class S)
+void cancel(S search, cancel_search);
+
+// Returns distance from the seed vertex to the current vertex, 
+// or to the target vertex for edge views
+template<class S>
+auto depth(S search) -> integral;
+
+// Returns number of pending vertices to process
+template<class S>
+auto size(S search) -> integral; 
+\end{lstlisting}
+
+Of particular note, \tcode{size(dfs)} is typically the same as \tcode{depth(dfs)} and is simple to calculate. breadth\_first\_search requires extra bookkeeping to evaluate \tcode{depth(bfs)} and returns a different value than \tcode{size(bfs)}.
+
+The following example shows how the functions  could be used, using \tcode{dfs} for one of the depth\_first\_search views. The same functions can be used for all all search views.
+\begin{lstlisting}
+auto&& g = ...; // graph
+auto&& dfs = vertices_depth_first_search(g,0); // start with vertex_id=0
+for(auto&& [vid,v] : dfs) {
+  // No need to search deeper?
+  if(depth(dfs) > 3) {
+    cancel(dfs,cancel_search::cancel_branch);
+    continue;
+  }
+  
+  if(size(dfs) > 1000) {
+    std::cout << "Big depth of " << size(dfs) << '\n';
+  }
+  
+  // do useful things
+}
+
+\end{lstlisting}
 
 \subsubsection{vertexlist Views}
 \
@@ -499,7 +553,7 @@ Since the source vertex \tcode{u} is available when calling an \tcode{incidence}
     \textbf{Example} & \textbf{Return} \\
 \hline
     \tcode{for(auto\&\& [vid,uv] : incidence(g,u))} & \tcode{edge_view<VId,false,E,void>} \\
-    \tcode{for(auto\&\& [vid,uv,val] : incidence(g,uv,evf))} & \tcode{edge_view<VId,false,E,EV>} \\
+    \tcode{for(auto\&\& [vid,uv,val] : incidence(g,u,evf))} & \tcode{edge_view<VId,false,E,EV>} \\
 \hline
 \end{tabular}}
 \caption{\tcode{incidence} View Functions}
@@ -799,11 +853,44 @@ If the concept requirements for the default implementation aren't met by the gra
 
 Edgelists are assumed to be either be an edgelist view of an adjacency graph, or a standard range with source\_id and target\_id values. There is no need for additional functions when a range is used.
 
-\subsection{csr\_graph Graph Container}
+\subsection{Graph Container Implementation}
+
+\subsubsection{csr\_graph Graph Container}
 The csr\_graph is a high-performance, static graph container that uses \href{https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_\%28CSR\%2C_CRS_or_Yale_format\%29}{Compressed Sparse Row} format to store it's vertices, edges and associated values. Once constructed, it cannot be modified.
+
+\begin{lstlisting}
+template <class    EV    = void, 
+          class    VV    = void, 
+          class    GV    = void, 
+          integral VId   = uint32_t, 
+          class    Alloc = allocator<uint32_t>>
+class csr_graph;
+\end{lstlisting}
+
+\subsubsection{csr\_partite\_graph Graph Container (In Design)}
+\phil{This is experimental}
+
+The \tcode{csr_partite_graph} extends \tcode{csr_graph} to have multiple partitions, where each partition defines a different value type for the vertex and edge. The same template arguments are used, but it also expects that the VV and EV arguments are \tcode{std::variant}, and the number of types in each is the same. The number of types in the variants define the number of partitions. The edge types apply to the outgoing edges of the vertices in the same partition. \tcode{std::monostate} can be used if no value is needed for a vertex or edge in a partition.
+
+Example usage
+\begin{lstlisting}
+using VV = std::variant<int,double,bool>;
+using EV = std::variant<int,int,std::monostate>; // no outgoing edges in the final partition
+using G  = csr_partite_graph<EV, VV>;
+G g = ...; // construct g with data
+for(size_t p = 0; p < partition_size(g); ++p) {
+  for(auto&& [uid,u] : partition(g,p)) {
+    for(auto&& [vid,uv] : incidence(g,u)) {
+       // do interesting things with uv
+    }
+  }
+}
+\end{lstlisting}
 
 \section{Design - Graph Container Author}
 \subsection{Customization Points}
+\phil{Describe CPO's in general that can apply to both niebloids and tag\_invoke. tag\_invoke may have some controversy because it is so new.}
+
 We follow the lead of P2300r5 \cite{REF_P2300r5} section 5.9 for our implementation of customization points. The text in this section has been taken from that paper and modified to be specific to graphs.
 
 The contemporary technique for customization in the Standard Library is customization point objects. A customization point object, will it look for member functions and then for nonmember functions with the same name as the customization point, and calls those if they match. This is the technique used by the C++20 ranges library. However, it has several unfortunate consequences:
@@ -874,9 +961,9 @@ namespaces. Suggestions for namespaces are \tcode{std::graph} and
 Proposed headers include
 \begin{itemize}
 \item[]\tcode{<graph>}
+\item[]\tcode{<graph_view>}
 \item[]\tcode{<graph_algorithm>}
 \item[]\tcode{<csr_graph>}
-\item[]\tcode{<graph_view>}
 \end{itemize}
 
 \section{Technical Specifications}
