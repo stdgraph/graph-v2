@@ -6,7 +6,7 @@
 #include("Catch.cmake")
 
 add_compile_definitions(TEST_DATA_ROOT_DIR="${TEST_DATA_ROOT_DIR}")
-add_compile_definitions(TEST_OUTPUT_ROOT_DIR="${TEST_OUTPUT_ROOT_DIR}")
+add_compile_definitions(TEST_OUTPUT_ROOT_DIR="${TEST_OUTPUT_ROOT_DIR}/output/")
 
 
 add_library(catch_main STATIC catch_main.cpp "csv_routes.hpp")
