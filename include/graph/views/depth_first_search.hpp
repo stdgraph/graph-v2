@@ -71,9 +71,15 @@ public:
   dfs_base(graph_type& g, vertex_id_type seed, const Alloc& alloc)
         : graph_(g), S_(alloc), colors_(ranges::size(vertices(g)), white, alloc) {
     if (seed < ranges::size(vertices(graph_)) && !ranges::empty(edges(graph_, seed))) {
-      edge_iterator uv = ranges::begin(edges(graph_, seed));
-      S_.push(stack_elem{seed, uv});
+      edge_iterator uvi = ranges::begin(edges(graph_, seed));
+      S_.push(stack_elem{seed, uvi});
       colors_[seed] = grey;
+
+      // Mark initial vertex as visited
+      if (uvi != ranges::end(edges(graph_, seed))) {
+        vertex_id_type v_id = real_target_id(*uvi, seed);
+        colors_[v_id]       = grey;
+      }
     }
   }
   dfs_base()                = default;

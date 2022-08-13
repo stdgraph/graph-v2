@@ -64,6 +64,8 @@
     - [ ] topological_sort_edge_range
 - Algorithms
   - [ ] Common
+    - [ ] Add depth(search) CPO for dfs, bfs, topo_sort
+    - [ ] Add size(search) CPO for dfs, bfs, topo_sort
   - [ ] Algorithms (full & simplified/book)
     - [ ] Shortest Paths
       - [x] Dijkstra book (impl from AndrewL)
@@ -186,14 +188,22 @@
     - [ ] fnc obj as ptr vs. value?
     - [ ] vs. NWGraph (returning references vs. values)
   - [ ] tag_invoke design & use (access namespace, tag names, etc.)
-- Readiness
-  - [ ] **Publish in github**
-    - [x] add license file (boost)
-    - [ ] README.md completion
-    - [ ] Algorithms: bfs + dfs + dijkstra|bellman_ford + warshall_transitive_closure
-    - [ ] DoxyGen output OK
-  - [ ] Sep-2022 CppCon
-  - [ ] Nov-2022 WG21 Kona
+- Milestones
+  - [ ] CppCon: Sep 12-16, 2022
+    - [ ] **Publish in github**
+      - [x] add license file (boost)
+      - [ ] README.md completion
+      - [ ] Algorithms: bfs + dfs + dijkstra|bellman_ford + warshall_transitive_closure
+      - [ ] DoxyGen output OK
+    - [ ] **Presentation (Phil & Andrew)**
+  - [ ] ACCU: First week of April, 2023
+  - [ ] Cpp on Sea: First week of July, 2023
+  - [ ] Acceptance of P1709 by SG19 (Machine Learning): Dec goal
+  - [ ] Acceptance of P1709 by SG6 (Numerics)
+  - [ ] Acceptance of P1709 by SG14 (Low Latency)
+  - [ ] Acceptance of P1709 by LEWG
+  - [ ] Acceptance of P1709 by LWG
+  - [ ] Acceptance of P1709 by WG21
   - [ ] Feb-2025 deadline for C++26
 
 ### Issues
