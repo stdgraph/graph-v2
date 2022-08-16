@@ -1,10 +1,5 @@
 # ToDo & Issues
 
-### Conferences and Events (potential presentation)
-- [ ] ACCU:       1st week of April
-- [ ] Cpp on Sea: 1st week of July
-- [ ] CppCon:     2nd week of Sep
-
 ### Milestones
 - [ ] CppCon: Sep 12-16, 2022
   - [ ] **Presentation (Phil & Andrew)**

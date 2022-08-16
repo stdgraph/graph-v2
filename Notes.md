@@ -12,3 +12,8 @@ P2300r5 4.19 parallel algorithms
 	which (1) return senders rather than values or void and (2) where a customization point pairing a sender 
 	with an execution policy would similarly be used to obtain an object of implementation-defined type to 
 	be provided as the first argument to the algorithm.
+
+# Conferences and Events (potential presentation)
+- [ ] ACCU:       1st week of April
+- [ ] Cpp on Sea: 1st week of July
+- [ ] CppCon:     2nd week of Sep
