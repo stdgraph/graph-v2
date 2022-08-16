@@ -1,5 +1,27 @@
 # ToDo & Issues
 
+### Conferences and Events (potential presentation)
+- [ ] ACCU:       1st week of April
+- [ ] Cpp on Sea: 1st week of July
+- [ ] CppCon:     2nd week of Sep
+
+### Milestones
+- [ ] CppCon: Sep 12-16, 2022
+  - [ ] **Presentation (Phil & Andrew)**
+  - [ ] **Publish graph-v2 github repository**
+    - [x] add license file (boost)
+    - [ ] README.md completion
+    - [ ] Views: bfs + dfs
+    - [ ] Algorithms: dijkstra + warshall_transitive_closure
+    - [ ] Validate Sphinx output is OK
+- [ ] Acceptance of P1709 by SG19 (Machine Learning): goal by Dec-2022
+- [ ] Acceptance of P1709 by SG6 (Numerics)
+- [ ] Acceptance of P1709 by SG14 (Low Latency)
+- [ ] Acceptance of P1709 by LEWG (Library Evolution Working Group)
+- [ ] Acceptance of P1709 by LWG (Library Working Group)
+- [ ] Acceptance of P1709 by WG21 (C++ Standards Committee)
+- [ ] Feb-2025 deadline for C++26
+
 ## Open
 
 ### ToDo 
@@ -159,10 +181,7 @@
     - [x] Add Getting Started
   - [ ] P1709
     - [x] Google Doc --> LaTex
-    - [ ] Review P2300 WRT format & structure
-        - [ ] Add reference to P2300
-        - [ ] Defer specification of parallel algos until executors have been accepted (see Notes.md)
-        - [ ] CPO usage (copy from P2300 5.9, 8.1.1, 8.1.2)
+    - [ ] Customization Points: reword to allow either Niebloids or tag_invoke
     - [ ] Design Decisions
       - [x] Library Organization
       - [x] Separation of Graph Algorithm and Data Structure Requirements
@@ -188,23 +207,6 @@
     - [ ] fnc obj as ptr vs. value?
     - [ ] vs. NWGraph (returning references vs. values)
   - [ ] tag_invoke design & use (access namespace, tag names, etc.)
-- Milestones
-  - [ ] CppCon: Sep 12-16, 2022
-    - [ ] **Publish in github**
-      - [x] add license file (boost)
-      - [ ] README.md completion
-      - [ ] Algorithms: bfs + dfs + dijkstra|bellman_ford + warshall_transitive_closure
-      - [ ] DoxyGen output OK
-    - [ ] **Presentation (Phil & Andrew)**
-  - [ ] ACCU: First week of April, 2023
-  - [ ] Cpp on Sea: First week of July, 2023
-  - [ ] Acceptance of P1709 by SG19 (Machine Learning): Dec goal
-  - [ ] Acceptance of P1709 by SG6 (Numerics)
-  - [ ] Acceptance of P1709 by SG14 (Low Latency)
-  - [ ] Acceptance of P1709 by LEWG
-  - [ ] Acceptance of P1709 by LWG
-  - [ ] Acceptance of P1709 by WG21
-  - [ ] Feb-2025 deadline for C++26
 
 ### Issues
 - [ ] SG19 Questions/Input

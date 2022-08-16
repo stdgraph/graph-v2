@@ -58,23 +58,48 @@ TEST_CASE("Germany Routes Example", "[example][germany][routes]") {
   }
 
 #if 1
-  auto&&     g            = load_ordered_graph<G>(csv_file, name_order_policy::source_order_found, true);
-  const auto frankfurt    = find_frankfurt(g);
-  const auto frankfurt_id = find_frankfurt_id(g);
+  auto  g            = load_ordered_graph<G>(csv_file, name_order_policy::source_order_found, true);
+  auto& frankfurt    = **find_frankfurt(g);
+  auto  frankfurt_id = find_frankfurt_id(g);
 
   //std::string_view munchen_name = "M\xC3\xBCnchen";
   //auto&& u   = **find_city(g, munchen_name);
   //auto   uid = find_city_id(g, munchen_name);
 
-  cout << "Path Segments:" << endl;
+  cout << "DFS Path Segments (depth):" << endl;
   for (auto&& [uid, u] : vertexlist(g)) {
     cout << "From " << out_city(g, uid, u) << "\n";
     auto dfs = vertices_depth_first_search(g, uid);
     for (auto&& [vid, v] : dfs) {
-      cout << "   --> " << out_city(g, vid, v)<< " - " << dfs.depth() << " segments" << endl;
+      cout << "   --> " << out_city(g, vid, v) << " - " << dfs.depth() << " segments" << endl;
     }
   }
 
+  // Shortest Paths (segments)
+  {
+    auto                        weight_1 = [](edge_reference_t<G> uv) -> int { return 1; };
+    std::vector<int>            distance(size(vertices(g)));
+    std::vector<vertex_id_t<G>> predecessor(size(vertices(g)));
+    dijkstra_clrs(g, frankfurt_id, distance, predecessor, weight_1);
+
+    cout << "Shortest paths from " << vertex_value(g, frankfurt) << " by segment" << endl;
+    for (vertex_id_t<G> uid = 0; uid < size(vertices(g)); ++uid)
+      if (distance[uid] > 0)
+        cout << "  --> " << out_city(g, uid, *find_vertex(g, uid)) << " - " << distance[uid] << " segments" << endl;
+  }
+
+  // Shortest Paths (km)
+  {
+    auto                        weight = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
+    std::vector<double>         distance(size(vertices(g)));
+    std::vector<vertex_id_t<G>> predecessor(size(vertices(g)));
+    dijkstra_clrs(g, frankfurt_id, distance, predecessor, weight);
+
+    cout << "Shortest paths from " << vertex_value(g, frankfurt) << " by km" << endl;
+    for (vertex_id_t<G> uid = 0; uid < size(vertices(g)); ++uid)
+      if (distance[uid] > 0)
+        cout << "  --> " << out_city(g, uid, *find_vertex(g, uid)) << " - " << distance[uid] << "km" << endl;
+  }
 #endif
 
   //using inv_vec = std::vector<int>;
