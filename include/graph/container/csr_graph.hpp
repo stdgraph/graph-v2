@@ -37,12 +37,12 @@ namespace std::graph::container {
 /// <param name="eprojection">Projects (converts) a value in erng to a copyable_edge_t<VId,EV></param>
 /// <returns>A pair<VId,size_t> with the max vertex id used and the number of edges scanned.</returns>
 template <class VId, class EV, ranges::forward_range ERng, class EProj = identity>
-requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
 constexpr auto max_vertex_id(const ERng& erng, const EProj& eprojection) {
   size_t edge_count = 0;
   VId    max_id     = 0;
   for (auto&& edge_data : erng) {
-    const views::copyable_edge_t<VId, EV>& uv = eprojection(edge_data);
+    const copyable_edge_t<VId, EV>& uv = eprojection(edge_data);
     max_id = max(max_id, max(static_cast<VId>(uv.source_id), static_cast<VId>(uv.target_id)));
     ++edge_count;
   }
@@ -53,11 +53,7 @@ constexpr auto max_vertex_id(const ERng& erng, const EProj& eprojection) {
 //
 // forward declarations
 //
-template <class    EV    = bool, 
-          class    VV    = void, 
-          class    GV    = void, 
-          integral VId   = uint32_t, 
-          class    Alloc = allocator<uint32_t>>
+template <class EV = bool, class VV = void, class GV = void, integral VId = uint32_t, class Alloc = allocator<uint32_t>>
 class csr_graph;
 
 /// <summary>
@@ -390,7 +386,7 @@ public: // Construction/Destruction
   /// <param name="eprojection">Projection function that creates a copyable_edge_t<VId,EV> from an erng value</param>
   /// <param name="alloc">Allocator to use for internal containers</param>
   template <ranges::forward_range ERng, class EProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr csr_graph_base(const ERng& erng, EProj eprojection = {}, const Alloc& alloc = Alloc())
         : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
 
@@ -410,8 +406,8 @@ public: // Construction/Destruction
   /// <param name="vprojection">Projection function that creates a copyable_vertex_t<VId,EV> from a vrng value</param>
   /// <param name="alloc">Allocator to use for internal containers</param>
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph_base(const ERng&  erng,
                            const VRng&  vrng,
                            EProj        eprojection = {},
@@ -428,7 +424,7 @@ public: // Construction/Destruction
   /// </summary>
   /// <param name="ilist">Initializer list of copyable_edge_t<VId,EV> -> [source_id, target_id, value]</param>
   /// <param name="alloc">Allocator to use for internal containers</param>
-  constexpr csr_graph_base(const initializer_list<views::copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
+  constexpr csr_graph_base(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
     load_edges(ilist, identity());
   }
@@ -793,17 +789,17 @@ public: // Construction/Destruction
   // csr_graph(gv&&, erng, eprojection, alloc)
 
   template <ranges::forward_range ERng, class EProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr csr_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc) {}
 
   template <ranges::forward_range ERng, class EProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr csr_graph(const graph_value_type& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc), value_(value) {}
 
   template <ranges::forward_range ERng, class EProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr csr_graph(graph_value_type&& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc), value_(move(value)) {}
 
@@ -812,8 +808,8 @@ public: // Construction/Destruction
   // csr_graph(gv&&, erng, vrng, eprojection, vprojection, alloc)
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph(const ERng&  erng,
                       const VRng&  vrng,
                       EProj        eprojection = {},
@@ -822,8 +818,8 @@ public: // Construction/Destruction
         : base_type(erng, vrng, eprojection, vprojection, alloc) {}
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph(const graph_value_type& value,
                       const ERng&             erng,
                       const VRng&             vrng,
@@ -833,8 +829,8 @@ public: // Construction/Destruction
         : base_type(erng, vrng, eprojection, vprojection, alloc), value_(value) {}
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph(graph_value_type&& value,
                       const ERng&        erng,
                       const VRng&        vrng,
@@ -844,7 +840,7 @@ public: // Construction/Destruction
         : base_type(erng, vrng, eprojection, vprojection, alloc), value_(move(value)) {}
 
 
-  constexpr csr_graph(const initializer_list<views::copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
+  constexpr csr_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
 private: // tag_invoke properties
@@ -890,13 +886,13 @@ public: // Construction/Destruction
   constexpr csr_graph& operator=(csr_graph&&)      = default;
 
   template <ranges::forward_range ERng, class EProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr csr_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc) {}
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-        views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph(const ERng&  erng,
                       const VRng&  vrng,
                       EProj        eprojection = {},
@@ -904,7 +900,7 @@ public: // Construction/Destruction
                       const Alloc& alloc       = Alloc())
         : base_type(erng, vrng, eprojection, vprojection, alloc) {}
 
-  constexpr csr_graph(const initializer_list<views::copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
+  constexpr csr_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
 

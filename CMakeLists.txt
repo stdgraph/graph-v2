@@ -98,7 +98,7 @@ if(ENABLE_TESTING)
 endif()
 
 if(ENABLE_EXAMPLES)
-  add_subdirectory(example)
+  #add_subdirectory(example)
 endif()
 
 #if(ENABLE_FUZZING)

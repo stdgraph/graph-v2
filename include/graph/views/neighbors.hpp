@@ -6,14 +6,14 @@
 // neighbors(g,u) -> neighbor_view<VId,false,E,EV> -> {target_id, vertex& [,value]}
 //
 // given:    auto vvf = [&g](vertex_reference_t<G> v) { return vertex_value(g,v); }
-// 
+//
 // examples: for([vid, v]             : neighbors(g,uid))
 //           for([vid, v, value]      : neighbors(g,uid,vvf))
-// 
+//
 // Since u is passed to incidence(), there's no need to include Sourced versions of
 // incidence().
 //
-namespace std::graph::views {
+namespace std::graph {
 
 
 template <adjacency_graph G, bool Sourced = false, class VVF = void>
@@ -29,7 +29,7 @@ template <adjacency_graph G, bool Sourced, class VVF>
 class neighbor_iterator
       : public source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>> )>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type            = G;
   using vertex_type           = vertex_t<graph_type>;
@@ -63,7 +63,7 @@ public:
   constexpr ~neighbor_iterator()                        = default;
 
   constexpr neighbor_iterator& operator=(const neighbor_iterator&) = default;
-  constexpr neighbor_iterator& operator=(neighbor_iterator&&) = default;
+  constexpr neighbor_iterator& operator=(neighbor_iterator&&)      = default;
 
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
@@ -171,7 +171,7 @@ public:
   constexpr ~neighbor_iterator()                        = default;
 
   constexpr neighbor_iterator& operator=(const neighbor_iterator&) = default;
-  constexpr neighbor_iterator& operator=(neighbor_iterator&&) = default;
+  constexpr neighbor_iterator& operator=(neighbor_iterator&&)      = default;
 
 public:
   constexpr reference operator*() const {
@@ -229,30 +229,32 @@ private: // member variables
 
 template <adjacency_graph G, bool Sourced, class VVF>
 using neighbors_view = ranges::subrange<neighbor_iterator<G, Sourced, VVF>, vertex_edge_iterator_t<G>>;
+} // namespace std::graph
 
-namespace tag_invoke {
-  // ranges
-  TAG_INVOKE_DEF(neighbors); // neighbors(g,uid)            -> edges[vid,uv]
-                             // neighbors(g,uid,fn)         -> edges[vid,uv,value]
+namespace std::graph::tag_invoke {
+// ranges
+TAG_INVOKE_DEF(neighbors); // neighbors(g,uid)            -> edges[vid,uv]
+                           // neighbors(g,uid,fn)         -> edges[vid,uv,value]
 
-  template <class G>
-  concept _has_neighbors_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-    {neighbors(g, uid)};
-  };
-  template <class G, class VVF>
-  concept _has_neighbors_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-    {neighbors(g, uid, vvf)};
-  };
-} // namespace tag_invoke
+template <class G>
+concept _has_neighbors_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
+  {neighbors(g, uid)};
+};
+template <class G, class VVF>
+concept _has_neighbors_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
+  {neighbors(g, uid, vvf)};
+};
+} // namespace std::graph::tag_invoke
 
+namespace std::graph::views {
 //
 // neighbors(g,uid)
 //
 template <adjacency_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_id_t<G> uid) {
-  if constexpr (tag_invoke::_has_neighbors_g_uid_adl<G>)
-    return tag_invoke::neighbors(g, uid);
+  if constexpr (std::graph::tag_invoke::_has_neighbors_g_uid_adl<G>)
+    return std::graph::tag_invoke::neighbors(g, uid);
   else {
     using iterator_type = neighbor_iterator<G, false, void>;
     return neighbors_view<G, false, void>(iterator_type(g, uid), ranges::end(edges(g, uid)));
@@ -266,13 +268,11 @@ constexpr auto neighbors(G&& g, vertex_id_t<G> uid) {
 template <adjacency_graph G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-  if constexpr (tag_invoke::_has_neighbors_g_uid_evf_adl<G, VVF>)
-    return tag_invoke::neighbors(g, uid, vvf);
+  if constexpr (std::graph::tag_invoke::_has_neighbors_g_uid_evf_adl<G, VVF>)
+    return std::graph::tag_invoke::neighbors(g, uid, vvf);
   else {
     using iterator_type = neighbor_iterator<G, false, VVF>;
     return neighbors_view<G, false, VVF>(iterator_type(g, uid, vvf), ranges::end(edges(g, uid)));
   }
 }
-
-
 } // namespace std::graph::views

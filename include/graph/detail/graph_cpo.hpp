@@ -215,7 +215,7 @@ namespace tag_invoke {
   };
 } // namespace tag_invoke
 template <class G, class ER>
-concept _can_eval_target = ranges::random_access_range<ER> && requires(G&& g, ranges::range_reference_t<ER> uv) {
+concept _can_eval_target = ranges::random_access_range<vertex_range_t<G>> && requires(G&& g, ranges::range_reference_t<ER> uv) {
   { target_id(g, uv) } -> integral;
 };
 

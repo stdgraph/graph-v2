@@ -68,7 +68,12 @@ auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOr
   return std::pair(std::move(lbl_vec), reader.n_rows()); // return (unique lbls, num rows read)
 }
 
-enum struct directedness : int8_t { directed, undirected };
+enum struct directedness : int8_t {
+  directed,   // a single edge joins 2 vertices
+  directed2,  // 2 edges join 2 vertices, each with different directions; needed for graphviz
+  undirected, // one or more edges exist between vertices with no direction
+  bidirected  // a single edge between vertices with direction both ways (similar to undirected, but with arrows)
+};
 
 enum struct name_order_policy : int8_t {
   order_found,        // id assigned when first encountered as source or target
@@ -211,7 +216,7 @@ auto load_graph(csv::string_view csv_file) {
 
   // Load vertices
   auto city_id_getter = [&city_names](const city_id_map& name_id) {
-    using copyable_id_name = std::graph::views::copyable_vertex_t<vertex_id_type, std::string>;
+    using copyable_id_name = std::graph::copyable_vertex_t<vertex_id_type, std::string>;
     return copyable_id_name{name_id.second,
                             name_id.first}; // {id,name} don't move name b/c we need to keep it in the map
   };
@@ -220,7 +225,7 @@ auto load_graph(csv::string_view csv_file) {
   // load edges
   auto eproj = [&g, col1, col2](const csv::CSVRow& row) {
     using edge_value_type    = std::remove_cvref_t<edge_value_t<G>>;
-    using copyable_edge_type = views::copyable_edge_t<vertex_id_type, edge_value_type>;
+    using copyable_edge_type = copyable_edge_t<vertex_id_type, edge_value_type>;
     return copyable_edge_type{
           find_city_id(g, row[col1].get_sv()), // source_id
           find_city_id(g, row[col2].get_sv()), // target_id
@@ -272,7 +277,7 @@ auto load_ordered_graph(csv::string_view        csv_file,
   csv::CSVReader reader(csv_file); // CSV file reader; string_views remain valid until the file is closed
 
   using labels_map   = map<string_view, vertex_id_type>; // label, vertex id (also output order, assigned later)
-  using csv_row_type = views::copyable_edge_t<iterator_t<labels_map>, double>;
+  using csv_row_type = copyable_edge_t<iterator_t<labels_map>, double>;
   using csv_row_deq  = deque<csv_row_type>;
 
   labels_map  lbls;    // unique labels for both source_id and target_id, ordered
@@ -330,7 +335,7 @@ auto load_ordered_graph(csv::string_view        csv_file,
 
   // load vertices
   using copyable_label        = std::remove_reference_t<vertex_value_type>;
-  using graph_copyable_vertex = std::graph::views::copyable_vertex_t<vertex_id_type, copyable_label>;
+  using graph_copyable_vertex = std::graph::copyable_vertex_t<vertex_id_type, copyable_label>;
   auto city_name_getter       = [](lbl_iter& lbl) {
     graph_copyable_vertex retval{lbl->second, copyable_label(lbl->first)};
     return retval;
@@ -339,7 +344,7 @@ auto load_ordered_graph(csv::string_view        csv_file,
 
   // load edges
   auto eproj = [&g](csv_row_type& row) {
-    using graph_copyable_edge_type = views::copyable_edge_t<vertex_id_type, edge_value_type>;
+    using graph_copyable_edge_type = copyable_edge_t<vertex_id_type, edge_value_type>;
     graph_copyable_edge_type retval{static_cast<vertex_id_type>(row.source_id->second),
                                     static_cast<vertex_id_type>(row.target_id->second), row.value};
     return retval;
@@ -456,7 +461,12 @@ OS& operator<<(OS& os, const ostream_indenter& indent) {
 /// <param name="g">Grape instance</param>
 /// <param name="filename">Graphviz filename to output</param>
 template <class G>
-void output_routes_graphviz(const G& g, std::string_view filename, const directedness dir) {
+void output_routes_graphviz(
+      const G&           g,
+      std::string_view   filename,
+      const directedness dir,
+      std::string_view   bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
+) {
   using namespace std::graph;
   using namespace std::literals;
   std::string   fn(filename);
@@ -466,18 +476,67 @@ void output_routes_graphviz(const G& g, std::string_view filename, const directe
   //of << "\xBB\xBF"; // UTF-8 lead chars for UTF-8
 
   // nodesep=0.5; doesn't help
-  std::string_view arrowhead = (dir == directedness::directed ? "arrowhead=vee"sv : "arrowhead=none"sv);
+  std::string_view arrows, rev_arrows = "dir=back,arrowhead=vee,";
+  switch (dir) {
+  case directedness::bidirected: arrows = "dir=both,arrowhead=vee,arrowtail=vee"; break;
+  case directedness::directed: arrows = "dir=forward,arrowhead=vee"; break;
+  case directedness::directed2: arrows = "dir=forward,arrowhead=vee"; break;
+  case directedness::undirected: arrows = "dir=none"; break;
+  }
 
   of << "digraph routes {\n"
      << "  overlap = scalexy\n"
-     << "  splines = curved\n";
+     << "  splines = curved\n"
+     << "  node[shape=oval]\n"
+     << "  edge[" << arrows << ", fontcolor=blue]\n";
+  if (!bgcolor.empty())
+    of << "  bgcolor=" << bgcolor << "\n";
+
 
   for (auto&& [uid, u] : views::vertexlist(g)) {
-    of << "  " << uid << " [shape=oval,label=\"" << vertex_value(g, u) << " [" << uid << "]\"]\n";
+    of << "  " << uid << " [label=\"" << vertex_value(g, u) << " [" << uid << "]\"]\n";
     for (auto&& [vid, uv] : views::incidence(g, uid)) {
-      auto&& v = target(g, uv);
-      of << "   " << uid << " -> " << vid << " [" << arrowhead << ",xlabel=\"" << edge_value(g, uv)
-         << " km\", fontcolor=blue]\n";
+      auto&&           v   = target(g, uv);
+      std::string_view arw = (dir == directedness::directed2 && vid < uid) ? rev_arrows : "";
+      of << "   " << uid << " -> " << vid << " [" << arw << "xlabel=\"" << edge_value(g, uv) << " km\"]\n";
+    }
+    of << std::endl;
+  }
+  of << "}\n";
+}
+
+template <class G>
+void output_routes_graphviz_adjlist(
+      const G&         g,
+      std::string_view filename,
+      std::string_view bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
+) {
+  using namespace std::graph;
+  using namespace std::literals;
+  std::string   fn(filename);
+  std::ofstream of(fn);
+  assert(of.is_open());
+  //of << "\xEF\xBB\xBF"; // UTF-8 lead chars for UTF-8 including BOM
+  //of << "\xBB\xBF"; // UTF-8 lead chars for UTF-8
+
+  // nodesep=0.5; doesn't help
+
+  of << "digraph routes {\n"
+     << "  overlap = scalexy\n"
+     << "  graph[rankdir=LR]\n"
+     << "  edge[arrowhead=vee]\n";
+  if (!bgcolor.empty())
+    of << "  bgcolor=" << bgcolor << "\n";
+
+  for (auto&& [uid, u] : views::vertexlist(g)) {
+    of << "  " << uid << " [shape=Mrecord, label=\"{<f0>" << uid << "|<f1>" << vertex_value(g, u) << "}\"]\n";
+    std::string from = std::to_string(uid);
+    for (auto&& [vid, uv] : views::incidence(g, uid)) {
+      auto&&      v  = target(g, uv);
+      std::string to = "e"s + std::to_string(uid) + "_"s + std::to_string(vid);
+      of << "    " << to << " [shape=record, label=\"{<f0>" << vid << "|<f1>" << edge_value(g, uv) << "km}\"]\n";
+      of << "    " << from << " -> " << to;
+      from = to;
     }
     of << std::endl;
   }

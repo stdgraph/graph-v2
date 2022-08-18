@@ -40,10 +40,10 @@ using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
 
-using std::graph::views::vertices_depth_first_search_view;
+using std::graph::vertices_depth_first_search_view;
 using std::graph::views::vertices_depth_first_search;
 
-using std::graph::views::edges_depth_first_search_view;
+using std::graph::edges_depth_first_search_view;
 using std::graph::views::edges_depth_first_search;
 using std::graph::views::sourced_edges_depth_first_search;
 
@@ -267,7 +267,7 @@ TEST_CASE("vertices_depth_first_search_view test", "[dynamic][dfs][vertex]") {
     for (auto&& [uid, u] : dfs) {
       ++city_cnt;
       if (uid == 2) // Karlsruhe
-        dfs.cancel(std::graph::views::cancel_search::cancel_all);
+        dfs.cancel(std::graph::cancel_search::cancel_all);
     }
     REQUIRE(2 == city_cnt);
   }
@@ -280,7 +280,7 @@ TEST_CASE("vertices_depth_first_search_view test", "[dynamic][dfs][vertex]") {
       //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
       ++city_cnt;
       if (uid == 4) // Wurzburg
-        dfs.cancel(std::graph::views::cancel_search::cancel_branch);
+        dfs.cancel(std::graph::cancel_search::cancel_branch);
     }
     REQUIRE(6 == city_cnt);
   }
@@ -485,7 +485,7 @@ TEST_CASE("vertices_depth_first_search test", "[dynamic][dfs][vertex]") {
     for (auto&& [uid, u] : dfs) {
       ++city_cnt;
       if (uid == 2) // Karlsruhe
-        dfs.cancel(std::graph::views::cancel_search::cancel_all);
+        dfs.cancel(std::graph::cancel_search::cancel_all);
     }
     REQUIRE(2 == city_cnt);
   }
@@ -498,7 +498,7 @@ TEST_CASE("vertices_depth_first_search test", "[dynamic][dfs][vertex]") {
       //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
       ++city_cnt;
       if (uid == 4) // Wurzburg
-        dfs.cancel(std::graph::views::cancel_search::cancel_branch);
+        dfs.cancel(std::graph::cancel_search::cancel_branch);
     }
     REQUIRE(6 == city_cnt);
   }
@@ -772,7 +772,7 @@ TEST_CASE("edges_depth_first_search_view test", "[dynamic][dfs][edge]") {
     for (auto&& [vid, uv] : dfs) {
       ++city_cnt;
       if (vid == 2) // Karlsruhe
-        dfs.cancel(std::graph::views::cancel_search::cancel_all);
+        dfs.cancel(std::graph::cancel_search::cancel_all);
     }
     REQUIRE(2 == city_cnt);
   }
@@ -785,7 +785,7 @@ TEST_CASE("edges_depth_first_search_view test", "[dynamic][dfs][edge]") {
       //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
       ++city_cnt;
       if (vid == 4) // Wurzburg
-        dfs.cancel(std::graph::views::cancel_search::cancel_branch);
+        dfs.cancel(std::graph::cancel_search::cancel_branch);
     }
     REQUIRE(6 == city_cnt);
   }
@@ -1059,7 +1059,7 @@ TEST_CASE("edges_depth_first_search test", "[dynamic][dfs][edge]") {
     for (auto&& [vid, uv] : dfs) {
       ++city_cnt;
       if (vid == 2) // Karlsruhe
-        dfs.cancel(std::graph::views::cancel_search::cancel_all);
+        dfs.cancel(std::graph::cancel_search::cancel_all);
     }
     REQUIRE(2 == city_cnt);
   }
@@ -1072,7 +1072,7 @@ TEST_CASE("edges_depth_first_search test", "[dynamic][dfs][edge]") {
       //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
       ++city_cnt;
       if (vid == 4) // Wurzburg
-        dfs.cancel(std::graph::views::cancel_search::cancel_branch);
+        dfs.cancel(std::graph::cancel_search::cancel_branch);
     }
     REQUIRE(6 == city_cnt);
   }

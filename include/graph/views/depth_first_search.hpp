@@ -32,7 +32,7 @@
 #ifndef GRAPH_DFS_HPP
 #  define GRAPH_DFS_HPP
 
-namespace std::graph::views {
+namespace std::graph {
 
 /// <summary>
 /// The element in a depth-first search stack.
@@ -574,50 +574,51 @@ public:
   auto end() const { return end_sentinel(); }
   auto cend() const { return end_sentinel(); }
 };
+} // namespace std::graph
 
-namespace tag_invoke {
-  // vertices_depth_first_search CPO
-  TAG_INVOKE_DEF(vertices_depth_first_search); // vertices_depth_first_search(g,seed)    -> vertices[vid,v]
-                                               // vertices_depth_first_search(g,seed,fn) -> vertices[vid,v,value]
+namespace std::graph::tag_invoke {
+// vertices_depth_first_search CPO
+TAG_INVOKE_DEF(vertices_depth_first_search); // vertices_depth_first_search(g,seed)    -> vertices[vid,v]
+                                             // vertices_depth_first_search(g,seed,fn) -> vertices[vid,v,value]
 
-  template <class G, class A>
-  concept _has_vtx_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-    {vertices_depth_first_search(g, seed, alloc)};
-  };
-  template <class G, class VVF, class A>
-  concept _has_vtx_dfs_vvf_adl = vertex_range<G> &&
-        requires(G&& g, vertex_id_t<G> seed, const VVF& vvf, const A& alloc) {
-    {vertices_depth_first_search(g, seed, vvf, alloc)};
-  };
+template <class G, class A>
+concept _has_vtx_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
+  {vertices_depth_first_search(g, seed, alloc)};
+};
+template <class G, class VVF, class A>
+concept _has_vtx_dfs_vvf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const VVF& vvf, const A& alloc) {
+  {vertices_depth_first_search(g, seed, vvf, alloc)};
+};
 
-  // edges_depth_first_search CPO
-  //  sourced_edges_depth_first_search
-  TAG_INVOKE_DEF(edges_depth_first_search);         // edges_depth_first_search(g,seed)    -> edges[vid,v]
-                                                    // edges_depth_first_search(g,seed,fn) -> edges[vid,v,value]
-  TAG_INVOKE_DEF(sourced_edges_depth_first_search); // sourced_edges_depth_first_search(g,seed)    -> edges[uid,vid,v]
-        // sourced_edges_depth_first_search(g,seed,fn) -> edges[uid,vid,v,value]
+// edges_depth_first_search CPO
+//  sourced_edges_depth_first_search
+TAG_INVOKE_DEF(edges_depth_first_search);         // edges_depth_first_search(g,seed)    -> edges[vid,v]
+                                                  // edges_depth_first_search(g,seed,fn) -> edges[vid,v,value]
+TAG_INVOKE_DEF(sourced_edges_depth_first_search); // sourced_edges_depth_first_search(g,seed)    -> edges[uid,vid,v]
+      // sourced_edges_depth_first_search(g,seed,fn) -> edges[uid,vid,v,value]
 
-  template <class G, class A>
-  concept _has_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-    {edges_depth_first_search(g, seed, alloc)};
-  };
-  template <class G, class EVF, class A>
-  concept _has_edg_dfs_evf_adl = vertex_range<G> &&
-        requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
-    {edges_depth_first_search(g, seed, evf, alloc)};
-  };
+template <class G, class A>
+concept _has_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
+  {edges_depth_first_search(g, seed, alloc)};
+};
+template <class G, class EVF, class A>
+concept _has_edg_dfs_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
+  {edges_depth_first_search(g, seed, evf, alloc)};
+};
 
-  template <class G, class A>
-  concept _has_src_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-    {sourced_edges_depth_first_search(g, seed, alloc)};
-  };
-  template <class G, class EVF, class A>
-  concept _has_src_edg_dfs_evf_adl = vertex_range<G> &&
-        requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
-    {sourced_edges_depth_first_search(g, seed, evf, alloc)};
-  };
-} // namespace tag_invoke
+template <class G, class A>
+concept _has_src_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
+  {sourced_edges_depth_first_search(g, seed, alloc)};
+};
+template <class G, class EVF, class A>
+concept _has_src_edg_dfs_evf_adl = vertex_range<G> &&
+      requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
+  {sourced_edges_depth_first_search(g, seed, evf, alloc)};
+};
+} // namespace std::graph::tag_invoke
 
+
+namespace std::graph::views {
 
 //
 // vertices_depth_first_search(g,uid,alloc)
@@ -626,8 +627,8 @@ namespace tag_invoke {
 template <adjacency_graph G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
-  if constexpr (tag_invoke::_has_vtx_dfs_adl<G, Alloc>)
-    return tag_invoke::vertices_depth_first_search(g, seed, alloc);
+  if constexpr (std::graph::tag_invoke::_has_vtx_dfs_adl<G, Alloc>)
+    return std::graph::tag_invoke::vertices_depth_first_search(g, seed, alloc);
   else
     return vertices_depth_first_search_view<G, void, Stack>(g, seed, alloc);
 }
@@ -636,8 +637,8 @@ template <adjacency_graph G, class VVF, class Stack = stack<dfs_element<G>>, cla
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       invocable<VVF, vertex_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const VVF& vvf, const Alloc& alloc = Alloc()) {
-  if constexpr (tag_invoke::_has_vtx_dfs_vvf_adl<G, VVF, Alloc>)
-    return tag_invoke::vertices_depth_first_search(g, seed, vvf, alloc);
+  if constexpr (std::graph::tag_invoke::_has_vtx_dfs_vvf_adl<G, VVF, Alloc>)
+    return std::graph::tag_invoke::vertices_depth_first_search(g, seed, vvf, alloc);
   else
     return vertices_depth_first_search_view<G, VVF, Stack>(g, seed, vvf, alloc);
 }
@@ -649,8 +650,8 @@ constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const VVF
 template <adjacency_graph G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
-  if constexpr (tag_invoke::_has_edg_dfs_adl<G, Alloc>)
-    return tag_invoke::edges_depth_first_search(g, seed, alloc);
+  if constexpr (std::graph::tag_invoke::_has_edg_dfs_adl<G, Alloc>)
+    return std::graph::tag_invoke::edges_depth_first_search(g, seed, alloc);
   else
     return edges_depth_first_search_view<G, void, false, Stack>(g, seed, alloc);
 }
@@ -659,8 +660,8 @@ template <adjacency_graph G, class EVF, class Stack = stack<dfs_element<G>>, cla
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       invocable<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, const Alloc& alloc = Alloc()) {
-  if constexpr (tag_invoke::_has_edg_dfs_evf_adl<G, EVF, Alloc>)
-    return tag_invoke::edges_depth_first_search(g, seed, evf, alloc);
+  if constexpr (std::graph::tag_invoke::_has_edg_dfs_evf_adl<G, EVF, Alloc>)
+    return std::graph::tag_invoke::edges_depth_first_search(g, seed, evf, alloc);
   else
     return edges_depth_first_search_view<G, EVF, false, Stack>(g, seed, evf, alloc);
 }
@@ -672,8 +673,8 @@ constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& e
 template <adjacency_graph G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
-  if constexpr (tag_invoke::_has_src_edg_dfs_adl<G, Alloc>)
-    return tag_invoke::sourced_edges_depth_first_search(g, seed, alloc);
+  if constexpr (std::graph::tag_invoke::_has_src_edg_dfs_adl<G, Alloc>)
+    return std::graph::tag_invoke::sourced_edges_depth_first_search(g, seed, alloc);
   else
     return edges_depth_first_search_view<G, void, true, Stack>(g, seed, alloc);
 }
@@ -683,8 +684,8 @@ requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<
       invocable<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto
 sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, const Alloc& alloc = Alloc()) {
-  if constexpr (tag_invoke::_has_src_edg_dfs_evf_adl<G, EVF, Alloc>)
-    return tag_invoke::sourced_edges_depth_first_search(g, seed, evf, alloc);
+  if constexpr (std::graph::tag_invoke::_has_src_edg_dfs_evf_adl<G, EVF, Alloc>)
+    return std::graph::tag_invoke::sourced_edges_depth_first_search(g, seed, evf, alloc);
   else
     return edges_depth_first_search_view<G, EVF, true, Stack>(g, seed, evf, alloc);
 }

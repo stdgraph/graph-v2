@@ -1,6 +1,6 @@
 #pragma once
 
-namespace std::graph::views {
+namespace std::graph {
 
 // Common types for DFS & BFS views
 enum three_colors : int8_t { black, white, grey }; // { finished, undiscovered, discovered }
@@ -98,16 +98,16 @@ struct edge_view<VId, false, void, void> {
 // for(auto&& [vid,uv,value] : edges_view(g, u, [](vertex_edge_reference_t<G> uv) { return ...; } )
 // for(auto&& [vid,uv]       : edges_view(g, u) )
 //
-template <class VId, class E, class EV>
-using targeted_edge = edge_view<VId, false, E, EV>; // {target_id, edge, [, value]}
+//template <class VId, class E, class EV>
+//using targeted_edge = edge_view<VId, false, E, EV>; // {target_id, edge, [, value]}
 
 //
 // sourced_edge
 // for(auto&& [uid,vid,uv,value] : sourced_edges_view(g, u, [](vertex_edge_reference_t<G> uv) { return ...; } )
 // for(auto&& [uid,vid,uv]       : sourced_edges_view(g, u) )
 //
-template <class VId, class V, class E, class EV>
-using sourced_edge = edge_view<VId, true, E, EV>; // {source_id, target_id, edge, [, value]}
+//template <class VId, class V, class E, class EV>
+//using sourced_edge = edge_view<VId, true, E, EV>; // {source_id, target_id, edge, [, value]}
 
 //
 // edgelist_edge

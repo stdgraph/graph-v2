@@ -133,7 +133,7 @@ public:
   constexpr ~dynamic_edge_target()                          = default;
 
   constexpr dynamic_edge_target& operator=(const dynamic_edge_target&) = default;
-  constexpr dynamic_edge_target& operator=(dynamic_edge_target&&) = default;
+  constexpr dynamic_edge_target& operator=(dynamic_edge_target&&)      = default;
 
 public:
   //constexpr vertex_id_type target_id() const { return target_id_; }
@@ -148,7 +148,8 @@ private:
   tag_invoke(::std::graph::tag_invoke::target_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
     return uv.target_id_;
   }
-  friend constexpr vertex_type& tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
+  friend constexpr vertex_type&
+  tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
     return begin(vertices(g))[uv.target_id_];
   }
   friend constexpr const vertex_type&
@@ -178,7 +179,7 @@ public:
   constexpr ~dynamic_edge_source()                          = default;
 
   constexpr dynamic_edge_source& operator=(const dynamic_edge_source&) = default;
-  constexpr dynamic_edge_source& operator=(dynamic_edge_source&&) = default;
+  constexpr dynamic_edge_source& operator=(dynamic_edge_source&&)      = default;
 
 public:
   //constexpr vertex_id_type source_id() const { return source_id_; }
@@ -193,7 +194,8 @@ private:
   tag_invoke(::std::graph::tag_invoke::source_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
     return uv.source_id_;
   }
-  friend constexpr vertex_type& tag_invoke(::std::graph::tag_invoke::source_fn_t, graph_type& g, edge_type& uv) noexcept {
+  friend constexpr vertex_type&
+  tag_invoke(::std::graph::tag_invoke::source_fn_t, graph_type& g, edge_type& uv) noexcept {
     return begin(vertices(g))[uv.source_id_];
   }
   friend constexpr const vertex_type&
@@ -226,7 +228,7 @@ public:
   constexpr ~dynamic_edge_value()                         = default;
 
   constexpr dynamic_edge_value& operator=(const dynamic_edge_value&) = default;
-  constexpr dynamic_edge_value& operator=(dynamic_edge_value&&) = default;
+  constexpr dynamic_edge_value& operator=(dynamic_edge_value&&)      = default;
 
 public:
   constexpr value_type&       value() noexcept { return value_; }
@@ -283,7 +285,7 @@ public:
   constexpr ~dynamic_edge()                   = default;
 
   constexpr dynamic_edge& operator=(const dynamic_edge&) = default;
-  constexpr dynamic_edge& operator=(dynamic_edge&&) = default;
+  constexpr dynamic_edge& operator=(dynamic_edge&&)      = default;
 };
 
 template <class VV, class GV, class VId, class Traits>
@@ -312,7 +314,7 @@ public:
   constexpr ~dynamic_edge()                   = default;
 
   constexpr dynamic_edge& operator=(const dynamic_edge&) = default;
-  constexpr dynamic_edge& operator=(dynamic_edge&&) = default;
+  constexpr dynamic_edge& operator=(dynamic_edge&&)      = default;
 };
 
 
@@ -345,7 +347,7 @@ public:
   constexpr ~dynamic_edge()                   = default;
 
   constexpr dynamic_edge& operator=(const dynamic_edge&) = default;
-  constexpr dynamic_edge& operator=(dynamic_edge&&) = default;
+  constexpr dynamic_edge& operator=(dynamic_edge&&)      = default;
 };
 
 template <class VV, class GV, class VId, class Traits>
@@ -370,7 +372,7 @@ public:
   constexpr ~dynamic_edge()                   = default;
 
   constexpr dynamic_edge& operator=(const dynamic_edge&) = default;
-  constexpr dynamic_edge& operator=(dynamic_edge&&) = default;
+  constexpr dynamic_edge& operator=(dynamic_edge&&)      = default;
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -394,7 +396,7 @@ public:
   constexpr ~dynamic_vertex_base()                          = default;
 
   constexpr dynamic_vertex_base& operator=(const dynamic_vertex_base&) = default;
-  constexpr dynamic_vertex_base& operator=(dynamic_vertex_base&&) = default;
+  constexpr dynamic_vertex_base& operator=(dynamic_vertex_base&&)      = default;
 
   constexpr dynamic_vertex_base(allocator_type alloc) : edges_(alloc) {}
 
@@ -431,8 +433,10 @@ private: // tag_invoke properties
   tag_invoke(::std::graph::tag_invoke::find_vertex_edge_fn_t, graph_type& g, vertex_id_type uid, vertex_id_type vid) {
     return ranges::find(g[uid].edges_, [&g, &vid](const edge_type& uv) -> bool { return target_id(g, uv) == vid; });
   }
-  friend constexpr edges_type::const_iterator
-  tag_invoke(::std::graph::tag_invoke::find_vertex_edge_fn_t, const graph_type& g, vertex_id_type uid, vertex_id_type vid) {
+  friend constexpr edges_type::const_iterator tag_invoke(::std::graph::tag_invoke::find_vertex_edge_fn_t,
+                                                         const graph_type& g,
+                                                         vertex_id_type    uid,
+                                                         vertex_id_type    vid) {
     return ranges::find(g[uid].edges_, [&g, &vid](const edge_type& uv) -> bool { return target_id(g, uv) == vid; });
   }
 };
@@ -463,7 +467,7 @@ public:
   constexpr ~dynamic_vertex()                     = default;
 
   constexpr dynamic_vertex& operator=(const dynamic_vertex&) = default;
-  constexpr dynamic_vertex& operator=(dynamic_vertex&&) = default;
+  constexpr dynamic_vertex& operator=(dynamic_vertex&&)      = default;
 
 public:
   using base_type::edges;
@@ -505,7 +509,7 @@ public:
   constexpr ~dynamic_vertex()                     = default;
 
   constexpr dynamic_vertex& operator=(const dynamic_vertex&) = default;
-  constexpr dynamic_vertex& operator=(dynamic_vertex&&) = default;
+  constexpr dynamic_vertex& operator=(dynamic_vertex&&)      = default;
 
   constexpr dynamic_vertex(allocator_type alloc) : base_type(alloc) {}
 };
@@ -544,7 +548,7 @@ public: // Construction/Destruction/Assignment
   constexpr ~dynamic_graph_base()                         = default;
 
   constexpr dynamic_graph_base& operator=(const dynamic_graph_base&) = default;
-  constexpr dynamic_graph_base& operator=(dynamic_graph_base&&) = default;
+  constexpr dynamic_graph_base& operator=(dynamic_graph_base&&)      = default;
 
   /// <summary>
   /// Create an empty graph using the allocator passed.
@@ -644,8 +648,8 @@ public: // Construction/Destruction/Assignment
     load_edges(vertex_count, 0, move(erng), eproj);
   }
 
-  dynamic_graph_base(const initializer_list<views::copyable_edge_t<VId, EV>>& il,
-                     edge_allocator_type                                      alloc = edge_allocator_type())
+  dynamic_graph_base(const initializer_list<copyable_edge_t<VId, EV>>& il,
+                     edge_allocator_type                               alloc = edge_allocator_type())
         : vertices_(alloc) {
     size_t last_id = 0;
     for (auto&& e : il)
@@ -662,7 +666,7 @@ public:
       resize_vertices(max(vertex_count, ranges::size(vrng)));
     }
     for (auto&& v : vrng) {
-      auto&& [id, value] = vproj(v); //views::copyable_vertex_t<VId, VV>
+      auto&& [id, value] = vproj(v); //copyable_vertex_t<VId, VV>
       size_t k           = static_cast<size_t>(id);
       if constexpr (ranges::random_access_range<vertices_type>)
         assert(k < vertices_.size());
@@ -677,7 +681,7 @@ public:
       resize_vertices(max(vertex_count, ranges::size(vrng)));
     }
     for (auto&& v : vrng) {
-      auto&& [id, value] = vproj(v); //views::copyable_vertex_t<VId, VV>
+      auto&& [id, value] = vproj(v); //copyable_vertex_t<VId, VV>
       size_t k           = static_cast<size_t>(id);
       if constexpr (ranges::random_access_range<vertices_type>)
         assert(k < vertices_.size());
@@ -823,7 +827,8 @@ private: // tag_invoke properties
   friend constexpr vertices_type& tag_invoke(::std::graph::tag_invoke::vertices_fn_t, dynamic_graph_base& g) {
     return g.vertices_;
   }
-  friend constexpr const vertices_type& tag_invoke(::std::graph::tag_invoke::vertices_fn_t, const dynamic_graph_base& g) {
+  friend constexpr const vertices_type& tag_invoke(::std::graph::tag_invoke::vertices_fn_t,
+                                                   const dynamic_graph_base& g) {
     return g.vertices_;
   }
 
@@ -832,7 +837,8 @@ private: // tag_invoke properties
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
   }
 
-  friend constexpr edges_type& tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, const vertex_id_type uid) {
+  friend constexpr edges_type&
+  tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, const vertex_id_type uid) {
     return g.vertices_[uid].edges();
   }
   friend constexpr const edges_type&
@@ -877,7 +883,7 @@ public:
   ~dynamic_graph()                    = default;
 
   dynamic_graph& operator=(const dynamic_graph&) = default;
-  dynamic_graph& operator=(dynamic_graph&&) = default;
+  dynamic_graph& operator=(dynamic_graph&&)      = default;
 
   // gv&,  alloc
   // gv&&, alloc
@@ -959,8 +965,7 @@ public:
         : base_type(erng, eproj, alloc), value_(move(gv)) {}
 
 
-  dynamic_graph(const initializer_list<views::copyable_edge_t<VId, EV>>& il,
-                edge_allocator_type                                      alloc = edge_allocator_type())
+  dynamic_graph(const initializer_list<copyable_edge_t<VId, EV>>& il, edge_allocator_type alloc = edge_allocator_type())
         : base_type(il, alloc) {}
 
 public:
@@ -971,7 +976,9 @@ private:
   value_type value_;
 
 private: // tag_invoke properties
-  friend constexpr value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, graph_type& g) { return g.value_; }
+  friend constexpr value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, graph_type& g) {
+    return g.value_;
+  }
   friend constexpr const value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, const graph_type& g) {
     return g.value_;
   }
@@ -1000,7 +1007,7 @@ public:
   ~dynamic_graph()                    = default;
 
   dynamic_graph& operator=(const dynamic_graph&) = default;
-  dynamic_graph& operator=(dynamic_graph&&) = default;
+  dynamic_graph& operator=(dynamic_graph&&)      = default;
 
   template <class ERng, class EProj = identity>
   //requires edge_value_extractor<ERng, EIdFnc, EValueFnc>
@@ -1017,8 +1024,7 @@ public:
   dynamic_graph(ERng& erng, VRng& vrng, EProj eproj = {}, VProj vproj = {}, allocator_type alloc = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc) {}
 
-  dynamic_graph(const initializer_list<views::copyable_edge_t<VId, EV>>& il,
-                edge_allocator_type                                      alloc = edge_allocator_type())
+  dynamic_graph(const initializer_list<copyable_edge_t<VId, EV>>& il, edge_allocator_type alloc = edge_allocator_type())
         : base_type(il, alloc) {}
 };
 

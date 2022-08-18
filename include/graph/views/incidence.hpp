@@ -7,14 +7,14 @@
 // incidence(g,u,evf) -> edge_view<VId,false,E,EV> -> {target_id, edge&, value}
 //
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g,uv) };
-// 
+//
 // examples: for([vid, uv]        : incidence(g,uid))
 //           for([vid, uv, value] : incidence(g,uid,evf))
 //
 // Since u is passed to incidence(), there's no need to include Sourced versions of
 // incidence().
 //
-namespace std::graph::views {
+namespace std::graph {
 
 
 template <adjacency_graph G, bool Sourced = false, class EVF = void>
@@ -63,7 +63,7 @@ public:
   constexpr ~incidence_iterator()                         = default;
 
   constexpr incidence_iterator& operator=(const incidence_iterator&) = default;
-  constexpr incidence_iterator& operator=(incidence_iterator&&) = default;
+  constexpr incidence_iterator& operator=(incidence_iterator&&)      = default;
 
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
@@ -163,7 +163,7 @@ public:
   constexpr ~incidence_iterator()                         = default;
 
   constexpr incidence_iterator& operator=(const incidence_iterator&) = default;
-  constexpr incidence_iterator& operator=(incidence_iterator&&) = default;
+  constexpr incidence_iterator& operator=(incidence_iterator&&)      = default;
 
 public:
   constexpr reference operator*() const {
@@ -212,33 +212,34 @@ private: // member variables
   friend bool operator==(const edge_iterator& lhs, const incidence_iterator& rhs) { return lhs == rhs.iter_; }
 };
 
-
 template <class G, bool Sourced, class EVF>
 using incidence_view = ranges::subrange<incidence_iterator<G, Sourced, EVF>, vertex_edge_iterator_t<G>>;
+} // namespace std::graph
 
-namespace tag_invoke {
-  // ranges
-  TAG_INVOKE_DEF(incidence); // incidence(g,uid)            -> edges[vid,v]
-                             // incidence(g,uid,fn)         -> edges[vid,v,value]
+namespace std::graph::tag_invoke {
+// ranges
+TAG_INVOKE_DEF(incidence); // incidence(g,uid)            -> edges[vid,v]
+                           // incidence(g,uid,fn)         -> edges[vid,v,value]
 
-  template <class G>
-  concept _has_incidence_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-    {incidence(g, uid)};
-  };
-  template <class G, class EVF>
-  concept _has_incidence_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-    {incidence(g, uid, evf)};
-  };
-} // namespace tag_invoke
+template <class G>
+concept _has_incidence_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
+  {incidence(g, uid)};
+};
+template <class G, class EVF>
+concept _has_incidence_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const EVF& evf) {
+  {incidence(g, uid, evf)};
+};
+} // namespace std::graph::tag_invoke
 
+namespace std::graph::views {
 //
 // incidence(g,uid)
 //
 template <adjacency_graph G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_id_t<G> uid) {
-  if constexpr (tag_invoke::_has_incidence_g_uid_adl<G>)
-    return tag_invoke::incidence(g, uid);
+  if constexpr (std::graph::tag_invoke::_has_incidence_g_uid_adl<G>)
+    return std::graph::tag_invoke::incidence(g, uid);
   else
     return incidence_view<G, false, void>(incidence_iterator<G, false, void>(g, uid), ranges::end(edges(g, uid)));
 }
@@ -250,8 +251,8 @@ constexpr auto incidence(G&& g, vertex_id_t<G> uid) {
 template <adjacency_graph G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-  if constexpr (tag_invoke::_has_incidence_g_uid_evf_adl<G, EVF>)
-    return tag_invoke::incidence(g, uid, evf);
+  if constexpr (std::graph::tag_invoke::_has_incidence_g_uid_evf_adl<G, EVF>)
+    return std::graph::tag_invoke::incidence(g, uid, evf);
   else
     return incidence_view<G, false, EVF>(incidence_iterator<G, false, EVF>(g, uid, evf), ranges::end(edges(g, uid)));
 }

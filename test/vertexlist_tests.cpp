@@ -64,8 +64,8 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
     static_assert(!std::is_const_v<std::remove_reference_t<decltype(g)>>);
     static_assert(!std::is_const_v<G>);
 
-    std::graph::views::vertexlist_iterator<G> i0; // default construction
-    std::graph::views::vertexlist_iterator<G> i1(g);
+    std::graph::vertexlist_iterator<G> i0; // default construction
+    std::graph::vertexlist_iterator<G> i1(g);
     static_assert(std::forward_iterator<decltype(i1)>, "vertexlist_iterator must be a forward_iterator");
     {
       auto&& [uid, u] = *i1;
@@ -80,7 +80,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::vertexlist_iterator<G> i2(g);
+    std::graph::vertexlist_iterator<G> i2(g);
     {
       auto&& [uid, u] = *i2;
       static_assert(is_const_v<decltype(uid)>, "vertex id must be const");
@@ -96,7 +96,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
     }
 
     static_assert(std::input_or_output_iterator<decltype(i1)>);
-    using _It = std::graph::views::vertexlist_iterator<G>;
+    using _It = std::graph::vertexlist_iterator<G>;
     using _Se = std::graph::vertex_iterator_t<G>;
     bool yy   = std::sentinel_for<_Se, _It>;
     bool xx   = std::sized_sentinel_for<_Se, _It>;
@@ -106,7 +106,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
 
     auto vvf  = [&g](vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
     using VVF = decltype(vvf);
-    std::graph::views::vertexlist_iterator<G, VVF> i3(g, vvf, begin(vertices(g)));
+    std::graph::vertexlist_iterator<G, VVF> i3(g, vvf, begin(vertices(g)));
     {
       // The following asserts are used to isolate problem with failing input_or_output_iterator concept for vertexlist_iterator
       static_assert(std::movable<decltype(i3)>, "vertexlist_iterator<G,VVF> is NOT movable");
@@ -138,7 +138,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>, "graph must be const");
 
     //std::graph::views::vertexlist_iterator<G2> i0; // default construction
-    std::graph::views::vertexlist_iterator<G2> i1(g2);
+    std::graph::vertexlist_iterator<G2> i1(g2);
     static_assert(std::forward_iterator<decltype(i1)>, "vertexlist_iterator must be a forward_iterator");
     {
       auto&& [uid, u] = *i1;
@@ -155,7 +155,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::vertexlist_iterator<G2> i2(g2);
+    std::graph::vertexlist_iterator<G2> i2(g2);
     {
       auto&& [uid, u] = *i2;
       static_assert(is_const_v<decltype(uid)>, "id must be const");
@@ -171,7 +171,7 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
 
     auto vvf  = [&g](vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
     using VVF = decltype(vvf);
-    std::graph::views::vertexlist_iterator<G, VVF> i3(g, vvf, begin(vertices(g)));
+    std::graph::vertexlist_iterator<G, VVF> i3(g, vvf, begin(vertices(g)));
     {
       auto&& [uid, u, name] = *i3;
       REQUIRE(uid == 0);

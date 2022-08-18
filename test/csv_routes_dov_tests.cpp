@@ -99,7 +99,7 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
   G g = {{0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, {1, 2, 80.0},  {2, 3, 250.0}, {3, 8, 84.0},
          {4, 5, 103.0}, {4, 7, 186.0}, {5, 8, 167.0}, {5, 9, 183.0}, {6, 8, 502.0}};
 
-  using init_vertex_value             = std::graph::views::copyable_vertex_t<vertex_id_t<G>, std::string>;
+  using init_vertex_value             = std::graph::copyable_vertex_t<vertex_id_t<G>, std::string>;
   std::vector<std::string_view> names = {"Frankfürt", "Mannheim", "Karlsruhe", "Augsburg", "Würzburg",
                                          "Nürnberg",  "Kassel",   "Erfurt",    "München",  "Stuttgart"};
   g.load_vertices(names, [&names](std::string_view& nm) {

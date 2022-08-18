@@ -48,3 +48,6 @@ packages/
 #Ignore generated doc files (for now)
 doc/*.pdf
 doc/*.gz
+
+#Ignore test output
+test/output/
