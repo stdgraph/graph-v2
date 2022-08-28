@@ -1095,7 +1095,7 @@ struct shortest_path<G, I, void> {
 };
 
 
-template <adjacency_graph G,
+template <adjacency_list G,
           typename OutIter,
           typename DistFnc,
           typename DistanceT = invoke_result_t<DistFnc>,
@@ -1107,7 +1107,7 @@ requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<
 void dijkstra_shortest_distances(G& g, vertex_id_t<G> seed, OutIter result_iter) {} // returns paths & distances
 
 
-template <adjacency_graph G, typename OutIter, typename Stack = deque<vertex_id_t<G>>>
+template <adjacency_list G, typename OutIter, typename Stack = deque<vertex_id_t<G>>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && //
       output_iterator < OutIter,
       shortest_path < G, ranges::iterator_t<Stack>,

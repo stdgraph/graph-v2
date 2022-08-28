@@ -98,7 +98,8 @@ if(ENABLE_TESTING)
 endif()
 
 if(ENABLE_EXAMPLES)
-  #add_subdirectory(example)
+  set(EXAMPLE_ROOT_DIR "${CMAKE_SOURCE_DIR}/example/")
+  add_subdirectory(example)
 endif()
 
 #if(ENABLE_FUZZING)

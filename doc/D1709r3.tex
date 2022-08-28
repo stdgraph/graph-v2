@@ -575,8 +575,8 @@ Since the source vertex \tcode{u} is available when calling a \tcode{neighbors} 
 \hline
     \textbf{Example} & \textbf{Return} \\
 \hline
-    \tcode{for(auto\&\& [vid,v] : neighbors(g,u))} & \tcode{vertex_view<VId,false,V,void>} \\
-    \tcode{for(auto\&\& [vid,v,val] : neighbors(g,u,evf))} & \tcode{vertex_view<VId,false,V,VV>} \\
+    \tcode{for(auto\&\& [vid,v] : neighbors(g,u))} & \tcode{neighbor_view<VId,false,V,void>} \\
+    \tcode{for(auto\&\& [vid,v,val] : neighbors(g,u,vvf))} & \tcode{neighbor_view<VId,false,V,VV>} \\
 \hline
 \end{tabular}}
 \caption{\tcode{neighbors} View Functions}
@@ -696,9 +696,9 @@ All algorithms in this proposal require that vertices are stored in random acces
 The Graph Container Interface is designed to support a wider scope of graph containers than required by the views and algorithms in this proposal. This enables for future growth of the graph data model (e.g. incoming edges on a vertex), or as a framework for graph implementations outside of the standard. For instance, existing implementations may have requirements that cause them to define features with looser constraints, such as sparse vertex\_ids, non-integral vertex\_ids, or storing vertices in associative bi-directional containers (e.g. std::map or std::unordered\_map). Such features require specialized implementations for views and algorithms. The performance for such algorithms will be sub-optimal, but is preferrable to run them on the existing container rather than loading the graph into a high-performance graph container and then running the algorithm on it, where the loading time can far outweigh the time to run the sub-optimal algorithm. To achieve this, care has been taken to make sure that the use of concepts chosen is appropriate for algorithm, view and container.
 
 \subsubsection{Concepts}
-Table \ref{tab:graph_concepts} summarizes the concepts in the Graph Container Interface, allowing views and algorithms to verify a graph implementation has the expected requirements for an \tcode{adjacency_graph} or \tcode{sourced_adjacency_graph}.
+Table \ref{tab:graph_concepts} summarizes the concepts in the Graph Container Interface, allowing views and algorithms to verify a graph implementation has the expected requirements for an \tcode{adjacency_list} or \tcode{sourced_adjacency_list}.
 
-Sourced edges have a source\_id on them in addition to a target\_id. A \tcode{sourced_adjacency_graph} has sourced edges.
+Sourced edges have a source\_id on them in addition to a target\_id. A \tcode{sourced_adjacency_list} has sourced edges.
 
 % is_sourced_edge and is_sourced_edge_v structs are not included the table for brevity. We may want to add them in the future for completeness.
 \begin{table}[h!]
@@ -711,8 +711,8 @@ Sourced edges have a source\_id on them in addition to a target\_id. A \tcode{so
     \tcode{vertex_range<G>} & \tcode{vertices(g)} returns a sized, forward\_range; \tcode{vertex_id(g,ui)} exists\\
     \tcode{targeted_edge<G>} & \tcode{target_id(g,uv)} and \tcode{target(g,uv)} exist\\
     \tcode{sourced_edge<G>} & \tcode{source_id(g,uv)} and \tcode{source(g,uv)} exist\\
-    \tcode{adjacency_graph<G>} & \tcode{vertex_range<G>} and \tcode{targeted_edge<G,edge<G>>} and \tcode{edges(g,_)} functions return a forward\_range\\
-    \tcode{sourced_adjacency_graph<G>} & \tcode{adjacency_graph<G>} and \tcode{sourced_edge<G, edge_t<G>>} and \tcode{edge_id(g,uv)} exists \\
+    \tcode{adjacency_list<G>} & \tcode{vertex_range<G>} and \tcode{targeted_edge<G,edge<G>>} and \tcode{edges(g,_)} functions return a forward\_range\\
+    \tcode{sourced_adjacency_list<G>} & \tcode{adjacency_list<G>} and \tcode{sourced_edge<G, edge_t<G>>} and \tcode{edge_id(g,uv)} exists \\
 \hline
 \end{tabular}}
 \caption{Graph Container Interface Concepts}
@@ -775,7 +775,7 @@ The type aliases are defined by either a function specialization for the underly
 \hline
     \tcode{vertex_range_t<G>} & \tcode{decltype(vertices(g))} & \\    
     \tcode{vertex_iterator_t<G>} & \tcode{iterator_t<vertex_range_t<G>>} & \\    
-    \tcode{vertex_t<G>} & \tcode{iterator_t<vertex_range_t<G>>} & \\    
+    \tcode{vertex_t<G>} & \tcode{range_value_t<vertex_range_t<G>>} & \\    
     \tcode{vertex_reference_t<G>} & \tcode{range_reference_t<vertex_range_t<G>>} & \\    
     \tcode{vertex_id_t<G>} & \tcode{decltype(vertex_id(g))} & \\    
     \tcode{vertex_value_t<G>} & \tcode{decltype(vertex_value(g))} & optional \\
@@ -819,7 +819,7 @@ Table \ref{tab:graph_func} summarizes the functions in the Graph Container Inter
     & & & Override to define a different \tcode{vertex_id_t<G>} type (e.g. int32\_t). \\
     \tcode{vertex_value(g,u)} & \tcode{vertex_value_t<G>} & constant & n/a, optional \\
     \tcode{degree(g,u)} & \tcode{integral} & constant & \tcode{size(edges(g,u))} if \tcode{sized_range<vertex_edge_range_t<G>>} \\
-    \tcode{find_vertex(g,uid)} & \tcode{vetex_range_t<G>} & constant & \tcode{begin(vertices(g)) + uid} \\
+    \tcode{find_vertex(g,uid)} & \tcode{vertex_iterator_t<G>} & constant & \tcode{begin(vertices(g)) + uid} \\
     & & & if \tcode{random_access_range<vertex_range_t<G>>}  \\
 \hline
     \tcode{edges(g,u)} & \tcode{vertex_edge_range_t<G>} & constant & n/a \\
@@ -1017,7 +1017,7 @@ requires(G&& g, ranges::range_reference_t<ER> uv) {
 };
 
 template <class G>
-concept adjacency_graph = vertex_range<G> && 
+concept adjacency_list = vertex_range<G> && 
                           targeted_edge<G, vertex_edge_range_t<G>> &&   
 requires(
       G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
@@ -1026,13 +1026,13 @@ requires(
 };
 
 template <class G>
-concept sourced_adjacency_graph = adjacency_graph<G> && sourced_edge<G, vertex_edge_range_t<G>> &&
+concept sourced_adjacency_list = adjacency_list<G> && sourced_edge<G, vertex_edge_range_t<G>> &&
       requires(G&& g, edge_reference_t<G> uv) {
   edge_id(g, uv);
 };
 
 template <class G>
-concept undirected_incidence_graph = sourced_adjacency_graph<G> && is_undirected_edge_v<edge_t<G>>;
+concept undirected_incidence_graph = sourced_adjacency_list<G> && is_undirected_edge_v<edge_t<G>>;
 
 template <class G>
 concept directed_incidence_graph = !undirected_incidence_graph<G>;

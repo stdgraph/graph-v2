@@ -78,8 +78,8 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
 
   SECTION("vertices_breadth_first_search_view is an input view") {
     vertices_breadth_first_search_view<G, void> bfs(g, frankfurt_id);
-    auto                                      it1 = bfs.begin();
-    using I                                       = decltype(it1);
+    auto                                        it1 = bfs.begin();
+    using I                                         = decltype(it1);
 
     auto it2 = it1;            // copyable
     I    it3(it1);             // copy-constuctible
@@ -174,7 +174,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
     auto city     = bfs.begin();
     int  city_cnt = 0;
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(1 == uid);
       REQUIRE("Mannheim" == vertex_value(g, u));
@@ -182,7 +182,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(4 == uid);
       REQUIRE("Würzburg" == vertex_value(g, u));
@@ -190,7 +190,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(6 == uid);
       REQUIRE("Kassel" == vertex_value(g, u));
@@ -198,7 +198,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(2 == uid);
       REQUIRE("Karlsruhe" == vertex_value(g, u));
@@ -206,7 +206,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(5 == uid);
       REQUIRE("Nürnberg" == vertex_value(g, u));
@@ -214,7 +214,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(7 == uid);
       REQUIRE("Erfurt" == vertex_value(g, u));
@@ -222,7 +222,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(8 == uid);
       REQUIRE("München" == vertex_value(g, u));
@@ -230,7 +230,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(3 == uid);
       REQUIRE("Augsburg" == vertex_value(g, u));
@@ -238,7 +238,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(9 == uid);
       REQUIRE("Stuttgart" == vertex_value(g, u));
@@ -265,7 +265,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
   }
 
   SECTION("vertices_breadth_first_search_view can do cancel_all") {
-    int                                 city_cnt = 0;
+    int                                   city_cnt = 0;
     vertices_breadth_first_search_view<G> bfs(g, frankfurt_id);
     for (auto&& [uid, u] : bfs) {
       ++city_cnt;
@@ -276,7 +276,7 @@ TEST_CASE("vertices_breadth_first_search_view test", "[dynamic][bfs][vertex]") {
   }
   SECTION("vertices_breadth_first_search_view can do cancel_branch #1") {
     //cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
-    int                                 city_cnt = 0;
+    int                                   city_cnt = 0;
     vertices_breadth_first_search_view<G> bfs(g, frankfurt_id);
     for (auto&& [uid, u] : bfs) {
       //ostream_indenter indent(size(bfs));
@@ -394,7 +394,7 @@ TEST_CASE("vertices_breadth_first_search test", "[dynamic][bfs][vertex]") {
     auto city     = bfs.begin();
     int  city_cnt = 0;
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(1 == uid);
       REQUIRE("Mannheim" == vertex_value(g, u));
@@ -402,7 +402,7 @@ TEST_CASE("vertices_breadth_first_search test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(4 == uid);
       REQUIRE("Würzburg" == vertex_value(g, u));
@@ -410,7 +410,7 @@ TEST_CASE("vertices_breadth_first_search test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(6 == uid);
       REQUIRE("Kassel" == vertex_value(g, u));
@@ -418,7 +418,7 @@ TEST_CASE("vertices_breadth_first_search test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(2 == uid);
       REQUIRE("Karlsruhe" == vertex_value(g, u));
@@ -426,7 +426,7 @@ TEST_CASE("vertices_breadth_first_search test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(5 == uid);
       REQUIRE("Nürnberg" == vertex_value(g, u));
@@ -434,7 +434,7 @@ TEST_CASE("vertices_breadth_first_search test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(7 == uid);
       REQUIRE("Erfurt" == vertex_value(g, u));
@@ -442,7 +442,7 @@ TEST_CASE("vertices_breadth_first_search test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(8 == uid);
       REQUIRE("München" == vertex_value(g, u));
@@ -450,7 +450,7 @@ TEST_CASE("vertices_breadth_first_search test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(3 == uid);
       REQUIRE("Augsburg" == vertex_value(g, u));
@@ -458,7 +458,7 @@ TEST_CASE("vertices_breadth_first_search test", "[dynamic][bfs][vertex]") {
       ++city;
     }
 
-    if(city != bfs.end()) {
+    if (city != bfs.end()) {
       auto&& [uid, u] = *city;
       REQUIRE(9 == uid);
       REQUIRE("Stuttgart" == vertex_value(g, u));
@@ -554,12 +554,11 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("edges_breadth_first_search_view output") {
     edges_breadth_first_search_view<G> bfs(g, frankfurt_id);
-    int                              cnt = 0;
+    int                                cnt = 0;
     cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
     for (auto&& [vid, uv] : bfs) {
       //ostream_indenter indent(static_cast<int>(bfs.depth()));
-      cout << "--> [" << vid << "] " << vertex_value(g, target(g, uv)) << ' ' << edge_value(g, uv) << "km"
-           << endl;
+      cout << "--> [" << vid << "] " << vertex_value(g, target(g, uv)) << ' ' << edge_value(g, uv) << "km" << endl;
       ++cnt;
     }
     REQUIRE(cnt == 9);
@@ -611,7 +610,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
     auto route    = bfs.begin();
     int  city_cnt = 0;
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(1 == vid);
       REQUIRE(85 == edge_value(g, uv));
@@ -620,7 +619,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(4 == vid);
       REQUIRE(217 == edge_value(g, uv));
@@ -629,7 +628,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(6 == vid);
       REQUIRE(173 == edge_value(g, uv));
@@ -638,7 +637,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(2 == vid);
       REQUIRE(80 == edge_value(g, uv));
@@ -647,7 +646,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(5 == vid);
       REQUIRE(103 == edge_value(g, uv));
@@ -656,7 +655,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(7 == vid);
       REQUIRE(186 == edge_value(g, uv));
@@ -665,7 +664,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(8 == vid);
       REQUIRE(502 == edge_value(g, uv));
@@ -674,7 +673,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(3 == vid);
       REQUIRE(250 == edge_value(g, uv));
@@ -683,7 +682,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(9 == vid);
       REQUIRE(183 == edge_value(g, uv));
@@ -696,9 +695,9 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
   }
 #endif
   SECTION("edges_breadth_first_search_view with edge value function") {
-    auto                                            evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
+    auto                                              evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
     edges_breadth_first_search_view<G, decltype(evf)> bfs(g, frankfurt_id, evf);
-    int                                             city_cnt = 0;
+    int                                               city_cnt = 0;
     //cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
     for (auto&& [vid, uv, km] : bfs) {
       //ostream_indenter indent(bfs.size());
@@ -706,7 +705,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
       //cout << "--> [" << vid << "] " << vertex_value(g, target(g, uv)) << ' ' << km << "km" << endl;
       ++city_cnt;
     }
-    
+
     REQUIRE(city_cnt == 9);
     /* Output:
         [0] Frankfürt (seed)
@@ -724,7 +723,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
 
   SECTION("edges_breadth_first_search_view with no-EVF and Sourced") {
     edges_breadth_first_search_view<G, void, true> bfs(g, frankfurt_id);
-    int                                          city_cnt = 0;
+    int                                            city_cnt = 0;
     //cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
     for (auto&& [uid, vid, uv] : bfs) {
       //ostream_indenter indent(bfs.size());
@@ -750,7 +749,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
   SECTION("edges_breadth_first_search_view with EVF and Sourced") {
     auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
     edges_breadth_first_search_view<G, decltype(evf), true> bfs(g, frankfurt_id, evf);
-    int                                                   city_cnt = 0;
+    int                                                     city_cnt = 0;
     //cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
     for (auto&& [uid, vid, uv, km] : bfs) {
       //ostream_indenter indent(bfs.size());
@@ -774,7 +773,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
   }
 
   SECTION("edges_breadth_first_search_view can do cancel_all") {
-    int                              city_cnt = 0;
+    int                                city_cnt = 0;
     edges_breadth_first_search_view<G> bfs(g, frankfurt_id);
     for (auto&& [vid, uv] : bfs) {
       ++city_cnt;
@@ -785,7 +784,7 @@ TEST_CASE("edges_breadth_first_search_view test", "[dynamic][bfs][edge]") {
   }
   SECTION("edges_breadth_first_search_view can do cancel_branch") {
     //cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
-    int                              city_cnt = 0;
+    int                                city_cnt = 0;
     edges_breadth_first_search_view<G> bfs(g, frankfurt_id);
     for (auto&& [vid, uv] : bfs) {
       //ostream_indenter indent(size(bfs));
@@ -848,8 +847,7 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
     cout << "\n[" << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (seed)" << endl;
     for (auto&& [vid, uv] : bfs) {
       //ostream_indenter indent(static_cast<int>(bfs.depth()));
-      cout << "--> [" << vid << "] " << vertex_value(g, target(g, uv)) << ' ' << edge_value(g, uv) << "km"
-           << endl;
+      cout << "--> [" << vid << "] " << vertex_value(g, target(g, uv)) << ' ' << edge_value(g, uv) << "km" << endl;
       ++cnt;
     }
     REQUIRE(cnt == 9);
@@ -897,11 +895,11 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
   }
 #elif TEST_OPTION_TEST
   SECTION("edges_breadth_first_search test content") {
-    auto bfs = edges_breadth_first_search(g, frankfurt_id);
+    auto bfs      = edges_breadth_first_search(g, frankfurt_id);
     auto route    = bfs.begin();
     int  city_cnt = 0;
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(1 == vid);
       REQUIRE(85 == edge_value(g, uv));
@@ -910,7 +908,7 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(4 == vid);
       REQUIRE(217 == edge_value(g, uv));
@@ -919,7 +917,7 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(6 == vid);
       REQUIRE(173 == edge_value(g, uv));
@@ -928,7 +926,7 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(2 == vid);
       REQUIRE(80 == edge_value(g, uv));
@@ -937,7 +935,7 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(5 == vid);
       REQUIRE(103 == edge_value(g, uv));
@@ -946,7 +944,7 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(7 == vid);
       REQUIRE(186 == edge_value(g, uv));
@@ -955,7 +953,7 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(8 == vid);
       REQUIRE(502 == edge_value(g, uv));
@@ -964,7 +962,7 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(3 == vid);
       REQUIRE(250 == edge_value(g, uv));
@@ -973,7 +971,7 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
       ++route;
     }
 
-    if(route != bfs.end()) {
+    if (route != bfs.end()) {
       auto&& [vid, uv] = *route;
       REQUIRE(9 == vid);
       REQUIRE(183 == edge_value(g, uv));
@@ -1087,4 +1085,3 @@ TEST_CASE("edges_breadth_first_search test", "[dynamic][bfs][edge]") {
     REQUIRE(6 == city_cnt);
   }
 }
-

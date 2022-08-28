@@ -41,12 +41,12 @@
 namespace std::graph {
 
 
-/*template <adjacency_graph G>
+/*template <adjacency_list G>
 struct bfs_element {
   vertex_id_t<G> u_id;
 };*/
 
-template <adjacency_graph G, class Queue, class Alloc>
+template <adjacency_list G, class Queue, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class bfs_base : public ranges::view_base {
 public:
@@ -62,13 +62,14 @@ public:
 private:
   using graph_ref_type = reference_wrapper<graph_type>;
   //using queue_elem     = bfs_element<graph_type>;
-  using queue_elem     = vertex_id_type;
+  using queue_elem = vertex_id_type;
 
   using parent_alloc = typename allocator_traits<typename Queue::container_type::allocator_type>::template rebind_alloc<
         vertex_id_type>;
 
 public:
-  bfs_base(graph_type& g, vertex_id_type seed, const Alloc& alloc) : graph_(g), Q_(alloc), colors_(ranges::size(vertices(g)), white, alloc) {
+  bfs_base(graph_type& g, vertex_id_type seed, const Alloc& alloc)
+        : graph_(g), Q_(alloc), colors_(ranges::size(vertices(g)), white, alloc) {
     if (seed < ranges::size(vertices(graph_)) && !ranges::empty(edges(graph_, seed))) {
       uv_ = ranges::begin(edges(graph_, seed));
       Q_.push(queue_elem{seed});
@@ -108,7 +109,7 @@ public:
   ~bfs_base()               = default;
 
   bfs_base& operator=(const bfs_base&) = delete;
-  bfs_base& operator=(bfs_base&&) = default;
+  bfs_base& operator=(bfs_base&&)      = default;
 
   constexpr bool empty() const noexcept { return Q_.empty(); }
 
@@ -138,17 +139,17 @@ protected:
 
   void advance() {
     // current frontier vertex
-    auto u_id = Q_.front();
+    auto           u_id = Q_.front();
     vertex_id_type v_id = real_target_id(*uv_, u_id);
 
     switch (cancel_) {
-    case cancel_search::continue_search:  
+    case cancel_search::continue_search:
       Q_.push(queue_elem{v_id});
       colors_[v_id] = grey; // visited v
       uv_           = find_unvisited(u_id, ++uv_);
       break;
     case cancel_search::cancel_branch:
-      cancel_ = cancel_search::continue_search;
+      cancel_       = cancel_search::continue_search;
       colors_[v_id] = black;
       uv_           = find_unvisited(u_id, ++uv_);
       break; // u will be marked completed below
@@ -176,20 +177,20 @@ protected:
   }
 
 protected:
-  _detail::ref_to_ptr<graph_type&>               graph_;
-  Queue                     Q_;
-  vertex_edge_iterator_t<G> uv_;
-  vector<three_colors>      colors_;
-  cancel_search             cancel_ = cancel_search::continue_search;
+  _detail::ref_to_ptr<graph_type&> graph_;
+  Queue                            Q_;
+  vertex_edge_iterator_t<G>        uv_;
+  vector<three_colors>             colors_;
+  cancel_search                    cancel_ = cancel_search::continue_search;
 };
 
 //---------------------------------------------------------------------------------------
 /// breadth-first search range for vertices, given a single seed vertex.
 ///
 
-template <adjacency_graph G, class VVF = void, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class VVF = void, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-  class vertices_breadth_first_search_view : public bfs_base<G, Queue, Alloc> {
+class vertices_breadth_first_search_view : public bfs_base<G, Queue, Alloc> {
 public:
   using base_type        = bfs_base<G, Queue, Alloc>;
   using graph_type       = G;
@@ -207,25 +208,25 @@ public:
 
 public:
   vertices_breadth_first_search_view(graph_type&    g,
-				     vertex_id_type seed,
-				     const VVF&     value_fn,
-				     const Alloc&   alloc = Alloc())
+                                     vertex_id_type seed,
+                                     const VVF&     value_fn,
+                                     const Alloc&   alloc = Alloc())
         : base_type(g, seed, alloc), value_fn_(&value_fn) {}
   template <class VKR>
   requires ranges::input_range<VKR> && convertible_to<ranges::range_value_t<VKR>, vertex_id_t<G>>
-  vertices_breadth_first_search_view(graph_type&    graph,
-				     const VKR&     seeds,
-				     const VVF&     value_fn,
-				     const Alloc&   alloc = Alloc())
+  vertices_breadth_first_search_view(graph_type&  graph,
+                                     const VKR&   seeds,
+                                     const VVF&   value_fn,
+                                     const Alloc& alloc = Alloc())
         : base_type(graph, seeds), value_fn_(&value_fn) {}
 
-  vertices_breadth_first_search_view()                        = default;
+  vertices_breadth_first_search_view()                                          = default;
   vertices_breadth_first_search_view(const vertices_breadth_first_search_view&) = delete; // can be expensive to copy
   vertices_breadth_first_search_view(vertices_breadth_first_search_view&&)      = default;
-  ~vertices_breadth_first_search_view()                       = default;
+  ~vertices_breadth_first_search_view()                                         = default;
 
   vertices_breadth_first_search_view& operator=(const vertices_breadth_first_search_view&) = delete;
-  vertices_breadth_first_search_view& operator=(vertices_breadth_first_search_view&&) = default;
+  vertices_breadth_first_search_view& operator=(vertices_breadth_first_search_view&&)      = default;
 
 public:
   struct end_sentinel {};
@@ -257,7 +258,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -300,7 +301,7 @@ private:
 };
 
 
-template <adjacency_graph G, class Queue, class Alloc>
+template <adjacency_list G, class Queue, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertices_breadth_first_search_view<G, void, Queue, Alloc> : public bfs_base<G, Queue, Alloc> {
 public:
@@ -317,19 +318,19 @@ public:
 
 public:
   vertices_breadth_first_search_view(graph_type& g, vertex_id_type seed, const Alloc& alloc = Alloc())
-    : base_type(g, seed, alloc) {}
+        : base_type(g, seed, alloc) {}
   template <class VKR>
   requires ranges::forward_range<VKR> && convertible_to<ranges::range_value_t<VKR>, vertex_id_t<G>>
   vertices_breadth_first_search_view(graph_type& g, const VKR& seeds, const Alloc& alloc = Alloc())
-    : base_type(g, seeds, alloc) {}
+        : base_type(g, seeds, alloc) {}
 
-  vertices_breadth_first_search_view()                        = default;
+  vertices_breadth_first_search_view()                                          = default;
   vertices_breadth_first_search_view(const vertices_breadth_first_search_view&) = delete; // can be expensive to copy
   vertices_breadth_first_search_view(vertices_breadth_first_search_view&&)      = default;
-  ~vertices_breadth_first_search_view()                       = default;
+  ~vertices_breadth_first_search_view()                                         = default;
 
   vertices_breadth_first_search_view& operator=(const vertices_breadth_first_search_view&) = delete;
-  vertices_breadth_first_search_view& operator=(vertices_breadth_first_search_view&&) = default;
+  vertices_breadth_first_search_view& operator=(vertices_breadth_first_search_view&&)      = default;
 
 public:
   struct end_sentinel {};
@@ -360,7 +361,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -373,9 +374,9 @@ public:
     }
 
     reference operator*() const noexcept {
-      auto& g             = the_range_->graph_;
-      auto&& u_id         = the_range_->Q_.front();
-      auto&& uvi          = the_range_->uv_;
+      auto&          g    = the_range_->graph_;
+      auto&&         u_id = the_range_->Q_.front();
+      auto&&         uvi  = the_range_->uv_;
       vertex_id_type v_id = the_range_->real_target_id(*uvi, u_id);
       auto&          v    = *find_vertex(g, v_id);
       value_              = {v_id, &v};
@@ -403,11 +404,11 @@ public:
 //---------------------------------------------------------------------------------------
 /// breadth-first search range for edges, given a single seed vertex.
 ///
-template <adjacency_graph G,
-	  class EVF = void,
-	  bool Sourced = false,
-	  class Queue = queue<vertex_id_t<G>>,
-	  class Alloc = allocator<bool>>
+template <adjacency_list G,
+          class EVF    = void,
+          bool Sourced = false,
+          class Queue  = queue<vertex_id_t<G>>,
+          class Alloc  = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class edges_breadth_first_search_view : public bfs_base<G, Queue, Alloc> {
 public:
@@ -429,13 +430,13 @@ public:
   edges_breadth_first_search_view(G& graph, const VKR& seeds, const EVF& value_fn, const Alloc& alloc = Alloc())
         : base_type(graph, seeds, alloc), value_fn_(&value_fn) {}
 
-  edges_breadth_first_search_view()                      = default;
+  edges_breadth_first_search_view()                                       = default;
   edges_breadth_first_search_view(const edges_breadth_first_search_view&) = delete; // can be expensive to copy
   edges_breadth_first_search_view(edges_breadth_first_search_view&&)      = default;
-  ~edges_breadth_first_search_view()                     = default;
+  ~edges_breadth_first_search_view()                                      = default;
 
   edges_breadth_first_search_view& operator=(const edges_breadth_first_search_view&) = delete;
-  edges_breadth_first_search_view& operator=(edges_breadth_first_search_view&&) = default;
+  edges_breadth_first_search_view& operator=(edges_breadth_first_search_view&&)      = default;
 
   struct end_sentinel {};
 
@@ -466,7 +467,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -485,8 +486,8 @@ public:
         value_.source_id = u_id;
       }
       value_.target_id = the_range_->real_target_id(*uvi, u_id);
-      value_.edge  = &*uvi;
-      value_.value = invoke(*the_range_->value_fn_, *uvi);
+      value_.edge      = &*uvi;
+      value_.value     = invoke(*the_range_->value_fn_, *uvi);
       return reinterpret_cast<reference>(value_);
     }
 
@@ -510,7 +511,7 @@ private:
   const EVF* value_fn_ = nullptr;
 };
 
-template <adjacency_graph G, bool Sourced, class Queue, class Alloc>
+template <adjacency_list G, bool Sourced, class Queue, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class edges_breadth_first_search_view<G, void, Sourced, Queue, Alloc> : public bfs_base<G, Queue, Alloc> {
 public:
@@ -522,18 +523,19 @@ public:
   using bfs_range_type      = edges_breadth_first_search_view<G, void, Sourced, Queue, Alloc>;
 
 public:
-  edges_breadth_first_search_view(G& g, vertex_id_type seed, const Alloc& alloc = Alloc()) : base_type(g, seed, alloc) {}
+  edges_breadth_first_search_view(G& g, vertex_id_type seed, const Alloc& alloc = Alloc())
+        : base_type(g, seed, alloc) {}
   template <class VKR>
   requires ranges::forward_range<VKR> && convertible_to<ranges::range_value_t<VKR>, vertex_id_t<G>>
   edges_breadth_first_search_view(G& g, const VKR& seeds, const Alloc& alloc()) : base_type(g, seeds, alloc) {}
 
-  edges_breadth_first_search_view()                      = default;
+  edges_breadth_first_search_view()                                       = default;
   edges_breadth_first_search_view(const edges_breadth_first_search_view&) = delete; // can be expensive to copy
   edges_breadth_first_search_view(edges_breadth_first_search_view&&)      = default;
-  ~edges_breadth_first_search_view()                     = default;
+  ~edges_breadth_first_search_view()                                      = default;
 
   edges_breadth_first_search_view& operator=(const edges_breadth_first_search_view&) = delete;
-  edges_breadth_first_search_view& operator=(edges_breadth_first_search_view&&) = default;
+  edges_breadth_first_search_view& operator=(edges_breadth_first_search_view&&)      = default;
 
   struct end_sentinel {};
 
@@ -563,7 +565,7 @@ public:
     ~iterator()               = default;
 
     iterator& operator=(const iterator&) = default;
-    iterator& operator=(iterator&&) = default;
+    iterator& operator=(iterator&&)      = default;
 
     iterator& operator++() {
       the_range_->advance();
@@ -582,7 +584,7 @@ public:
         value_.source_id = u_id;
       }
       value_.target_id = the_range_->real_target_id(*uvi, u_id);
-      value_.edge = &*uvi;
+      value_.edge      = &*uvi;
       return reinterpret_cast<reference>(value_);
     }
 
@@ -602,48 +604,47 @@ public:
   auto end() const { return end_sentinel(); }
   auto cend() const { return end_sentinel(); }
 };
-} // std::graph
+} // namespace std::graph
 
 namespace std::graph::tag_invoke {
-  // vertices_breadth_first_search CPO
-  TAG_INVOKE_DEF(vertices_breadth_first_search); // vertices_breadth_first_search(g,seed)    -> vertices[vid,v]
-                                                 // vertices_breadth_first_search(g,seed,fn) -> vertices[vid,v,value]
+// vertices_breadth_first_search CPO
+TAG_INVOKE_DEF(vertices_breadth_first_search); // vertices_breadth_first_search(g,seed)    -> vertices[vid,v]
+                                               // vertices_breadth_first_search(g,seed,fn) -> vertices[vid,v,value]
 
-  template <class G, class A>
-  concept _has_vtx_bfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-    {vertices_breadth_first_search(g, seed, alloc)};
-  };
-  template <class G, class VVF, class A>
-  concept _has_vtx_bfs_vvf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const VVF& vvf, const A& alloc) {
-    {vertices_breadth_first_search(g, seed, vvf, alloc)};
-  };
+template <class G, class A>
+concept _has_vtx_bfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
+  {vertices_breadth_first_search(g, seed, alloc)};
+};
+template <class G, class VVF, class A>
+concept _has_vtx_bfs_vvf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const VVF& vvf, const A& alloc) {
+  {vertices_breadth_first_search(g, seed, vvf, alloc)};
+};
 
-  // edges_breadth_first_search CPO
-  //  sourced_edges_breadth_first_search
-  TAG_INVOKE_DEF(edges_breadth_first_search); // edges_breadth_first_search(g,seed)    -> edges[vid,v]
-                                              // edges_breadth_first_search(g,seed,fn) -> edges[vid,v,value]
-  TAG_INVOKE_DEF(
-        sourced_edges_breadth_first_search); // sourced_edges_breadth_first_search(g,seed)    -> edges[uid,vid,v]
-                                             // sourced_edges_breadth_first_search(g,seed,fn) -> edges[uid,vid,v,value]
+// edges_breadth_first_search CPO
+//  sourced_edges_breadth_first_search
+TAG_INVOKE_DEF(edges_breadth_first_search);         // edges_breadth_first_search(g,seed)    -> edges[vid,v]
+                                                    // edges_breadth_first_search(g,seed,fn) -> edges[vid,v,value]
+TAG_INVOKE_DEF(sourced_edges_breadth_first_search); // sourced_edges_breadth_first_search(g,seed)    -> edges[uid,vid,v]
+      // sourced_edges_breadth_first_search(g,seed,fn) -> edges[uid,vid,v,value]
 
-  template <class G, class A>
-  concept _has_edg_bfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-    {edges_breadth_first_search(g, seed, alloc)};
-  };
-  template <class G, class EVF, class A>
-  concept _has_edg_bfs_evf_adl = vertex_range<G> &&
-        requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
-    {edges_breadth_first_search(g, seed, evf, alloc)};
-  };
+template <class G, class A>
+concept _has_edg_bfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
+  {edges_breadth_first_search(g, seed, alloc)};
+};
+template <class G, class EVF, class A>
+concept _has_edg_bfs_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
+  {edges_breadth_first_search(g, seed, evf, alloc)};
+};
 
-  template <class G, class A>
-  concept _has_src_edg_bfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-    {sourced_edges_breadth_first_search(g, seed, alloc)};
-  };
-  template <class G, class EVF, class A>
-  concept _has_src_edg_bfs_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
-    {sourced_edges_breadth_first_search(g, seed, evf, alloc)};
-  };
+template <class G, class A>
+concept _has_src_edg_bfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
+  {sourced_edges_breadth_first_search(g, seed, alloc)};
+};
+template <class G, class EVF, class A>
+concept _has_src_edg_bfs_evf_adl = vertex_range<G> &&
+      requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
+  {sourced_edges_breadth_first_search(g, seed, evf, alloc)};
+};
 
 } // namespace std::graph::tag_invoke
 
@@ -654,7 +655,7 @@ namespace std::graph::views {
 // vertices_breadth_first_search(g,uid)
 // vertices_breadth_first_search(g,uid,vvf)
 //
-template <adjacency_graph G, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
   if constexpr (tag_invoke::_has_vtx_bfs_adl<G, Alloc>)
@@ -663,7 +664,7 @@ constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed, const A
     return vertices_breadth_first_search_view<G, void, Queue>(g, seed, alloc);
 }
 
-template <adjacency_graph G, class VVF, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class VVF, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       is_invocable_v<VVF, vertex_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed, const VVF& vvf, const Alloc& alloc = Alloc()) {
@@ -677,7 +678,7 @@ constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed, const V
 // edges_breadth_first_search(g,uid)
 // edges_breadth_first_search(g,uid,evf)
 //
-template <adjacency_graph G, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
   if constexpr (tag_invoke::_has_edg_bfs_adl<G, Alloc>)
@@ -686,7 +687,7 @@ constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const Allo
     return edges_breadth_first_search_view<G, void, false, Queue>(g, seed, alloc);
 }
 
-template <adjacency_graph G, class EVF, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class EVF, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       is_invocable_v<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, const Alloc& alloc = Alloc()) {
@@ -700,7 +701,7 @@ constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const EVF&
 // sourced_edges_breadth_first_search(g,uid)
 // sourced_edges_breadth_first_search(g,uid,evf)
 //
-template <adjacency_graph G, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto sourced_edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
   if constexpr (tag_invoke::_has_src_edg_bfs_adl<G, Alloc>)
@@ -709,10 +710,11 @@ constexpr auto sourced_edges_breadth_first_search(G&& g, vertex_id_t<G> seed, co
     return edges_breadth_first_search_view<G, void, true, Queue>(g, seed, alloc);
 }
 
-template <adjacency_graph G, class EVF, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class EVF, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-is_invocable_v<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
-constexpr auto sourced_edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, const Alloc& alloc = Alloc()) {
+      is_invocable_v<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
+constexpr auto
+sourced_edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, const Alloc& alloc = Alloc()) {
   if constexpr (tag_invoke::_has_src_edg_bfs_evf_adl<G, EVF, Alloc>)
     return tag_invoke::sourced_edges_breadth_first_search(g, seed, evf, alloc);
   else

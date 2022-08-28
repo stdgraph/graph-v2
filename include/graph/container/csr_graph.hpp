@@ -53,7 +53,11 @@ constexpr auto max_vertex_id(const ERng& erng, const EProj& eprojection) {
 //
 // forward declarations
 //
-template <class EV = bool, class VV = void, class GV = void, integral VId = uint32_t, class Alloc = allocator<uint32_t>>
+template <class EV     = void,               // edge value type
+          class VV     = void,               // vertex value type
+          class GV     = void,               // graph value type
+          integral VId = uint32_t,           // vertex id type
+          class Alloc  = allocator<uint32_t>> // for internal containers
 class csr_graph;
 
 /// <summary>
@@ -142,13 +146,13 @@ public: // Operations
     resize(ranges::size(vrng));
 
     for (auto&& vtx : vrng) {
-      const auto& [id, value] = move(projection(vtx));
+      const auto& [id, value] = projection(vtx);
 
       // if an unsized vrng is passed, the caller is responsible to call
       // resize_vertices(n) with enough entries for all the values.
       assert(static_cast<size_t>(id) < size());
 
-      (*this)[id] = value;
+      (*this)[static_cast<size_t>(id)] = value;
     }
   }
 
@@ -406,12 +410,12 @@ public: // Construction/Destruction
   /// <param name="vprojection">Projection function that creates a copyable_vertex_t<VId,EV> from a vrng value</param>
   /// <param name="alloc">Allocator to use for internal containers</param>
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+  //      copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph_base(const ERng&  erng,
                            const VRng&  vrng,
-                           EProj        eprojection = {},
-                           VProj        vprojection = {},
+                           EProj        eprojection = {}, // eproj(eval) -> {source_id,target_id [,value]}
+                           VProj        vprojection = {}, // vproj(vval) -> {target_id [,value]}
                            const Alloc& alloc       = Alloc())
         : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
 
@@ -462,7 +466,7 @@ public: // Operations
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr void load_vertices(const VRng& vrng, VProj vprojection, size_type vertex_count = 0) {
-    row_values_base::load_row_values(max(vrng, vprojection, vertex_count, ranges::size(vrng)));
+    row_values_base::load_row_values(vrng, vprojection, max(vertex_count, ranges::size(vrng)));
   }
 
   /// <summary>
@@ -808,8 +812,8 @@ public: // Construction/Destruction
   // csr_graph(gv&&, erng, vrng, eprojection, vprojection, alloc)
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+  //      copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph(const ERng&  erng,
                       const VRng&  vrng,
                       EProj        eprojection = {},
@@ -818,8 +822,8 @@ public: // Construction/Destruction
         : base_type(erng, vrng, eprojection, vprojection, alloc) {}
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+  //      copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph(const graph_value_type& value,
                       const ERng&             erng,
                       const VRng&             vrng,

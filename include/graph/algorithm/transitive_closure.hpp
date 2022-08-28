@@ -7,7 +7,7 @@
 
 namespace std::graph {
 
-template <adjacency_graph G>
+template <adjacency_list G>
 struct reaches {
   vertex_id_t<G> from;
   vertex_id_t<G> to;
@@ -18,7 +18,7 @@ struct reaches {
 /// Warshall's algorithm. Complexity is O(n^3).
 //
 // clang-format off
-template <adjacency_graph G, typename OutIter, typename Alloc = allocator<bool>>
+template <adjacency_list G, typename OutIter, typename Alloc = allocator<bool>>
   requires ranges::random_access_range<vertex_range_t<G>> && 
            integral<vertex_id_t<G>> && 
            output_iterator<OutIter, reaches<G>>

@@ -17,7 +17,7 @@
 namespace std::graph {
 
 
-template <adjacency_graph G, bool Sourced = false, class EVF = void>
+template <adjacency_list G, bool Sourced = false, class EVF = void>
 class incidence_iterator;
 
 /// <summary>
@@ -25,11 +25,11 @@ class incidence_iterator;
 /// </summary>
 /// <typeparam name="G">Graph type</typeparam>
 /// <typeparam name="EVF">Edge Value Function</typeparam>
-template <adjacency_graph G, bool Sourced, class EVF>
+template <adjacency_list G, bool Sourced, class EVF>
 class incidence_iterator
-      : source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)> {
+      : source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
@@ -82,7 +82,7 @@ public:
         value_.target_id = source_id(g_, *iter_);
       }
     } else if constexpr (Sourced) {
-      if constexpr (sourced_adjacency_graph<G>) {
+      if constexpr (sourced_adjacency_list<G>) {
         value_.source_id = source_id(g_, *iter_);
         value_.target_id = target_id(g_, *iter_);
       } else {
@@ -120,11 +120,11 @@ private: // member variables
 };
 
 
-template <adjacency_graph G, bool Sourced>
+template <adjacency_list G, bool Sourced>
 class incidence_iterator<G, Sourced, void>
-      : public source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)> {
+      : public source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type      = G;
   using vertex_type     = vertex_t<graph_type>;
@@ -168,7 +168,7 @@ public:
 public:
   constexpr reference operator*() const {
     if constexpr (unordered_edge<G, edge_type>) {
-      static_assert(sourced_adjacency_graph<G>);
+      static_assert(sourced_adjacency_list<G>);
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
         value_.source_id = source_id(g_.*iter_);
         value_.target_id = target_id(g_, *iter_);
@@ -177,7 +177,7 @@ public:
         value_.target_id = source_id(g_, *iter_);
       }
     } else if constexpr (Sourced) {
-      if constexpr (sourced_adjacency_graph<G>) {
+      if constexpr (sourced_adjacency_list<G>) {
         value_.source_id = source_id(g_, *iter_);
         value_.target_id = target_id(g_, *iter_);
       } else {
@@ -235,7 +235,7 @@ namespace std::graph::views {
 //
 // incidence(g,uid)
 //
-template <adjacency_graph G>
+template <adjacency_list G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_id_t<G> uid) {
   if constexpr (std::graph::tag_invoke::_has_incidence_g_uid_adl<G>)
@@ -248,7 +248,7 @@ constexpr auto incidence(G&& g, vertex_id_t<G> uid) {
 //
 // incidence(g,uid,evf)
 //
-template <adjacency_graph G, class EVF>
+template <adjacency_list G, class EVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto incidence(G&& g, vertex_id_t<G> uid, const EVF& evf) {
   if constexpr (std::graph::tag_invoke::_has_incidence_g_uid_evf_adl<G, EVF>)

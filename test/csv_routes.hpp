@@ -28,6 +28,8 @@
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/incidence.hpp"
+#include "graph/views/depth_first_search.hpp"
+#include "graph/views//depth_first_search.hpp"
 #include <set>
 #include <map>
 #include <deque>
@@ -539,6 +541,50 @@ void output_routes_graphviz_adjlist(
       from = to;
     }
     of << std::endl;
+  }
+  of << "}\n";
+}
+
+
+template <class G>
+void output_routes_graphviz_dfs_vertices(
+      const G&                   g,
+      std::string_view           filename,
+      std::graph::vertex_id_t<G> seed,
+      std::string_view bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
+) {
+  using namespace std::graph;
+  using namespace std::graph::views;
+  using namespace std::literals;
+  std::string   fn(filename);
+  std::ofstream of(fn);
+  assert(of.is_open());
+  //of << "\xEF\xBB\xBF"; // UTF-8 lead chars for UTF-8 including BOM
+  //of << "\xBB\xBF"; // UTF-8 lead chars for UTF-8
+
+  // nodesep=0.5; doesn't help
+  std::vector<bool> visited;
+  visited.resize(size(vertices(g)));
+
+  of << "digraph routes {\n"
+     << "  overlap = scalexy\n"
+     << "  graph[rankdir=LR]\n"
+     << "  edge[arrowhead=vee]\n";
+  if (!bgcolor.empty())
+    of << "  bgcolor=" << bgcolor << "\n";
+
+  // output seed
+  of << "  " << seed << " [shape=Mrecord, label=\"{<f0>" << seed << "|<f1>" << vertex_value(g, *find_vertex(g, seed))
+     << "}\"]\n";
+
+  // output descendents
+  for (auto&& [uid, vid, uv] : std::graph::views::sourced_edges_depth_first_search(g, seed)) {
+    // Output newly discovered vertex
+    if (!visited[vid]) {
+      of << "  " << vid << " [shape=Mrecord, label=\"{<f0>" << vid << "|<f1>" << vertex_value(g, *find_vertex(g,uid)) << "}\"]\n";
+      visited[vid] = true;
+    }
+    of << "  " << uid << " -> " << vid << "\n"; // output the edge
   }
   of << "}\n";
 }

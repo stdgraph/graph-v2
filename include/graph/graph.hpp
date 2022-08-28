@@ -66,7 +66,7 @@ concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized
 };
 
 template <class G, class E>
-concept targeted_edge = requires(G&& g, E& uv) {
+concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
   target_id(g, uv);
   target(g, uv);
 };
@@ -83,8 +83,8 @@ inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
 
 
 template <class G>
-concept adjacency_graph = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(
-      G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid, ranges::range_reference_t<vertex_edge_range_t<G>> uv) {
+concept adjacency_list = vertex_range<G> && targeted_edge<G, edge_t<G>> &&
+      requires(G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid) {
   { edges(g, u) } -> ranges::forward_range;
   { edges(g, uid) } -> ranges::forward_range;
 };
@@ -92,7 +92,7 @@ concept adjacency_graph = vertex_range<G> && targeted_edge<G, edge_t<G>> && requ
 //      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
 template <class G>
-concept sourced_adjacency_graph = adjacency_graph<G> && sourced_edge<G, edge_t<G>> &&
+concept sourced_adjacency_list = adjacency_list<G> && sourced_edge<G, edge_t<G>> &&
       requires(G&& g, edge_reference_t<G> uv) {
   edge_id(g, uv);
 };
@@ -137,10 +137,10 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
 /// If a graph container implementation has a run-time property of ordered or
 /// unordered (e.g. it can't be determined at compile-time) then unordered_edge<G,E>
 /// should be true_type. The only consequence is that an additional if is done to
-/// check whether source_id or target_id is used for the target in this library. 
+/// check whether source_id or target_id is used for the target in this library.
 /// The container implementation can still preserve its implementation of order,
 /// assuming it always includes a source_id on the edge.
-/// 
+///
 /// Example:
 ///  namespace my_namespace {
 ///      template <class T>
@@ -172,7 +172,7 @@ concept unordered_edge = is_unordered_edge_v<G, E>;
 // is_ordered_edge, ordered_edge
 //
 template <class G, class E>
-struct is_ordered_edge : public negation<is_unordered_edge<G,E>> {};
+struct is_ordered_edge : public negation<is_unordered_edge<G, E>> {};
 
 template <class G, class E>
 inline constexpr bool is_ordered_edge_v = is_ordered_edge<G, E>::value;

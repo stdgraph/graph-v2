@@ -8,7 +8,8 @@ namespace std::graph {
 
 template <class G, class F>
 concept edge_weight_function = // e.g. weight(uv)
-      copy_constructible<F> && regular_invocable<F&, edge_reference_t<G>>;
+      copy_constructible<F> &&
+      is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
 
 class null_range_type : public std::vector<size_t> {
   using T         = size_t;
@@ -42,18 +43,21 @@ constexpr auto print_types(Ts...) {
 
 
 // The index into weight vector stored as the first property
-template <adjacency_graph             G,
-          ranges::random_access_range DM,
-          ranges::random_access_range PM,
-          class WF = std::function<ranges::range_value_t<DM>(edge_reference_t<G>)>>
-requires edge_weight_function<G, WF> && is_arithmetic_v<invoke_result_t<WF, edge_reference_t<G>>> &&
-      ranges::random_access_range<vertex_range_t<G>> && is_arithmetic_v<vertex_id_t<G>>
+template <adjacency_list             G,
+          ranges::random_access_range Distance,
+          ranges::random_access_range Predecessor,
+          class WF = std::function<ranges::range_value_t<Distance>(edge_reference_t<G>)>>
+requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
+      is_arithmetic_v<ranges::range_value_t<Distance>> &&
+      convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && edge_weight_function<G, WF>
+
 void dijkstra_clrs(
-      G&&            g,      //
-      vertex_id_t<G> source, //
-      DM&            distance,
-      PM&            predecessor,
-      WF             weight = [](edge_reference_t<G> uv) { return ranges::range_value_t<DM>(1); }) {
+      G&&            g,                                  // graph
+      vertex_id_t<G> seed,                               // starting vertex_id
+      Distance&      distance,                           // out: distance[uid] of uid from seed
+      Predecessor&   predecessor,                        // out: predecessor[uid] of uid in path
+      WF             weight = [](edge_reference_t<G> uv) // default weght(uv) -> 1
+      { return ranges::range_value_t<Distance>(1); }) {
 
   using id_type     = vertex_id_t<G>;
   using weight_type = invoke_result_t<WF, edge_reference_t<G>>;
@@ -61,10 +65,10 @@ void dijkstra_clrs(
   // Remark(Andrew): Do we want to allow null distance?  What about if both are null?  Still run algorithm at all?
 
   size_t N(size(vertices(g))); // Question(Andrew): Do we want a num_vertices(g) CPO?
-  assert(source < N && source >= 0);
+  assert(seed < N && seed >= 0);
 
   std::ranges::fill(distance, numeric_limits<weight_type>::max());
-  distance[source] = 0;
+  distance[seed] = 0;
 
   struct weighted_vertex {
     id_type     vertex_id = id_type();
@@ -77,7 +81,7 @@ void dijkstra_clrs(
   std::priority_queue<weighted_vertex, vector<weighted_vertex>, q_compare> Q;
 
   // Remark(Andrew):  CLRS puts all vertices in the queue to start but standard practice seems to be to enqueue source
-  Q.push({source, distance[source]});
+  Q.push({seed, distance[seed]});
 
   while (!Q.empty()) {
 
@@ -88,7 +92,7 @@ void dijkstra_clrs(
       //weight_type w = weight(uv);
       if (distance[uid] + w < distance[vid]) {
         distance[vid] = distance[uid] + w;
-        if constexpr (!is_same_v<PM, null_range_type>)
+        if constexpr (!is_same_v<Predecessor, null_range_type>)
           predecessor[vid] = uid;
         Q.push({vid, distance[vid]});
       }

@@ -49,5 +49,6 @@ packages/
 doc/*.pdf
 doc/*.gz
 
-#Ignore test output
+#Ignore test & example output
 test/output/
+example/CppCon2022/output/

@@ -108,7 +108,7 @@ struct shortest_path
 
 //! Internal implementation of the Dijstra algorithm.
 //!
-template <adjacency_graph G, typename DistFnc, typename DistanceT, typename A = allocator<DistanceT>>
+template <adjacency_list G, typename DistFnc, typename DistanceT, typename A = allocator<DistanceT>>
 class dijkstra_fn {
   enum colors : int8_t {
     white, // undiscovered
@@ -267,7 +267,7 @@ protected:
 
 //! Internal implementation of the Bellman-Ford algorithm.
 //!
-template <adjacency_graph G, typename DistFnc, typename DistanceT, typename A = allocator<DistanceT>>
+template <adjacency_list G, typename DistFnc, typename DistanceT, typename A = allocator<DistanceT>>
 class bellman_ford_fn {
   struct vertex_dist { // --> template<G,DistanceT> path_detail; move outside function
     vertex_key_t<G> vtx_key  = numeric_limits<vertex_key_t<G>>::max();
@@ -436,7 +436,7 @@ protected:
 //! @param alloc       The allocator to use for internal containers.
 //
 // clang-format off
-template <adjacency_graph G, 
+template <adjacency_list G, 
           typename        OutIter, 
           typename        DistFnc, 
           typename        A = allocator<char>>
@@ -477,7 +477,7 @@ void dijkstra_shortest_distances(
 //! @param alloc       The allocator to use for internal containers.
 //
 // clang-format off
-template <adjacency_graph G, 
+template <adjacency_list G, 
           typename        OutIter, 
           typename        DistFnc, 
           typename        A = allocator<char>>
@@ -524,7 +524,7 @@ void dijkstra_shortest_paths(
 //!                    detect_neg_edge_cycles is true.
 //
 // clang-format off
-template <adjacency_graph G, 
+template <adjacency_list G, 
           typename        OutIter, 
           typename        DistFnc, 
           typename        A = allocator<char>>
@@ -575,7 +575,7 @@ bool bellman_ford_shortest_distances(
 //!                    detect_neg_edge_cycles is true.
 //!
 // clang-format off
-template <adjacency_graph G, 
+template <adjacency_list G, 
           typename        OutIter, 
           typename        DistFnc, 
           typename        A = allocator<char>>

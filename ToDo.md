@@ -20,21 +20,21 @@
 ## Open
 
 ### ToDo 
-- API
+- Graph API
   - [ ] Common
-    - [x] Apply tag_invoke design in P2300
+    - [ ] Apply tag_invoke design in P2300 [wait to see if we want to use tag_invoke]
   - [x] Ranges
   - [ ] Concepts and type_traits
-    - [x] graph: adjacency_graph, sourced_adjacency_graph, adjacency_matrix, undirected_incidence_graph
+    - [x] graph: adjacency_list, sourced_adjacency_list, adjacency_matrix, undirected_incidence_graph
     - [ ] **view concepts: vertex_view, edge_view, neighbor_view returned from graph views**
     - [ ] **function concepts: VVF, EVF**
   - [ ] Graph API
     - [ ] depth() CPO? bfs, dfs. size() is different; depth for BFS takes extra work and is diff concept.
     - [x] cancel() CPO? bfs, dfs: no, member only
-    - [ ] replace is_undirected_edge_v<G> & undirected_incidence_graph<G> with is_unordered_edge_v<G>
+    - [x] replace is_undirected_edge_v<G> & undirected_incidence_graph<G> with is_unordered_edge_v<G>
   - [ ] Views
-    - [ ] view classes should be in std::graph
-    - [ ] view functions should be in std::graph::view
+    - [x] view classes should be in std::graph
+    - [x] view functions should be in std::graph::view
     - [ ] add range overloads to appropriate views (DFS, BFS, topo_sort, etc.)
     - [ ] vertexlist
       - [ ] Copy VVF to iterator (not reference)
@@ -114,9 +114,8 @@
         - [ ] dfs_transitive_closure
         - [ ] warshall_transitive_closure (single-threaded)
           - [x] implement
-          - [ ] validate & add unit
-        - [ ] warshall_transitive_closure (parallel)
-- Containers (data structures)
+          - [ ] validate & add unit tests
+- Graph Containers (data structures)
     - [x] csr_graph (for P1709)
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [x] Support VV=void
@@ -129,10 +128,10 @@
       - [ ] graph with map-based vertices (requires different algorithm impl)
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] constexpr graph based on std::array
-    - [ ] partite_csr_graph<EV,VV,GV,VId,Alloc> where EV & VV are tuples of the sample size, and each element defines the type used in the partition
+    - [ ] **csr_partite_graph<EV,VV,GV,VId,Alloc>** where EV & VV are tuples of the sample size, and each element defines the type used in the partition
     - [ ] undirected_adjacency_list<EV,VV,GV,VId,Alloc>
     - [x] directed_adjacency_vector (retired)
-    - [ ] adaptor for range of ranges (e.g. vector\<list\<T\>\>)
+    - [ ] adaptor for range of ranges (e.g. vector\<list\<T\>\>) [see rr_adaptor in ./test]
 - [ ] Testing Patterns
   - [x] Validate content
   - [ ] Validate graph API

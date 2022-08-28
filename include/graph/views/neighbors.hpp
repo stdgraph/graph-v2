@@ -16,7 +16,7 @@
 namespace std::graph {
 
 
-template <adjacency_graph G, bool Sourced = false, class VVF = void>
+template <adjacency_list G, bool Sourced = false, class VVF = void>
 class neighbor_iterator;
 
 
@@ -25,11 +25,11 @@ class neighbor_iterator;
 /// </summary>
 /// <typeparam name="G">Graph type</typeparam>
 /// <typeparam name="VVF">Edge Value Function</typeparam>
-template <adjacency_graph G, bool Sourced, class VVF>
+template <adjacency_list G, bool Sourced, class VVF>
 class neighbor_iterator
-      : public source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)> {
+      : public source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type            = G;
   using vertex_type           = vertex_t<graph_type>;
@@ -78,7 +78,7 @@ public:
     // shadow_vertex_type has correct constness based on the G template parameter
 
     if constexpr (unordered_edge<G, edge_type>) {
-      static_assert(sourced_adjacency_graph<G>);
+      static_assert(sourced_adjacency_list<G>);
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
         value_.source_id = source_id(g_.*iter_);
         value_.target_id = target_id(g_, *iter_);
@@ -89,7 +89,7 @@ public:
         value_.target    = const_cast<shadow_vertex_type*>(&source(g_, *iter_));
       }
     } else if constexpr (Sourced) {
-      if constexpr (sourced_adjacency_graph<G>) {
+      if constexpr (sourced_adjacency_list<G>) {
         value_.source_id = source_id(g_, *iter_);
         value_.target_id = target_id(g_, *iter_);
       } else {
@@ -128,11 +128,11 @@ private: // member variables
 };
 
 
-template <adjacency_graph G, bool Sourced>
+template <adjacency_list G, bool Sourced>
 class neighbor_iterator<G, Sourced, void>
-      : public source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)> {
+      : public source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_graph<G>) || unordered_edge<G, edge_t<G>>)>;
+  using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type            = G;
   using vertex_type           = vertex_t<graph_type>;
@@ -179,7 +179,7 @@ public:
     // shadow_vertex_type has correct constness based on the G template parameter
 
     if constexpr (unordered_edge<G, edge_type>) {
-      static_assert(sourced_adjacency_graph<G>);
+      static_assert(sourced_adjacency_list<G>);
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
         value_.source_id = source_id(g_.*iter_);
         value_.target_id = target_id(g_, *iter_);
@@ -190,7 +190,7 @@ public:
         value_.target    = const_cast<shadow_vertex_type*>(&source(g_, *iter_));
       }
     } else if constexpr (Sourced) {
-      if constexpr (sourced_adjacency_graph<G>) {
+      if constexpr (sourced_adjacency_list<G>) {
         value_.source_id = source_id(g_, *iter_);
         value_.target_id = target_id(g_, *iter_);
       } else {
@@ -227,7 +227,7 @@ private: // member variables
 };
 
 
-template <adjacency_graph G, bool Sourced, class VVF>
+template <adjacency_list G, bool Sourced, class VVF>
 using neighbors_view = ranges::subrange<neighbor_iterator<G, Sourced, VVF>, vertex_edge_iterator_t<G>>;
 } // namespace std::graph
 
@@ -250,7 +250,7 @@ namespace std::graph::views {
 //
 // neighbors(g,uid)
 //
-template <adjacency_graph G>
+template <adjacency_list G>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_id_t<G> uid) {
   if constexpr (std::graph::tag_invoke::_has_neighbors_g_uid_adl<G>)
@@ -265,7 +265,7 @@ constexpr auto neighbors(G&& g, vertex_id_t<G> uid) {
 //
 // neighbors(g,uid,vvf)
 //
-template <adjacency_graph G, class VVF>
+template <adjacency_list G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>>
 constexpr auto neighbors(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
   if constexpr (std::graph::tag_invoke::_has_neighbors_g_uid_evf_adl<G, VVF>)

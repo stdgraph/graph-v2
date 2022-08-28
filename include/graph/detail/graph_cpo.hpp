@@ -138,7 +138,7 @@ auto find_vertex(G&& g, vertex_id_t<G> uid) {
   if constexpr (tag_invoke::_has_find_vertex_adl<G>)
     return tag_invoke::find_vertex(g, uid);
   else if constexpr (ranges::random_access_range<vertex_range_t<G>>)
-    return begin(vertices(g)) + uid;
+    return begin(vertices(g)) + static_cast<ranges::range_difference_t<vertex_range_t<G>>>(uid);
 }
 
 //

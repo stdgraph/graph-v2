@@ -37,7 +37,7 @@ namespace std::graph {
 /// <summary>
 /// The element in a depth-first search stack.
 /// </summary>
-template <adjacency_graph G>
+template <adjacency_list G>
 struct dfs_element {
   vertex_id_t<G>            u_id;
   vertex_edge_iterator_t<G> uv;
@@ -47,7 +47,7 @@ struct dfs_element {
 /// depth-first search view for vertices, given a single seed vertex.
 ///
 
-template <adjacency_graph G, class Stack, class Alloc>
+template <adjacency_list G, class Stack, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class dfs_base : public ranges::view_base {
 public:
@@ -70,7 +70,7 @@ private:
 public:
   dfs_base(graph_type& g, vertex_id_type seed, const Alloc& alloc)
         : graph_(g), S_(alloc), colors_(ranges::size(vertices(g)), white, alloc) {
-    if (seed < ranges::size(vertices(graph_)) && !ranges::empty(edges(graph_, seed))) {
+    if (seed < static_cast<vertex_id_type>(ranges::size(vertices(graph_))) && !ranges::empty(edges(graph_, seed))) {
       edge_iterator uvi = ranges::begin(edges(graph_, seed));
       S_.push(stack_elem{seed, uvi});
       colors_[seed] = grey;
@@ -185,7 +185,7 @@ protected:
 /// depth-first search range for vertices, given a single seed vertex.
 ///
 
-template <adjacency_graph G, class VVF = void, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class VVF = void, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertices_depth_first_search_view : public dfs_base<G, Stack, Alloc> {
 public:
@@ -288,7 +288,7 @@ private:
 };
 
 
-template <adjacency_graph G, class Stack, class Alloc>
+template <adjacency_list G, class Stack, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertices_depth_first_search_view<G, void, Stack, Alloc> : public dfs_base<G, Stack, Alloc> {
 public:
@@ -384,7 +384,7 @@ public:
 //---------------------------------------------------------------------------------------
 /// depth-first search view for edges, given a single seed vertex.
 ///
-template <adjacency_graph G,
+template <adjacency_list G,
           class EVF    = void,
           bool Sourced = false,
           class Stack  = stack<dfs_element<G>>,
@@ -486,7 +486,7 @@ private:
   const EVF* value_fn_ = nullptr;
 };
 
-template <adjacency_graph G, bool Sourced, class Stack, class Alloc>
+template <adjacency_list G, bool Sourced, class Stack, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class edges_depth_first_search_view<G, void, Sourced, Stack, Alloc> : public dfs_base<G, Stack, Alloc> {
 public:
@@ -624,7 +624,7 @@ namespace std::graph::views {
 // vertices_depth_first_search(g,uid,alloc)
 // vertices_depth_first_search(g,uid,vvf,alloc)
 //
-template <adjacency_graph G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
   if constexpr (std::graph::tag_invoke::_has_vtx_dfs_adl<G, Alloc>)
@@ -633,7 +633,7 @@ constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const All
     return vertices_depth_first_search_view<G, void, Stack>(g, seed, alloc);
 }
 
-template <adjacency_graph G, class VVF, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class VVF, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       invocable<VVF, vertex_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const VVF& vvf, const Alloc& alloc = Alloc()) {
@@ -647,7 +647,7 @@ constexpr auto vertices_depth_first_search(G&& g, vertex_id_t<G> seed, const VVF
 // edges_depth_first_search(g,uid,alloc)
 // edges_depth_first_search(g,uid,evf,alloc)
 //
-template <adjacency_graph G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
   if constexpr (std::graph::tag_invoke::_has_edg_dfs_adl<G, Alloc>)
@@ -656,7 +656,7 @@ constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc&
     return edges_depth_first_search_view<G, void, false, Stack>(g, seed, alloc);
 }
 
-template <adjacency_graph G, class EVF, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class EVF, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       invocable<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, const Alloc& alloc = Alloc()) {
@@ -670,7 +670,7 @@ constexpr auto edges_depth_first_search(G&& g, vertex_id_t<G> seed, const EVF& e
 // sourced_edges_depth_first_search(g,uid,alloc)
 // sourced_edges_depth_first_search(g,uid,evf,alloc)
 //
-template <adjacency_graph G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
   if constexpr (std::graph::tag_invoke::_has_src_edg_dfs_adl<G, Alloc>)
@@ -679,7 +679,7 @@ constexpr auto sourced_edges_depth_first_search(G&& g, vertex_id_t<G> seed, cons
     return edges_depth_first_search_view<G, void, true, Stack>(g, seed, alloc);
 }
 
-template <adjacency_graph G, class EVF, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class EVF, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
       invocable<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto

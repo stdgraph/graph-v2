@@ -6,7 +6,7 @@
 #include("Catch.cmake")
 
 add_compile_definitions(TEST_DATA_ROOT_DIR="${TEST_DATA_ROOT_DIR}")
-add_compile_definitions(TEST_OUTPUT_ROOT_DIR="${TEST_OUTPUT_ROOT_DIR}/output/")
+add_compile_definitions(TEST_OUTPUT_ROOT_DIR="${TEST_EXAMPLE_ROOT_DIR}/output/")
 
 
 add_library(catch_main STATIC catch_main.cpp "csv_routes.hpp")
@@ -18,7 +18,7 @@ add_executable(tests tests.cpp "examples.cpp"
                                "csv_routes_vofl_tests.cpp" "csv_routes.hpp"  "csv_routes.cpp" "csv_routes_dov_tests.cpp" "csv_routes_csr_tests.cpp" 
                                "vertexlist_tests.cpp" "incidence_tests.cpp"  "neighbors_tests.cpp"  "edgelist_tests.cpp" 
                                "shortest_paths_tests.cpp" "transitive_closure_tests.cpp" "dfs_tests.cpp" "bfs_tests.cpp"
-                               "germany_routes_example.cpp")
+                               )
 target_link_libraries(tests PRIVATE project_warnings project_options catch_main Catch2::Catch2 graph)
 target_link_libraries(tests PRIVATE fmt::fmt)
 target_link_libraries(tests PRIVATE csv_parser)

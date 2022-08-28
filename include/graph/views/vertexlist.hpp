@@ -21,12 +21,12 @@
 //
 namespace std::graph {
 
-template <adjacency_graph G, class VVF = void>
+template <adjacency_list G, class VVF = void>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertexlist_iterator;
 
 
-template <adjacency_graph G, class VVF>
+template <adjacency_list G, class VVF>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertexlist_iterator {
 public:
@@ -99,7 +99,7 @@ protected:
 };
 
 
-template <adjacency_graph G>
+template <adjacency_list G>
 requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertexlist_iterator<G, void> {
 public:
@@ -170,7 +170,7 @@ protected:
 };
 
 
-template <adjacency_graph G, class VVF = void>
+template <adjacency_list G, class VVF = void>
 using vertexlist_view = ranges::subrange<vertexlist_iterator<G, VVF>, vertex_iterator_t<G>>;
 }
 
@@ -225,7 +225,7 @@ namespace std::graph::views {
 //
 // vertexlist(g [,proj])
 //
-template <adjacency_graph G>
+template <adjacency_list G>
 constexpr auto vertexlist(G&& g) {
   if constexpr (std::graph::tag_invoke::_has_vertexlist_g_adl<G>)
     return std::graph::tag_invoke::vertexlist(forward<G>(g));
@@ -233,7 +233,7 @@ constexpr auto vertexlist(G&& g) {
     return vertexlist_view<G>(vertices(forward<G>(g)));
 }
 
-template <adjacency_graph G, class VVF>
+template <adjacency_list G, class VVF>
 requires invocable<VVF, vertex_reference_t<G>>
 constexpr auto vertexlist(G&& g, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
@@ -247,7 +247,7 @@ constexpr auto vertexlist(G&& g, const VVF& value_fn) {
 //
 // vertexlist(g, first, last [,proj])
 //
-template <adjacency_graph G>
+template <adjacency_list G>
 requires ranges::random_access_range<vertex_range_t<G>>
 constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
   using iterator_type = vertexlist_iterator<G>;
@@ -257,7 +257,7 @@ constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G
     return vertexlist_view<G>(iterator_type(first, static_cast<vertex_id_t<G>>(first - begin(vertices(g)))), last);
 }
 
-template <adjacency_graph G, class VVF>
+template <adjacency_list G, class VVF>
 requires ranges::random_access_range<vertex_range_t<G>> && invocable<VVF, vertex_reference_t<G>>
 constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
   using iterator_type = vertexlist_iterator<G, VVF>;
@@ -272,7 +272,7 @@ constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G
 //
 // vertexlist(g, ur, [,proj])
 //
-template <adjacency_graph G, ranges::random_access_range VR>
+template <adjacency_list G, ranges::random_access_range VR>
 requires ranges::random_access_range<vertex_range_t<G>>
 constexpr auto vertexlist(G&& g, VR&& vr) {
   using iterator_type = vertexlist_iterator<G>;
@@ -286,7 +286,7 @@ constexpr auto vertexlist(G&& g, VR&& vr) {
   }
 }
 
-template <adjacency_graph G, ranges::random_access_range VR, class VVF>
+template <adjacency_list G, ranges::random_access_range VR, class VVF>
 requires invocable<VVF, vertex_reference_t<G>> &&
       convertible_to<ranges::iterator_t<VR>, vertex_iterator_t<G>> // allow for ranges::subrange of vertices
 constexpr auto vertexlist(G&& g, VR&& vr, const VVF& value_fn) {
