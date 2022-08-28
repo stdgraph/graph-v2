@@ -35,7 +35,8 @@ sudo apt install python3-pip
 pip install conan (re-login to have $HOME/.local/bin added to $PATH)
 code . (automatically downloads & installs vscode)
 
-git clone git@github.com:pratzl/graph-v2.git
+# Clone and get csv-parser
+git clone git@github.com:stdgraph/graph-v2.git
 cd graph-v2
 git submodule update --init --recursive
 

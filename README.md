@@ -3,180 +3,133 @@
 **[This library is in the alpha stage that may include significant changes to the interface. It is not recommended for general use.]**
 
 ## Overview
-This prototype library is an implementation of the proposed Graph Library for ISO Standard C++ as described in [P1709](http://wg21.link/P1709). 
-It has gone through major revisions since it was first introduced in 2019. While the hope is that we have settled on a useful and acceptable
-design, it is still being refined. Comments and questions are welcome and can be directed to phil.ratzloff@sas.com.
+This library designed to provide a useful set of algorithms, views and container(s) for graphs. It also defines
+a core Graph Container Interface that provide the basis of interacting with an abstract adjacency list graph, and 
+to provide easy integration with external adjacency list graphs.
+
+bi-partite and n-partite graphs are under investigation.
+
+Hyper-graphs are outside the scope of this project.
+
+Comments and questions are welcome and can be directed to phil.ratzloff@sas.com.
 
 ### Purpose
-The purpose of the library is to provide a foundation for graph algorithms and data structures with the same goals of the original
-STL, where graph algorithms written for the library can work against indepdendent graph data structures that support the core graph 
-API functions. It includes some common algorithms, views and a graph data structure with the belief that it will grow with time.
+This prototype library is an implementation of the proposed Graph Library for ISO Standard C++ as described in P1709. 
+It has gone through major revisions since it was first introduced in 2019. While we are comfortable of the core design, there is
+still plenty of activity being done and refinements made in its design and implementation. Experimenting with this library is 
+encouraged, keeping in mind that breaking changes are expected.
 
 ### Goals
 The goals of the library include:
-1. Support creation of high-performance algorithms that are as good as the existing state-of-the art, or better.
+1. Support creation of high-performance, state-of-the-art algorithms.
 2. Syntax that is simple, expressive and easy to understand when writing algorithms.
-3. Present different views of incidence graphs that are commonly used by the algorithms (incidence, neighbors [adjacency], 
-   edge-list).
-4. Support optional, user-defined value_types for an edge, vertex and graph.
-5. Easy integration of existing graph data structures.
-6. Be able to extend the design for future standardization, or for uses outside the standard. For instance:
+3. Define useful concepts and traits that can be used by algorithms to describe their requirements.
+4. Support views for graph traversal commonly used by algorithms.
+5. Support optional, user-defined value_types for an edge, vertex and graph.
+5. Easy integration of existing graph containers.
+6. Have an open design to allow for extensions in the future: 
 
-   a. All algorithms in the standard will only support vertices in random-access containers. However, graph algorithms and 
-      data structures outside of the standard may use a map, unordered_map or other data structure and the design should 
-      support that use.
+   a. Support for partite (partitioned) graphs. This requires extending (changing?) the Graph Container Interface.
+      This is under investigation.
 
-   b. All algorithms in the standard require an integral vertex id. However, graph algorithms and data structures 
-      outside of the standard may use a string or compound type and the design should support that use.
+   b. Support the incoming edges on a vertex (e.g. bidirectional graphs).
 
-   c. While vertices only have "outgoing" edges in the standard because most algorithms only require that, bi-directional 
-      graphs with both incoming and outgoing edges can also exist and the design should should be extensible to support
-      that.
-
-7. Define useful traits and concepts that can be used by algorithms to describe their requirements, and provide expected
-   and optimized results.
-8. Provide initial functionality that is useful that includes graph algorithms, views, API, and data structure.
-
+   c. Investigate features that might make the Interface useful outside P1709, such as sparse vertex_ids.
+      This can help validate the existing design and guide decisions for the future.
+   
 ## Getting Started
-### Build & Run Requirements
-This is being actively developed with the latest releases of MSVC (VS2022) on Windows and gcc (11) on Linux. Other releases
-or compilers may or may not work.
+This is being actively developed with the latest releases of MSVC (VS2022) on Windows and gcc (11) on Linux. 
+Other releases or compilers may or may not work.
 
-At the time of this writing Clang doesn't have a \<concepts\> header and so it hasn't been used. It will be added to the
-test suite after it has the header and fully supports concepts.
+### Prerequesites
+1. C++20 compliant compiler that fully supports concepts and ranges.
+2. CMake 20 or later (for CMake Presets)
+3. ninja build
+4. Python3
+5. Conan package manager (Python: pip install conan)
 
-#### Prerequesites
-1. C++20 compliant compiler that fully supports concepts and ranges. 
-   gcc 11 and the latest version of MSVC have been used for development. 
-   Others may also work but haven't been tested.
-2. gdb
-3. CMake 20 or later (needed for CMake Presets)
-4. ninja-build
-5. clang-format
-6. Python3
-7. Conan package manager (Python: pip install conan)
+### Install Dependencies
 
-#### Cloning & Building
+#### On Ubuntu 22
+```bash
+sudo apt install build-essential gdb cmake ninja-build python3-pip
+pip3 install conan
+```
 
-```C++
-git clone https://github.com/pratzl/graph-v2.git
+#### On Windows
+
+### Get graph-v2 Source
+```bash
+git clone https://github.com/stdgraph/graph-v2.git
 cd graph-v2
+
+# The csv-parser is a sub-module used for loading test data
 git submodule update --init --recursive
+```
+
+### Build graph-v2
+#### On Ubuntu 22
+```bash
 mkdir build
 cd build
 cmake ../???
 make
 ```
 
+#### On Windows
+
+### Editor/IDE Configuration
 You'll need to assure CMake Presets are enabled in your IDE or other development tool. 
 See https://docs.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170 for configuring Microsoft tools.
 
-The following library(s) are dependencies and are loaded as git sub-modules
-
-1. csv-parser
-
-The following libraries will automatically be installed by Conan
-
-1. Catch2 unit test framework
-2. Boost
-3. docopt
-4. fmt
-5. range-v3
-6. spdlog
-
 ## Description
-
-### Naming Conventions
-
-Template parameters:
-
-| Abbr     | Description                                                                     | 
-| :--------| :-------------------------------------------------------------------------------|
-| G        | Graph                                                                           |
-| GV       | Graph Value (user-defined or void)                                              |
-| GVF      | Graph Value Function: gvf(g) -> value; declval(value) may be different than GV  |
-| V        | Vertex type                                                                     |
-| VId      | Vertex id type                                                                  |
-| VV       | Vertex Value (user-defined or void)                                             |
-| VVF      | Vertex Value Function: vvf(u) -> value; declval(value) may be different than VV |
-| VR       | Vertex Range                                                                    |
-| E        | Edge type                                                                       |
-| EV       | Edge Value (user-defined or void)                                               |
-| ER       | Edge Range                                                                      |
-| EVF      | Edge Value Function: evf(uv) -> value; declval(value) may be different than EV  |
-
-Function Parameters:
-
-| Abbr         | Description                            | 
-| :------------| :--------------------------------------|
-| g            | graph reference                        |
-| u, v, x, y   | vertex reference                       |
-| uid, vid     | vertex ids                             |
-| ui,vi        | vertex iterators                       |
-| uv           | edge reference                         |
-| uvi          | edge iterator                          |
-
-### Graph Views
-
-#### vertexlist View
-#### incidence and sourced_incidence_Views
-#### neighbors and sourced_neighbors View (adjacency)
-#### edgelist View
-
-### Graph Range Algorithms
-
-#### Depth-First Search
-dfs_vertex_range
-dfs_edge_range
-
-#### Breadth-First Search
-bfs_vertex_range
-bfs_edge_range
+In the following tables, P1709 identifies that the feature is in the P1709 proposal. A value of "TBD" indicates that it
+is being considered, subject to the size of the proposal and other priorities.
 
 ### Graph Algorithms
 
-#### Shortest Paths
-vertex_path_t
-vertex_path_range
-edge_path_t
-edge_path_range
-shortest_path
+| Algorithm                       | P1709 | Status                                                                          | 
+| :-------------------------------| :---- | :-------------------------------------------------------------------------------|
+| Dijkstra Shortest Paths         | Yes   | dijkstra_clrs: needs review                                                     |
+| Bellman-Ford Shortest Paths     | Yes   | needs implementation                                                            |
+| Connected Components            | Yes   | needs implementation                                                            |
+| Strongly Connected Components   | Yes   | needs implementation                                                            |
+| Bi-Connected Components         | Yes   | needs implementation                                                            |
+| Articulation Points             | Yes   | needs implementation                                                            |
+| Minimum Spanning Tree           | Yes   | needs implementation                                                            |
+| Page Rank                       | TBD   | needs implementation                                                            |
+| Betweenness Centrality          | TBD   | needs implementation                                                            |
+| Triangle Count                  | TBD   | needs implementation                                                            |
+| Subgraph Isomorphism            | TBD   | needs implementation                                                            |
+| Kruskell Minimum Spanning Tree  | TBD   | needs implementation                                                            |
+| Prim Minimum Spanning Tre       | TBD   | needs implementation                                                            |
+| Louvain (Community Detection)   | TBD   | needs implementation                                                            |
+| Label propagation (Comm. Detection) | TBD   | needs implementation                                                        |
 
-dijkstra_shortest_paths
-bellman_ford_shortest_paths
 
-#### Components
+### Graph Views
 
-component
-bicomponent
+| View                            | Done? | Description                                                                     | 
+| :-------------------------------| :---- | :-------------------------------------------------------------------------------|
+| vertexlist                      | Yes   | Iterates over vertices                                                          |
+| incidence                       | Yes   | Iterates over outgoing edges of a vertex                                        |
+| neighbors                       | Yes   | Iterates over outgoing neighbor vertices of a vertex                            |
+| edgelist                        | Yes   | Iterates over edges of a graph                                                  |
+| depth_first_search              | Yes   | Iterates over vertices or edges of a seed vertex in depth-first order           |
+| breadth_first_search            | Yes   | Iterates over vertices or edges of a seed vertex in breadth-first order         |
+| topological_sort                | No    | Iterates over vertices or edges of a seed vertex in topological sort order      |
 
-connected_components
-strongly_connected_components
-biconnected_components
-articulation_points
+### Graph Containers
 
-#### Transitive Closure
-
-reaches
-dfs_transitive_closure
-warshall_transitive_closure
-
-### Graph API
-
-#### Types
-#### Traits & Concepts
-#### Functions
-#### Integrating with Existing Graphs
-
-### Graph Data Structures
-
-#### csr_graph
-
-#### dynamic_graph
+| Container                       | P1709 | Description                                                                     | 
+| :-------------------------------| :---- | :-------------------------------------------------------------------------------|
+| csr_graph                       | Yes   | Compresed Sparse Row graph. High performance, static structure.                 |
+| csr_partite_graph               | No    | Partitioned graph. Needs investigation.                                         |
+| dynamic_graph                   | No    | Easy to use different containers for vertices and edges.                        |
 
 
 ## Thanks to:
-Andrew Lumsdaine and the NWGraph team for numerous insights and collaborations with their C++20 
+The NWGraph team for all their collaborations and support, along with providing the algorithm implementations
 [NWGraph Library](https://github.com/NWmath/NWgr)
 
 Numerous comments and support from the Machine Learning study group (SG19) in the ISO C++ Standards

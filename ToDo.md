@@ -6,8 +6,8 @@
   - [ ] **Publish graph-v2 github repository**
     - [x] add license file (boost)
     - [ ] README.md completion
-    - [ ] Views: bfs + dfs
-    - [ ] Algorithms: dijkstra + warshall_transitive_closure
+    - [x] Views: bfs + dfs
+    - [x] Algorithms: dijkstra + warshall_transitive_closure
     - [ ] Validate Sphinx output is OK
 - [ ] Acceptance of P1709 by SG19 (Machine Learning): goal by Dec-2022
 - [ ] Acceptance of P1709 by SG6 (Numerics)
