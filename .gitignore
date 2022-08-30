@@ -59,3 +59,17 @@ doc/latex/*.toc
 test/output/
 example/CppCon2022/output/
 
+checks.json
+
+# Sphinx related
+.DS_Store
+__pycache__
+_build
+_doxygen
+_api
+
+# Demo / Benchmark related
+# *.tsv
+# *.csv
+# *.mtx
+
