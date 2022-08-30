@@ -152,7 +152,7 @@ exhale_args = {
     HIDE_UNDOC_CLASSES     = YES
     HIDE_UNDOC_MEMBERS     = YES
     '''),
-    "verboseBuild": True,
+    # "verboseBuild": True,
     "listingExclude": [ r'.*_tag_invoke*', 'edge_list_c' ],
     "unabridgedOrphanKinds": { "namespace", "page" }
 }
