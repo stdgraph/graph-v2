@@ -46,9 +46,16 @@ packages/
 .vs/
 
 #Ignore generated doc files (for now)
-doc/*.pdf
-doc/*.gz
+doc/latex/*.pdf
+doc/latex/*.gz
+doc/latex/*.dvi
+doc/latex/*.log
+doc/latex/*.blg
+doc/latex/*.bbl
+doc/latex/*.out
+doc/latex/*.toc
 
 #Ignore test & example output
 test/output/
 example/CppCon2022/output/
+
