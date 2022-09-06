@@ -1,10 +1,3 @@
-# automatically enable catch2 to generate ctest targets
-
-# Catch.cmake is in C:/Users/pratz/.conan/data/catch2/2.13.7/_/_/package/5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9/lib/cmake/Catch2
-#message("CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}" )
-#find_file(ctch "Catch.cmake" REQUIRED) # this succeeds
-#include("Catch.cmake")
-
 add_compile_definitions(TEST_DATA_ROOT_DIR="${TEST_DATA_ROOT_DIR}")
 add_compile_definitions(TEST_OUTPUT_ROOT_DIR="${TEST_EXAMPLE_ROOT_DIR}/output/")
 
@@ -22,11 +15,9 @@ add_executable(tests tests.cpp "examples.cpp"
                                "vertexlist_tests.cpp" "incidence_tests.cpp"  "neighbors_tests.cpp"  "edgelist_tests.cpp" 
                                "shortest_paths_tests.cpp" "transitive_closure_tests.cpp" "dfs_tests.cpp" "bfs_tests.cpp"
                                )
+
 target_link_libraries(tests PRIVATE project_warnings project_options catch_main Catch2::Catch2 graph)
 target_link_libraries(tests PRIVATE fmt::fmt)
-# target_link_libraries(tests PRIVATE csv_parser)
-#target_link_libraries(tests PRIVATE graph)
-#target_link_libraries(tests PRIVATE graph_adaptor)
 target_include_directories(tests 
     INTERFACE ${Catch2_INCLUDE_DIRS_DEBUG} 
     INTERFACE ${CSVPARSER_INCLUDE_DIR}

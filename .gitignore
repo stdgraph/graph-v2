@@ -52,3 +52,6 @@ doc/*.gz
 #Ignore test & example output
 test/output/
 example/CppCon2022/output/
+
+#Ignore externals directory
+externals/

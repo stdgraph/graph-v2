@@ -1,7 +1,7 @@
 include(FetchContent)
 set(FETCHCONTENT_QUIET ON)
 
-message(STATUS "Cloning External Project: csv_parser")
+message(STATUS "Cloning External Project: csv-parser")
 get_filename_component(FC_BASE "../externals"
                 REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
 set(FETCHCONTENT_BASE_DIR ${FC_BASE})
@@ -19,3 +19,5 @@ if(NOT csv_parser_POPULATED)
   )
 endif()
 set(CSVPARSER_INCLUDE_DIR "${csv_parser_SOURCE_DIR}/single_include")
+
+FetchContent_MakeAvailable(csv_parser)
