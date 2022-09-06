@@ -82,8 +82,9 @@ include(cmake/Conan.cmake)
 run_conan()
 
 # Add other libraries
-add_library(csv_parser INTERFACE)
-target_include_directories(csv_parser INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/csv-parser/")
+include(${PROJECT_SOURCE_DIR}/cmake/CSVParser.cmake)
+# add_library(csvparser INTERFACE)
+# target_include_directories(csv_parser INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/csv-parser/")
 
 add_library(graph INTERFACE)
 target_include_directories(graph INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
