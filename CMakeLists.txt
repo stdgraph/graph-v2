@@ -32,7 +32,7 @@ endif()
 add_library(project_warnings INTERFACE)
 
 # enable cache system
-include(cmake/Cache.cmake)
+# include(cmake/Cache.cmake)
 
 # Add linker configuration
 include(cmake/Linker.cmake)
@@ -73,21 +73,18 @@ if (ENABLE_PCH)
     <utility>)
 endif()
 
-# Set up some extra Conan dependencies based on our needs before loading Conan
-set(CONAN_EXTRA_REQUIRES "")
-set(CONAN_EXTRA_OPTIONS "")
-set(CONAN_DISABLE_CHECK_COMPILER ON)
 
-include(cmake/Conan.cmake)
-run_conan()
-
-# Add other libraries
-add_library(csv_parser INTERFACE)
-target_include_directories(csv_parser INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/csv-parser/")
+# Add libraries
+include(${PROJECT_SOURCE_DIR}/cmake/FetchBoost.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/FetchCatch.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/FetchDocopt.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/FetchFMT.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/FetchCSVParser.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/FetchRange.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/FetchSPDLog.cmake)
 
 add_library(graph INTERFACE)
 target_include_directories(graph INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
-#target_link_libraries(graph INTERFACE CONAN_PKG::range-v3)
 
 if(ENABLE_TESTING)
   enable_testing()

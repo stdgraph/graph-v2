@@ -45,15 +45,12 @@ Other releases or compilers may or may not work.
 1. C++20 compliant compiler that fully supports concepts and ranges.
 2. CMake 20 or later (for CMake Presets)
 3. ninja build
-4. Python3
-5. Conan package manager (Python: pip install conan)
 
 ### Install Dependencies
 
 #### On Ubuntu 22
 ```bash
-sudo apt install build-essential gdb cmake ninja-build python3-pip
-pip3 install conan
+sudo apt install build-essential gdb cmake ninja-build
 ```
 
 #### On Windows
@@ -62,9 +59,6 @@ pip3 install conan
 ```bash
 git clone https://github.com/stdgraph/graph-v2.git
 cd graph-v2
-
-# The csv-parser is a sub-module used for loading test data
-git submodule update --init --recursive
 ```
 
 ### Build graph-v2
@@ -72,7 +66,7 @@ git submodule update --init --recursive
 ```bash
 mkdir build
 cd build
-cmake ../???
+cmake ..
 make
 ```
 
@@ -139,7 +133,7 @@ Bob Steagal for his [gcc-builder & clang-builder scripts](https://github.com/Bob
 
 Jason Turner for his [cpp_starter_project](https://github.com/lefticus/cpp_starter_project)
 
-René FerdinandRivera Morell for his [duck_invoke](https://github.com/bfgroup/duck_invoke), an implementation
+Renï¿½ FerdinandRivera Morell for his [duck_invoke](https://github.com/bfgroup/duck_invoke), an implementation
 of tag_invoke ([P1895](https://wg21.link/P1895)) that works for both gcc and msvc. Minor modifications have
 been made so it it in the std namespace.
 

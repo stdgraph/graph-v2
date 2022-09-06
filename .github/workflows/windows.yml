@@ -6,6 +6,9 @@ on:
   push:
     branches: [ master ]
 
+  pull_request:
+    branches: [ master ]
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -15,7 +18,7 @@ jobs:
   build:
     # https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/
     if: "!contains(github.event.commits[0].message, '[skip windows]')"
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:        
@@ -23,17 +26,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-
-      - run: pip3 install conan
-        shell: bash
       
       - name: Configure cmake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B ${{github.workspace}}/build
+        run: cmake -B ${{github.workspace}}/build -D CMAKE_BUILD_TYPE=Release
         
       - name: Build all applications
         run: cmake --build ${{github.workspace}}/build
-      
-      - name: Run the algorithm
-        run: ${{github.workspace}}\build\bin\Debug\sssp.exe ${{github.workspace}}\datasets\chesapeake\chesapeake.mtx

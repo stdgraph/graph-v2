@@ -73,3 +73,5 @@ _api
 # *.csv
 # *.mtx
 
+#Ignore externals directory
+externals/

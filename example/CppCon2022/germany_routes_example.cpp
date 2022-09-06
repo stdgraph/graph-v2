@@ -73,8 +73,8 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
                                 "Nürnberg",  "Kassel",   "Erfurt",    "München",  "Stuttgart"};
 
   // edge data (edgelist)
-  using route_data                    = copyable_edge_t<city_id_type, double>; // {source_id, target_id, value}
-  vector<route_data> segments_doubled = {
+  using route_data                  = copyable_edge_t<city_id_type, double>; // {source_id, target_id, value}
+  vector<route_data> routes_doubled = {
         {0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, //
         {1, 0, 85.0},  {1, 2, 80.0},                 //
         {2, 1, 80.0},  {2, 3, 250.0},                //
@@ -92,10 +92,10 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
     city_id_type target_id = 0;
     double       distance  = 0.0; // km
   };
-  using RR = vector<list<route>>; // range of ranges
-  using G  = rr_adaptor<RR, city_names_type>;
+  using AdjList = vector<list<route>>;                  // range of ranges
+  using G       = rr_adaptor<AdjList, city_names_type>; // graph
 
-  G g(city_names, segments_doubled);
+  G g(city_names, routes_doubled);
 
   // Useful demo values
   city_id_type          frankfurt_id = 0;
@@ -125,7 +125,7 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
 
   // Shortest Paths (km)
   {
-    auto                        weight = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
+    auto                        weight = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); }; // { return 1; };
     std::vector<double>         distance(size(vertices(g)));
     std::vector<vertex_id_t<G>> predecessor(size(vertices(g)));
     dijkstra_clrs(g, frankfurt_id, distance, predecessor, weight);
@@ -136,23 +136,23 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
         cout << "  --> " << city_id(g, uid) << " - " << distance[uid] << "km" << endl;
     }
 
-    // Find furtherest distance
-    vertex_id_t<G> furtherest_id   = frankfurt_id;
-    double         furtherest_dist = 0.0;
+    // Find farthest city
+    vertex_id_t<G> farthest_id   = frankfurt_id;
+    double         farthest_dist = 0.0;
     for (vertex_id_t<G> uid = 0; uid < size(vertices(g)); ++uid) {
-      if (distance[uid] > furtherest_dist) {
-        furtherest_dist = distance[uid];
-        furtherest_id   = uid;
+      if (distance[uid] > farthest_dist) {
+        farthest_dist = distance[uid];
+        farthest_id   = uid;
       }
     }
 
-    // Output path for furtherest distance
-    cout << "The furtherest city from " << city(g, frankfurt_id) << " is " << city(g, furtherest_id) << " at "
-         << distance[furtherest_id] << "km" << endl;
-    cout << "The shortest path from " << city(g, furtherest_id) << " to " << city(g, frankfurt_id) << " is: " << endl
+    // Output path for farthest distance
+    cout << "The farthest city from " << city(g, frankfurt_id) << " is " << city(g, farthest_id) << " at "
+         << distance[farthest_id] << "km" << endl;
+    cout << "The shortest path from " << city(g, farthest_id) << " to " << city(g, frankfurt_id) << " is: " << endl
          << "  ";
-    for (vertex_id_t<G> uid = furtherest_id; uid != frankfurt_id; uid = predecessor[uid]) {
-      if (uid != furtherest_id)
+    for (vertex_id_t<G> uid = farthest_id; uid != frankfurt_id; uid = predecessor[uid]) {
+      if (uid != farthest_id)
         cout << " -- ";
       cout << city_id(g, uid);
     }
