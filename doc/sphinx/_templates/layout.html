@@ -1,0 +1,27 @@
+{% if meta is defined and meta is not none and meta.layout is defined%}
+{%- extends (meta.layout+".html")|default('!layout.html') %}
+{% else %}
+{%- extends "!layout.html" %}
+{% endif %}
+
+{% block rootrellink %}
+        <li><a href="{{ pathto('index') }}">NW Graph home</a>&#160;|</li>
+        <li><a href="{{ pathto('contents') }}">Documentation</a> &#187;</li>
+{% endblock %}
+
+{% block header %}
+<div class="pageheader">
+  <ul>
+    <li><a href="{{ pathto('index') }}">Home</a></li>
+    <li><a href="{{ pathto('usage/installation') }}">Get it</a></li>
+    <li><a href="{{ pathto('contents') }}">Docs</a></li>
+    <li><a href="{{ pathto('develop') }}">Extend/Develop</a></li>
+  </ul>
+  <div>
+    <a href="{{ pathto('index') }}">
+      <img src="{{ pathto('_static/nwgraph.png', 1) }}" alt="NW Graph" height="96px"/>
+    </a>
+  </div>
+</div>
+{% endblock %}
+

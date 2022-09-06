@@ -46,12 +46,32 @@ packages/
 .vs/
 
 #Ignore generated doc files (for now)
-doc/*.pdf
-doc/*.gz
+doc/latex/*.pdf
+doc/latex/*.gz
+doc/latex/*.dvi
+doc/latex/*.log
+doc/latex/*.blg
+doc/latex/*.bbl
+doc/latex/*.out
+doc/latex/*.toc
 
 #Ignore test & example output
 test/output/
 example/CppCon2022/output/
+
+checks.json
+
+# Sphinx related
+.DS_Store
+__pycache__
+_build
+_doxygen
+_api
+
+# Demo / Benchmark related
+# *.tsv
+# *.csv
+# *.mtx
 
 #Ignore externals directory
 externals/
