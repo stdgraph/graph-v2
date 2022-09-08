@@ -181,12 +181,6 @@ This document proposes the addition of \textbf{graph algorithms}, \textbf{graph 
 Graphs, used in ML and other \textbf{scientific} domains, as well as \textbf{industrial} and \textbf{general} programming, do \textbf{not} presently exist in the C++ standard. In ML, a graph forms the underlying structure of an \textbf{artificial neural network} (ANN). In a \textbf{game}, a graph can be used to
 represent the \textbf{map} of a game world. In \textbf{business} environments, graphs arise as \textbf{entity relationship diagrams} (ERD) or \textbf{data flow diagrams} (DFD). In the realm of \textbf{social media}, a graph represents a \textbf{social network}.
 
-\subsection{Impact on the Standard}
-This proposal is a pure \textbf{library} extension.
-
-\subsection{Interaction wtih Other Papers}
-There is no interaction with other proposals to the standard.
-
 \subsection{Goals and Priorities}
 \begin{itemize}
 \item Follow the separation of algorithms, ranges, views and containers established by the standard library.
@@ -215,20 +209,77 @@ This paper limits itself to adjacency graphs only, including an outer range of v
 
 \hl{Bipartite graphs} are being investigated. A general design has been established and it needs to be implemented to validate that it will work and see what areas of the design are impacted.
 
-Hypergraphs are not supported.
-
 Parallel versions of the algorithms are not included for several reasons. The executors proposal in P2300r5 \cite{REF_P2300r5} is expected to introduce new and better ways to do parallel algorithms beyond that used in the parallel STL algorithms and we would like to wait for finalization of that proposal before committing to parallel implementations. Secondly, many graph algorithms don't benefit from parallel implementations so there is less need to offer an implementation. Lastly, it will help limit the size of this proposal which is already looking to be large without it. It is expected that future proposals will be submitted for parallel graph algorithms. 
 
-\subsection{Prior Art}
-boost::graph \\
-\hl{Other?}
+Hypergraphs are not supported.
 
-\subsubsection{Inspiration}
-NWGraph
+\subsection{Impact on the Standard}
+This proposal is a pure \textbf{library} extension.
+
+\subsection{Interaction wtih Other Papers}
+There is no interaction with other proposals to the standard.
+
+\subsection{Implementation experience}
+The github \href{https://github.com/stdgraph}{stdgraph} repository contains an implementation for this proposal.
+
+\subsection{Usage experience}
+\subsection{Deployment experience}
+\subsection{Performance considerations}
+The algorithms are being ported from NWGraph to the \href{https://github.com/stdgraph}{stdgraph} implementation used for this proposal. Performance analysis from those algorithms can be found in the peer-reviewed paper for NWGraph \cite{REF_nwgraph_paper}.
+
+\subsection{Prior Art}
+\textbf{boost::graph} has been an important C++ graph implementation since 2001. It was developed with the goal to provide
+a modern library that addressed all the needs someone would want of a graph library. It is still a viable library used today,
+attesting to the value it brings.
+
+However, boost::graph was written using C++98 and added many unneccesary abstractions that makes it difficult
+to use by a casual developer. 
+
+Andrew is a co-author of boost::graph.
+\\
+
+\textbf{NWGraph} (\cite{REF_nwgraph_library} and \cite{REF_nwgraph_paper}) was published in 2022
+by Andrew et al, bringing additional experience gained since creating boost::graph, to create a modern graph library that
+was more accessible to the average developer using C++20 to create a simpler interface with the latest algorithms.
+
+While NWGraph made
+important strides, there are some areas that don't conform to established expectations in the Standard Library. Examples
+include using parameter packs to define multiple value types for an edge, rather than a single type; a focus on only defing value types on edges, but not vertices or the graph. it has no defined way to
+integrate existing graph containers to be used by the algorithms.
+\\
+
+This proposal takes the best of NWGraph, with work by Phil to define a Graph Container Interface, to provide a library that
+embraces performance, ease-of-use and the ability to use the algorithms and views on externally defined graph containers.
 
 \subsection{Alternatives}
+There are no known alternative graph library we're aware of that meets the same requirements and uses concepts and ranges from C++20.
 
-\subsection{Future Directions}
+%Later revisions should include this:
+%\subsection{Changes Library Evolution previously requested}
+
+\subsection{Feature test macro}
+The \tcode{__cpp_lib_graph} feature test macro is recommended to represent all features in this proposal including algorithms, views, concepts, traits, types, functions and graph container(s).
+
+Future features could extend the name for new features. For instance, \tcode{__cpp_lib_graph_partite_container} could be used if an n-partite graph container were added in later C++ versions.
+
+\subsection{Freestanding}
+We believe this library can be used in a freestanding C++ implementation.
+
+\subsection{Namespaces}
+Graph containers and their views and algorithms are not interchangeable with existing containers and algorithms.
+It is believed that they are unique enough to warrant their own namespaces and is used in this proposal.
+\begin{itemize}
+\item[]\tcode{std::graph}
+\item[]\tcode{std::graph::views}
+\end{itemize}
+
+\noindent
+Alternative locations for the above respective namespaces could also be as follows:
+\begin{itemize}
+\item[]\tcode{std}, or \tcode{std::ranges}
+\item[]\tcode{std::ranges::views}
+\end{itemize}
+
 
 % algorithms: 
 % views: 
@@ -392,6 +443,12 @@ Specializations are defined with \tcode{V}=void or \tcode{VV}=void to suppress t
 \end{center}
 \end{table}
 
+A useful type alias for copying vertex values (excluding the vertex reference) is also available.
+\begin{lstlisting}
+template <class VId, class VV>
+using copyable_vertex_t = vertex_view<VId, void, VV>; // {id, value}
+\end{lstlisting}
+
 \paragraph{\tcode{struct edge_view<VId, Sourced, E, EV>}}\label{edge-view}\mbox{} \\
 \tcode{edge_view} is used to return edge information. It is used by \tcode{incidence(g,u)}, \tcode{edgelist(g)}, \tcode{edges_breadth_first_search(g,u)}, \tcode{edges_depth_first_search(g,u)} and others. When \tcode{Sourced}=true, the \tcode{source_id} member is included with type \tcode{VId}. The \tcode{target_id} member always exists.
 
@@ -430,6 +487,13 @@ Specializations are defined with \tcode{Sourced}=true\(|\)false, \tcode{E}=void 
 \label{tab:edge-view}
 \end{center}
 \end{table}
+
+A useful type alias for copying edge values (excluding the edge reference) is also available.
+\begin{lstlisting}
+template <class VId, class EV>
+using copyable_edge_t = edge_view<VId, true, void, EV>; // {source_id, target_id [, value]}
+\end{lstlisting}
+
 
 \paragraph{\tcode{struct neighbor_view<VId, Sourced, V, VV>}}\label{neighbor-view}\mbox{} \\
 \tcode{neighbor_view} is used to return information for a neighbor vertex, through an edge. It is used by \tcode{neighbors(g,u)}. When \tcode{Sourced}=true, the \tcode{source_id} member is included with type \tcode{VId}. The \tcode{target_id} member always exists.
@@ -714,7 +778,10 @@ Sourced edges have a source\_id on them in addition to a target\_id. A \tcode{so
     \tcode{targeted_edge<G>} & \tcode{target_id(g,uv)} and \tcode{target(g,uv)} exist\\
     \tcode{sourced_edge<G>} & \tcode{source_id(g,uv)} and \tcode{source(g,uv)} exist\\
     \tcode{adjacency_list<G>} & \tcode{vertex_range<G>} and \tcode{targeted_edge<G,edge<G>>} and \tcode{edges(g,_)} functions return a forward\_range\\
-    \tcode{sourced_adjacency_list<G>} & \tcode{adjacency_list<G>} and \tcode{sourced_edge<G, edge_t<G>>} and \tcode{edge_id(g,uv)} exists \\
+    \tcode{sourced_adjacency_list<G>} & \tcode{adjacency_list<G>} and \tcode{sourced_edge<G, edge_t<G>>} and     \tcode{edge_id(g,uv)} exists \\
+\hline
+    \tcode{copyable_vertex<T,VId,VV>} & \tcode{convertible_to<T, copyable_vertex_t<VId, VV>>} \\
+    \tcode{copyable_edge<T,Vid,EV>} & \tcode{convertible_to<T, copyable_edge_t<VId, EV>>} \\
 \hline
 \end{tabular}}
 \caption{Graph Container Interface Concepts}
@@ -859,15 +926,60 @@ Edgelists are assumed to be either be an edgelist view of an adjacency graph, or
 \subsection{Graph Container Implementation}
 
 \subsubsection{csr\_graph Graph Container}
-The csr\_graph is a high-performance, static graph container that uses \href{https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_\%28CSR\%2C_CRS_or_Yale_format\%29}{Compressed Sparse Row} format to store it's vertices, edges and associated values. Once constructed, it cannot be modified.
+The csr\_graph is a high-performance graph container that uses \href{https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_\%28CSR\%2C_CRS_or_Yale_format\%29}{Compressed Sparse Row} format to store it's vertices, edges and associated values. Once constructed, vertices and edges cannot be added or deleted but values on vertices and edges can be modified.
+\\
+
+The following listing shows the public interface for the \tcode{csr_graph}. 
+
+When a value type template argument (EV, VV, GV) is void then no extra overhead is incurred for it. The selection of the VId template argument impacts the inter storage requirements. If you have a small graph where the number of vertices is less than 256, and the number of edges is less than 256, then a \tcode{uint8_t} would be sufficient.
+
+Only the constructors, destructor and assignment operators for \tcode{csr_graph} are public. No other member functions or types are exposed. All other types are only accessible through the types and functions in the Graph Container Interface.
+
+The \tcode{ERng} template parameter is assumed to be a range of \tcode{copyable_edge_t<VId,EV>}. If it isn't, an \tcode{EProj} projection function must be passed to to convert the ERng value type to a \tcode{copyable_edge_t<VId,EV>}.
+
+Likewise, the \tcode{VRng} template parameter is assumed to be a range of \tcode{copyable_vertex_t<VId,VV>}. If it isn't, a \tcode{VProj} projection function must be passed to convert the VRng value type to a \tcode{copyable_vertex_t<VId,VV>}.
 
 \begin{lstlisting}
-template <class    EV    = void, 
-          class    VV    = void, 
-          class    GV    = void, 
+template <class    EV    = void,  // Edge Value type
+          class    VV    = void,  // Vertex Value type
+          class    GV    = void,  // Graph Value type
           integral VId   = uint32_t, 
           class    Alloc = allocator<uint32_t>>
-class csr_graph;
+class csr_graph {
+public:
+  constexpr csr_graph()                 = default;
+  constexpr csr_graph(const csr_graph&) = default;
+  constexpr csr_graph(csr_graph&&)      = default;
+  constexpr ~csr_graph()                = default;
+
+  constexpr csr_graph& operator=(const csr_graph&) = default;
+  constexpr csr_graph& operator=(csr_graph&&)      = default;
+  
+  // edge-only construction
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  constexpr csr_graph(const ERng&  erng, 
+                      EProj        eprojection, 
+                      const Alloc& alloc = Alloc());
+
+  // edge and vertex value construction
+  template <ranges::forward_range ERng, 
+            ranges::forward_range VRng, 
+            class                 EProj = identity, 
+            class                 VProj = identity>
+  requires 
+        copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  constexpr csr_graph(const ERng&  erng,
+                      const VRng&  vrng,
+                      EProj        eprojection = {},
+                      VProj        vprojection = {},
+                      const Alloc& alloc       = Alloc());
+
+  // initializer list using edge_view<VId,true,void,EV>
+  constexpr csr_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, 
+                      const Alloc& alloc = Alloc());
+};
 \end{lstlisting}
 
 \subsubsection{csr\_partite\_graph Graph Container (In Design)}
@@ -892,51 +1004,14 @@ for(size_t p = 0; p < partition_size(g); ++p) {
 
 \section{Design - Graph Container Author}
 \subsection{Customization Points}
-\phil{Describe CPO's in general that can apply to both niebloids and tag\_invoke. tag\_invoke may have some controversy because it is so new.}
-
-We follow the lead of P2300r5 \cite{REF_P2300r5} section 5.9 for our implementation of customization points. The text in this section has been taken from that paper and modified to be specific to graphs.
-
-The contemporary technique for customization in the Standard Library is customization point objects. A customization point object, will it look for member functions and then for nonmember functions with the same name as the customization point, and calls those if they match. This is the technique used by the C++20 ranges library. However, it has several unfortunate consequences:
-
+Customization Points can be implemented in one of three ways:
 \begin{enumerate}
-\item It does not allow for easy propagation of customization points unknown to the adaptor to a wrapped object, which makes writing 
-universal adapter types much harder - and this proposal uses quite a lot of those.
-
-\item It effectively reserves names globally. Because neither member names nor ADL-found functions can be qualified with a namespace, 
-every customization point object that uses the ranges scheme reserves the name for all types in all namespaces.
+\item A static function object that can be overridden by using ADL. This is the current technique used in existing standard libraries.
+\item \href{https://wg21.link/P2547}{P2547 Language Support for Customisable Functions}, an active proposal for C++26.
+\item \href{https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1895r0.pdf}{P1895 tag\_invoke: A general pattern for supporting customisable functions}. This has been dismissed as a viable solution for use in the standard for a variety of reasons identified in in P2547.
 \end{enumerate}
 
-This paper proposes to instead use the mechanism described in \href{https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1895r0.pdf}{tag\_invoke: A general pattern for supporting customisable functions}:
-\tcode{tag_invoke}; the wording for \tcode{tag_invoke} has been incorporated into the proposed specification in this paper.
-
-In short, instead of using globally reserved names, \tcode{tag_invoke} uses the type of the customization point object itself as the mechanism to find customizations. 
-It globally reserves only a single name - \tcode{tag_invoke} - which itself is used the same way that ranges-style customization points are used. All other customization 
-points are defined in terms of \tcode{tag_invoke}. For example, the customization for \tcode{std::graph::vertices(g)} will call 
-\tcode{tag_invoke(std::graph::vertices, g)}, instead of attempting to invoke \tcode{g.vertices()}, and then \tcode{vertices(g)} if the member call is not valid.
-
-Using \tcode{tag_invoke} has the following benefits:
-
-\begin{enumerate}
-\item It reserves only a single global name, instead of reserving a global name for every customization point object we define.
-
-\item It is possible to propagate customizations to a subobject, because the information of which customization point is being resolved is in the type of an argument, and not in the name of the function:
-
-\begin{lstlisting}
-// forward most customizations to a subobject
-template<typename Tag, typename ...Args>
-friend auto tag_invoke(Tag && tag, wrapper & self, Args &&... args) {
-    return std::forward<Tag>(tag)(self.subobject, std::forward<Args>(args)...);
-}
-
-// but override one of them with a specific value
-friend auto tag_invoke(specific_customization_point_t, wrapper & self) {
-    return self.some_value;
-}
-\end{lstlisting}
-
-\item It is possible to pass those as template arguments to types, because the information of which customization point is being resolved is in the type. 
-
-\end{enumerate}
+We are monitoring the progress of P2547 and will use that if is accepted into the Standard. In the interim, the current library prototype implementation is using \tcode{tag_invoke} for convenience, but it will be replaced with the function object or P2547 functionality at a future date.
 
 \subsection{Function Specialization}
 
@@ -956,7 +1031,6 @@ instance, graph algorithms wouldn't be used on a non-graph range. For this reaso
 namespaces. Suggestions for namespaces are \tcode{std::graph} and
 \tcode{std::ranges::graph} for the root namespace. The graph namespaces proposed include
 \begin{itemize}
-\item[]\tcode{std::tag_invoke}
 \item[]\tcode{std::graph}
 \item[]\tcode{std::graph::views}
 \end{itemize}
@@ -1146,10 +1220,8 @@ auto edgelist(G&& g);
 \begin{lstlisting}
 namespace std::graph {
 
-// ...tag_invoke
-
-
 // ...
+
 }
 \end{lstlisting}
 

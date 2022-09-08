@@ -75,3 +75,6 @@ _api
 
 #Ignore externals directory
 externals/
+
+# Ignore pulled repositories
+csv-parser/

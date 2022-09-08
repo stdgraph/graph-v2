@@ -889,11 +889,13 @@ public: // Construction/Destruction
   constexpr csr_graph& operator=(const csr_graph&) = default;
   constexpr csr_graph& operator=(csr_graph&&)      = default;
 
+  // edge-only construction
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr csr_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc) {}
 
+  // edge and vertex value construction
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
         copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
@@ -904,6 +906,7 @@ public: // Construction/Destruction
                       const Alloc& alloc       = Alloc())
         : base_type(erng, vrng, eprojection, vprojection, alloc) {}
 
+  // initializer list using edge_view<VId,true,void,EV>
   constexpr csr_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
