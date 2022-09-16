@@ -23,16 +23,22 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:        
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
+      # - uses: actions/checkout@v3
+      #   with:
+      #     submodules: recursive
 
-      - run: brew install gcc@12
+      - name: Install GCC-12
+        run: brew install gcc@12
+      
       - run: gcc --version
-      - run: echo $PATH
-      - run: which gcc-12
-      - run: echo "PATH=\"/usr/local/bin:$PATH\"" >> ~/.bash_profile
-      - run: source ~/.bash_profile
+      
+      - name: Force GCC-12 over Clang
+        run: |
+          sudo ln -s $(which g++-12) g++
+          sudo ln -s $(which gcc-12) gcc
+          sudo ln -s $(which cc-12) cc
+          sudo ln -s $(which c++-12) c++
+
       - run: gcc --version
       
       # - name: Configure cmake
