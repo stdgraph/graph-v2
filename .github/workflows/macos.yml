@@ -27,7 +27,7 @@ jobs:
         with:
           submodules: recursive
 
-      - run: brew install gcc-12
+      - run: brew install gcc@12
       - run: gcc --version
       
       # - name: Configure cmake
