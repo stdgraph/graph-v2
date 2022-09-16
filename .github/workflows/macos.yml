@@ -35,11 +35,7 @@ jobs:
       - run: which gcc-12
       
       - name: Force GCC-12 over Clang
-        run: |
-          alias gcc='gcc-12'
-          alias cc='cc-12'
-          alias g++='g++-12'
-          alias c++='c++-12'
+        run: echo "/usr/local/bin"  >> $GITHUB_PATH
 
       - run: gcc --version
       
