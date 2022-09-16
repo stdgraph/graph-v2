@@ -31,6 +31,8 @@ jobs:
         run: brew install gcc@12
       
       - run: gcc --version
+      - run: which gcc
+      - run: which gcc-12
       
       - name: Force GCC-12 over Clang
         run: |
