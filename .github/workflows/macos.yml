@@ -36,10 +36,10 @@ jobs:
       
       - name: Force GCC-12 over Clang
         run: |
-          sudo ln -s $(which g++-12) g++
-          sudo ln -s $(which gcc-12) gcc
-          sudo ln -s $(which cc-12) cc
-          sudo ln -s $(which c++-12) c++
+          sudo ln -s $(which g++-12) $(which g++)
+          sudo ln -s $(which gcc-12) $(which gcc)
+          sudo ln -s $(which cc-12) $(which cc)
+          sudo ln -s $(which c++-12) $(which c++)
 
       - run: gcc --version
       
