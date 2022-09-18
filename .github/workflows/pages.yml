@@ -1,0 +1,56 @@
+name: Documentation
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["master"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      # Install requirements
+      - name: Install Requirements
+        run: |
+          sudo apt-get install doxygen
+          cd ${{github.workspace}}/doc/sphinx
+          pip install -r requirements.txt
+        
+      # Build Sphinx documentation
+      - name: Build Documentation
+        run: |
+          cd ${{github.workspace}}/doc/sphinx
+          make html
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # Upload html directory
+          path: './doc/sphinx/_build/html'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
