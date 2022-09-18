@@ -1,17 +1,16 @@
 # Graph Library Proposal for the C++ Standard
+[![MacOS](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml) [![Ubuntu](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml) [![Windows](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml)
 
-**[This library is in the alpha stage that may include significant changes to the interface. It is not recommended for general use.]**
+> This library is in the alpha stage that may include significant changes to the interface. It is not recommended for general use.
 
 ## Overview
 This library designed to provide a useful set of algorithms, views and container(s) for graphs. It also defines
 a core Graph Container Interface that provide the basis of interacting with an abstract adjacency list graph, and 
 to provide easy integration with external adjacency list graphs.
 
-bi-partite and n-partite graphs are under investigation.
-
-Hyper-graphs are outside the scope of this project.
-
-Comments and questions are welcome and can be directed to phil.ratzloff@sas.com.
+- bi-partite and n-partite graphs are under investigation.
+- Hyper-graphs are outside the scope of this project.
+- Comments and questions are welcome and can be directed to phil.ratzloff@sas.com.
 
 ### Purpose
 This prototype library is an implementation of the proposed Graph Library for ISO Standard C++ as described in P1709. 
@@ -28,51 +27,30 @@ The goals of the library include:
 5. Support optional, user-defined value_types for an edge, vertex and graph.
 5. Easy integration of existing graph containers.
 6. Have an open design to allow for extensions in the future: 
-
-   a. Support for partite (partitioned) graphs. This requires extending (changing?) the Graph Container Interface.
+   1. Support for partite (partitioned) graphs. This requires extending (changing?) the Graph Container Interface.
       This is under investigation.
-
-   b. Support the incoming edges on a vertex (e.g. bidirectional graphs).
-
-   c. Investigate features that might make the Interface useful outside P1709, such as sparse vertex_ids.
+   2. Support the incoming edges on a vertex (e.g. bidirectional graphs).
+   3. Investigate features that might make the Interface useful outside P1709, such as sparse vertex_ids.
       This can help validate the existing design and guide decisions for the future.
    
 ## Getting Started
-This is being actively developed with the latest releases of MSVC (VS2022) on Windows and gcc (11) on Linux. 
+This is being actively developed with the latest releases of MSVC (VS2022) on Windows and gcc (11) on Linux/MacOS. 
 Other releases or compilers may or may not work.
 
 ### Prerequesites
-1. C++20 compliant compiler that fully supports concepts and ranges.
-2. CMake 20 or later (for CMake Presets)
-3. ninja build
+- C++20 compliant compiler that fully supports concepts and ranges.
+- CMake 20 or later (for CMake Presets)
 
-### Install Dependencies
-
-#### On Ubuntu 22
-```bash
-sudo apt install build-essential gdb cmake ninja-build
-```
-
-#### On Windows
-
-### Get graph-v2 Source
+### Quick Start Guide (Linux, WSL, MacOS)
 ```bash
 git clone https://github.com/stdgraph/graph-v2.git
 cd graph-v2
-```
-
-### Build graph-v2
-#### On Ubuntu 22
-```bash
-mkdir build
-cd build
+mkdir build && cd build
 cmake ..
-make
+make -j8
 ```
 
-#### On Windows
-
-### Editor/IDE Configuration
+### Editor/IDE Configuration (Windows)
 You'll need to assure CMake Presets are enabled in your IDE or other development tool. 
 See https://docs.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170 for configuring Microsoft tools.
 
@@ -122,21 +100,15 @@ is being considered, subject to the size of the proposal and other priorities.
 | dynamic_graph                   | No    | Easy to use different containers for vertices and edges.                        |
 
 
-## Thanks to:
-The NWGraph team for all their collaborations and support, along with providing the algorithm implementations
+## Acknowledgments
+- The NWGraph team for all their collaborations and support, along with providing the algorithm implementations
 [NWGraph Library](https://github.com/NWmath/NWgr)
-
-Numerous comments and support from the Machine Learning study group (SG19) in the ISO C++ Standards
+- Numerous comments and support from the Machine Learning study group (SG19) in the ISO C++ Standards
 Committee ([WG21](https://isocpp.org/std/the-committee)).
-
-Bob Steagal for his [gcc-builder & clang-builder scripts](https://github.com/BobSteagall)
-
-Jason Turner for his [cpp_starter_project](https://github.com/lefticus/cpp_starter_project)
-
-Ren� FerdinandRivera Morell for his [duck_invoke](https://github.com/bfgroup/duck_invoke), an implementation
+- Bob Steagal for his [gcc-builder & clang-builder scripts](https://github.com/BobSteagall)
+- Jason Turner for his [cpp_starter_project](https://github.com/lefticus/cpp_starter_project)
+- René Ferdinand Rivera Morell for his [duck_invoke](https://github.com/bfgroup/duck_invoke), an implementation
 of tag_invoke ([P1895](https://wg21.link/P1895)) that works for both gcc and msvc. Minor modifications have
 been made so it it in the std namespace.
-
-Vincent La for his [cvs-parser](https://github.com/vincentlaucsb/csv-parser)
-
-The ISO C++ Standards Committee (WG21) for [C++](http://eel.is/c++draft/)
+- Vincent La for his [cvs-parser](https://github.com/vincentlaucsb/csv-parser)
+- The ISO C++ Standards Committee (WG21) for [C++](http://eel.is/c++draft/)
