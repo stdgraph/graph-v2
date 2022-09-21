@@ -112,7 +112,7 @@
 \vfill
 \begin{center}
 \LARGE
-\textbf{\hl{D1709r3} Graph Library}\\
+\textbf{\hl{D1709R4} Graph Library}\\
 \vspace{12pt}
 \normalsize
 	Phillip Ratzloff (SAS Institute)\\
@@ -120,8 +120,8 @@
 \end{center}
 \vspace{32pt}
 \begin{tabular}{ll}
-\textbf{Document Number:} & \hl{D1709r3} \\
-\textbf{Date:} & \hl{TBD}, 2022 (mailing)\\ 
+\textbf{Document Number:} & \hl{D1709R4} \\
+\textbf{Date:} & \hl{December, 2022 (goal)} (mailing)\\ 
 \textbf{Project:} & ISO JTC1/SC22/WG21: Programming Language C++\\
 \textbf{Audience:} & SG19, WG21, LEWG\\
 \textbf{Source:} & \href{https://github.com/stdgraph/graph-v2}{Github} \\
@@ -152,7 +152,7 @@
 \clearpage
 
 \section*{Revision History}
-\subsection*{P1709R3}
+\subsection*{P1709R4}
 This was a major redesign that incorporated all the experience and input from the past 3 years.
 \begin{itemize}
 \item Reduce the scope to focus on an edge list and adjacency graph with outgoing edges only, and remove mutable interface functions. 
@@ -164,6 +164,9 @@ when appropriate.
 \item Revisit the algorithms to be considered. transitive\_closure has been dropped. The final list hasn't been finalized yet.
 \item Replace the two container implementations with csr\_graph.
 \end{itemize}
+
+\subsection*{P1709R3}
+A simple status revision to say a major change is coming soon.
 
 \subsection*{P1709R2}
 Define the \textbf{uniform API} for undirected and directed algorithms (an extended API also exists for directed graphs). Added \textbf{concepts} for undirected, directed and bidirected graphs. Refined \textbf{DFS} and \textbf{BFS} range definitions from prototype experience. Refined \textbf{shortest paths} and \textbf{transitive closure} algorithms from input and prototype experience.
@@ -1245,7 +1248,7 @@ Michael Wong's work is made possible by Codeplay Software Ltd., ISOCPP Foundatio
 
 \footnotesize
 \bibliographystyle{unsrt}
-\bibliography{P1709R3}
+\bibliography{P1709R4}
 \normalsize
 
 \end{document}
