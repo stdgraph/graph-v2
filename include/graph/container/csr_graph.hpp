@@ -765,11 +765,12 @@ public: // Types
   using graph_type = csr_graph<EV, VV, GV, VId, Alloc>;
   using base_type  = csr_graph_base<EV, VV, GV, VId, Alloc>;
 
-  using vertex_id_type    = VId;
+  using edge_value_type   = EV;
   using vertex_value_type = VV;
+  using graph_value_type  = GV;
+  using value_type        = GV;
 
-  using graph_value_type = GV;
-  using value_type       = GV;
+  using vertex_id_type = VId;
 
 public: // Construction/Destruction
   constexpr csr_graph()                 = default;
@@ -812,8 +813,8 @@ public: // Construction/Destruction
   // csr_graph(gv&&, erng, vrng, eprojection, vprojection, alloc)
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-  //      copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph(const ERng&  erng,
                       const VRng&  vrng,
                       EProj        eprojection = {},
@@ -822,8 +823,8 @@ public: // Construction/Destruction
         : base_type(erng, vrng, eprojection, vprojection, alloc) {}
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
-  //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-  //      copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr csr_graph(const graph_value_type& value,
                       const ERng&             erng,
                       const VRng&             vrng,

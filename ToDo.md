@@ -218,6 +218,8 @@
 - [ ] Should we worry about row-major & column-major ordering of adjacency_matrix? always assume row-major?
 - [ ] Is there a way for EVF to take both edge_value and fnc obj? (same for VVF & vertex_value)
 - [ ] The default for edges(g,uid) CPO isn't being found by msvc or gcc. Is there a way to only have to override one version of edges(g,)?
+- [ ] Shoud we support format() output? (Investigate work into how ranges are handled in general)
+- [ ] What is the design for CSR & CSC for matrices? (contact Christian Trott)
 
 ## Resolved
 ### ToDo Completed

@@ -208,11 +208,17 @@ represent the \textbf{map} of a game world. In \textbf{business} environments, g
 \end{itemize}
 
 \subsection{What this proposal is  \textbf{not}}
-This paper limits itself to adjacency graphs only, including an outer range of vertices with an inner range of outgoing edges on each vertex. It also includes an edgelist of all edges in the graph, either as a edgelist view or a simple range with a source\_id and target\_id. It does not include incoming edges on a vertex, though that could be a future extension.
+This paper limits itself to adjacency graphs only, including an outer range of vertices with an inner range of outgoing edges on each vertex. It also includes an edgelist of all edges in the graph, either as a edgelist view or a simple range with a source\_id and target\_id. 
 
 \hl{Bipartite graphs} are being investigated. A general design has been established and it needs to be implemented to validate that it will work and see what areas of the design are impacted.
 
 Parallel versions of the algorithms are not included for several reasons. The executors proposal in P2300r5 \cite{REF_P2300r5} is expected to introduce new and better ways to do parallel algorithms beyond that used in the parallel STL algorithms and we would like to wait for finalization of that proposal before committing to parallel implementations. Secondly, many graph algorithms don't benefit from parallel implementations so there is less need to offer an implementation. Lastly, it will help limit the size of this proposal which is already looking to be large without it. It is expected that future proposals will be submitted for parallel graph algorithms. 
+
+Incoming edges on a vertex are not included, though it is hoped that a future proposal will be made for them.
+
+The algorithms and views in this proposal expect that vertex\_ids are densly assigned in a random access range, but it does not exclude the possibility of sparsely-defined vertex\_ids stored in containers like \tcode{std::map} or \tcode{std::unordered_map} in future proposals. 
+
+The algorithms and views in this proposal expect that vertex\_ids are integal, but it does not exclude non-integral or user-defined types in future proposals.
 
 Hypergraphs are not supported.
 
@@ -222,12 +228,12 @@ This proposal is a pure \textbf{library} extension.
 \subsection{Interaction wtih Other Papers}
 There is no interaction with other proposals to the standard.
 
-\subsection{Implementation experience}
+\subsection{Implementation Experience}
 The github \href{https://github.com/stdgraph}{stdgraph} repository contains an implementation for this proposal.
 
-\subsection{Usage experience}
-\subsection{Deployment experience}
-\subsection{Performance considerations}
+\subsection{Usage Experience}
+\subsection{Deployment Experience}
+\subsection{Performance Considerations}
 The algorithms are being ported from NWGraph to the \href{https://github.com/stdgraph}{stdgraph} implementation used for this proposal. Performance analysis from those algorithms can be found in the peer-reviewed paper for NWGraph \cite{REF_nwgraph_paper}.
 
 \subsection{Prior Art}
@@ -242,16 +248,16 @@ Andrew is a co-author of boost::graph.
 \\
 
 \textbf{NWGraph} (\cite{REF_nwgraph_library} and \cite{REF_nwgraph_paper}) was published in 2022
-by Andrew et al, bringing additional experience gained since creating boost::graph, to create a modern graph library that
-was more accessible to the average developer using C++20 to create a simpler interface with the latest algorithms.
+by Lumsdaine et al, bringing additional experience gained since creating boost::graph, to create a modern graph library using C++20 that
+was more accessible to the average developer with the latest algorithms.
 
 While NWGraph made
 important strides, there are some areas that don't conform to established expectations in the Standard Library. Examples
-include using parameter packs to define multiple value types for an edge, rather than a single type; a focus on only defing value types on edges, but not vertices or the graph. it has no defined way to
+include using parameter packs to define multiple value types for an edge, rather than a single type; a focus on only defing value types on edges, but not vertices or the graph; there is no defined way to
 integrate existing graph containers to be used by the algorithms.
 \\
 
-This proposal takes the best of NWGraph, with work by Phil to define a Graph Container Interface, to provide a library that
+This proposal takes the best of NWGraph, with previous work done for P1709 to define a Graph Container Interface, to provide a library that
 embraces performance, ease-of-use and the ability to use the algorithms and views on externally defined graph containers.
 
 \subsection{Alternatives}
@@ -260,7 +266,7 @@ There are no known alternative graph library we're aware of that meets the same 
 %Later revisions should include this:
 %\subsection{Changes Library Evolution previously requested}
 
-\subsection{Feature test macro}
+\subsection{Feature Test Macro}
 The \tcode{__cpp_lib_graph} feature test macro is recommended to represent all features in this proposal including algorithms, views, concepts, traits, types, functions and graph container(s).
 
 Future features could extend the name for new features. For instance, \tcode{__cpp_lib_graph_partite_container} could be used if an n-partite graph container were added in later C++ versions.
@@ -279,7 +285,7 @@ It is believed that they are unique enough to warrant their own namespaces and i
 \noindent
 Alternative locations for the above respective namespaces could also be as follows:
 \begin{itemize}
-\item[]\tcode{std}, or \tcode{std::ranges}
+\item[]\tcode{std::ranges}
 \item[]\tcode{std::ranges::views}
 \end{itemize}
 
@@ -326,10 +332,10 @@ Table \ref{tab:name_conv} shows the naming conventions used throughout this docu
 \end{center}
 \end{table}
 
-\subsection{Graph Data Models}
-\subsubsection{Adjacency Graph}
+\subsection{Graph Definition}
  A \textit{graph} \cite{REF_graph} $G = (V, E)$ is a set of \textit{vertices} \cite{REF_graph} $V$, \textbf{points} in a space, and \textit{edges} \cite{REF_graph} $E$, \textbf{links} between these vertices. Edges may or may not be \textbf{oriented}, that is, \textit{directed} \cite{REF_graph} or \textit{undirected} \cite{REF_graph}, respectively. Moreover, edges may be \textit{weighted} \cite{REF_graph}, that is, assigned a value. Both \textbf{static} and \textbf{dynamic} implementations of a graph exist, specifically a (static) \textbf{matrix}, each having the typical advantages and disadvantages associated with static and dynamic data structures.
 
+\subsubsection{Adjacency List}
 %% adjacency graph, vertex, edge
 %% incidence, neighbors (adjacency)
 %% optional user-defined values for edge, vertex, graph
@@ -948,42 +954,10 @@ template <class    EV    = void,  // Edge Value type
           class    GV    = void,  // Graph Value type
           integral VId   = uint32_t, 
           class    Alloc = allocator<uint32_t>>
-class csr_graph {
-public:
-  constexpr csr_graph()                 = default;
-  constexpr csr_graph(const csr_graph&) = default;
-  constexpr csr_graph(csr_graph&&)      = default;
-  constexpr ~csr_graph()                = default;
-
-  constexpr csr_graph& operator=(const csr_graph&) = default;
-  constexpr csr_graph& operator=(csr_graph&&)      = default;
-  
-  // edge-only construction
-  template <ranges::forward_range ERng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr csr_graph(const ERng&  erng, 
-                      EProj        eprojection, 
-                      const Alloc& alloc = Alloc());
-
-  // edge and vertex value construction
-  template <ranges::forward_range ERng, 
-            ranges::forward_range VRng, 
-            class                 EProj = identity, 
-            class                 VProj = identity>
-  requires 
-        copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-        copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr csr_graph(const ERng&  erng,
-                      const VRng&  vrng,
-                      EProj        eprojection = {},
-                      VProj        vprojection = {},
-                      const Alloc& alloc       = Alloc());
-
-  // initializer list using edge_view<VId,true,void,EV>
-  constexpr csr_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, 
-                      const Alloc& alloc = Alloc());
-};
+class csr_graph;
 \end{lstlisting}
+
+A fuller description of \tcode{csr_graph}, including its constructors, can be found in the \tcode{<csr_graph} header section.
 
 \subsubsection{csr\_partite\_graph Graph Container (In Design)}
 \phil{This is experimental}
@@ -1011,50 +985,23 @@ Customization Points can be implemented in one of three ways:
 \begin{enumerate}
 \item A static function object that can be overridden by using ADL. This is the current technique used in existing standard libraries.
 \item \href{https://wg21.link/P2547}{P2547 Language Support for Customisable Functions}, an active proposal for C++26.
-\item \href{https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1895r0.pdf}{P1895 tag\_invoke: A general pattern for supporting customisable functions}. This has been dismissed as a viable solution for use in the standard for a variety of reasons identified in in P2547.
+\item \href{https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1895r0.pdf}{P1895 tag\_invoke: A general pattern for supporting customisable functions}. This has been dismissed as a viable solution for use in the standard for a variety of reasons identified in P2547.
 \end{enumerate}
 
 We are monitoring the progress of P2547 and will use that if is accepted into the Standard. In the interim, the current library prototype implementation is using \tcode{tag_invoke} for convenience, but it will be replaced with the function object or P2547 functionality at a future date.
 
-\subsection{Function Specialization}
-
-\section{Specification}
-\section{Library introduction [library]}
-\section{Graph introduction [graph]}
-\section{algorithms [graph.algorithms]}
-\section{views [graph.views]}
-\section{customization points [graph.functions]}
-
-
-\section{Old Introduction (Content after this will be moved above or removed)}
-
-\subsection{Namespaces and Headers}
-Graph algorithms, views and containers are unique and not easily interchanged with other elements of the standard library. For
-instance, graph algorithms wouldn't be used on a non-graph range. For this reason it is recommended to have them in their own 
-namespaces. Suggestions for namespaces are \tcode{std::graph} and
-\tcode{std::ranges::graph} for the root namespace. The graph namespaces proposed include
-\begin{itemize}
-\item[]\tcode{std::graph}
-\item[]\tcode{std::graph::views}
-\end{itemize}
-
-Proposed headers include
-\begin{itemize}
-\item[]\tcode{<graph>}
-\item[]\tcode{<graph_view>}
-\item[]\tcode{<graph_algorithm>}
-\item[]\tcode{<csr_graph>}
-\end{itemize}
-
 \section{Technical Specifications}
-TBA
+This section is woefully incomplete and likely has errors when considering what needs to be included in the Standard. The intention is to give additional detailed information that isn't covered in earlier sections, for those who wish to know more.
+
+We anticipate getting direction from the Library Working Group to fill this out more completely and acurately.
 
 \subsection{Header \tcode{<graph>} synopsis [graph.syn]}
 
+\subsection{Functions}
+All functions are customization points.
+
 \begin{lstlisting}
 namespace std::graph {
-
-// ...
 
 template <typename G>
 auto vertices(G&& g);
@@ -1065,13 +1012,47 @@ auto vertex_id(G&& g, vertex_iterator_t<G>);
 template <typename G>
 auto vertex_value(G&& g, vertex_reference_t<G>);
 
+} // namespace std::graph
+\end{lstlisting}
+
+\subsection{Type Aliases}
+\begin{lstlisting}
+namespace std::graph {
+
 // ...
 
-template <class G>
-inline constexpr bool is_adjacency_matrix_v = false;
+} // namespace std::graph
+\end{lstlisting}
 
-template <class E>
-inline constexpr bool is_undirected_edge_v = false;
+\subsection{Traits}
+\begin{lstlisting}
+namespace std::graph {
+
+template <class G>
+concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
+  {degree(g, u)};
+};
+
+template <class G>
+concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
+  { find_vertex(g, uid) } -> forward_iterator;
+};
+
+template <class G>
+concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
+  { find_vertex_edge(g, u, vid) } -> forward_iterator;
+  { find_vertex_edge(g, uid, vid) } -> forward_iterator;
+};
+
+template <class G>
+concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
+  { contains_edge(g, uid, vid) } -> convertible_to<bool>;
+} // namespace std::graph
+\end{lstlisting}
+
+\subsection{Concepts}
+\begin{lstlisting}
+namespace std::graph {
 
 template <class G>
 concept vertex_range = ranges::forward_range<vertex_range_t<G>> && 
@@ -1108,94 +1089,21 @@ template <class G>
 concept sourced_adjacency_list = adjacency_list<G> && sourced_edge<G, vertex_edge_range_t<G>> &&
       requires(G&& g, edge_reference_t<G> uv) {
   edge_id(g, uv);
-};
-
-template <class G>
-concept undirected_incidence_graph = sourced_adjacency_list<G> && is_undirected_edge_v<edge_t<G>>;
-
-template <class G>
-concept directed_incidence_graph = !undirected_incidence_graph<G>;
-
-template <class G>
-concept adjacency_matrix = is_adjacency_matrix_v<G>;
-
-template <class G>
-concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
-  {degree(g, u)};
-};
-
-template <class G>
-concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
-  { find_vertex(g, uid) } -> forward_iterator;
-};
-
-template <class G>
-concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
-  { find_vertex_edge(g, u, vid) } -> forward_iterator;
-  { find_vertex_edge(g, uid, vid) } -> forward_iterator;
-};
-
-template <class G>
-concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-  { contains_edge(g, uid, vid) } -> convertible_to<bool>;
-};
-
-}
+} // namespace std::graph
 \end{lstlisting}
 
-\vspace{10pt}
-
-\noindent The following is a synopsis of the functions and classes above.
-
-\begin{lstlisting}
-template <typename G>
-auto vertices(G&& g);
-\end{lstlisting}
-%
-\begin{itemize}
-\item Preconditions: TBA.
-\item Effects: TBA.
-\item Complexity: TBA.
-\item Returns: TBA.
-\item Remarks: TBA.
-\end{itemize}
-
-\vspace{10pt}
-
-\begin{lstlisting}
-template <typename G>
-auto vertex_id (G&& g, vertex_iterator_t<G>);
-\end{lstlisting}
-%
-\begin{itemize}
-\item Preconditions: TBA.
-\item Effects: TBA.
-\item Complexity: TBA.
-\item Returns: TBA.
-\item Remarks: TBA.
-\end{itemize}
-
-\vspace{10pt}
-
-\begin{lstlisting}
-template <typename G>
-auto vertex_value (G&& g, vertex_reference_t<G>);
-\end{lstlisting}
-%
-\begin{itemize}
-\item Preconditions: TBA.
-\item Effects: TBA.
-\item Complexity: TBA.
-\item Returns: TBA.
-\item Remarks: TBA.
-\end{itemize}
+%\vspace{10pt}
 
 \subsection{Header \tcode{<graph_view>} synopsis [graph.syn]}
 
 \begin{lstlisting}
-namespace std::graph::views {
+namespace std::graph {
 
-// ...
+... // view classes go here
+
+} // namespace std::graph
+
+namespace std::graph::views {
 
 template <typename G>
 auto vertexlist(G&& g);
@@ -1209,13 +1117,18 @@ auto neighbors(G&& g, vertex_reference_t<G>);
 template <typename G>
 auto edgelist(G&& g);
 
-// ...
 // vertices_depth_first_search
 // edges_depth_first_search
 // sourced_edges_depth_first_search
+
 // vertices_breadth_first_search
 // edges_breadth_first_search
-}
+// sourced_edges_breadth_first_search
+
+// vertices_topological_sort
+// edges_toplological_sort
+// sourced_edges_topological_sort
+} // namespace std::graph::views
 \end{lstlisting}
 
 \subsection{Header \tcode{<graph_algorithm>} synopsis [graph.syn]}
@@ -1223,24 +1136,108 @@ auto edgelist(G&& g);
 \begin{lstlisting}
 namespace std::graph {
 
-// ...
-
-}
+} // namespace std::graph
 \end{lstlisting}
 
 \subsection{Header \tcode{<csr_graph>} synopsis [graph.syn]}
 
+%\vspace{10pt}
+
 \begin{lstlisting}
 namespace std::graph {
 
-// ...
+template <class EV     = void,                // edge value type
+          class VV     = void,                // vertex value type
+          class GV     = void,                // graph value type
+          integral VId = uint32_t,            // vertex id type
+          class Alloc  = allocator<uint32_t>> // for internal containers
+class csr_graph {
+public: // Types
+  using graph_type = csr_graph<EV, VV, GV, VId, Alloc>;
+  
+  using edge_value_type   = EV;
+  using vertex_value_type = VV;
+  using graph_value_type  = GV;
+  using value_type        = GV;
 
-template<class EV, class VV, class GV, class VId, class Alloc>
-class csr_graph;
+  using vertex_id_type = VId;
 
-// ...
-}
+public: // Construction/Destruction
+  constexpr csr_graph()                 = default;
+  constexpr csr_graph(const csr_graph&) = default;
+  constexpr csr_graph(csr_graph&&)      = default;
+  constexpr ~csr_graph()                = default;
+
+  constexpr csr_graph& operator=(const csr_graph&) = default;
+  constexpr csr_graph& operator=(csr_graph&&)      = default;
+
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  constexpr csr_graph(const ERng&  erng, 
+                      EProj        eprojection, 
+                      const Alloc& alloc = Alloc());
+
+  template <ranges::forward_range ERng, ranges::forward_range VRng,
+            class EProj = identity,     class VProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> 
+        && copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  constexpr csr_graph(const ERng&  erng,
+                      const VRng&  vrng,
+                      EProj        eprojection = {},
+                      VProj        vprojection = {},
+                      const Alloc& alloc       = Alloc());
+
+  constexpr csr_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, 
+                      const Alloc& alloc = Alloc());
+
+};
+
+} // namespace std::graph
 \end{lstlisting}
+
+When \tcode{GV} is not \tcode{void} the following constructors are also available.
+
+\begin{lstlisting}
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  constexpr csr_graph(const graph_value_type& value, 
+                      const ERng&             erng, 
+                      EProj                   eprojection, 
+                      const Alloc&            alloc = Alloc());
+  
+  template <ranges::forward_range ERng, class EProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  constexpr csr_graph(graph_value_type&& value,
+                      const ERng&        erng, 
+                      EProj              eprojection, 
+                      const Alloc&       alloc = Alloc());
+
+
+  template <ranges::forward_range ERng, ranges::forward_range VRng,
+            class EProj = identity,     class VProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> 
+        && copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  constexpr csr_graph(const graph_value_type& value,
+                      const ERng&             erng,
+                      const VRng&             vrng,
+                      EProj                   eprojection = {},
+                      VProj                   vprojection = {},
+                      const Alloc&            alloc       = Alloc());
+
+  template <ranges::forward_range ERng, ranges::forward_range VRng,
+            class EProj = identity,     class VProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> 
+        && copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
+  constexpr csr_graph(graph_value_type&& value,
+                      const ERng&        erng,
+                      const VRng&        vrng,
+                      EProj              eprojection = {},
+                      VProj              vprojection = {},
+                      const Alloc&       alloc       = Alloc());
+
+
+\end{lstlisting}
+
 
 
 \section{Acknowledgements}
