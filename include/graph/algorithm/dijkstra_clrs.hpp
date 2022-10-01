@@ -8,8 +8,7 @@ namespace std::graph {
 
 template <class G, class F>
 concept edge_weight_function = // e.g. weight(uv)
-      copy_constructible<F> &&
-      is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
+      copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
 
 class null_range_type : public std::vector<size_t> {
   using T         = size_t;
@@ -43,22 +42,22 @@ constexpr auto print_types(Ts...) {
 
 
 // The index into weight vector stored as the first property
-template <adjacency_list             G,
+template <adjacency_list              G,
           ranges::random_access_range Distance,
           ranges::random_access_range Predecessor,
           class WF = std::function<ranges::range_value_t<Distance>(edge_reference_t<G>)>>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-      is_arithmetic_v<ranges::range_value_t<Distance>> &&
-      convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && edge_weight_function<G, WF>
-
+requires ranges::random_access_range<vertex_range_t<G>> &&                  //
+      integral<vertex_id_t<G>> &&                                           //
+      is_arithmetic_v<ranges::range_value_t<Distance>> &&                   //
+      convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
+      edge_weight_function<G, WF>
 void dijkstra_clrs(
-      G&&            g,                                  // graph
-      vertex_id_t<G> seed,                               // starting vertex_id
-      Distance&      distance,                           // out: distance[uid] of uid from seed
-      Predecessor&   predecessor,                        // out: predecessor[uid] of uid in path
-      WF             weight = [](edge_reference_t<G> uv) // default weght(uv) -> 1
-      { return ranges::range_value_t<Distance>(1); }) {
-
+      G&&            g,           // graph
+      vertex_id_t<G> seed,        // starting vertex_id
+      Distance&      distance,    // out: distance[uid] of uid from seed
+      Predecessor&   predecessor, // out: predecessor[uid] of uid in path
+      WF weight = [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }) // default weight(uv) -> 1
+{
   using id_type     = vertex_id_t<G>;
   using weight_type = invoke_result_t<WF, edge_reference_t<G>>;
 
