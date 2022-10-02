@@ -949,11 +949,12 @@ The \tcode{ERng} template parameter is assumed to be a range of \tcode{copyable_
 Likewise, the \tcode{VRng} template parameter is assumed to be a range of \tcode{copyable_vertex_t<VId,VV>}. If it isn't, a \tcode{VProj} projection function must be passed to convert the VRng value type to a \tcode{copyable_vertex_t<VId,VV>}.
 
 \begin{lstlisting}
-template <class    EV    = void,  // Edge Value type
-          class    VV    = void,  // Vertex Value type
-          class    GV    = void,  // Graph Value type
-          integral VId   = uint32_t, 
-          class    Alloc = allocator<uint32_t>>
+template <class    EV     = void,     // Edge Value type
+          class    VV     = void,     // Vertex Value type
+          class    GV     = void,     // Graph Value type
+          integral VId    = uint32_t, // vertex id type
+          integral EIndex = uint32_t, // edge index type
+          class    Alloc  = allocator<uint32_t>> // for internal containers
 class csr_graph;
 \end{lstlisting}
 
@@ -1145,14 +1146,15 @@ namespace std::graph {
 \begin{lstlisting}
 namespace std::graph {
 
-template <class EV     = void,                // edge value type
-          class VV     = void,                // vertex value type
-          class GV     = void,                // graph value type
-          integral VId = uint32_t,            // vertex id type
-          class Alloc  = allocator<uint32_t>> // for internal containers
+template <class EV        = void,                // edge value type
+          class VV        = void,                // vertex value type
+          class GV        = void,                // graph value type
+          integral VId    = uint32_t,            // vertex id type
+          integral EIndex = uint32_t,            // edge index type
+          class Alloc     = allocator<uint32_t>> // for internal containers
 class csr_graph {
 public: // Types
-  using graph_type = csr_graph<EV, VV, GV, VId, Alloc>;
+  using graph_type = csr_graph<EV, VV, GV, VId, EIndex, Alloc>;
   
   using edge_value_type   = EV;
   using vertex_value_type = VV;

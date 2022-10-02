@@ -22,7 +22,7 @@
 // csr_graph(erng, eproj) : load_edges(erng,eproj)
 // csr_graph(erng, eproj, vrng, vproj): load(erng, eproj, vrng, vprog)
 //
-// [uid,vval]      <-- copyable_vertex<VId,VV>
+// [uid,vval]     <-- copyable_vertex<VId,VV>
 // [uid,vid,eval] <-- copyable_edge<VId,EV>
 //
 namespace std::graph::container {
@@ -53,20 +53,21 @@ constexpr auto max_vertex_id(const ERng& erng, const EProj& eprojection) {
 //
 // forward declarations
 //
-template <class EV     = void,               // edge value type
-          class VV     = void,               // vertex value type
-          class GV     = void,               // graph value type
-          integral VId = uint32_t,           // vertex id type
-          class Alloc  = allocator<uint32_t>> // for internal containers
+template <class EV        = void,            // edge value type
+          class VV        = void,            // vertex value type
+          class GV        = void,            // graph value type
+          integral VId    = uint32_t,        // vertex id type
+          integral EIndex = uint32_t,        // edge index type
+          class Alloc     = allocator<uint32_t>> // for internal containers
 class csr_graph;
 
 /// <summary>
 /// Wrapper struct for the row index to distinguish it from a vertex_id_type (VId).
 /// </summary>
-template <integral VId>
+template <integral EIndex>
 struct csr_row {
-  using vertex_id_type = VId;
-  vertex_id_type index = 0;
+  using edge_index_type = EIndex;
+  edge_index_type index = 0;
 };
 
 /// <summary>
@@ -87,16 +88,17 @@ struct csr_col {
 /// <typeparam name="EV">Edge Value type, or void if there is none</typeparam>
 /// <typeparam name="VV">Vertex Value type, or void if there is none</typeparam>
 /// <typeparam name="GV">Graph Value type, or void if there is none</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the total edges and the total vertices.</typeparam>
+/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
+/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
 /// <typeparam name="Alloc">Allocator type</typeparam>
-template <class EV, class VV, class GV, integral VId, class Alloc>
+template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
 class csr_row_values {
-  using row_type           = csr_row<VId>; // index into col_index_
+  using row_type           = csr_row<EIndex>; // index into col_index_
   using row_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<row_type>;
   using row_index_vector   = vector<row_type, row_allocator_type>;
 
 public:
-  using graph_type        = csr_graph<EV, VV, GV, VId, Alloc>;
+  using graph_type        = csr_graph<EV, VV, GV, VId, EIndex, Alloc>;
   using vertex_type       = row_type;
   using vertex_value_type = VV;
   using allocator_type    = typename allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
@@ -198,8 +200,8 @@ private:
   vector_type v_;
 };
 
-template <class EV, class GV, integral VId, class Alloc>
-class csr_row_values<EV, void, GV, VId, Alloc> {
+template <class EV, class GV, integral VId, integral EIndex, class Alloc>
+class csr_row_values<EV, void, GV, VId, EIndex, Alloc> {
 public:
   constexpr csr_row_values(const Alloc& alloc) {}
   constexpr csr_row_values() = default;
@@ -229,16 +231,17 @@ public: // Operations
 /// <typeparam name="EV">Edge Value type, or void if there is none</typeparam>
 /// <typeparam name="VV">Vertex Value type, or void if there is none</typeparam>
 /// <typeparam name="GV">Graph Value type, or void if there is none</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the total edges and the total vertices.</typeparam>
+/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
+/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
 /// <typeparam name="Alloc">Allocator type</typeparam>
-template <class EV, class VV, class GV, integral VId, class Alloc>
+template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
 class csr_col_values {
   using col_type           = csr_col<VId>; // target_id
   using col_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<col_type>;
   using col_index_vector   = vector<col_type, col_allocator_type>;
 
 public:
-  using graph_type      = csr_graph<EV, VV, GV, VId, Alloc>;
+  using graph_type      = csr_graph<EV, VV, GV, VId, EIndex, Alloc>;
   using edge_type       = col_type; // index into v_
   using edge_value_type = EV;
   using allocator_type  = typename allocator_traits<Alloc>::template rebind_alloc<edge_value_type>;
@@ -303,8 +306,8 @@ private:
   vector_type v_;
 };
 
-template <class VV, class GV, integral VId, class Alloc>
-class csr_col_values<void, VV, GV, VId, Alloc> {
+template <class VV, class GV, integral VId, integral EIndex, class Alloc>
+class csr_col_values<void, VV, GV, VId, EIndex, Alloc> {
 public:
   constexpr csr_col_values(const Alloc& alloc) {}
   constexpr csr_col_values() = default;
@@ -333,16 +336,17 @@ public: // Operations
 /// <typeparam name="EV">Edge value type</typeparam>
 /// <typeparam name="VV">Vertex value type</typeparam>
 /// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the total edges and the total vertices.</typeparam>
+/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
+/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
-template <class EV, class VV, class GV, integral VId, class Alloc>
+template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
 class csr_graph_base
-      : public csr_row_values<EV, VV, GV, VId, Alloc>
-      , public csr_col_values<EV, VV, GV, VId, Alloc> {
-  using row_values_base = csr_row_values<EV, VV, GV, VId, Alloc>;
-  using col_values_base = csr_col_values<EV, VV, GV, VId, Alloc>;
+      : public csr_row_values<EV, VV, GV, VId, EIndex, Alloc>
+      , public csr_col_values<EV, VV, GV, VId, EIndex, Alloc> {
+  using row_values_base = csr_row_values<EV, VV, GV, VId, EIndex, Alloc>;
+  using col_values_base = csr_col_values<EV, VV, GV, VId, EIndex, Alloc>;
 
-  using row_type           = csr_row<VId>; // index into col_index_
+  using row_type           = csr_row<EIndex>; // index into col_index_
   using row_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<row_type>;
   using row_index_vector   = vector<row_type, row_allocator_type>;
 
@@ -351,7 +355,7 @@ class csr_graph_base
   using col_index_vector   = vector<col_type, col_allocator_type>;
 
 public: // Types
-  using graph_type = csr_graph_base<EV, VV, GV, VId, Alloc>;
+  using graph_type = csr_graph_base<EV, VV, GV, VId, EIndex, Alloc>;
 
   using vertex_id_type      = VId;
   using vertex_type         = row_type;
@@ -361,6 +365,7 @@ public: // Types
 
   using edge_type        = col_type; // index into v_
   using edge_value_type  = EV;
+  using edge_index_type  = EIndex;
   using edges_type       = ranges::subrange<ranges::iterator_t<col_index_vector>>;
   using const_edges_type = ranges::subrange<ranges::iterator_t<const col_index_vector>>;
 
@@ -661,8 +666,8 @@ public: // Operations
     return row_index_.begin() + id;
   }
 
-  constexpr vertex_id_type index_of(const row_type& u) const noexcept {
-    return static_cast<vertex_id_type>(&u - row_index_.data());
+  constexpr edge_index_type index_of(const row_type& u) const noexcept {
+    return static_cast<edge_index_type>(&u - row_index_.data());
   }
   constexpr vertex_id_type index_of(const col_type& v) const noexcept {
     return static_cast<vertex_id_type>(&v - col_index_.data());
@@ -757,13 +762,14 @@ private: // tag_invoke properties
 /// <typeparam name="EV">Edge value type</typeparam>
 /// <typeparam name="VV">Vertex value type</typeparam>
 /// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the total edges and the total vertices.</typeparam>
+/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
+/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
-template <class EV, class VV, class GV, integral VId, class Alloc>
-class csr_graph : public csr_graph_base<EV, VV, GV, VId, Alloc> {
+template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
+class csr_graph : public csr_graph_base<EV, VV, GV, VId, EIndex, Alloc> {
 public: // Types
-  using graph_type = csr_graph<EV, VV, GV, VId, Alloc>;
-  using base_type  = csr_graph_base<EV, VV, GV, VId, Alloc>;
+  using graph_type = csr_graph<EV, VV, GV, VId, EIndex, Alloc>;
+  using base_type  = csr_graph_base<EV, VV, GV, VId, EIndex, Alloc>;
 
   using edge_value_type   = EV;
   using vertex_value_type = VV;
@@ -867,13 +873,14 @@ private: // Member variables
 /// <typeparam name="EV">Edge value type</typeparam>
 /// <typeparam name="VV">Vertex value type</typeparam>
 /// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the total edges and the total vertices.</typeparam>
+/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
+/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
 /// <typeparam name="Alloc">Allocator</typeparam>
-template <class EV, class VV, integral VId, class Alloc>
-class csr_graph<EV, VV, void, VId, Alloc> : public csr_graph_base<EV, VV, void, VId, Alloc> {
+template <class EV, class VV, integral VId, integral EIndex, class Alloc>
+class csr_graph<EV, VV, void, VId, EIndex, Alloc> : public csr_graph_base<EV, VV, void, VId, EIndex, Alloc> {
 public: // Types
-  using graph_type = csr_graph<EV, VV, void, VId, Alloc>;
-  using base_type  = csr_graph_base<EV, VV, void, VId, Alloc>;
+  using graph_type = csr_graph<EV, VV, void, VId, EIndex, Alloc>;
+  using base_type  = csr_graph_base<EV, VV, void, VId, EIndex, Alloc>;
 
   using vertex_id_type    = VId;
   using vertex_value_type = VV;

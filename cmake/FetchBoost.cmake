@@ -9,7 +9,7 @@ set(FETCHCONTENT_BASE_DIR ${FC_BASE})
 FetchContent_Declare(
     boost
     GIT_REPOSITORY https://github.com/boostorg/boost.git
-    GIT_TAG        boost-1.78.0
+    GIT_TAG        boost-1.80.0
 )
 
 FetchContent_GetProperties(boost)

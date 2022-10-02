@@ -172,7 +172,7 @@ protected:
 
 template <adjacency_list G, class VVF = void>
 using vertexlist_view = ranges::subrange<vertexlist_iterator<G, VVF>, vertex_iterator_t<G>>;
-}
+} // namespace std::graph
 
 namespace std::graph::tag_invoke {
   // ranges
