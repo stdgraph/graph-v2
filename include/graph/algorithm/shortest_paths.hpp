@@ -39,16 +39,178 @@
 //      detect_neg_edge_cycles parameter?)
 //
 
+#pragma once
+
 #include <queue>
 #include <vector>
+#include <ranges>
 #include "../graph.hpp"
-
-#define SHORTEST_RANGE
 
 #ifndef GRAPH_SHORTEST_PATHS_HPP
 #  define GRAPH_SHORTEST_PATHS_HPP
 
 namespace std::graph {
+
+template <class G, class F>
+concept edge_weight_function = // e.g. weight(uv)
+      copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
+
+template <class Q>
+concept queueable = requires(Q&& q, Q::value_type value) {
+  Q::value_type;
+  Q::size_type;
+  Q::reference;
+
+  {q.top()};
+  {q.push(value)};
+  {q.pop()};
+  {q.empty()};
+  {q.size()};
+};
+
+struct empty {};
+using null_predessor_range_type = ranges::subrange<ranges::iterator_t<vector<empty>>>;
+
+template <class G, class W>
+struct weighted_vertex {
+  vertex_id_t<G> vertex_id = vertex_id_t<G>();
+  W              weight    = W();
+
+  constexpr auto operator<=>(const weighted_vertex& rhs) const noexcept {
+    if constexpr (is_signed_v<vertex_id_t<G>>)
+      return vertex_id - rhs.vertex_id;
+    else if constexpr (sizeof(vertex_id_t<G>) < sizeof(ptrdiff_t))
+      return static_cast<ptrdiff_t>(vertex_id) - static_cast<ptrdiff_t>(rhs.vertex_id);
+    else {
+      if (vertex_id < rhs.vertex_id)
+        return -1;
+      else if (vertex_id > rhs.vertex_id)
+        return +1;
+      else
+        return 0;
+    }
+  }
+};
+
+
+// Remark(Andrew)
+//  1.  We may want to make the queue parameterizable as different types of
+//      heaps give different performance. std::priority_queue is probably
+//      reasonable default.
+
+// Remark(Phil)
+//  1.  We are expecting the caller to pass pre-extended distance & predecessor
+//      ranges. This requires initializing of the values 2x, first with the default
+//      value (e.g. 0), and secondly with the max value for the algorithm.
+
+// The index into weight vector stored as the first property
+
+
+template <adjacency_list              G,
+          ranges::random_access_range Distance,
+          class Predecessor,
+          class EVF   = std::function<ranges::range_value_t<Distance>(edge_reference_t<G>)>,
+          queueable Q = priority_queue<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>,
+                                       vector<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>,
+                                       greater<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>>>
+requires ranges::random_access_range<vertex_range_t<G>> && //
+      integral<vertex_id_t<G>> &&                          //
+      is_arithmetic_v<ranges::range_value_t<Distance>> &&  //
+      //convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
+      edge_weight_function<G, EVF>
+constexpr void dijkstra_shortest_paths_impl(G&&            g,           // graph
+                                            vertex_id_t<G> seed,        // starting vertex_id
+                                            Distance&      distance,    // out: distance[uid] of vertex_id uid from seed
+                                            Predecessor&   predecessor, // out: predecessor[uid] of vertex_id uid in path
+                                            EVF&           weight_fn,   // weight function
+                                            Q&             q            // queue
+) {
+  // init distances
+  using distance_type = ranges::range_value_t<Distance>;
+  assert(size(distance) >= size(vertices(g)));
+  assert(seed >= 0 && static_cast<size_t>(seed) < size(vertices(g)));
+  //ranges::fill(distance, numeric_limits<distance_type>::max());
+  ranges::fill_n(ranges::begin(distance), size(vertices(g)), numeric_limits<distance_type>::max());
+  distance[seed] = 0;
+
+  // init predecessors
+  if constexpr (!is_same_v<Predecessor, null_predessor_range_type>) {
+    using predecessor_type = ranges::range_value_t<Predecessor>;
+    assert(size(predecessor) >= size(vertices(g)));
+    //ranges::fill(predecessor, numeric_limits<predecessor_type>::max());
+    ranges::fill_n(ranges::begin(predecessor), size(vertices(g)), numeric_limits<predecessor_type>::max());
+  }
+
+  // Remark(Andrew): CLRS puts all vertices in the queue to start but standard practice seems to be to enqueue source
+  q.push({seed, distance[seed]});
+  while (!q.empty()) {
+    auto uid = q.top().vertex_id;
+    q.pop();
+
+    for (auto&& [vid, uv, w] : views::incidence(g, uid, weight_fn)) {
+      if (distance[uid] + w < distance[vid]) {
+        distance[vid] = distance[uid] + w;
+        if constexpr (!is_same_v<Predecessor, null_predessor_range_type>)
+          predecessor[vid] = uid;
+        q.push({vid, distance[vid]});
+      }
+    }
+  }
+}
+
+/// <summary>
+///
+/// </summary>
+/// <typeparam name="G">Graph</typeparam>
+/// <typeparam name="DistanceT"></typeparam>
+/// <typeparam name="A"></typeparam>
+template <adjacency_list              G,
+          ranges::random_access_range Distance,
+          ranges::random_access_range Predecessor,
+          class EVF   = std::function<ranges::range_value_t<Distance>(edge_reference_t<G>)>,
+          queueable Q = priority_queue<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>,
+                                       vector<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>,
+                                       greater<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>>>
+requires ranges::random_access_range<vertex_range_t<G>> &&                  //
+      integral<vertex_id_t<G>> &&                                           //
+      is_arithmetic_v<ranges::range_value_t<Distance>> &&                   //
+      convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
+      edge_weight_function<G, EVF>
+constexpr void dijkstra_shortest_paths(
+      G&&            g,           // graph
+      vertex_id_t<G> seed,        // starting vertex_id
+      Distance&      distance,    // out: distance[uid] of vertex_id uid from seed
+      Predecessor&   predecessor, // out: predecessor[uid] of vertex_id uid in path
+      EVF            weight_fn =
+            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }, // default weight(uv) -> 1
+      Q q = Q()                                                                        //
+) {
+  dijkstra_shortest_paths_impl(g, seed, distance, predecessor, weight_fn, q);
+}
+
+// The index into weight vector stored as the first property
+template <adjacency_list              G,
+          ranges::random_access_range Distance,
+          class EVF   = std::function<ranges::range_value_t<Distance>(edge_reference_t<G>)>,
+          queueable Q = priority_queue<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>,
+                                       vector<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>,
+                                       greater<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>>>
+requires ranges::random_access_range<vertex_range_t<G>> && //
+      integral<vertex_id_t<G>> &&                          //
+      is_arithmetic_v<ranges::range_value_t<Distance>> &&  //
+      edge_weight_function<G, EVF>
+constexpr void dijkstra_shortest_distances(
+      G&&            g,        // graph
+      vertex_id_t<G> seed,     // starting vertex_id
+      Distance&      distance,    // out: distance[uid] of vertex_id uid from seed
+      EVF            weight_fn =
+            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }, // default weight(uv) -> 1
+      Q q = Q()                                                                        //
+) {
+  null_predessor_range_type predessor;
+  dijkstra_shortest_paths_impl(g, seed, distance, predessor, weight_fn, q);
+}
+
 
 #  ifdef CPO
 
@@ -98,11 +260,11 @@ struct shortest_path
   vector<VertexIteratorT, A> path;                   // vertices that make up the path
   DistanceT                  distance = DistanceT(); // sum of the path's edge distances in the path
 
-  shortest_path()                     = default;
-  shortest_path(const shortest_path&) = default;
-  shortest_path(shortest_path&&)      = default;
+  shortest_path()                                = default;
+  shortest_path(const shortest_path&)            = default;
+  shortest_path(shortest_path&&)                 = default;
   shortest_path& operator=(const shortest_path&) = default;
-  shortest_path& operator=(shortest_path&&) = default;
+  shortest_path& operator=(shortest_path&&)      = default;
   shortest_path(A alloc) : path(alloc) {}
 };
 
@@ -120,7 +282,7 @@ class dijkstra_fn {
     vertex_key_t<G> vtx_key  = numeric_limits<vertex_key_t<G>>::max();
     DistanceT       distance = numeric_limits<DistanceT>::max(); // distance from source
     bool            operator<(const vertex_dist& rhs) const {
-      return distance > rhs.distance; // > so top has lowest distance in priority_queue
+                 return distance > rhs.distance; // > so top has lowest distance in priority_queue
     }
   };
   using vertex_dist_cont = vector<vertex_dist>;
@@ -204,7 +366,7 @@ protected:
       DistanceT       distance   = numeric_limits<DistanceT>::max(); // distance from source
       vertex_key_t<G> parent_key = numeric_limits<vertex_key_t<G>>::max();
       bool            operator<(const q_vertex_dist& rhs) const {
-        return distance > rhs.distance; // > so top has lowest distance in priority_queue
+                   return distance > rhs.distance; // > so top has lowest distance in priority_queue
       }
     };
     priority_queue<q_vertex_dist, vector<q_vertex_dist>> q(alloc_);
@@ -273,7 +435,7 @@ class bellman_ford_fn {
     vertex_key_t<G> vtx_key  = numeric_limits<vertex_key_t<G>>::max();
     DistanceT       distance = numeric_limits<DistanceT>::max();
     bool            operator<(const vertex_dist& rhs) const {
-      return distance > rhs.distance; // > so top has lowest distance in priority_queue
+                 return distance > rhs.distance; // > so top has lowest distance in priority_queue
     }
   };
   using vertex_dist_cont = vector<vertex_dist>;
@@ -544,7 +706,6 @@ bool bellman_ford_shortest_distances(
       A                    alloc        = A())
 // clang-format on
 {
-
   using distance_t = decltype(distance_fnc(*ranges::begin(edges(g, begin(g)))));
   bellman_ford_fn<G, DistFnc, distance_t, A> fn(g, distance_fnc, alloc);
   return fn.shortest_distances(source, result_iter, leaves_only, detect_neg_edge_cycles);

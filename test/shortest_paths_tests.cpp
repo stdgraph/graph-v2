@@ -15,6 +15,7 @@
 
 using std::cout;
 using std::endl;
+using std::vector;
 
 using std::ranges::forward_range;
 using std::remove_reference_t;
@@ -24,6 +25,7 @@ using std::graph::vertex_t;
 using std::graph::vertex_id_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
+using std::graph::edge_value_t;
 
 using std::graph::vertices;
 using std::graph::edges;
@@ -31,6 +33,9 @@ using std::graph::vertex_value;
 using std::graph::target_id;
 using std::graph::target;
 using std::graph::edge_value;
+
+using std::graph::dijkstra_shortest_paths;
+using std::graph::dijkstra_shortest_distances;
 
 
 using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
@@ -47,13 +52,24 @@ auto find_frankfurt(G&& g) {
 }
 
 
-#if 0
-TEST_CASE("Warshall's Algorithm", "[csv][vofl][transitive_closure][warshall]") {
+TEST_CASE("Dijkstra's Shortest Paths", "[csv][vofl][shortest_paths][dijkstra]") {
   init_console();
-  using G  = routes_volf_graph_type;
-  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  using G             = routes_volf_graph_type;
+  auto&& g            = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  auto   frankfurt_id = find_frankfurt_id(g);
 
-  std::vector<std::graph::reaches<G>> reaches;
-  std::graph::warshall_transitive_closure(g, std::back_inserter(reaches));
+  vector<double>         distance(size(vertices(g)));
+  vector<vertex_id_t<G>> predecessor(size(vertices(g)));
+  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessor);
 }
-#endif
+
+TEST_CASE("Dijkstra's Shortest Distances", "[csv][vofl][shortest_distances][dijkstra]") {
+  init_console();
+  using G             = routes_volf_graph_type;
+  auto&& g            = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  auto   frankfurt_id = find_frankfurt_id(g);
+
+  vector<double>         distance(size(vertices(g)));
+  vector<vertex_id_t<G>> predecessor(size(vertices(g)));
+  dijkstra_shortest_distances(g, frankfurt_id, distance);
+}

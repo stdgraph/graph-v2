@@ -349,13 +349,142 @@ Table \ref{tab:name_conv} shows the naming conventions used throughout this docu
 \subsubsection{Example: Graph Author}
 
 \section{Design - User Side}
+\subsection{Algorithm Concepts}
+Additional concepts used by algorithms.
+\begin{lstlisting}
+template <class G, class F>
+concept edge_weight_function = // e.g. weight(uv)
+      copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
+\end{lstlisting}
+
+\begin{lstlisting}
+// queueable<Q> can represent std::queue and std::priority_queue
+template <class Q>
+concept queueable = requires(Q&& q, Q::value_type value) {
+  Q::value_type;
+  Q::size_type;
+  Q::reference;
+
+  {q.top()};
+  {q.push(value)};
+  {q.pop()};
+  {q.empty()};
+  {q.size()};
+};
+\end{lstlisting}
+
+
 \subsection{Algorithms}
 %Algorithms with [TBD] are candidates to consider but having been decided for being in the paper
 %We are targeting the paper to be under 50pp
+All algorithms are customization points.
+
 \phil{Algorithms marked [TBD] are provisional and may be moved to a separate proposal to keep the size of this proposal manageable}
 
-\subsubsection{Dijkstra's Shortest Paths}
-Dijkstra's algorithm \cite{REF_} ...
+\subsubsection{Dijkstra's Shortest Paths and Shortest Distances}
+Dijkstra's algorithm \cite{REF_} is a single-source, shortest paths algorithm. It finds the shortest paths and their weighted distances to all 
+vertices connected to a single seed vertex.
+
+\begin{lstlisting}
+template <adjacency_list              G,
+          ranges::random_access_range Distance,
+          ranges::random_access_range Predecessor,
+          class EVF   = std::function<ranges::range_value_t<Distance>(edge_reference_t<G>)>,
+          queueable Q = 
+              priority_queue<
+                  weighted_vertex<G,invoke_result_t<EVF,edge_reference_t<G>>>,
+                  vector<weighted_vertex<G,invoke_result_t<EVF,edge_reference_t<G>>>>,
+                  greater<weighted_vertex<G,invoke_result_t<EVF,edge_reference_t<G>>>>>>
+requires ranges::random_access_range<vertex_range_t<G>> &&                  //
+      integral<vertex_id_t<G>> &&                                           //
+      is_arithmetic_v<ranges::range_value_t<Distance>> &&                   //
+      convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
+      edge_weight_function<G, EVF>
+constexpr void dijkstra_shortest_paths(
+      G&&            g,           // graph
+      vertex_id_t<G> seed,        // starting vertex_id
+      Distance&      distance,    // out: distance[uid] of vertex_id uid from seed
+      Predecessor&   predecessor, // out: predecessor[uid] of vertex_id uid in path
+      EVF            weight_fn = [](edge_reference_t<G> uv)  // weight_fn(uv) -> 1
+                                         { return ranges::range_value_t<Distance>(1); },
+      Q              q = Q()
+      );
+\end{lstlisting}
+
+\begin{table}[h!]
+%\begin{center}
+%\resizebox{\textwidth}{!}
+{\begin{tabular}{l l}
+\hline
+    \textit{Complexity} & O(E+2V), where E is the number of edges connected to \tcode{seed}, directly or indirectly, and 2V is the time to \\
+    & initialize the \tcode{distance} and \tcode{predecessor} ranges. \\
+\hline
+    \textit{Preconditions} &  \tcode{seed >= 0 && seed < size(vertices(g))} \\
+     &  \tcode{size(distance) >= size(vertices(g))}; caller must pre-extend \\
+     &  \tcode{size(predecessor) >= size(vertices(g))}; caller must pre-extend \\
+\hline
+    \textit{Constraints} &  Values returned by \tcode{weight_fn} must be non-negative. \\
+\hline
+    \textit{Return} & \tcode{distance[uid]} will be the shortest, weighted distance of vertex\_id \tcode{uid} from \tcode{seed}. \\
+    & If \tcode{uid} is not connected to \tcode{seed} by any edges then it will have a value of \\
+    & \tcode{numeric_limits<range_value_t<Distance>>::max()}. \\
+    & \\
+    & \tcode{predecessor[uid]} will have the predecing vertex\_id of \tcode{uid} in the weighted shortest path to \tcode{seed}. \\
+    & If \tcode{uid} is not connected to \tcode{seed} by any edges then it will have a value of \\
+    & \tcode{numeric_limits<range_value_t<Predecessor>>::max()}. \\
+\hline
+\end{tabular}}
+%\caption{\tcode{incidence} View Functions}
+%\label{tab:incidence}
+%\end{center}
+\end{table}
+
+\phil{There's a hidden complexity of O(E+4V), not just O(E+2V), because we're requiring the caller to pre-extend \tcode{distance} and \tcode{predecessor}
+which also initializes the ranges. 
+If there were customization points for \tcode{resize(c,n[,init])}, \tcode{clear(c)} and \tcode{reserve(c,n)} we could reduce the complexity to 
+O(E+2V) overall.
+} 
+
+\phil{Describe the pros and cons of different kinds of queues} \\
+
+The default weight function \tcode{weight_fn} returns a value of 1. When that is used, \tcode{distances[uid]} will have the shortest number of edges 
+between vertex \tcode{uid} and vertex \tcode{seed}. The distance from \tcode{seed} to itself is zero.
+
+If the caller wishes to use a different queue other than \tcode{priority_queue}, the queue will need to have elements of \tcode{weighted_vertex}
+which is used internally by the algorithm.
+\begin{lstlisting}
+template <class G, class W>
+struct weighted_vertex {
+  vertex_id_t<G> vertex_id = vertex_id_t<G>();
+  W              weight    = W();
+  constexpr auto operator<=>(const weighted_vertex&) const noexcept; // compare vertex_id
+};
+\end{lstlisting}
+
+The \tcode{dijkstra_shortest_distances} function is the same as \tcode{dijkstra_shortest_paths} except that it doesn't include
+the \tcode{predecessor} parameter and has a complexity of O(E+V).
+\begin{lstlisting}
+template <adjacency_list              G,
+          ranges::random_access_range Distance,
+          class EVF   = std::function<ranges::range_value_t<Distance>(edge_reference_t<G>)>,
+          queueable Q = 
+              priority_queue<
+                  weighted_vertex<G,invoke_result_t<EVF,edge_reference_t<G>>>,
+                  vector<weighted_vertex<G,invoke_result_t<EVF,edge_reference_t<G>>>>,
+                  greater<weighted_vertex<G,invoke_result_t<EVF,edge_reference_t<G>>>>>>
+requires ranges::random_access_range<vertex_range_t<G>> &&                  //
+      integral<vertex_id_t<G>> &&                                           //
+      is_arithmetic_v<ranges::range_value_t<Distance>> &&                   //
+      edge_weight_function<G, EVF>
+constexpr void dijkstra_shortest_distances(
+      G&&            g,           // graph
+      vertex_id_t<G> seed,        // starting vertex_id
+      Distance&      distance,    // out: distance[uid] of vertex_id uid from seed
+      EVF            weight_fn = [](edge_reference_t<G> uv)  // weight_fn(uv) -> 1
+                                         { return ranges::range_value_t<Distance>(1); },
+      Q              q = Q()
+      );
+\end{lstlisting}
 
 \subsubsection{Bellman-Ford Shortest Paths}
 The Bellman-Ford algorithm \cite{REF_} ...

@@ -79,6 +79,7 @@
     - [ ] **bfs_edge_range**
     - [ ] topological_sort_vertex_range
     - [ ] topological_sort_edge_range
+    - [ ] allow options to exclude vertex/edge reference on results (Andrew)
 - Algorithms
   - [ ] Common
     - [ ] Add depth(search) CPO for dfs, bfs, topo_sort
