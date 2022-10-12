@@ -75,7 +75,7 @@ endif()
 
 
 # Add libraries
-include(${PROJECT_SOURCE_DIR}/cmake/FetchBoost.cmake)
+#include(${PROJECT_SOURCE_DIR}/cmake/FetchBoost.cmake)
 include(${PROJECT_SOURCE_DIR}/cmake/FetchCatch.cmake)
 include(${PROJECT_SOURCE_DIR}/cmake/FetchDocopt.cmake)
 include(${PROJECT_SOURCE_DIR}/cmake/FetchFMT.cmake)

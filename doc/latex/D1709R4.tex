@@ -102,6 +102,8 @@
 \newcommand{\comment}[2]{{\color{comment}[{\sc #1:} \textsf{#2}]}}
 \newcommand{\phil}[1]{\comment{Phil}{#1}}
 \newcommand{\andrew}[1]{\comment{Andrew}{#1}}
+\newcommand{\kevin}[1]{\comment{Kevin}{#1}}
+\newcommand{\muhammad}[1]{\comment{Muhammad}{#1}}
 
 
 
@@ -382,10 +384,15 @@ All algorithms are customization points.
 \phil{Algorithms marked [TBD] are provisional and may be moved to a separate proposal to keep the size of this proposal manageable}
 
 \subsubsection{Dijkstra's Shortest Paths and Shortest Distances}
-Dijkstra's algorithm \cite{REF_} is a single-source, shortest paths algorithm. It finds the shortest paths and their weighted distances to all 
-vertices connected to a single seed vertex.
+Dijkstra's algorithm \cite{REF_} is a single-source, shortest paths algorithm for non-negative weights. It finds the shortest paths 
+and their weighted distances to all vertices connected to a single seed vertex.
 
 \begin{lstlisting}
+template <adjacency_list G, class DistanceValue>
+auto dijkstra_invalid_distance() {
+  return numeric_limits<DistanceValue>::max(); // exposition only
+}
+
 template <adjacency_list              G,
           ranges::random_access_range Distance,
           ranges::random_access_range Predecessor,
@@ -416,22 +423,25 @@ constexpr void dijkstra_shortest_paths(
 %\resizebox{\textwidth}{!}
 {\begin{tabular}{l l}
 \hline
-    \textit{Complexity} & O(E+2V), where E is the number of edges connected to \tcode{seed}, directly or indirectly, and 2V is the time to \\
-    & initialize the \tcode{distance} and \tcode{predecessor} ranges. \\
-\hline
-    \textit{Preconditions} &  \tcode{seed >= 0 && seed < size(vertices(g))} \\
-     &  \tcode{size(distance) >= size(vertices(g))}; caller must pre-extend \\
-     &  \tcode{size(predecessor) >= size(vertices(g))}; caller must pre-extend \\
+    \textit{Complexity} & O(V log(V)). \\
+                                & Additional time will be required to pre-extend  or initialize the \tcode{distance} range by the caller. \\
+                                & Additional time may also be required to pre-extend \tcode{predecessor}. \\
 \hline
     \textit{Constraints} &  Values returned by \tcode{weight_fn} must be non-negative. \\
 \hline
-    \textit{Return} & \tcode{distance[uid]} will be the shortest, weighted distance of vertex\_id \tcode{uid} from \tcode{seed}. \\
-    & If \tcode{uid} is not connected to \tcode{seed} by any edges then it will have a value of \\
-    & \tcode{numeric_limits<range_value_t<Distance>>::max()}. \\
+    \textit{Preconditions} &  \tcode{seed >= 0 && seed < size(vertices(g))} \\
+                                   &  \tcode{size(distance) >= size(vertices(g))}; caller must pre-extend with \tcode{dikstra_invalid_distance()} \\
+                                   &  \tcode{size(predecessor) >= size(vertices(g))}; caller must pre-extend \\
+                                   & \tcode{distance[i] = dijkstra_invalid_distance()} for \tcode{i < size(vertices(g))} \\
+\hline
+    \textit{Postconditions} &  \tcode{distance[seed] == 0} \\
+                                     & \tcode{predecessor[seed] == seed}. \\
+\hline
+    \textit{Effects} & \tcode{distance[uid]} will be the shortest, weighted distance of vertex\_id \tcode{uid} from \tcode{seed}. \\
+    & If \tcode{uid} is not connected to \tcode{seed} by any edges then it will have a value of \tcode{dijkstra_invalid_distance()}. \\
     & \\
-    & \tcode{predecessor[uid]} will have the predecing vertex\_id of \tcode{uid} in the weighted shortest path to \tcode{seed}. \\
-    & If \tcode{uid} is not connected to \tcode{seed} by any edges then it will have a value of \\
-    & \tcode{numeric_limits<range_value_t<Predecessor>>::max()}. \\
+    & \tcode{predecessor[uid]} will have the preceding vertex\_id of \tcode{uid} in the weighted shortest path to \tcode{seed} \\
+    & when \tcode{distance[uid] != dijkstra_invalid_distance()}. \\
 \hline
 \end{tabular}}
 %\caption{\tcode{incidence} View Functions}
@@ -439,21 +449,18 @@ constexpr void dijkstra_shortest_paths(
 %\end{center}
 \end{table}
 
-\phil{There's a hidden complexity of O(E+4V), not just O(E+2V), because we're requiring the caller to pre-extend \tcode{distance} and \tcode{predecessor}
-which also initializes the ranges. 
-If there were customization points for \tcode{resize(c,n[,init])}, \tcode{clear(c)} and \tcode{reserve(c,n)} we could reduce the complexity to 
-O(E+2V) overall.
-} 
-
 \phil{Describe the pros and cons of different kinds of queues} \\
 
-The default weight function \tcode{weight_fn} returns a value of 1. When that is used, \tcode{distances[uid]} will have the shortest number of edges 
+\andrew{Consider putting the queue template parameter on BFS and passing BFS as a parameter to Dijkstra. Kevin will think about it.} \\
+
+The default weight function \tcode{weight_fn} returns a value of 1. When that is used, \tcode{distance[uid]} will have the shortest number of edges 
 between vertex \tcode{uid} and vertex \tcode{seed}. The distance from \tcode{seed} to itself is zero.
 
 If the caller wishes to use a different queue other than \tcode{priority_queue}, the queue will need to have elements of \tcode{weighted_vertex}
 which is used internally by the algorithm.
 \begin{lstlisting}
 template <class G, class W>
+requires is_default_constructible_v<vertex_id_t<G>> && is_default_constructible_v<W>
 struct weighted_vertex {
   vertex_id_t<G> vertex_id = vertex_id_t<G>();
   W              weight    = W();
@@ -462,7 +469,7 @@ struct weighted_vertex {
 \end{lstlisting}
 
 The \tcode{dijkstra_shortest_distances} function is the same as \tcode{dijkstra_shortest_paths} except that it doesn't include
-the \tcode{predecessor} parameter and has a complexity of O(E+V).
+the \tcode{predecessor} parameter.
 \begin{lstlisting}
 template <adjacency_list              G,
           ranges::random_access_range Distance,
@@ -1067,15 +1074,11 @@ Edgelists are assumed to be either be an edgelist view of an adjacency graph, or
 The csr\_graph is a high-performance graph container that uses \href{https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_\%28CSR\%2C_CRS_or_Yale_format\%29}{Compressed Sparse Row} format to store it's vertices, edges and associated values. Once constructed, vertices and edges cannot be added or deleted but values on vertices and edges can be modified.
 \\
 
-The following listing shows the public interface for the \tcode{csr_graph}. 
-
-When a value type template argument (EV, VV, GV) is void then no extra overhead is incurred for it. The selection of the VId template argument impacts the inter storage requirements. If you have a small graph where the number of vertices is less than 256, and the number of edges is less than 256, then a \tcode{uint8_t} would be sufficient.
+The following listing shows the prototype for the \tcode{csr_graph}. A fuller description, including its constructors, can be found in the \tcode{<csr_graph} header section.
 
 Only the constructors, destructor and assignment operators for \tcode{csr_graph} are public. No other member functions or types are exposed. All other types are only accessible through the types and functions in the Graph Container Interface.
 
-The \tcode{ERng} template parameter is assumed to be a range of \tcode{copyable_edge_t<VId,EV>}. If it isn't, an \tcode{EProj} projection function must be passed to to convert the ERng value type to a \tcode{copyable_edge_t<VId,EV>}.
-
-Likewise, the \tcode{VRng} template parameter is assumed to be a range of \tcode{copyable_vertex_t<VId,VV>}. If it isn't, a \tcode{VProj} projection function must be passed to convert the VRng value type to a \tcode{copyable_vertex_t<VId,VV>}.
+When a value type template argument (EV, VV, GV) is void then no extra overhead is incurred for it. The selection of the VId template argument impacts the inter storage requirements. If you have a small graph where the number of vertices is less than 256, and the number of edges is less than 256, then a \tcode{uint8_t} would be sufficient.
 
 \begin{lstlisting}
 template <class    EV     = void,     // Edge Value type
@@ -1086,8 +1089,6 @@ template <class    EV     = void,     // Edge Value type
           class    Alloc  = allocator<uint32_t>> // for internal containers
 class csr_graph;
 \end{lstlisting}
-
-A fuller description of \tcode{csr_graph}, including its constructors, can be found in the \tcode{<csr_graph} header section.
 
 \subsubsection{csr\_partite\_graph Graph Container (In Design)}
 \phil{This is experimental}
@@ -1269,6 +1270,10 @@ namespace std::graph {
 \end{lstlisting}
 
 \subsection{Header \tcode{<csr_graph>} synopsis [graph.syn]}
+
+The \tcode{ERng} template parameter is assumed to be a range of \tcode{copyable_edge_t<VId,EV>}. If it isn't, an \tcode{EProj} projection function must be passed to to convert the ERng value type to a \tcode{copyable_edge_t<VId,EV>}.
+
+Likewise, the \tcode{VRng} template parameter is assumed to be a range of \tcode{copyable_vertex_t<VId,VV>}. If it isn't, a \tcode{VProj} projection function must be passed to convert the VRng value type to a \tcode{copyable_vertex_t<VId,VV>}.
 
 %\vspace{10pt}
 

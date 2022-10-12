@@ -56,10 +56,10 @@ concept edge_weight_function = // e.g. weight(uv)
       copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
 
 template <class Q>
-concept queueable = requires(Q&& q, Q::value_type value) {
-  Q::value_type;
-  Q::size_type;
-  Q::reference;
+concept queueable = requires(Q&& q, typename Q::value_type value) {
+  typename Q::value_type;
+  typename Q::size_type;
+  typename Q::reference;
 
   {q.top()};
   {q.push(value)};
@@ -68,30 +68,29 @@ concept queueable = requires(Q&& q, Q::value_type value) {
   {q.size()};
 };
 
-struct empty {};
-using null_predessor_range_type = ranges::subrange<ranges::iterator_t<vector<empty>>>;
+struct null_predecessor {};
+using null_predessor_range_type = ranges::subrange<ranges::iterator_t<vector<null_predecessor>>>;
 
 template <class G, class W>
+requires is_default_constructible_v<vertex_id_t<G>> && is_default_constructible_v<W>
 struct weighted_vertex {
   vertex_id_t<G> vertex_id = vertex_id_t<G>();
   W              weight    = W();
 
   constexpr auto operator<=>(const weighted_vertex& rhs) const noexcept {
-    if constexpr (is_signed_v<vertex_id_t<G>>)
-      return vertex_id - rhs.vertex_id;
-    else if constexpr (sizeof(vertex_id_t<G>) < sizeof(ptrdiff_t))
-      return static_cast<ptrdiff_t>(vertex_id) - static_cast<ptrdiff_t>(rhs.vertex_id);
-    else {
-      if (vertex_id < rhs.vertex_id)
-        return -1;
-      else if (vertex_id > rhs.vertex_id)
-        return +1;
-      else
-        return 0;
-    }
+    if (vertex_id < rhs.vertex_id)
+      return -1;
+    else if (vertex_id > rhs.vertex_id)
+      return +1;
+    else
+      return 0;
   }
 };
 
+template <adjacency_list G, class DistanceValue>
+auto dijkstra_invalid_distance() {
+  return numeric_limits<DistanceValue>::max();
+}
 
 // Remark(Andrew)
 //  1.  We may want to make the queue parameterizable as different types of
@@ -118,27 +117,34 @@ requires ranges::random_access_range<vertex_range_t<G>> && //
       is_arithmetic_v<ranges::range_value_t<Distance>> &&  //
       //convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
       edge_weight_function<G, EVF>
-constexpr void dijkstra_shortest_paths_impl(G&&            g,           // graph
-                                            vertex_id_t<G> seed,        // starting vertex_id
-                                            Distance&      distance,    // out: distance[uid] of vertex_id uid from seed
-                                            Predecessor&   predecessor, // out: predecessor[uid] of vertex_id uid in path
-                                            EVF&           weight_fn,   // weight function
-                                            Q&             q            // queue
+constexpr void dijkstra_shortest_paths_impl(G&&            g,         // graph
+                                            vertex_id_t<G> seed,      // starting vertex_id
+                                            Distance&      distance,  // out: distance[uid] of vertex_id uid from seed
+                                            Predecessor& predecessor, // out: predecessor[uid] of vertex_id uid in path
+                                            EVF&         weight_fn,   // weight function
+                                            Q&           q            // queue
 ) {
   // init distances
   using distance_type = ranges::range_value_t<Distance>;
   assert(size(distance) >= size(vertices(g)));
   assert(seed >= 0 && static_cast<size_t>(seed) < size(vertices(g)));
+#  if 0 // caller must initialize distance[] values with dijkstra_invalid_distance()
   //ranges::fill(distance, numeric_limits<distance_type>::max());
-  ranges::fill_n(ranges::begin(distance), size(vertices(g)), numeric_limits<distance_type>::max());
+  ranges::fill_n(ranges::begin(distance), size(vertices(g)), dijkstra_invalid_distance<G, distance_type>());
+#  endif
   distance[seed] = 0;
 
   // init predecessors
   if constexpr (!is_same_v<Predecessor, null_predessor_range_type>) {
+#  if 1
+    // predecessor[x] is valid if distance[x] != dijkstra_invalid_distance();
+    predecessor[seed] = seed;
+#  else
     using predecessor_type = ranges::range_value_t<Predecessor>;
     assert(size(predecessor) >= size(vertices(g)));
     //ranges::fill(predecessor, numeric_limits<predecessor_type>::max());
     ranges::fill_n(ranges::begin(predecessor), size(vertices(g)), numeric_limits<predecessor_type>::max());
+#  endif
   }
 
   // Remark(Andrew): CLRS puts all vertices in the queue to start but standard practice seems to be to enqueue source
@@ -202,7 +208,7 @@ requires ranges::random_access_range<vertex_range_t<G>> && //
 constexpr void dijkstra_shortest_distances(
       G&&            g,        // graph
       vertex_id_t<G> seed,     // starting vertex_id
-      Distance&      distance,    // out: distance[uid] of vertex_id uid from seed
+      Distance&      distance, // out: distance[uid] of vertex_id uid from seed
       EVF            weight_fn =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }, // default weight(uv) -> 1
       Q q = Q()                                                                        //
