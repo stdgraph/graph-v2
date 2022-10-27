@@ -1,32 +1,17 @@
-//
-// Author: Andrew Lumsdaine and Phil Ratzloff
-//
-// Shortest Paths and Shortest Distances algorithms using Dijkstra & Bellman-Ford algorithms
-// for a single source vertex.
-//
-// Dijktra's shortest path algorithm runs in O(|E| + |V|log|V|) time and supports non-negative
-// edge weights. Negative weights result in undefined values. Outputting leaf-only distances/paths
-// adds an additional O(|V| + |E|).
-//
-// (FUTURE)
-// Bellman-Ford shortest path algorithm runs in O(|V| * |E|) and support negative edge weights.
-// Detecting negative edge cycles adds an addtional O(|E|).
-//
-// Both algorithms support shortest-distance and shortest-path variants, where shortest-path
-// requires memory allocation of a vector of vertex iterators for each value returned to the
-// output iterator passed.
-//
-// NOTES
-//  A vertex range variant isn't included because it's assumes that it would be useful for
-//  contiguous vertices in a range. Rather, it would be better to support a collection of vertex
-//  iterators to allow for disjoint vertices.
-//
-// ISSUES / QUESTIONS
-//  1.  Should bellman_ford always check for negative edge cycles? (e.g. remove
-//      detect_neg_edge_cycles parameter?)
-//
-
-#pragma once
+/**
+ * @file shortest_paths.hpp
+ * 
+ * @brief Single-Source Shortest paths and shortest sistances algorithms using Dijkstra & 
+ * Bellman-Ford algorithms.
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ * SPDX-License-Identifier: BSL-1.0
+ *
+ * @authors
+ *   Andrew Lumsdaine
+ *   Phil Ratzloff
+ */
 
 #include <queue>
 #include <vector>
@@ -119,7 +104,7 @@ auto dijkstra_invalid_distance() {
  * Complexity: O(|E| + |V|log|V|)
  * 
  * @tparam G                The graph type.
- * @tparam DistanceRange    The distance type.
+ * @tparam DistanceRange    The distance range type.
  * @tparam PredecessorRange The predecessor range type.
  * @tparam EVF              The edge value function that returns the weight of an edge.
  * @tparam Q                The priority queue type.
@@ -133,12 +118,12 @@ auto dijkstra_invalid_distance() {
  *                    caller must assure size(predecessor) >= size(vertices(g)). It is only valid when
  *                    distance[uid] != dijkstra_invalid_distance().
  * @param weight_fn   The weight function object used to determine the distance between
- *                    vertices on an edge. The default return value is 1.
+ *                    vertices on an edge. Return values must be non-negative. The default return value is 1.
  * @param q           The priority queue used internally by dijkstra_shortest_paths.
  */
 template <adjacency_list              G,
           ranges::random_access_range DistanceRange,
-          class PredecessorRange,
+          ranges::random_access_range PredecessorRange,
           class EVF   = std::function<ranges::range_value_t<DistanceRange>(edge_reference_t<G>)>,
           queueable Q = priority_queue<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>,
                                        vector<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>,
@@ -188,10 +173,10 @@ constexpr void dijkstra_shortest_paths(
  * 
  * Complexity: O(|E| + |V|log|V|)
  * 
- * @tparam G                The graph type.
- * @tparam Distance         The distance type.
- * @tparam EVF              The edge value function that returns the weight of an edge.
- * @tparam Q                The priority queue type.
+ * @tparam G          The graph type.
+ * @tparam Distance   The distance range type.
+ * @tparam EVF        The edge value function that returns the weight of an edge.
+ * @tparam Q          The priority queue type.
  * 
  * @param g           The graph.
  * @param seed        The single source vertex to start the search.
@@ -199,7 +184,7 @@ constexpr void dijkstra_shortest_paths(
  *                    must assure size(distance) >= size(vertices(g)) and set the values to be 
  *                    dijkstra_invalid_distance().
  * @param weight_fn   The weight function object used to determine the distance between
- *                    vertices on an edge. The default return value is 1.
+ *                    vertices on an edge. Return values must be non-negative. The default return value is 1.
  * @param q           The priority queue used internally by dijkstra_shortest_paths.
  */
 template <adjacency_list              G,
