@@ -1,0 +1,22 @@
+name: Formatting
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master and dev branch
+  push:
+    branches: [ master workflow/format]
+
+  pull_request:
+    branches: [ master workflow/format]
+
+jobs:
+  formatting-check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run clang-format style check for C/C++/Protobuf programs.
+      uses: jidicula/clang-format-action@v4.9.0
+      with:
+        clang-format-version: '13'
+        check-path: 'include'
