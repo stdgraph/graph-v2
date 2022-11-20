@@ -18,8 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Run clang-format style check for C/C++/Protobuf programs.
-      uses: jidicula/clang-format-action@v4.9.0
-      with:
-        clang-format-version: '13'
-        check-path: 'include'
+    - name: Install clang-format
+      run: |
+        apt-get update \
+        && apt-get install --no-install-recommends -y \
+        clang-format-16 \
+        && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+        && apt-get clean -y && rm -rf /var/lib/apt/lists/* \
+        && mv /usr/bin/clang-format-16 /usr/bin/clang-format
+      shell: bash
