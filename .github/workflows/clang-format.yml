@@ -18,12 +18,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
+    - name: Add clang-format key
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - \
+        && sudo echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main" >> /etc/apt/sources.list \
+        && sudo echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main" >> /etc/apt/sources.list \
+        && sudo echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main" >> /etc/apt/sources.list \
+        && sudo echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main" >> /etc/apt/sources.list \
+        && sudo echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >> /etc/apt/sources.list \
+        && sudo echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >> /etc/apt/sources.list
+      shell: bash
+      
     - name: Install clang-format
       run: |
         sudo apt-get update \
-        && sudo apt-get install --no-install-recommends -y \
-        clang-format-16 \
-        && sudo apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-        && sudo apt-get clean -y && sudo rm -rf /var/lib/apt/lists/* \
-        && sudo mv /usr/bin/clang-format-16 /usr/bin/clang-format
+        && sudo apt-get install -y clang-format-16 \
+        && clang-format --version
       shell: bash
