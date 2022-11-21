@@ -60,8 +60,7 @@ TEST_CASE("CSR void EV test", "[csr][capabilities]") {
   //using init_edge_value = std::graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
 
   // Define the graph. It's the same as the germany routes using source_order_found
-  G g = {{0, 1},  {0, 4}, {0, 6}, {1, 2},  {2, 3}, {3, 8},
-         {4, 5}, {4, 7}, {5, 8}, {5, 9}, {6, 8}};
+  G g = {{0, 1}, {0, 4}, {0, 6}, {1, 2}, {2, 3}, {3, 8}, {4, 5}, {4, 7}, {5, 8}, {5, 9}, {6, 8}};
 
   using init_vertex_value             = std::graph::copyable_vertex_t<vertex_id_t<G>, std::string>;
   std::vector<std::string_view> names = {"Frankfürt", "Mannheim", "Karlsruhe", "Augsburg", "Würzburg",

@@ -12,42 +12,42 @@ namespace std::graph::container {
 
 template <class C>
 concept reservable = requires(C& container, typename C::size_type n) {
-  {container.reserve(n)};
-};
+                       { container.reserve(n) };
+                     };
 template <class C>
 concept resizable = requires(C& container, typename C::size_type n) {
-  {container.resize(n)};
-};
+                      { container.resize(n) };
+                    };
 
 template <class C>
 concept has_emplace_back = requires(C& container, typename C::value_type&& value) {
-  {container.emplace_back(move(value))};
-};
+                             { container.emplace_back(move(value)) };
+                           };
 template <class C>
 concept has_push_back = requires(C& container, const typename C::value_type& value) {
-  {container.push_back(value)};
-};
+                          { container.push_back(value) };
+                        };
 template <class C>
 concept has_emplace_front = requires(C& container, typename C::value_type&& value) {
-  {container.emplace_front(move(value))};
-};
+                              { container.emplace_front(move(value)) };
+                            };
 template <class C>
 concept has_push_front = requires(C& container, const typename C::value_type& value) {
-  {container.push_front(value)};
-};
+                           { container.push_front(value) };
+                         };
 template <class C>
 concept has_emplace = requires(C& container, typename C::value_type&& value) {
-  {container.emplace(move(value))};
-};
+                        { container.emplace(move(value)) };
+                      };
 template <class C>
 concept has_insert = requires(C& container, const typename C::value_type& value) {
-  {container.insert(value)};
-};
+                       { container.insert(value) };
+                     };
 
 template <class C, class Idx>
 concept has_array_operator = requires(C&& container, Idx idx) {
-  {container[idx]}; //->is_lvalue_reference_v;
-};
+                               { container[idx] }; //->is_lvalue_reference_v;
+                             };
 
 // return a lambda to push/insert/emplace an element in a container
 template <class C>
@@ -100,7 +100,7 @@ constexpr auto assign_or_insert(C& container) {
 // and a second time to load the edges.
 template <class ERng, class EIdFnc, class EValueFnc>
 concept edge_value_extractor = ranges::forward_range<ERng> && invocable<EIdFnc, typename ERng::value_type> &&
-      invocable<EValueFnc, typename ERng::value_type>;
+                               invocable<EValueFnc, typename ERng::value_type>;
 
 namespace detail {
   //--------------------------------------------------------------------------------------
@@ -108,8 +108,8 @@ namespace detail {
   //
   template <class T>
   struct graph_value_wrapper {
-    constexpr graph_value_wrapper()                 = default;
-    graph_value_wrapper(const graph_value_wrapper&) = default;
+    constexpr graph_value_wrapper()                            = default;
+    graph_value_wrapper(const graph_value_wrapper&)            = default;
     graph_value_wrapper& operator=(const graph_value_wrapper&) = default;
     graph_value_wrapper(graph_value_wrapper&& v) : value(move(v.value)) {}
     graph_value_wrapper(const T& v) : value(v) {}
@@ -120,15 +120,16 @@ namespace detail {
 
   template <class T>
   struct graph_value_needs_wrap
-        : integral_constant<bool, is_scalar<T>::value || is_array<T>::value || is_union<T>::value ||
-                                        is_reference<T>::value> {};
+        : integral_constant<bool,
+                            is_scalar<T>::value || is_array<T>::value || is_union<T>::value || is_reference<T>::value> {
+  };
 
   template <class T>
-  constexpr auto user_value(T & v)->T& {
+  constexpr auto user_value(T& v) -> T& {
     return v;
   }
   template <class T>
-  constexpr auto user_value(const T& v)->const T& {
+  constexpr auto user_value(const T& v) -> const T& {
     return v;
   }
 } // namespace detail
@@ -141,8 +142,8 @@ struct empty_value {}; // empty graph|vertex|edge value
 struct weight_value {
   int weight = 0;
 
-  constexpr weight_value()          = default;
-  weight_value(const weight_value&) = default;
+  constexpr weight_value()                     = default;
+  weight_value(const weight_value&)            = default;
   weight_value& operator=(const weight_value&) = default;
   weight_value(const int& w) : weight(w) {}
 };
@@ -150,8 +151,8 @@ struct weight_value {
 struct name_value {
   string name;
 
-  name_value()                  = default;
-  name_value(const name_value&) = default;
+  name_value()                             = default;
+  name_value(const name_value&)            = default;
   name_value& operator=(const name_value&) = default;
   name_value(const string& s) : name(s) {}
   name_value(string&& s) : name(move(s)) {}

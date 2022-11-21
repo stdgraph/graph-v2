@@ -4,19 +4,31 @@ name: Formatting
 on:
   # Triggers the workflow on push or pull request events but only for the master and dev branch
   push:
-    branches: [ master workflow/format]
-
-  pull_request:
-    branches: [ master workflow/format]
+    branches: [ master ]
 
 jobs:
   formatting-check:
-    name: Check
+    name: Format
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Run clang-format style check for C/C++/Protobuf programs.
-      uses: jidicula/clang-format-action@v4.9.0
       with:
-        clang-format-version: '13'
-        check-path: 'include'
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Install clang-format
+      run: |
+        pip install clang-format \
+        && clang-format --version
+      shell: bash
+
+    - name: Format files
+      run: ${{github.workspace}}/scripts/format.sh ${{github.workspace}} y
+      shell: bash
+
+    - name: Commit changes
+      uses: EndBug/add-and-commit@v9
+      with:
+        committer_name: GitHub Actions
+        committer_email: 41898282+github-actions[bot]@users.noreply.github.com
+        message: ':octocat: Applied clang-format.'
+        add: '*.hpp *.cpp'

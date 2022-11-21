@@ -42,16 +42,16 @@ concept edge_weight_function = // e.g. weight(uv)
 */
 template <class Q>
 concept queueable = requires(Q&& q, typename Q::value_type value) {
-  typename Q::value_type;
-  typename Q::size_type;
-  typename Q::reference;
+                      typename Q::value_type;
+                      typename Q::size_type;
+                      typename Q::reference;
 
-  {q.top()};
-  {q.push(value)};
-  {q.pop()};
-  {q.empty()};
-  {q.size()};
-};
+                      { q.top() };
+                      { q.push(value) };
+                      { q.pop() };
+                      { q.empty() };
+                      { q.size() };
+                    };
 
 /**
  * @brief Internal sentinal type to indicate that predecessor evaluation isn't needed when calling 
@@ -128,11 +128,11 @@ template <adjacency_list              G,
           queueable Q = priority_queue<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>,
                                        vector<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>,
                                        greater<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>>>
-requires ranges::random_access_range<vertex_range_t<G>> &&     //
-      integral<vertex_id_t<G>> &&                              //
-      is_arithmetic_v<ranges::range_value_t<DistanceRange>> && //
-      //convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
-      edge_weight_function<G, EVF>
+requires ranges::random_access_range<vertex_range_t<G>> &&        //
+         integral<vertex_id_t<G>> &&                              //
+         is_arithmetic_v<ranges::range_value_t<DistanceRange>> && //
+         //convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
+         edge_weight_function<G, EVF>
 constexpr void dijkstra_shortest_paths(
       G&&               g,
       vertex_id_t<G>    seed,
@@ -193,17 +193,17 @@ template <adjacency_list              G,
           queueable Q = priority_queue<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>,
                                        vector<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>,
                                        greater<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>>>
-requires ranges::random_access_range<vertex_range_t<G>> &&     //
-      integral<vertex_id_t<G>> &&                              //
-      is_arithmetic_v<ranges::range_value_t<DistanceRange>> && //
-      edge_weight_function<G, EVF>
+requires ranges::random_access_range<vertex_range_t<G>> &&        //
+         integral<vertex_id_t<G>> &&                              //
+         is_arithmetic_v<ranges::range_value_t<DistanceRange>> && //
+         edge_weight_function<G, EVF>
 constexpr void dijkstra_shortest_distances(
       G&&            g,        // graph
       vertex_id_t<G> seed,     // starting vertex_id
       DistanceRange& distance, // out: distance[uid] of vertex_id uid from seed
       EVF            weight_fn =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<DistanceRange>(1); }, // default weight(uv) -> 1
-      Q q = Q()                                                                        //
+      Q q = Q()                                                                             //
 ) {
   _null_predecessor_range_type predecessor; // don't evaluate predecessor
   dijkstra_shortest_paths(g, seed, distance, predecessor, weight_fn, q);
