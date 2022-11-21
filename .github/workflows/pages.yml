@@ -38,39 +38,36 @@ jobs:
         env:
           CC:   gcc-11
           CXX:  g++-11
-        
-      # Install requirements
-      - name: Install Requirements
-        run: |
-          sudo apt-get install doxygen
-          cd ${{github.workspace}}/docs/sphinx
-          pip install -r requirements.txt
-          python --version
-        
+
       # Testing with a different python
       - name: Install Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.7' 
         
-      - name: What Version
-        run: python --version
+      # Install requirements
+      - name: Install Requirements
+        run: |
+          python --version
+          sudo apt-get install doxygen
+          cd ${{github.workspace}}/docs/sphinx
+          pip install -r requirements.txt
 
-      # # Build Sphinx documentation
-      # - name: Build Documentation
-      #   run: |
-      #     cd ${{github.workspace}}/docs/sphinx
-      #     make html
+      # Build Sphinx documentation
+      - name: Build Documentation
+        run: |
+          cd ${{github.workspace}}/docs/sphinx
+          make html
         
-      # - name: Setup Pages
-      #   uses: actions/configure-pages@v2
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
       
-      # - name: Upload artifact
-      #   uses: actions/upload-pages-artifact@v1
-      #   with:
-      #     # Upload html directory
-      #     path: './docs/sphinx/_build/html'
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # Upload html directory
+          path: './docs/sphinx/_build/html'
           
-      # - name: Deploy to GitHub Pages
-      #   id: deployment
-      #   uses: actions/deploy-pages@v1
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
