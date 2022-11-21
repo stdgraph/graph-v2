@@ -49,10 +49,12 @@ jobs:
         
       # Testing with a different python
       - name: Install Python
-      - uses: actions/setup-python@v4
+        uses: actions/setup-python@v4
         with:
           python-version: '3.7' 
-      - run: python --version
+        
+      - name: What Version
+        run: python --version
 
       # # Build Sphinx documentation
       # - name: Build Documentation
