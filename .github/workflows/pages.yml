@@ -43,13 +43,13 @@ jobs:
       - name: Install Requirements
         run: |
           sudo apt-get install doxygen
-          cd ${{github.workspace}}/doc/sphinx
+          cd ${{github.workspace}}/docs/sphinx
           pip install -r requirements.txt
         
       # Build Sphinx documentation
       - name: Build Documentation
         run: |
-          cd ${{github.workspace}}/doc/sphinx
+          cd ${{github.workspace}}/docs/sphinx
           make html
         
       - name: Setup Pages
@@ -59,7 +59,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload html directory
-          path: './doc/sphinx/_build/html'
+          path: './docs/sphinx/_build/html'
           
       - name: Deploy to GitHub Pages
         id: deployment
