@@ -26,6 +26,5 @@ jobs:
       shell: bash
 
     - name: Format files
-      run: |
-        cd ${{github.workspace}}/scripts \
-        $$ ./format.sh ./ y
+      run: ${{github.workspace}}/scripts/format.sh ${{github.workspace}} y
+      shell: bash
