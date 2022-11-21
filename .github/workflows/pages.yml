@@ -45,22 +45,30 @@ jobs:
           sudo apt-get install doxygen
           cd ${{github.workspace}}/docs/sphinx
           pip install -r requirements.txt
+          python --version
         
-      # Build Sphinx documentation
-      - name: Build Documentation
-        run: |
-          cd ${{github.workspace}}/docs/sphinx
-          make html
-        
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
-      
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+      # Testing with a different python
+      - name: Install Python
+      - uses: actions/setup-python@v4
         with:
-          # Upload html directory
-          path: './docs/sphinx/_build/html'
+          python-version: '3.7' 
+      - run: python --version
+
+      # # Build Sphinx documentation
+      # - name: Build Documentation
+      #   run: |
+      #     cd ${{github.workspace}}/docs/sphinx
+      #     make html
+        
+      # - name: Setup Pages
+      #   uses: actions/configure-pages@v2
+      
+      # - name: Upload artifact
+      #   uses: actions/upload-pages-artifact@v1
+      #   with:
+      #     # Upload html directory
+      #     path: './docs/sphinx/_build/html'
           
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
+      # - name: Deploy to GitHub Pages
+      #   id: deployment
+      #   uses: actions/deploy-pages@v1
