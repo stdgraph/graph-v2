@@ -52,4 +52,4 @@ if [ "$format_files" = "false" ]; then
 fi
 
 # Format each file.
-clang-format --verbose -i --style=file "${FILE_LIST_ARRAY[@]}"
+clang-format --verbose -i --style=file:$SCRIPT_DIRECTORY/.clang-format "${FILE_LIST_ARRAY[@]}"
