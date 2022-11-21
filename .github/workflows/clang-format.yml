@@ -21,6 +21,6 @@ jobs:
 
     - name: Install clang-format
       run: |
-        pip install clang-format
+        pip install clang-format \
         && clang-format --version
       shell: bash
