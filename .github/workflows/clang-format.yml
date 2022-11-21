@@ -20,16 +20,9 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Add clang-format key
-      run: |
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - \
-        && sudo echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main" >> /etc/apt/sources.list \
-        && sudo echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main" >> /etc/apt/sources.list \
-        && sudo echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main" >> /etc/apt/sources.list \
-        && sudo echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main" >> /etc/apt/sources.list \
-        && sudo echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >> /etc/apt/sources.list \
-        && sudo echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >> /etc/apt/sources.list
+      run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
       shell: bash
-      
+
     - name: Install clang-format
       run: |
         sudo apt-get update \
