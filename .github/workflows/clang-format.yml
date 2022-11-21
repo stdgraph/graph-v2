@@ -27,5 +27,5 @@ jobs:
 
     - name: Format files
       run: |
-      cd ${{github.workspace}}/scripts \
-      $$ ./format.sh ./ y
+        cd ${{github.workspace}}/scripts \
+        $$ ./format.sh ./ y
