@@ -581,7 +581,8 @@ void output_routes_graphviz_dfs_vertices(
   for (auto&& [uid, vid, uv] : std::graph::views::sourced_edges_depth_first_search(g, seed)) {
     // Output newly discovered vertex
     if (!visited[vid]) {
-      of << "  " << vid << " [shape=Mrecord, label=\"{<f0>" << vid << "|<f1>" << vertex_value(g, *find_vertex(g,uid)) << "}\"]\n";
+      of << "  " << vid << " [shape=Mrecord, label=\"{<f0>" << vid << "|<f1>" << vertex_value(g, *find_vertex(g, uid))
+         << "}\"]\n";
       visited[vid] = true;
     }
     of << "  " << uid << " -> " << vid << "\n"; // output the edge

@@ -43,15 +43,16 @@ using to_tuple_t = decltype(to_tuple(std::declval<T>()));
 
 template <class C>
 concept has_push_back = requires(C& container, std::ranges::range_reference_t<C> val) {
-  {container.push_back(val)};
-};
+                          { container.push_back(val) };
+                        };
 template <class C>
 concept has_push_front = requires(C& container, std::ranges::range_reference_t<C> val) {
-  {container.push_front(val)};
-};
+                           { container.push_front(val) };
+                         };
 
 template <class Outer>
-concept range_of_ranges = std::ranges::random_access_range<Outer> &&   // outer range is an random_access_range
+concept range_of_ranges =
+      std::ranges::random_access_range<Outer> &&                       // outer range is an random_access_range
       std::ranges::forward_range<std::ranges::range_value_t<Outer>> && // inner range is forward_range
       std::integral<std::tuple_element_t<0,
                                          to_tuple_t<std::ranges::range_value_t<std::ranges::range_value_t<
@@ -76,8 +77,8 @@ public:
 
 public:
   template <std::ranges::forward_range ERng, class EProj = std::identity>
-  rr_adaptor(VVR&         vertex_values,       // 
-             const ERng&  erng,                // 
+  rr_adaptor(VVR&         vertex_values,       //
+             const ERng&  erng,                //
              const EProj& eproj     = EProj(), // EProj(ERng::value_type&) -> edge_view<VId,true[,val]>
              bool         dup_edges = false)
         : vertex_values_(vertex_values) {
@@ -233,7 +234,8 @@ template <class V>
 using rr_vertex_value_type_t = rr_vertex_value_type<V>::type;
 
 template <class Outer>
-concept range_of_ranges2 = std::ranges::random_access_range<Outer> &&  // outer range is an random_access_range
+concept range_of_ranges2 =
+      std::ranges::random_access_range<Outer> &&                       // outer range is an random_access_range
       std::ranges::forward_range<std::ranges::range_value_t<Outer>> && // inner range is forward_range
       std::integral<std::tuple_element_t<0,
                                          to_tuple_t<std::ranges::range_value_t<std::ranges::range_value_t<

@@ -26,8 +26,7 @@ class incidence_iterator;
 /// <typeparam name="G">Graph type</typeparam>
 /// <typeparam name="EVF">Edge Value Function</typeparam>
 template <adjacency_list G, bool Sourced, class EVF>
-class incidence_iterator
-      : source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
+class incidence_iterator : source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
   using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
 
@@ -223,12 +222,12 @@ TAG_INVOKE_DEF(incidence); // incidence(g,uid)            -> edges[vid,v]
 
 template <class G>
 concept _has_incidence_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-  {incidence(g, uid)};
-};
+                                                        { incidence(g, uid) };
+                                                      };
 template <class G, class EVF>
 concept _has_incidence_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-  {incidence(g, uid, evf)};
-};
+                                                            { incidence(g, uid, evf) };
+                                                          };
 } // namespace std::graph::tag_invoke
 
 namespace std::graph::views {

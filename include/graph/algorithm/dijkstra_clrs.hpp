@@ -46,11 +46,11 @@ template <adjacency_list              G,
           ranges::random_access_range Distance,
           ranges::random_access_range Predecessor,
           class WF = std::function<ranges::range_value_t<Distance>(edge_reference_t<G>)>>
-requires ranges::random_access_range<vertex_range_t<G>> &&                  //
-      integral<vertex_id_t<G>> &&                                           //
-      is_arithmetic_v<ranges::range_value_t<Distance>> &&                   //
-      convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
-      edge_weight_function<G, WF>
+requires ranges::random_access_range<vertex_range_t<G>> &&                     //
+         integral<vertex_id_t<G>> &&                                           //
+         is_arithmetic_v<ranges::range_value_t<Distance>> &&                   //
+         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
+         edge_weight_function<G, WF>
 void dijkstra_clrs(
       G&&            g,           // graph
       vertex_id_t<G> seed,        // starting vertex_id

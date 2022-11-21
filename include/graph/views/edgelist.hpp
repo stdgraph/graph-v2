@@ -105,7 +105,7 @@ public:
   constexpr ~edgelist_iterator()                        = default;
 
   constexpr edgelist_iterator& operator=(const edgelist_iterator&) = default;
-  constexpr edgelist_iterator& operator=(edgelist_iterator&&) = default;
+  constexpr edgelist_iterator& operator=(edgelist_iterator&&)      = default;
 
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
@@ -198,7 +198,7 @@ public:
   constexpr ~edgelist_iterator()                        = default;
 
   constexpr edgelist_iterator& operator=(const edgelist_iterator&) = default;
-  constexpr edgelist_iterator& operator=(edgelist_iterator&&) = default;
+  constexpr edgelist_iterator& operator=(edgelist_iterator&&)      = default;
 
 public:
   constexpr reference operator*() const {
@@ -252,21 +252,21 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_edgelist_g_adl = adjacency_list<G> && requires(G&& g) {
-    {edgelist(g)};
-  };
+                                                       { edgelist(g) };
+                                                     };
   template <class G>
   concept _has_edgelist_g_uid_adl = adjacency_list<G> && requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-    {edgelist(g, uid, vid)};
-  };
+                                                           { edgelist(g, uid, vid) };
+                                                         };
   template <class G, class EVF>
   concept _has_edgelist_g_evf_adl = adjacency_list<G> && requires(G&& g, const EVF& evf) {
-    {edgelist(g, evf)};
-  };
+                                                           { edgelist(g, evf) };
+                                                         };
   template <class G, class EVF>
-  concept _has_edgelist_g_uid_evf_adl = adjacency_list<G> &&
-        requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, const EVF& evf) {
-    {edgelist(g, uid, vid, evf)};
-  };
+  concept _has_edgelist_g_uid_evf_adl =
+        adjacency_list<G> && requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, const EVF& evf) {
+                               { edgelist(g, uid, vid, evf) };
+                             };
 
 } // namespace tag_invoke
 
