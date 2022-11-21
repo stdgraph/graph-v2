@@ -14,10 +14,12 @@ on:
 
 jobs:
   formatting-check:
-    name: Check
+    name: Format
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
 
     - name: Install clang-format
       run: |
