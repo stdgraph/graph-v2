@@ -37,51 +37,49 @@ using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<r
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
 TEST_CASE("Maximal Independent Set Algorithm", "[mis]") {
-    init_console();
-    using G = routes_vol_graph_type;
-    auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
+  init_console();
+  using G  = routes_vol_graph_type;
+  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
 
-    SECTION( "default seed(0)" ) {
-        std::set<vertex_id_t<G>> mis;
-	cout << "MIS seed with " << vertex_value(g, *find_vertex(g, 0)) << endl;
-	std::graph::maximal_independent_set( g, std::inserter(mis, mis.begin()));
-	
-        for ( auto&& uid : mis ) {
-            cout << uid << " " << vertex_value(g,*find_vertex(g, uid)) << endl;
-        }
+  SECTION("default seed(0)") {
+    std::set<vertex_id_t<G>> mis;
+    cout << "MIS seed with " << vertex_value(g, *find_vertex(g, 0)) << endl;
+    std::graph::maximal_independent_set(g, std::inserter(mis, mis.begin()));
+
+    for (auto&& uid : mis) {
+      cout << uid << " " << vertex_value(g, *find_vertex(g, uid)) << endl;
     }
-    SECTION( "seed=4" ) {
-        std::vector<vertex_id_t<G>> mis;
-	cout << "MIS seed with " << vertex_value(g, *find_vertex(g, 4)) << endl;
-        std::graph::maximal_independent_set( g, std::back_inserter(mis), 4 );
+  }
+  SECTION("seed=4") {
+    std::vector<vertex_id_t<G>> mis;
+    cout << "MIS seed with " << vertex_value(g, *find_vertex(g, 4)) << endl;
+    std::graph::maximal_independent_set(g, std::back_inserter(mis), 4);
 
-        for ( auto&& uid : mis ) {
-            cout << uid << " " << vertex_value(g,*find_vertex(g, uid)) << endl;
-        }
+    for (auto&& uid : mis) {
+      cout << uid << " " << vertex_value(g, *find_vertex(g, uid)) << endl;
     }
-
+  }
 }
-#elif TEST_OPTION == TEST_OPTION_TEST 
+#elif TEST_OPTION == TEST_OPTION_TEST
 TEST_CASE("Maximal Independent Set Algorithm", "[mis]") {
-    init_console();
-    using G = routes_vol_graph_type;
-    auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
+  init_console();
+  using G  = routes_vol_graph_type;
+  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
 
-    SECTION( "default seed(0)" ) {
-        std::set<vertex_id_t<G>> mis;
-	std::graph::maximal_independent_set( g, std::inserter(mis, mis.begin()));
+  SECTION("default seed(0)") {
+    std::set<vertex_id_t<G>> mis;
+    std::graph::maximal_independent_set(g, std::inserter(mis, mis.begin()));
 
-        for ( auto&& uid : mis ) {
-	  for (auto&& [vid, v] : std::graph::views::incidence(g, uid)) {
-            REQUIRE(mis.find(vid) == mis.end());
-	  }
-        }
+    for (auto&& uid : mis) {
+      for (auto&& [vid, v] : std::graph::views::incidence(g, uid)) {
+        REQUIRE(mis.find(vid) == mis.end());
+      }
     }
-    SECTION( "seed=4" ) {
-        std::vector<vertex_id_t<G>> mis;
-	std::graph::maximal_independent_set( g, std::back_inserter(mis), 4 );
-	REQUIRE(mis.size() == 5);
-    }
-
+  }
+  SECTION("seed=4") {
+    std::vector<vertex_id_t<G>> mis;
+    std::graph::maximal_independent_set(g, std::back_inserter(mis), 4);
+    REQUIRE(mis.size() == 5);
+  }
 }
 #endif

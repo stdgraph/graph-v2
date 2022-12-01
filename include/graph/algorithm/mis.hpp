@@ -36,23 +36,22 @@ namespace std::graph {
 
 template <adjacency_list G, class Iter>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-  std::output_iterator<Iter,vertex_id_t<G>>
+         std::output_iterator<Iter, vertex_id_t<G>>
 
-void maximal_independent_set(
-    G&&  g,                 // graph
-    Iter mis,               // out: maximal independent set
-    vertex_id_t<G> seed = 0 // seed vtx
+void maximal_independent_set(G&&            g,       // graph
+                             Iter           mis,     // out: maximal independent set
+                             vertex_id_t<G> seed = 0 // seed vtx
 ) {
   size_t N(size(vertices(g)));
   assert(seed < N && seed >= 0);
 
   std::vector<bool> removed_vertices(g.size());
-  *mis++ = seed;
+  *mis++                 = seed;
   removed_vertices[seed] = true;
   for (auto&& [vid, v] : views::incidence(g, seed)) {
     removed_vertices[vid] = true;
   }
-  
+
   for (auto&& [uid, u] : views::vertexlist(g)) {
     if (!removed_vertices[uid]) {
       *mis++ = uid;
