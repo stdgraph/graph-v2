@@ -10,7 +10,7 @@ to provide easy integration with external adjacency list graphs.
 
 - bi-partite and n-partite graphs are under investigation.
 - Hyper-graphs are outside the scope of this project.
-- Comments and questions are welcome and can be directed to phil.ratzloff@sas.com.
+- Comments and questions are welcome and can be directed to GitHub [discussions](https://github.com/stdgraph/graph-v2/discussions) or [issues](https://github.com/stdgraph/graph-v2/issues).
 
 ### Purpose
 This prototype library is an implementation of the proposed Graph Library for ISO Standard C++ as described in P1709. 
