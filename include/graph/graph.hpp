@@ -58,6 +58,13 @@ inline constexpr bool is_undirected_edge_v = false;
 //
 // graph concepts
 //
+
+
+/**
+ * @brief Range of vertices concept.
+ * 
+ * @tparam G The graph type.
+ */
 template <class G>
 concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized_range<vertex_range_t<G>> &&
                        requires(G&& g, vertex_iterator_t<G> ui) {
@@ -65,6 +72,12 @@ concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized
                          vertex_id(g, ui);
                        };
 
+/**
+ * @brief Type of the target concept.
+ * 
+ * @tparam G The graph type.
+ * @tparam E The ddge type.
+ */
 template <class G, class E>
 concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
                           target_id(g, uv);
