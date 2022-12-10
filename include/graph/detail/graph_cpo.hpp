@@ -31,8 +31,8 @@ namespace std::graph {
 // Graph reference of graph type G.*</ summary>*<typeparam name = "G"> Graph</ typeparam>
 
 
- template <class G>
- using graph_reference_t = add_lvalue_reference<G>;
+template <class G>
+using graph_reference_t = add_lvalue_reference<G>;
 
 
 /** 
