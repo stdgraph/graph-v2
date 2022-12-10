@@ -8,7 +8,7 @@
 
 namespace std::graph {
 
-// Tags are defined in tag_invoke namespace to avoid conflicts with function names 
+// Tags are defined in tag_invoke namespace to avoid conflicts with function names
 // in std::graph, allowing customization for default behavior.
 //
 // graphs must use tags like std::graph::tag_invoke::vertex_id_fn_t when defining
@@ -17,7 +17,7 @@ namespace std::graph {
 // Minimal requirements for a graph with random_access vertices(g)
 //      vertices(g), edges(g,u), target_id(g,u)
 // To have vertex_id_t<G> be something other than size_t
-//      vertex_id(g,ui) 
+//      vertex_id(g,ui)
 // Properties, as supported by the graph:
 //      edge_value(g,uv), vertex_value(g,uv), graph_value(g)
 //
@@ -102,8 +102,8 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_vertex_id_adl = requires(G&& g, vertex_iterator_t<G> ui) {
-    {vertex_id(g, ui)};
-  };
+                                 { vertex_id(g, ui) };
+                               };
 } // namespace tag_invoke
 
 template <class G>
@@ -128,8 +128,8 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_find_vertex_adl = requires(G&& g, vertex_id_t<G> uid) {
-    {find_vertex(g, uid)};
-  };
+                                   { find_vertex(g, uid) };
+                                 };
 } // namespace tag_invoke
 
 template <class G>
@@ -156,13 +156,13 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_edges_vtxref_adl = requires(G&& g, vertex_reference_t<G> u) {
-    {edges(g, u)};
-  };
+                                    { edges(g, u) };
+                                  };
 
   template <class G>
   concept _has_edges_vtxid_adl = requires(G&& g, vertex_id_t<G> uid) {
-    {edges(g, uid)};
-  };
+                                   { edges(g, uid) };
+                                 };
 } // namespace tag_invoke
 
 template <class G>
@@ -211,13 +211,14 @@ namespace tag_invoke {
 
   template <class G, class ER>
   concept _has_target_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-    {target(g, uv)};
-  };
+                              { target(g, uv) };
+                            };
 } // namespace tag_invoke
 template <class G, class ER>
-concept _can_eval_target = ranges::random_access_range<vertex_range_t<G>> && requires(G&& g, ranges::range_reference_t<ER> uv) {
-  { target_id(g, uv) } -> integral;
-};
+concept _can_eval_target =
+      ranges::random_access_range<vertex_range_t<G>> && requires(G&& g, ranges::range_reference_t<ER> uv) {
+                                                          { target_id(g, uv) } -> integral;
+                                                        };
 
 template <class G>
 requires tag_invoke::_has_target_adl<G, vertex_edge_range_t<G>> || _can_eval_target<G, vertex_edge_range_t<G>>
@@ -253,14 +254,14 @@ namespace tag_invoke {
 
   template <class G, class ER>
   concept _has_source_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-    {source(g, uv)};
-  };
+                              { source(g, uv) };
+                            };
 } // namespace tag_invoke
 
 template <class G, class ER>
 concept _can_eval_source_id = ranges::random_access_range<ER> && requires(G&& g, ranges::range_reference_t<ER> uv) {
-  { source_id(g, uv) } -> integral;
-};
+                                                                   { source_id(g, uv) } -> integral;
+                                                                 };
 
 template <class G>
 requires tag_invoke::_has_source_adl<G, vertex_edge_range_t<G>> || _can_eval_source_id<G, vertex_edge_range_t<G>>
@@ -282,15 +283,15 @@ namespace tag_invoke {
 
   template <class G, class ER>
   concept _has_edge_id_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-    {edge_id(g, uv)};
-  };
+                               { edge_id(g, uv) };
+                             };
 } // namespace tag_invoke
 
 template <class G, class ER>
 concept _can_eval_edge_id = requires(G&& g, ranges::range_reference_t<ER> uv) {
-  {target_id(g, uv)};
-  {source_id(g, uv)};
-};
+                              { target_id(g, uv) };
+                              { source_id(g, uv) };
+                            };
 
 template <class G>
 requires tag_invoke::_has_edge_id_adl<G, vertex_edge_range_t<G>> || _can_eval_edge_id<G, vertex_edge_range_t<G>>
@@ -318,13 +319,13 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_find_vertex_edge_adl = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
-    {find_vertex_edge(g, u, vid)};
-  };
+                                        { find_vertex_edge(g, u, vid) };
+                                      };
   template <class G>
   concept _has_find_vertex_id_edge_adl =
         requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
-    {find_vertex_edge(g, uid, vid)};
-  };
+          { find_vertex_edge(g, uid, vid) };
+        };
 } // namespace tag_invoke
 
 template <class G>
@@ -354,8 +355,8 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_contains_edge_adl = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-    {contains_edge(g, uid, vid)};
-  };
+                                     { contains_edge(g, uid, vid) };
+                                   };
 } // namespace tag_invoke
 
 template <class G>
@@ -364,8 +365,7 @@ auto contains_edge(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
     return tag_invoke::contains_edge(g, uid, vid);
   else if constexpr (is_adjacency_matrix_v<G>) {
     return uid < ranges::size(vertices(g)) && vid < ranges::size(vertices(g));
-  }
-  else {
+  } else {
     auto ui = find_vertex(g, uid);
     return find_vertex_edge(g, *ui) != ranges::end(edges(g, *ui));
   }
@@ -380,8 +380,8 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_degree_adl = requires(G&& g, vertex_reference_t<G> u) {
-    {degree(g, u)};
-  };
+                              { degree(g, u) };
+                            };
 } // namespace tag_invoke
 
 template <class G>
@@ -430,7 +430,7 @@ using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_
 
 //
 // graph_value(g) -> <<user-defined type>>
-// 
+//
 // graph_value_t<G> = decltype(graph_value(g))
 //
 namespace tag_invoke {
