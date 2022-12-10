@@ -13,7 +13,7 @@ target_include_directories(catch_main
 add_executable(tests tests.cpp "examples.cpp" 
                                "csv_routes_vofl_tests.cpp" "csv_routes.hpp"  "csv_routes.cpp" "csv_routes_dov_tests.cpp" "csv_routes_csr_tests.cpp" 
                                "vertexlist_tests.cpp" "incidence_tests.cpp"  "neighbors_tests.cpp"  "edgelist_tests.cpp" 
-                               "shortest_paths_tests.cpp" "transitive_closure_tests.cpp" "dfs_tests.cpp" "bfs_tests.cpp" "pagerank.cpp"
+                               "shortest_paths_tests.cpp" "transitive_closure_tests.cpp" "dfs_tests.cpp" "bfs_tests.cpp" "mis_tests.cpp"
                                )
 
 target_link_libraries(tests PRIVATE project_warnings project_options catch_main Catch2::Catch2 graph)
