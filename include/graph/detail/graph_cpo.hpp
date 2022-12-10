@@ -28,32 +28,33 @@ namespace std::graph {
 //
 //  load_graph(g,erng,vrng,eproj,vproj)
 //
-
-/// <summary>
-/// Graph reference of graph type G.
-/// </summary>
-/// <typeparam name="G">Graph</typeparam>
-template <class G>
-using graph_reference_t = add_lvalue_reference<G>;
+// Graph reference of graph type G.*</ summary>*<typeparam name = "G"> Graph</ typeparam>
 
 
-/// <summary>
-/// Override for a graph type where edges are defined densely in a matrix to allow for
-/// optimized algorithms can take advantage of the memory layout.
-///
-/// Example:
-///  namespace my_namespace {
-///      template<class X>
-///      class my_graph { ... };
-///  }
-///  namespace std::graph {
-///     template<>
-///     struct is_adjacency_matrix<my_namespace::my_graph<X>> : true_type;
-///  }
-/// </summary>
-/// <typeparam name="G">Graph</typeparam>
-///
+ template <class G>
+ using graph_reference_t = add_lvalue_reference<G>;
 
+
+/** 
+ * @brief Tag a graph type as an adjacency matrix.
+ * 
+ * Specialize for a graph type where edges are defined densely in a matrix to allow for
+ * optimized algorithms can take advantage of the memory layout.
+ *
+ * Example:
+ * @code
+ *  namespace my_namespace {
+ *      template<class X>
+ *      class my_graph { ... };
+ *  }
+ *  namespace std::graph {
+ *     template<>
+ *     struct is_adjacency_matrix<my_namespace::my_graph<X>> : true_type;
+ *  }
+ * @endcode
+ * 
+ * @tparam G The graph type
+ */
 template <class G>
 struct define_adjacency_matrix : public false_type {}; // specialized for graph container
 
@@ -78,18 +79,49 @@ namespace tag_invoke {
   TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices]
 }
 
+/**
+ * @brief Returns the vertices range for a graph G.
+ * 
+ * Default implementation: n/a.
+ * 
+ * Complexity: O(1)
+ * 
+ * This is a customization point function that is required to be overridden for each
+ * graph type.
+ * 
+ * @tparam G The graph type
+ * @param g A graph instance
+*/
 template <class G>
 auto vertices(G&& g) -> decltype(tag_invoke::vertices(g)) {
   return tag_invoke::vertices(g);
 }
 
+/**
+ * @brief The vertex range type for a graph G.
+ * @tparam G The graph type.
+ */
 template <class G>
 using vertex_range_t = decltype(std::graph::vertices(declval<G&&>()));
+
+/**
+ * @brief The vertex iterator type for a graph G.
+ * @tparam G The graph type.
+ */
 template <class G>
 using vertex_iterator_t = ranges::iterator_t<vertex_range_t<G&&>>;
 
+/**
+ * @brief The vertex type for a graph G.
+ * @tparam G The graph type.
+ */
 template <class G>
 using vertex_t = ranges::range_value_t<vertex_range_t<G>>;
+
+/**
+ * @brief The vertex reference type for a graph G.
+ * @tparam G The graph type.
+*/
 template <class G>
 using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
 
@@ -106,6 +138,31 @@ namespace tag_invoke {
                                };
 } // namespace tag_invoke
 
+/**
+ * @brief Get's the id of a vertex.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: ui - begin(g)
+ * 
+ * This is a customization point function that may be overriden for a graph type.
+ * The main reason to do so is to change the return type to be something different
+ * than range_difference_t<vertex_range_t<G>>. For 64-bit systems, that's typically
+ * int64_t. The return type is used to define the type vertex_id_t<G> which is used
+ * for vertex id in other functions.
+ * 
+ * Why does this function take a vertex iterator instead of a vertex reference?
+ * The vertex id is often calculated rather than stored. Given an iterator, the id is easily
+ * calculated by id = (ui - begin(vertices(g))). If a vertex reference v is passed instead
+ * it is also easily calculated for vertices stored in contiguous memory like std::vector.
+ * However, if it's a random access container like a deque, then the reference won't work
+ * and an iterator is the only option.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param ui A vertex iterator for a vertext in graph G.
+ * @return The vertex id of a vertex.
+*/
 template <class G>
 requires tag_invoke::_has_vertex_id_adl<G> || random_access_iterator<vertex_iterator_t<G>>
 auto vertex_id(G&& g, vertex_iterator_t<G> ui) {
@@ -115,6 +172,15 @@ auto vertex_id(G&& g, vertex_iterator_t<G> ui) {
     return ui - ranges::begin(vertices(g));
 }
 
+/**
+ * @brief Defines the type of the vertex id.
+ * 
+ * Complexity: O(1)
+ * 
+ * The vertex id type for graph type G.
+ * 
+ * @tparam G The graph type.
+*/
 template <class G>
 using vertex_id_t = decltype(vertex_id(declval<G&&>(), declval<vertex_iterator_t<G>>()));
 
@@ -132,6 +198,18 @@ namespace tag_invoke {
                                  };
 } // namespace tag_invoke
 
+/**
+ * @brief Find a vertex given a vertex id.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: begin(vertices(g)) + uid, if random_access_range<vertex_range_t<G>>
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uid Vertex id.
+ * @return An iterator to the vertex if the vertex exists, or end(vertices(g)) if it doesn't exist.
+*/
 template <class G>
 requires tag_invoke::_has_find_vertex_adl<G> || ranges::random_access_range<vertex_range_t<G>>
 auto find_vertex(G&& g, vertex_id_t<G> uid) {
@@ -165,11 +243,36 @@ namespace tag_invoke {
                                  };
 } // namespace tag_invoke
 
+/**
+ * @brief Get the outgoing edges of a vertex.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: n/a. This must be specialized for each graph type.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param u Vertex reference.
+ * @return A range of the outgoing edges.
+*/
 template <class G>
 requires tag_invoke::_has_edges_vtxref_adl<G>
 auto edges(G&& g, vertex_reference_t<G> u) -> decltype(tag_invoke::edges(g, u)) {
   return tag_invoke::edges(g, u); // graph author must define
 }
+
+/**
+ * @brief Get the outgoing edges of a vertex id.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: edges(g, *find_vertex(g, uid))
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uid Vertex id.
+ * @return A range of the outgoing edges.
+*/
 template <class G>
 auto edges(G&& g, vertex_id_t<G> uid) -> decltype(tag_invoke::edges(g, uid)) {
   if constexpr (tag_invoke::_has_edges_vtxid_adl<G>)
@@ -178,12 +281,31 @@ auto edges(G&& g, vertex_id_t<G> uid) -> decltype(tag_invoke::edges(g, uid)) {
     return edges(g, *find_vertex(g, uid));
 }
 
+/**
+ * @brief The outgoing edge range type of a vertex for graph G.
+ * @tparam G The graph type.
+*/
 template <class G>
 using vertex_edge_range_t = decltype(edges(declval<G&&>(), declval<vertex_reference_t<G>>()));
+
+/**
+ * @brief The outgoing edge iterator type of a vertex for graph G.
+ * @tparam G The graph type.
+*/
 template <class G>
 using vertex_edge_iterator_t = ranges::iterator_t<vertex_edge_range_t<G>>;
+
+/**
+ * @brief The edge type for graph G.
+ * @tparam G The graph type.
+*/
 template <class G>
 using edge_t = ranges::range_value_t<vertex_edge_range_t<G>>;
+
+/**
+ * @brief The edge reference type for graph G.
+ * @tparam G The graph type.
+*/
 template <class G>
 using edge_reference_t = ranges::range_reference_t<vertex_edge_range_t<G>>;
 
@@ -194,6 +316,18 @@ namespace tag_invoke {
   TAG_INVOKE_DEF(target_id);
 }
 
+/**
+ * @brief Get the target vertex id of an edge.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: n/a. This must be specialized for each graph type.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uv An edge reference.
+ * @return The target vertex id.
+*/
 template <class G>
 auto target_id(G&& g, edge_reference_t<const G> uv) -> decltype(tag_invoke::target_id(g, uv)) {
   return tag_invoke::target_id(g, uv);
@@ -220,6 +354,18 @@ concept _can_eval_target =
                                                           { target_id(g, uv) } -> integral;
                                                         };
 
+/**
+ * @brief Get the target vertex of an edge.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: *(begin(vertices(g)) + target_id(g, uv))
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uv An edge reference.
+ * @return The target vertex reference.
+*/
 template <class G>
 requires tag_invoke::_has_target_adl<G, vertex_edge_range_t<G>> || _can_eval_target<G, vertex_edge_range_t<G>>
 auto&& target(G&& g, edge_reference_t<G> uv) {
@@ -237,6 +383,21 @@ namespace tag_invoke {
   TAG_INVOKE_DEF(source_id);
 }
 
+/**
+ * @brief Get the source vertex id of an edge.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: n/a. This must be specialized for each graph type, if available.
+ * 
+ * Not all graphs support a source id on an edge. The existance of @c source_id(g,uv) function 
+ * for a graph type G determines if it is considered a "sourced" edge or not.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uv An edge reference.
+ * @return The source vertex id.
+*/
 template <class G>
 auto source_id(G&& g, edge_reference_t<G> uv) -> decltype(tag_invoke::source_id(g, uv)) {
   return tag_invoke::source_id(g, uv);
@@ -263,6 +424,22 @@ concept _can_eval_source_id = ranges::random_access_range<ER> && requires(G&& g,
                                                                    { source_id(g, uv) } -> integral;
                                                                  };
 
+/**
+ * @brief Get the source vertex of an edge.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: *(begin(vertices(g)) + source_id(g, uv)), if @source_id(g,uv) is defined for G
+ * 
+ * Not all graphs support a source on an edge. The existance of @c source_id(g,uv) function 
+ * for a graph type G determines if it is considered a "sourced" edge or not. If it is, 
+ * @c source(g,uv) will also exist.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uv An edge reference.
+ * @return The source vertex reference.
+*/
 template <class G>
 requires tag_invoke::_has_source_adl<G, vertex_edge_range_t<G>> || _can_eval_source_id<G, vertex_edge_range_t<G>>
 auto&& source(G&& g, edge_reference_t<G> uv) {
@@ -293,6 +470,18 @@ concept _can_eval_edge_id = requires(G&& g, ranges::range_reference_t<ER> uv) {
                               { source_id(g, uv) };
                             };
 
+/**
+ * @brief Get the edge id of an edge.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: pair(source_id(g, uv), target_id(g, uv))
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uv An edge reference.
+ * @return The edge id as a pair of vertex id's.
+*/
 template <class G>
 requires tag_invoke::_has_edge_id_adl<G, vertex_edge_range_t<G>> || _can_eval_edge_id<G, vertex_edge_range_t<G>>
 auto edge_id(G&& g, edge_reference_t<G> uv) {
@@ -328,6 +517,20 @@ namespace tag_invoke {
         };
 } // namespace tag_invoke
 
+/**
+ * @brief Find an edge of a vertex.
+ * 
+ * Complexity: O(E), where |E| is the number of outgoing edges of vertex u
+ * 
+ * Default implementation: find_if(edges(g, u), [&g, &vid](auto&& uv) { return target_id(g, uv) == vid; })
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param u A vertex instance.
+ * @param vid A target vertex id.
+ * @return An edge iterator of an outgoing edge of u with a target id of vid. end(edges(g,u)) will
+ *         be returned if an edge doesn't exist.
+*/
 template <class G>
 auto find_vertex_edge(G&& g, vertex_reference_t<G> u, vertex_id_t<G> vid) {
   if constexpr (tag_invoke::_has_find_vertex_edge_adl<G>)
@@ -336,6 +539,20 @@ auto find_vertex_edge(G&& g, vertex_reference_t<G> u, vertex_id_t<G> vid) {
     return ranges::find_if(edges(g, u), [&g, &vid](auto&& uv) { return target_id(g, uv) == vid; });
 }
 
+/**
+ * @brief Find an edge in the graph.
+ * 
+ * Complexity: O(E), where |E| is the number of outgoing edges of vertex u
+ * 
+ * Default implementation: find_vertex_edge(g, *(begin(vertices(g)) + uid), vid)
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uid The vertex source id of the edge.
+ * @param vid The vertex target id of the edge.
+ * @return An edge iterator of an outgoing edge of u with a target id of vid. end(edges(g,uid)) will
+ *         be returned if an edge doesn't exist.
+*/
 template <class G>
 requires tag_invoke::_has_find_vertex_id_edge_adl<G> || ranges::random_access_range<vertex_range_t<G>>
 auto find_vertex_edge(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
@@ -359,6 +576,19 @@ namespace tag_invoke {
                                    };
 } // namespace tag_invoke
 
+/**
+ * @brief Does an edge exist in the graph?
+ * 
+ * Complexity: O(E), where |E| is the number of outgoing edges of vertex u
+ * 
+ * Default implementation: find_vertex_edge(g, *ui) != end(edges(g, *ui));
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uid The vertex source id of the edge.
+ * @param vid The vertex target id of the edge.
+ * @return true if the edge exists, or false otherwise.
+*/
 template <class G>
 auto contains_edge(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
   if constexpr (tag_invoke::_has_contains_edge_adl<G>)
@@ -384,6 +614,18 @@ namespace tag_invoke {
                             };
 } // namespace tag_invoke
 
+/**
+ * @brief The number of outgoing edges of a vertex.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: size(edges(g, u))
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param u A vertex instance.
+ * @return The number of outgoing edges of vertex u.
+*/
 template <class G>
 requires tag_invoke::_has_degree_adl<G> || ranges::sized_range<vertex_edge_range_t<G>>
 auto degree(G&& g, vertex_reference_t<G> u) {
@@ -403,6 +645,18 @@ namespace tag_invoke {
   TAG_INVOKE_DEF(vertex_value); // vertex_value(g,u) -> ?
 }
 
+/**
+ * @brief The user-defined value for a vertex, if it exists.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: n/a. This must be specialized for the vertex type of each graph type, if available.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param u A vertex instance.
+ * @return The value associated with vertex u.
+*/
 template <class G>
 auto vertex_value(G&& g, vertex_reference_t<G> u) -> decltype(tag_invoke::vertex_value(g, u)) {
   return tag_invoke::vertex_value(g, u);
@@ -419,6 +673,18 @@ namespace tag_invoke {
   TAG_INVOKE_DEF(edge_value);
 }
 
+/**
+ * @brief The user-defined value for a edge, if it exists.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: n/a. This must be specialized for the edge type of each graph type, if available.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uv A edge instance.
+ * @return The value associated with edge uv.
+*/
 template <class G>
 auto edge_value(G&& g, edge_reference_t<G> uv) -> decltype(tag_invoke::edge_value(g, uv)) {
   return tag_invoke::edge_value(g, uv);
@@ -437,6 +703,17 @@ namespace tag_invoke {
   TAG_INVOKE_DEF(graph_value); // graph_value(g) -> GV&
 }
 
+/**
+ * @brief The user-defined value for a graph, if it exists.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: n/a. This must be specialized for each graph type, if available.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @return The value associated with graph g.
+*/
 template <class G>
 auto&& graph_value(G&& g) {
   return tag_invoke::graph_value(g);
