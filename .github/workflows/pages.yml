@@ -24,7 +24,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -38,18 +38,26 @@ jobs:
         env:
           CC:   gcc-11
           CXX:  g++-11
+
+      # Testing with a different python
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.7' 
         
       # Install requirements
       - name: Install Requirements
         run: |
+          python --version
           sudo apt-get install doxygen
-          cd ${{github.workspace}}/doc/sphinx
+          doxygen --version
+          cd ${{github.workspace}}/docs/sphinx
           pip install -r requirements.txt
-        
+
       # Build Sphinx documentation
       - name: Build Documentation
         run: |
-          cd ${{github.workspace}}/doc/sphinx
+          cd ${{github.workspace}}/docs/sphinx
           make html
         
       - name: Setup Pages
@@ -59,7 +67,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload html directory
-          path: './doc/sphinx/_build/html'
+          path: './docs/sphinx/_build/html'
           
       - name: Deploy to GitHub Pages
         id: deployment
