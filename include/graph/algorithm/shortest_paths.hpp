@@ -213,8 +213,8 @@ constexpr void dijkstra_shortest_distances(
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }, // default weight(uv) -> 1
       Q q = Q()                                                                        //
 ) {
-  null_predessor_range_type predessor;
-  dijkstra_shortest_paths_impl(g, seed, distance, predessor, weight_fn, q);
+  null_predessor_range_type predecessor;
+  dijkstra_shortest_paths_impl(g, seed, distance, predecessor, weight_fn, q);
 }
 
 

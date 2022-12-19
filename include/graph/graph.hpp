@@ -9,6 +9,8 @@
 
 // Naming Conventions
 //
+// Andrew: Code is read more than it is written.  The code should be written to be read, i.e., use names like "graph" instead of "g" or "G".
+//
 // Template
 // Parameter Variables      Description
 // --------- -------------- ----------------------------------------------------
@@ -58,71 +60,94 @@ inline constexpr bool is_undirected_edge_v = false;
 //
 // graph concepts
 //
+
+/**
+ * @brief vertex_range concept.
+ * @tparam G The graph type.
+ */
 template <class G>
 concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized_range<vertex_range_t<G>> &&
-      requires(G&& g, vertex_iterator_t<G> ui) {
-  { vertices(g) } -> ranges::forward_range;
-  vertex_id(g, ui);
-};
+                       requires(G&& g, vertex_iterator_t<G> ui) {
+                         { vertices(g) } -> ranges::forward_range;
+                         vertex_id(g, ui);
+                       };
 
+/**
+ * @brief targeted_edge concept.
+ * @tparam G The graph type.
+ * @tparam E The edge type.
+ */
 template <class G, class E>
 concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
-  target_id(g, uv);
-  target(g, uv);
-};
+                          target_id(g, uv);
+                          target(g, uv);
+                        };
 
+/**
+ * @brief sourced_edge concept.
+ * @tparam G The graph type.
+ *
+ */
 template <class G, class E>
 concept sourced_edge = requires(G&& g, E& uv) {
-  source_id(g, uv);
-  source(g, uv);
-};
+                         source_id(g, uv);
+                         source(g, uv);
+                       };
 template <class G, class E>
 struct is_sourced_edge : public integral_constant<bool, sourced_edge<G, E>> {};
 template <class G, class E>
 inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
 
-
+/**
+ * @brief adjacency_list concept.
+ * @tparam G The graph type.
+  */
 template <class G>
-concept adjacency_list = vertex_range<G> && targeted_edge<G, edge_t<G>> &&
-      requires(G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid) {
-  { edges(g, u) } -> ranges::forward_range;
-  { edges(g, uid) } -> ranges::forward_range;
-};
+concept adjacency_list =
+      vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid) {
+                                                          { edges(g, u) } -> ranges::forward_range;
+                                                          { edges(g, uid) } -> ranges::forward_range;
+                                                        };
 // !is_same_v<vertex_range_t<G>, vertex_edge_range_t<G>>
 //      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
 template <class G>
-concept sourced_adjacency_list = adjacency_list<G> && sourced_edge<G, edge_t<G>> &&
-      requires(G&& g, edge_reference_t<G> uv) {
-  edge_id(g, uv);
-};
+concept sourced_adjacency_list =
+      adjacency_list<G> && sourced_edge<G, edge_t<G>> && requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
 
 //
 // property concepts
 //
 template <class G>
 concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
-  {degree(g, u)};
-};
+                       { degree(g, u) };
+                     };
 
-//
-// find/contains concepts
-//
+/**
+ * @brief has_find_vertex concept.
+ * @tparam G The graph type.
+ */
 template <class G>
 concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
-  { find_vertex(g, uid) } -> forward_iterator;
-};
-
+                            { find_vertex(g, uid) } -> forward_iterator;
+                          };
+/**
+ * @brief has_find_verex_edge concept.
+ * @tparam G The graph type.
+ */
 template <class G>
 concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
-  { find_vertex_edge(g, u, vid) } -> forward_iterator;
-  { find_vertex_edge(g, uid, vid) } -> forward_iterator;
-};
-
+                                 { find_vertex_edge(g, u, vid) } -> forward_iterator;
+                                 { find_vertex_edge(g, uid, vid) } -> forward_iterator;
+                               };
+/**
+ * @brief has_contains_edge concept.
+ * @tparam G The graph type.
+ */
 template <class G>
 concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-  { contains_edge(g, uid, vid) } -> convertible_to<bool>;
-};
+                              { contains_edge(g, uid, vid) } -> convertible_to<bool>;
+                            };
 
 
 /// <summary>
