@@ -8,3 +8,15 @@ exhale
 sphinx-book-theme
 sphinx-rtd-theme
 sphinx-toolbox
+
+
+Sphinx                        5.3.0
+sphinxcontrib-bibtex          2.5.0
+jinja2-highlight              0.6.1
+myst-parser                   0.18.1
+sphinx-copybutton             0.5.1
+breathe                       4.34.0
+exhale                        0.3.6
+sphinx-book-theme             0.3.3
+sphinx-rtd-theme              1.1.1
+sphinx-toolbox                3.2.0
