@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 
 project = 'graph-v2'
-copyright = '2022, Phil Ratzloff, Andrew Lumsdaine, Kevin Deweese, Muhammed Osama'
-author = 'Phil Ratzloff, Andrew Lumsdaine, Kevin Deweese, Muhammed Osama'
+copyright = '2022, Phil Ratzloff, Andrew Lumsdaine, Kevin Deweese, Muhammad Osama'
+author = 'Phil Ratzloff, Andrew Lumsdaine, Kevin Deweese, Muhammad Osama'
 
 # The full version, including alpha/beta/rc tags
 release = '0.8.30'
@@ -37,14 +37,17 @@ sys.path.append(os.path.abspath('_extensions'))
 extensions = [
     'sphinx.ext.mathjax', 'sphinx.ext.intersphinx', 'sphinx.ext.viewcode', 'sphinx.ext.graphviz',
     'sphinxcontrib.bibtex',
-#    'sphinx_book_theme', # 'sphinx_rtd_theme',
+    'sphinx_toolbox.more_autodoc.overloads',
+    # 'sphinx_book_theme', 
+    # 'sphinx_rtd_theme',
     'breathe', 
-    'nw_exhale'
+    'nw_exhale',
+    'myst_parser'
 ]
 
 source_suffix = {
+    '.md': 'markdown',
     '.rst': 'restructuredtext',
-
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -87,8 +90,9 @@ mathjax3_config = {
 
 html_theme_path = [ "_themes" ]
 #html_theme = 'sphinx13'
-html_theme = 'sphinx_rtd_theme'
-
+# html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_book_theme'
+html_title = "std::graph Documentation"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -99,6 +103,10 @@ html_css_files = [
     'css/custom.css'
 ]
 
+html_theme_options = {
+    "repository_url": "https://github.com/stdgraph/graph-v2",
+}
+
 # html_favicon = nwgraph.ico
 # html_additional_pages = []
 # html_copy_source = True
@@ -106,7 +114,7 @@ html_css_files = [
 
 # -- Options for the C++ Domain ----------------------------------------------
 
-cpp_index_common_prefix = ['nw::', 'nw::graph::']
+cpp_index_common_prefix = ['std::', 'std::graph::']
 
 
 # -- Options for Breathe -----------------------------------------------------

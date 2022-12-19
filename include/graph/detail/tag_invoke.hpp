@@ -77,15 +77,13 @@ struct tag_invoke_is_nothrow {
 };
 
 template <typename _Tag, typename... _Args>
-concept tag_invocable = requires(_Tag tag, _Args... args) {
-  std::tag_invoke(static_cast<_Tag&&>(tag), static_cast<_Args&&>(args)...);
-};
+concept tag_invocable =
+      requires(_Tag tag, _Args... args) { std::tag_invoke(static_cast<_Tag&&>(tag), static_cast<_Args&&>(args)...); };
 
 template <typename _Tag, typename... _Args>
 concept nothrow_tag_invocable = requires(_Tag tag, _Args... args) {
-  { std::tag_invoke(static_cast<_Tag&&>(tag), static_cast<_Args&&>(args)...) }
-  noexcept;
-};
+                                  { std::tag_invoke(static_cast<_Tag&&>(tag), static_cast<_Args&&>(args)...) } noexcept;
+                                };
 
 /* tag::reference[]
 [#bfg_tag]

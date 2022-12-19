@@ -9,15 +9,14 @@
 
 // Naming Conventions
 //
-// Andrew: Code is read more than it is written.  The code should be written to be read, i.e., use names like "graph" instead of "g" or "G".
-//
 // Template
 // Parameter Variables      Description
 // --------- -------------- ----------------------------------------------------
 // G         g              Graph
 // GV                       Graph Value (user-defined or void)
 //
-// V         u,v,x,y        Vertex
+// V                        Vertex type
+//           u,v,x,y        Vertex reference
 // VId       uid,vid,seed   Vertex Id
 // VV                       Vertex Value (user-defined or void)
 // VR                       Vertex Range
@@ -36,24 +35,30 @@
 #  define GRAPH_HPP
 
 namespace std::graph {
-/// <summary>
-/// Override for an edge type where source and target are unordered
-/// For instance, given:
-///      vertex_iterator_t<G> ui = ...;
-///      for(auto&& uv : edges(g,*ui)) ...
-/// if(source_id(g,u) != vertex_id(ui)) then target_id(g,u) == vertex_id(ui)
-///
-/// Example:
-///  namespace my_namespace {
-///      template<class X>
-///      class my_graph { ... };
-///  }
-///  namespace std::graph {
-///     template<class X>
-///     inline constexpr bool is_undirected_edge_v<edge_t<my_namespace::my_graph<X>>> = true;
-///  }
-/// </summary>
-/// <typeparam name="E">The edge type with unordered source and target</typeparam>
+/**
+ * @brief Override for an edge type where source and target are unordered
+ * 
+ * For instance, given:
+ *  @code
+ *      vertex_iterator_t<G> ui = ...;
+ *      for(auto&& uv : edges(g,*ui)) ...
+ *  @endcode
+ *  if(source_id(g,u) != vertex_id(ui)) then target_id(g,u) == vertex_id(ui)
+ *
+ * Example:
+ *  @code
+ *  namespace my_namespace {
+ *      template<class X>
+ *      class my_graph { ... };
+ *  }
+ *  namespace std::graph {
+ *     template<class X>
+ *     inline constexpr bool is_undirected_edge_v<edge_t<my_namespace::my_graph<X>>> = true;
+ *  }
+ *  @endcode
+ * 
+ * @tparam name E The edge type with unordered source and target
+ */
 template <class E>
 inline constexpr bool is_undirected_edge_v = false;
 
@@ -61,8 +66,10 @@ inline constexpr bool is_undirected_edge_v = false;
 // graph concepts
 //
 
+
 /**
- * @brief vertex_range concept.
+ * @brief Concept for a range of vertices.
+ * 
  * @tparam G The graph type.
  */
 template <class G>
@@ -73,7 +80,10 @@ concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized
                        };
 
 /**
- * @brief targeted_edge concept.
+ * @brief Concept for a targeted edge.
+ * 
+ * A targeted edge has both @c target_id(g,uv) and @c target(g,uv) functions defined for it.
+ * 
  * @tparam G The graph type.
  * @tparam E The edge type.
  */
@@ -84,24 +94,49 @@ concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
                         };
 
 /**
- * @brief sourced_edge concept.
+ * @brief Concept for a sourced edge.
+ * 
+ * A sourced edge has both @c source_id(g,uv) and @c source(g,uv) functions defined for it.
+ * 
  * @tparam G The graph type.
- *
+ * @tparam E The edge type.
  */
 template <class G, class E>
 concept sourced_edge = requires(G&& g, E& uv) {
                          source_id(g, uv);
                          source(g, uv);
                        };
+
+/**
+ * @brief Type trait to determine if an edge is sourced.
+ * 
+ * Use @c is_sourced_edge<G,E>::value to deterine if the edge is sourced.
+ * 
+ * @tparam G The graph type.
+ * @tparam E The edge type.
+*/
 template <class G, class E>
 struct is_sourced_edge : public integral_constant<bool, sourced_edge<G, E>> {};
+
+/**
+ * @brief Type trait helper to determine if an edge is sourced.
+ * 
+ * Use @c is_sourced_edge_v<G,E> to deterine if the edge is sourced.
+ * 
+ * @tparam G The graph type.
+ * @tparam E The edge type.
+*/
 template <class G, class E>
 inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
 
 /**
- * @brief adjacency_list concept.
+ * @brief Concept for an adjacency list graph.
+ * 
+ * An adjacency list requires that the vertices range is a forward range, it has a targeted edge,
+ * and functions edges(g,u) and edges(g,uid) are defined.
+ * 
  * @tparam G The graph type.
-  */
+*/
 template <class G>
 concept adjacency_list =
       vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid) {
@@ -111,6 +146,14 @@ concept adjacency_list =
 // !is_same_v<vertex_range_t<G>, vertex_edge_range_t<G>>
 //      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
+/**
+ * @brief Concept for a sourced adjacency list.
+ * 
+ * A sourced adjacency list extends the adjacency list by requiring that edges are souced edges
+ * and edge_id(g,uv) is defined.
+ * 
+ * @tparam G The graph type.
+*/
 template <class G>
 concept sourced_adjacency_list =
       adjacency_list<G> && sourced_edge<G, edge_t<G>> && requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
@@ -118,32 +161,55 @@ concept sourced_adjacency_list =
 //
 // property concepts
 //
+
+/**
+ * @brief Concept for the existance of degree function for graph G.
+ * 
+ * Returns true if degree(g) exists for graph G.
+ * 
+ * @tparam G The graph type
+*/
 template <class G>
 concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
                        { degree(g, u) };
                      };
 
+//
+// find/contains concepts
+//
+
 /**
- * @brief has_find_vertex concept.
- * @tparam G The graph type.
- */
+ * @brief Concept for the existance of the find_vertex(g,uid) function for graph G.
+ * 
+ * Returns true if find_vertex(g,uid) exists for graph G.
+ * 
+ * @tparam G The graph type
+*/
 template <class G>
 concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
                             { find_vertex(g, uid) } -> forward_iterator;
                           };
+
 /**
- * @brief has_find_verex_edge concept.
- * @tparam G The graph type.
- */
+ * @brief Concept for the existance of the find_vertex_edge(g,uid,vid) function for graph G.
+ * 
+ * Returns true if find_vertex_edge(g,u,vid) and find_vertex_edge(g,uid,vid) exists for graph G.
+ * 
+ * @tparam G The graph type
+*/
 template <class G>
 concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
                                  { find_vertex_edge(g, u, vid) } -> forward_iterator;
                                  { find_vertex_edge(g, uid, vid) } -> forward_iterator;
                                };
+
 /**
- * @brief has_contains_edge concept.
- * @tparam G The graph type.
- */
+ * @brief Concept for the existance of the has_contains_edge(g,uid,vid) function for graph G.
+ * 
+ * Returns true if has_contains_edge(g,uid,vid) exists for graph G.
+ * 
+ * @tparam G The graph type
+*/
 template <class G>
 concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
                               { contains_edge(g, uid, vid) } -> convertible_to<bool>;
