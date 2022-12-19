@@ -24,7 +24,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -49,7 +49,9 @@ jobs:
       - name: Install Requirements
         run: |
           python --version
-          sudo apt-get install doxygen
+          wget https://www.doxygen.nl/files/doxygen-1.9.5.linux.bin.tar.gz
+          tar -xvf doxygen-1.9.5.linux.bin.tar.gz
+          echo "${HOME}/doxygen-1.9.5/bin" >> $GITHUB_PATH
           doxygen --version
           cd ${{github.workspace}}/docs/sphinx
           pip install -r requirements.txt
