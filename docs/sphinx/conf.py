@@ -90,8 +90,8 @@ mathjax3_config = {
 
 html_theme_path = [ "_themes" ]
 #html_theme = 'sphinx13'
-# html_theme = 'sphinx_rtd_theme'
-html_theme = 'sphinx_book_theme'
+html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_book_theme'
 html_title = "std::graph Documentation"
 
 # Add any paths that contain custom static files (such as style sheets) here,
