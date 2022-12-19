@@ -49,13 +49,11 @@ jobs:
       - name: Install Requirements
         run: |
           python --version
-          ls
-          pwd
           wget https://www.doxygen.nl/files/doxygen-1.9.5.linux.bin.tar.gz
           tar -xvf doxygen-1.9.5.linux.bin.tar.gz
-          ls
-          echo "${HOME}/doxygen-1.9.5/bin" >> $GITHUB_PATH
-          echo $GITHUB_PATH
+          echo "${{github.workspace}}/doxygen-1.9.5/bin" >> $GITHUB_PATH
+          cd ${{github.workspace}}/doxygen-1.9.5/bin
+          pwd
           doxygen --version
           cd ${{github.workspace}}/docs/sphinx
           pip install -r requirements.txt
