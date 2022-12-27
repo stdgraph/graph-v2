@@ -847,19 +847,19 @@ private: // tag_invoke properties
   }
 };
 
-/// <summary>
-/// Vector-of-List defines a minimal representation for an incidence graph, while also allowing
-/// for user-defined property types for edges, vertices and the graph itself.
-/// </summary>
-/// @tparam EV    [default=void] The edge value type. If "void" is used no user value is stored
-///               on the edge.
-/// @tparam VV    [default=void] The vertex value type. If "void" is used no user value is stored
-///               on the vertex.
-/// @tparam GV    [default=void] The graph value type. If "void" is used no user value is stored
-///               on the graph.
-/// @tparam VId  [default=uint32_t] The type used for the vertex id.
-/// @tparam Alloc The allocator used for storing the vertices and edges.
-///
+/**
+ * Vector-of-List defines a minimal representation for an incidence graph, while also allowing
+ * for user-defined property types for edges, vertices and the graph itself.
+ * 
+ * @tparam EV    [default=void] The edge value type. If "void" is used no user value is stored
+ *               on the edge.
+ * @tparam VV    [default=void] The vertex value type. If "void" is used no user value is stored
+ *               on the vertex.
+ * @tparam GV    [default=void] The graph value type. If "void" is used no user value is stored
+ *               on the graph.
+ * @tparam VId  [default=uint32_t] The type used for the vertex id.
+ * @tparam Alloc The allocator used for storing the vertices and edges.
+*/
 template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
 class dynamic_graph : public dynamic_graph_base<EV, VV, GV, Sourced, VId, Traits> {
 public:

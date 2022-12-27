@@ -755,16 +755,17 @@ private: // tag_invoke properties
 };
 
 
-/// <summary>
-/// csr_graph - compressed sparse row adjacency graph
-///
-/// </summary>
-/// <typeparam name="EV">Edge value type</typeparam>
-/// <typeparam name="VV">Vertex value type</typeparam>
-/// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
-/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
-/// <typeparam name="Alloc">Allocator</typeparam>
+/**
+ * @ingroup graph_containers
+ * @brief Compressed Sparse Row adjacency graph container.
+ *
+ * @tparam EV Edge value type
+ * @tparam VV Vertex value type
+ * @tparam GV Graph value type
+ * @tparam VI Vertex Id type. This must be large enough for the count of vertices.
+ * @tparam EIndex Edge Index type. This must be large enough for the count of edges.
+ * @tparam Alloc Allocator type
+*/
 template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
 class csr_graph : public csr_graph_base<EV, VV, GV, VId, EIndex, Alloc> {
 public: // Types
@@ -866,16 +867,16 @@ private: // Member variables
   graph_value_type value_ = graph_value_type();
 };
 
-/// <summary>
-/// csr_graph - compressed sparse row adjacency graph
-///
-/// </summary>
-/// <typeparam name="EV">Edge value type</typeparam>
-/// <typeparam name="VV">Vertex value type</typeparam>
-/// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
-/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
-/// <typeparam name="Alloc">Allocator</typeparam>
+/**
+ * @ingroup graph_containers
+ * @brief Compressed Sparse Row adjacency graph container.
+ *
+ * @tparam EV Edge value type
+ * @tparam VV Vertex value type
+ * @tparam VI Vertex Id type. This must be large enough for the count of vertices.
+ * @tparam EIndex Edge Index type. This must be large enough for the count of edges.
+ * @tparam Alloc Allocator type
+*/
 template <class EV, class VV, integral VId, integral EIndex, class Alloc>
 class csr_graph<EV, VV, void, VId, EIndex, Alloc> : public csr_graph_base<EV, VV, void, VId, EIndex, Alloc> {
 public: // Types
