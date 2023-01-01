@@ -42,6 +42,7 @@ constexpr auto print_types(Ts...) {
 
 
 /**
+ * @ingroup graph_algorithms
  * @brief Dijkstra's algorithm for finding the shortest path from a source vertex to all other vertices in a graph.
  * @tparam G The graph type.
  * @tparam WF The edge weight function type.

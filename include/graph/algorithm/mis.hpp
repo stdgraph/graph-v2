@@ -22,6 +22,7 @@
 namespace std::graph {
 
 /**
+ * @ingroup graph_algorithms
  * @brief Find a maximal independent set of vertices
  * 
  * Complexity: O(|E|)
