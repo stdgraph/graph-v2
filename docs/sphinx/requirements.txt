@@ -1,6 +1,6 @@
 sphinx==5.3.0
-breathe==4.34.0
-exhale==0.3.6
+breathe
+exhale
 sphinxcontrib-bibtex==2.5.0
 jinja2-highlight==0.6.1
 myst-parser==0.18.1
