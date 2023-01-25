@@ -14,10 +14,10 @@ if(NOT catch2_POPULATED)
   FetchContent_Populate(
     catch2
   )
+  add_subdirectory(${catch2_SOURCE_DIR})
 endif()
 
 set(CATCH2_SOURCE_DIR "${catch2_SOURCE_DIR}")
 set(CATCH2_INCLUDE_DIR "${catch2_INCLUDE_DIR}")
 
 FetchContent_MakeAvailable(catch2)
-add_subdirectory(${catch2_SOURCE_DIR})

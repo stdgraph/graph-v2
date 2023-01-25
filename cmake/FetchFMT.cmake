@@ -14,10 +14,10 @@ if(NOT fmt_POPULATED)
   FetchContent_Populate(
     fmt
   )
+  add_subdirectory(${fmt_SOURCE_DIR})
 endif()
 
 set(FMT_SOURCE_DIR "${fmt_SOURCE_DIR}")
 set(FMT_INCLUDE_DIR "${fmt_INCLUDE_DIR}")
 
 FetchContent_MakeAvailable(fmt)
-add_subdirectory(${fmt_SOURCE_DIR})
