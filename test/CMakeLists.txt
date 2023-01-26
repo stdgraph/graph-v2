@@ -17,7 +17,7 @@ add_executable(tests tests.cpp "examples.cpp"
 			       "mis_tests.cpp"
                                )
 
-target_link_libraries(tests PRIVATE project_warnings project_options catch_main Catch2::Catch2 graph)
+target_link_libraries(tests PRIVATE project_warnings project_options catch_main Catch2::Catch2WithMain graph)
 target_link_libraries(tests PRIVATE fmt::fmt)
 target_include_directories(tests 
     INTERFACE ${Catch2_INCLUDE_DIRS_DEBUG} 
