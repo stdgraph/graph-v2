@@ -165,7 +165,7 @@ void kruskal(
  *                    caller must assure size(predecessor) >= size(vertices(g)).
  * @param seed        The single source vertex to start the search.
  */
-template<class EV, adjacency_list G, ranges::random_access_range Predecessor,
+template<adjacency_list G, ranges::random_access_range Predecessor,
 ranges::random_access_range Weight>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 void prim(
@@ -174,8 +174,9 @@ void prim(
     Weight&        weight,      // out: edge value weight[uid] from tree edge uid to predecessor[uid]
     vertex_id_t<G> seed = 0     // seed vtx
 ) {
-  prim<EV>(g, predecessor, weight,
-    [](auto&& i, auto&& j){ return i < j; }, std::numeric_limits<EV>::max(), seed);
+  prim(g, predecessor, weight,
+    [](auto&& i, auto&& j){ return i < j; },
+    std::numeric_limits<ranges::range_value_t<Weight>>::max(), seed);
 }
 
 /**
@@ -192,20 +193,21 @@ void prim(
  * @param predecessor [inout] The predecessor[uid] of vertex_id uid in tree. predecessor[seed] == seed. The
  *                    caller must assure size(predecessor) >= size(vertices(g)).
  * @param compare     The comparison operator.
- * @param init_init   The initial distance value.
+ * @param init_dist   The initial distance value.
  * @param seed        The single source vertex to start the search.
  */
-template<class EV, adjacency_list G, ranges::random_access_range Predecessor,
+template<adjacency_list G, ranges::random_access_range Predecessor,
 ranges::random_access_range Weight, class CompareOp>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 void prim(
-    G&&            g,           // graph
-    Predecessor&   predecessor, // out: predecessor[uid] of uid in tree
-    Weight&        weight,      // out: edge value weight[uid] from tree edge uid to predecessor[uid]
-    CompareOp      compare,     // edge value comparitor
-    EV             init_dist,   // initial distance
-    vertex_id_t<G> seed = 0     // seed vtx
+    G&&                           g,           // graph
+    Predecessor&                  predecessor, // out: predecessor[uid] of uid in tree
+    Weight&                       weight,      // out: edge value weight[uid] from tree edge uid to predecessor[uid]
+    CompareOp                     compare,     // edge value comparitor
+    ranges::range_value_t<Weight> init_dist,   // initial distance
+    vertex_id_t<G>                seed = 0     // seed vtx
 ) {
+  typedef ranges::range_value_t<Weight> EV;
   size_t N(size(vertices(g)));
   std::vector<EV> distance(N, init_dist);
   std::vector<uint8_t> finished(N, false);
