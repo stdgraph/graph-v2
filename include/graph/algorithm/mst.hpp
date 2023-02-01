@@ -210,7 +210,6 @@ void prim(
   typedef ranges::range_value_t<Weight> EV;
   size_t N(size(vertices(g)));
   std::vector<EV> distance(N, init_dist);
-  std::vector<uint8_t> finished(N, false);
   distance[seed] = 0;
   predecessor[seed] = seed;
 
@@ -225,16 +224,12 @@ void prim(
   while (!Q.empty()) {
     auto uid = std::get<0>(Q.top());
     Q.pop();
-
-    if (finished[uid]) {
-      continue;
-    }
     
     for (auto&& [vid, uv, w] : views::incidence(g, uid, evf)) {
-      if (!finished[vid] && compare(w, distance[vid])) {
-	      distance[vid] = w;
-	      Q.push({ vid, distance[vid] });
-	      predecessor[vid] = uid;
+      if (compare(w, distance[vid])) {
+	distance[vid] = w;
+	Q.push({ vid, distance[vid] });
+	predecessor[vid] = uid;
         weight[vid] = w;
       }
     }
