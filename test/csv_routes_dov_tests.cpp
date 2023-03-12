@@ -39,7 +39,7 @@ using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
 
-template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VId = uint32_t>
+template <typename EV = void, typename VV = void, typename GV = void, typename VId = uint32_t, bool Sourced = false>
 struct dov_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
@@ -47,9 +47,9 @@ struct dov_graph_traits {
   using vertex_id_type                       = VId;
   constexpr inline const static bool sourced = Sourced;
 
-  using edge_type   = std::graph::container::dynamic_edge<EV, VV, GV, Sourced, VId, dov_graph_traits>;
-  using vertex_type = std::graph::container::dynamic_vertex<EV, VV, GV, Sourced, VId, dov_graph_traits>;
-  using graph_type  = std::graph::container::dynamic_graph<EV, VV, GV, Sourced, VId, dov_graph_traits>;
+  using edge_type   = std::graph::container::dynamic_edge<EV, VV, GV, VId, Sourced, dov_graph_traits>;
+  using vertex_type = std::graph::container::dynamic_vertex<EV, VV, GV, VId, Sourced, dov_graph_traits>;
+  using graph_type  = std::graph::container::dynamic_graph<EV, VV, GV, VId, Sourced, dov_graph_traits>;
 
   using vertices_type = std::deque<vertex_type>;
   using edges_type    = std::vector<edge_type>;
