@@ -34,19 +34,22 @@
 
 namespace std::graph {
 
-/// <summary>
-/// The element in a depth-first search stack.
-/// </summary>
+/**
+ * @brief The element in a depth-first search stack.
+*/
 template <adjacency_list G>
 struct dfs_element {
   vertex_id_t<G>            u_id;
   vertex_edge_iterator_t<G> uv;
 };
 
-//---------------------------------------------------------------------------------------
-/// depth-first search view for vertices, given a single seed vertex.
-///
-
+/**
+ * @brief Depth-first search view for vertices, given a single seed vertex.
+ * 
+ * @tparam G     Graph type
+ * @tparam Stack Stack type for internal use
+ * @tparam Alloc Allocator type
+*/
 template <adjacency_list G, class Stack, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class dfs_base : public ranges::view_base {
@@ -184,10 +187,14 @@ protected:
 };
 
 
-//---------------------------------------------------------------------------------------
-/// depth-first search range for vertices, given a single seed vertex.
-///
-
+/**
+ * @brief Depth-first search range for vertices, given a single seed vertex.
+ * 
+ * @tparam G     Graph type
+ * @tparam VVF   Vertex Value Function type
+ * @tparam Stack Stack type for internal use
+ * @tparam Alloc Allocator type
+*/
 template <adjacency_list G, class VVF = void, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertices_depth_first_search_view : public dfs_base<G, Stack, Alloc> {
@@ -384,9 +391,15 @@ public:
 };
 
 
-//---------------------------------------------------------------------------------------
-/// depth-first search view for edges, given a single seed vertex.
-///
+/**
+ * @brief Depth-first search view for edges, given a single seed vertex.
+ * 
+ * @tparam G       Graph type
+ * @tparam EVF     Edge Value Function type
+ * @tparam Sourced Does graph G support @c source_id()?
+ * @tparam Stack   Stack type for use internally
+ * @tparam Alloc   Allocator type
+*/
 template <adjacency_list G,
           class EVF    = void,
           bool Sourced = false,

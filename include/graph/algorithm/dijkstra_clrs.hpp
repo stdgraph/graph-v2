@@ -51,8 +51,8 @@ constexpr auto print_types(Ts...) {
  *
  * @param graph The graph.
  * @param source The source vertex.
-*  @param distance The distance vector.
-*  @param predecessor The predecessor vector.
+ * @param distance The distance vector.
+ * @param predecessor The predecessor vector.
  * @param weight The edge weight function.
  *        The edge weight function must be a function object that returns the weight of an edge.
  *        The edge weight function must be copy constructible.

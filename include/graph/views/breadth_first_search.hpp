@@ -187,10 +187,14 @@ protected:
   cancel_search                    cancel_ = cancel_search::continue_search;
 };
 
-//---------------------------------------------------------------------------------------
-/// breadth-first search range for vertices, given a single seed vertex.
-///
-
+/**
+ * @brief Breadth-first search range for vertices, given a single seed vertex.
+ * 
+ * @tparam G     Graph type
+ * @tparam VVF   Vertex Value Function type
+ * @tparam Queue Queue type for internal use
+ * @tparam Alloc Allocator type
+*/
 template <adjacency_list G, class VVF = void, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertices_breadth_first_search_view : public bfs_base<G, Queue, Alloc> {
@@ -404,9 +408,14 @@ public:
 };
 
 
-//---------------------------------------------------------------------------------------
-/// breadth-first search range for edges, given a single seed vertex.
-///
+/**
+ * @brief Breadth-first search range for edges, given a single seed vertex.
+ * @tparam G       Graph type
+ * @tparam EVF     Edge Value Function type
+ * @tparam Sourced Does the graph support @c source_id()?
+ * @tparam Queue   Queue type for internal use
+ * @tparam Alloc   Allocator type
+*/
 template <adjacency_list G,
           class EVF    = void,
           bool Sourced = false,

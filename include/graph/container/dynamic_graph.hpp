@@ -1199,7 +1199,7 @@ public: // Load operations
   }
 
 #if 0
-  /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
+  /// @todo ERng not a forward_range because CSV reader doesn't conform to be a forward_range
   template <class ERng, class EProj = identity>
   void load_edges(ERng&& erng, EProj eproj = {}) {
     // Nothing to do?

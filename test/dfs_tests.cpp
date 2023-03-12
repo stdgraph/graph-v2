@@ -1131,6 +1131,6 @@ void shortest_paths_example() {
   //dijkstra_shortest_paths(g, 1, back_inserter(path));
 }
 } // namespace std::graph
-#endif ///
+#endif // 0
 
 TEST_CASE("shortest paths demo", "[dynamic][shortest_paths][vertex]") {}

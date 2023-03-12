@@ -20,11 +20,12 @@ template <adjacency_list G, bool Sourced = false, class VVF = void>
 class neighbor_iterator;
 
 
-/// <summary>
-/// Iterator for an neighbors range of edges for a vertex.
-/// </summary>
-/// <typeparam name="G">Graph type</typeparam>
-/// <typeparam name="VVF">Edge Value Function</typeparam>
+/**
+ * @brief Iterator for an neighbors range of edges for a vertex.
+ *
+ * @tparam G    Graph type
+ * @tparam VVF  Edge Value Function type
+*/
 template <adjacency_list G, bool Sourced, class VVF>
 class neighbor_iterator
       : public source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
