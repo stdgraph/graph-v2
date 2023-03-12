@@ -32,13 +32,13 @@ namespace std::graph::container {
 // dynamic_graph traits forward references
 //
 
-template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VId = uint32_t>
+template <class EV = void, class VV = void, class GV = void, class VId = uint32_t, bool Sourced = false>
 struct vofl_graph_traits;
 
-template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VId = uint32_t>
+template <class EV = void, class VV = void, class GV = void, class VId = uint32_t, bool Sourced = false>
 struct vol_graph_traits;
 
-template <class EV = void, class VV = void, class GV = void, bool Sourced = false, class VId = uint32_t>
+template <class EV = void, class VV = void, class GV = void, class VId = uint32_t, bool Sourced = false>
 struct vov_graph_traits;
 
 
@@ -46,18 +46,18 @@ struct vov_graph_traits;
 // dynamic_graph forward references
 //
 
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
 class dynamic_edge;
 
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
 class dynamic_vertex;
 
 template <class EV     = void,
           class VV     = void,
           class GV     = void,
-          bool Sourced = false,
           class VId    = uint32_t,
-          class Traits = vofl_graph_traits<EV, VV, GV, Sourced, VId>>
+          bool Sourced = false,
+          class Traits = vofl_graph_traits<EV, VV, GV, VId, Sourced>>
 class dynamic_graph;
 
 //--------------------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ class dynamic_graph;
  *                 and @c source(g,uv) will generate a compile error.
  * @tparam VId     @showinitializer =uint32_t Vertex id type
 */
-template <class EV, class VV, class GV, bool Sourced, class VId>
+template <class EV, class VV, class GV, class VId, bool Sourced>
 struct vofl_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
@@ -88,9 +88,9 @@ struct vofl_graph_traits {
   using vertex_id_type                       = VId;
   constexpr inline const static bool sourced = Sourced;
 
-  using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VId, vofl_graph_traits>;
-  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VId, vofl_graph_traits>;
-  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VId, vofl_graph_traits>;
+  using edge_type   = dynamic_edge<EV, VV, GV, VId, Sourced, vofl_graph_traits>;
+  using vertex_type = dynamic_vertex<EV, VV, GV, VId, Sourced, vofl_graph_traits>;
+  using graph_type  = dynamic_graph<EV, VV, GV, VId, Sourced, vofl_graph_traits>;
 
   using vertices_type = vector<vertex_type>;
   using edges_type    = forward_list<edge_type>;
@@ -112,7 +112,7 @@ struct vofl_graph_traits {
  *                 and @c source(g,uv) will generate a compile error.
  * @tparam VId     @showinitializer =uint32_t Vertex id type
 */
-template <class EV, class VV, class GV, bool Sourced, class VId>
+template <class EV, class VV, class GV, class VId, bool Sourced>
 struct vol_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
@@ -120,9 +120,9 @@ struct vol_graph_traits {
   using vertex_id_type                       = VId;
   constexpr inline const static bool sourced = Sourced;
 
-  using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VId, vol_graph_traits>;
-  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VId, vol_graph_traits>;
-  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VId, vol_graph_traits>;
+  using edge_type   = dynamic_edge<EV, VV, GV, VId, Sourced, vol_graph_traits>;
+  using vertex_type = dynamic_vertex<EV, VV, GV, VId, Sourced, vol_graph_traits>;
+  using graph_type  = dynamic_graph<EV, VV, GV, VId, Sourced, vol_graph_traits>;
 
   using vertices_type = vector<vertex_type>;
   using edges_type    = list<edge_type>;
@@ -144,7 +144,7 @@ struct vol_graph_traits {
  *                 and @c source(g,uv) will generate a compile error.
  * @tparam VId     @showinitializer =uint32_t Vertex id type
 */
-template <class EV, class VV, class GV, bool Sourced, class VId>
+template <class EV, class VV, class GV, class VId, bool Sourced>
 struct vov_graph_traits {
   using edge_value_type                      = EV;
   using vertex_value_type                    = VV;
@@ -152,9 +152,9 @@ struct vov_graph_traits {
   using vertex_id_type                       = VId;
   constexpr inline const static bool sourced = Sourced;
 
-  using edge_type   = dynamic_edge<EV, VV, GV, Sourced, VId, vov_graph_traits>;
-  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VId, vov_graph_traits>;
-  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VId, vov_graph_traits>;
+  using edge_type   = dynamic_edge<EV, VV, GV, VId, Sourced, vov_graph_traits>;
+  using vertex_type = dynamic_vertex<EV, VV, GV, VId, Sourced, vov_graph_traits>;
+  using graph_type  = dynamic_graph<EV, VV, GV, VId, Sourced, vov_graph_traits>;
 
   using vertices_type = vector<vertex_type>;
   using edges_type    = vector<edge_type>;
@@ -174,8 +174,8 @@ template <class Traits>
 using dynamic_adjacency_graph = dynamic_graph<typename Traits::edge_value_type,
                                               typename Traits::vertex_value_type,
                                               typename Traits::graph_value_type,
-                                              Traits::sourced,
                                               typename Traits::vertex_id_type,
+                                              Traits::sourced,
                                               Traits>;
 
 //--------------------------------------------------------------------------------------------------
@@ -204,14 +204,14 @@ using dynamic_adjacency_graph = dynamic_graph<typename Traits::edge_value_type,
  * @tparam VId     Vertex id type
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
 class dynamic_edge_target {
 public:
   using vertex_id_type = VId;
   using value_type     = EV;
-  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
-  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
-  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
 
 public:
   constexpr dynamic_edge_target(vertex_id_type target_id) : target_id_(target_id) {}
@@ -268,14 +268,14 @@ private:
  * @tparam VId     Vertex id type
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
 class dynamic_edge_source {
 public:
   using vertex_id_type = VId;
   using value_type     = EV;
-  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
-  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
-  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
 
 public:
   constexpr dynamic_edge_source(vertex_id_type source_id) : source_id_(source_id) {}
@@ -334,7 +334,7 @@ private:
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
 template <class EV, class VV, class GV, class VId, class Traits>
-class dynamic_edge_source<EV, VV, GV, false, VId, Traits> {};
+class dynamic_edge_source<EV, VV, GV, VId, false, Traits> {};
 
 /**
  * @ingroup graph_containers
@@ -357,13 +357,13 @@ class dynamic_edge_source<EV, VV, GV, false, VId, Traits> {};
  * @tparam VId     Vertex id type
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
 class dynamic_edge_value {
 public:
   using value_type  = EV;
-  using graph_type  = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
-  using vertex_type = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
-  using edge_type   = dynamic_edge_value<EV, VV, GV, Sourced, VId, Traits>;
+  using graph_type  = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
+  using vertex_type = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
+  using edge_type   = dynamic_edge_value<EV, VV, GV, VId, Sourced, Traits>;
 
 public:
   constexpr dynamic_edge_value(const value_type& value) : value_(value) {}
@@ -417,8 +417,8 @@ private: // tag_invoke properties
  * @tparam VId     Vertex id type
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
-template <class VV, class GV, bool Sourced, class VId, class Traits>
-class dynamic_edge_value<void, VV, GV, Sourced, VId, Traits> {};
+template <class VV, class GV, class VId, bool Sourced, class Traits>
+class dynamic_edge_value<void, VV, GV, VId, Sourced, Traits> {};
 
 
 /**
@@ -449,21 +449,21 @@ class dynamic_edge_value<void, VV, GV, Sourced, VId, Traits> {};
  * @tparam VId     Vertex id type
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
 class dynamic_edge
-      : public dynamic_edge_target<EV, VV, GV, Sourced, VId, Traits>
-      , public dynamic_edge_source<EV, VV, GV, Sourced, VId, Traits>
-      , public dynamic_edge_value<EV, VV, GV, Sourced, VId, Traits> {
+      : public dynamic_edge_target<EV, VV, GV, VId, Sourced, Traits>
+      , public dynamic_edge_source<EV, VV, GV, VId, Sourced, Traits>
+      , public dynamic_edge_value<EV, VV, GV, VId, Sourced, Traits> {
 public:
-  using base_target_type = dynamic_edge_target<EV, VV, GV, Sourced, VId, Traits>;
-  using base_source_type = dynamic_edge_source<EV, VV, GV, Sourced, VId, Traits>;
-  using base_value_type  = dynamic_edge_value<EV, VV, GV, Sourced, VId, Traits>;
+  using base_target_type = dynamic_edge_target<EV, VV, GV, VId, Sourced, Traits>;
+  using base_source_type = dynamic_edge_source<EV, VV, GV, VId, Sourced, Traits>;
+  using base_value_type  = dynamic_edge_value<EV, VV, GV, VId, Sourced, Traits>;
 
   using vertex_id_type = VId;
   using value_type     = EV;
-  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
-  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
-  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
 
 public:
   constexpr dynamic_edge(vertex_id_type source_id, vertex_id_type target_id)
@@ -505,20 +505,20 @@ public:
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
 template <class VV, class GV, class VId, class Traits>
-class dynamic_edge<void, VV, GV, true, VId, Traits>
-      : public dynamic_edge_target<void, VV, GV, true, VId, Traits>
-      , public dynamic_edge_source<void, VV, GV, true, VId, Traits>
-      , public dynamic_edge_value<void, VV, GV, true, VId, Traits> {
+class dynamic_edge<void, VV, GV, VId, true, Traits>
+      : public dynamic_edge_target<void, VV, GV, VId, true, Traits>
+      , public dynamic_edge_source<void, VV, GV, VId, true, Traits>
+      , public dynamic_edge_value<void, VV, GV, VId, true, Traits> {
 public:
-  using base_target_type = dynamic_edge_target<void, VV, GV, true, VId, Traits>;
-  using base_source_type = dynamic_edge_source<void, VV, GV, true, VId, Traits>;
-  using base_value_type  = dynamic_edge_value<void, VV, GV, true, VId, Traits>;
+  using base_target_type = dynamic_edge_target<void, VV, GV, VId, true, Traits>;
+  using base_source_type = dynamic_edge_source<void, VV, GV, VId, true, Traits>;
+  using base_value_type  = dynamic_edge_value<void, VV, GV, VId, true, Traits>;
 
   using vertex_id_type = VId;
   using value_type     = void;
-  using graph_type     = dynamic_graph<void, VV, GV, true, VId, Traits>;
-  using vertex_type    = dynamic_vertex<void, VV, GV, true, VId, Traits>;
-  using edge_type      = dynamic_edge<void, VV, GV, true, VId, Traits>;
+  using graph_type     = dynamic_graph<void, VV, GV, VId, true, Traits>;
+  using vertex_type    = dynamic_vertex<void, VV, GV, VId, true, Traits>;
+  using edge_type      = dynamic_edge<void, VV, GV, VId, true, Traits>;
 
 public:
   constexpr dynamic_edge(vertex_id_type source_id, vertex_id_type target_id)
@@ -556,20 +556,20 @@ public:
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
 template <class EV, class VV, class GV, class VId, class Traits>
-class dynamic_edge<EV, VV, GV, false, VId, Traits>
-      : public dynamic_edge_target<EV, VV, GV, false, VId, Traits>
-      , public dynamic_edge_source<EV, VV, GV, false, VId, Traits>
-      , public dynamic_edge_value<EV, VV, GV, false, VId, Traits> {
+class dynamic_edge<EV, VV, GV, VId, false, Traits>
+      : public dynamic_edge_target<EV, VV, GV, VId, false, Traits>
+      , public dynamic_edge_source<EV, VV, GV, VId, false, Traits>
+      , public dynamic_edge_value<EV, VV, GV, VId, false, Traits> {
 public:
-  using base_target_type = dynamic_edge_target<EV, VV, GV, false, VId, Traits>;
-  using base_source_type = dynamic_edge_source<EV, VV, GV, false, VId, Traits>;
-  using base_value_type  = dynamic_edge_value<EV, VV, GV, false, VId, Traits>;
+  using base_target_type = dynamic_edge_target<EV, VV, GV, VId, false, Traits>;
+  using base_source_type = dynamic_edge_source<EV, VV, GV, VId, false, Traits>;
+  using base_value_type  = dynamic_edge_value<EV, VV, GV, VId, false, Traits>;
 
   using vertex_id_type = VId;
   using value_type     = EV;
-  using graph_type     = dynamic_graph<EV, VV, GV, false, VId, Traits>;
-  using vertex_type    = dynamic_vertex<EV, VV, GV, false, VId, Traits>;
-  using edge_type      = dynamic_edge<EV, VV, GV, false, VId, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, GV, VId, false, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, VId, false, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, VId, false, Traits>;
 
 public:
   constexpr dynamic_edge(vertex_id_type target_id) : base_target_type(target_id) {}
@@ -610,17 +610,17 @@ public:
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
 template <class VV, class GV, class VId, class Traits>
-class dynamic_edge<void, VV, GV, false, VId, Traits>
-      : public dynamic_edge_target<void, VV, GV, false, VId, Traits>
-      , public dynamic_edge_source<void, VV, GV, false, VId, Traits>
-      , public dynamic_edge_value<void, VV, GV, false, VId, Traits> {
+class dynamic_edge<void, VV, GV, VId, false, Traits>
+      : public dynamic_edge_target<void, VV, GV, VId, false, Traits>
+      , public dynamic_edge_source<void, VV, GV, VId, false, Traits>
+      , public dynamic_edge_value<void, VV, GV, VId, false, Traits> {
 public:
-  using base_target_type = dynamic_edge_target<void, VV, GV, false, VId, Traits>;
+  using base_target_type = dynamic_edge_target<void, VV, GV, VId, false, Traits>;
   using vertex_id_type   = VId;
   using value_type       = void;
-  using graph_type       = dynamic_graph<void, VV, GV, false, VId, Traits>;
-  using vertex_type      = dynamic_vertex<void, VV, GV, false, VId, Traits>;
-  using edge_type        = dynamic_edge<void, VV, GV, false, VId, Traits>;
+  using graph_type       = dynamic_graph<void, VV, GV, VId, false, Traits>;
+  using vertex_type      = dynamic_vertex<void, VV, GV, VId, false, Traits>;
+  using edge_type        = dynamic_edge<void, VV, GV, VId, false, Traits>;
 
 public:
   constexpr dynamic_edge(vertex_id_type target_id) : base_target_type(target_id) {}
@@ -655,14 +655,14 @@ public:
  * @tparam VId     Vertex id type
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
 class dynamic_vertex_base {
 public:
   using vertex_id_type = VId;
   using value_type     = VV;
-  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
-  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
-  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
   using edges_type     = typename Traits::edges_type;
   using allocator_type = typename edges_type::allocator_type;
 
@@ -733,15 +733,15 @@ private: // tag_invoke properties
  * @tparam VId     Vertex id type
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
-class dynamic_vertex : public dynamic_vertex_base<EV, VV, GV, Sourced, VId, Traits> {
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
+class dynamic_vertex : public dynamic_vertex_base<EV, VV, GV, VId, Sourced, Traits> {
 public:
-  using base_type      = dynamic_vertex_base<EV, VV, GV, Sourced, VId, Traits>;
+  using base_type      = dynamic_vertex_base<EV, VV, GV, VId, Sourced, Traits>;
   using vertex_id_type = VId;
   using value_type     = remove_cvref_t<VV>;
-  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
-  using vertex_type    = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
-  using edge_type      = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
+  using vertex_type    = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
+  using edge_type      = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
   using edges_type     = typename Traits::edges_type;
   using allocator_type = typename edges_type::allocator_type;
 
@@ -798,16 +798,16 @@ private: // tag_invoke properties
  * @tparam VId     Vertex id type
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
-template <class EV, class GV, bool Sourced, class VId, class Traits>
-class dynamic_vertex<EV, void, GV, Sourced, VId, Traits>
-      : public dynamic_vertex_base<EV, void, GV, Sourced, VId, Traits> {
+template <class EV, class GV, class VId, bool Sourced, class Traits>
+class dynamic_vertex<EV, void, GV, VId, Sourced, Traits>
+      : public dynamic_vertex_base<EV, void, GV, VId, Sourced, Traits> {
 public:
-  using base_type      = dynamic_vertex_base<EV, void, GV, Sourced, VId, Traits>;
+  using base_type      = dynamic_vertex_base<EV, void, GV, VId, Sourced, Traits>;
   using vertex_id_type = VId;
   using value_type     = void;
-  using graph_type     = dynamic_graph<EV, void, GV, Sourced, VId, Traits>;
-  using vertex_type    = dynamic_vertex<EV, void, GV, Sourced, VId, Traits>;
-  using edge_type      = dynamic_edge<EV, void, GV, Sourced, VId, Traits>;
+  using graph_type     = dynamic_graph<EV, void, GV, VId, Sourced, Traits>;
+  using vertex_type    = dynamic_vertex<EV, void, GV, VId, Sourced, Traits>;
+  using edge_type      = dynamic_edge<EV, void, GV, VId, Sourced, Traits>;
   using edges_type     = typename Traits::edges_type;
   using allocator_type = typename edges_type::allocator_type;
 
@@ -848,21 +848,21 @@ public:
  * @tparam VId     The type used for the vertex id.
  * @tparam Traits  Defines the types for vertex and edge containers.
 */
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
 class dynamic_graph_base {
 public: // types
-  using graph_type   = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
+  using graph_type   = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
   using graph_traits = Traits;
 
   using vertex_id_type        = VId;
-  using vertex_type           = dynamic_vertex<EV, VV, GV, Sourced, VId, Traits>;
+  using vertex_type           = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
   using vertices_type         = typename Traits::vertices_type;
   using vertex_allocator_type = typename vertices_type::allocator_type;
   using size_type             = vertices_type::size_type;
 
   using edges_type          = typename Traits::edges_type;
   using edge_allocator_type = typename edges_type::allocator_type;
-  using edge_type           = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
+  using edge_type           = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
 
 public: // Construction/Destruction/Assignment
   constexpr dynamic_graph_base()                          = default;
@@ -1310,12 +1310,12 @@ private: // tag_invoke properties
  * @tparam VId     @showinitializer =uint32_t Vertex id type
  * @tparam Traits  @showinitializer =vofl_graph_traits<EV,VV,GV,Sourced,VId> Defines the types for vertex and edge containers.
 */
-template <class EV, class VV, class GV, bool Sourced, class VId, class Traits>
-class dynamic_graph : public dynamic_graph_base<EV, VV, GV, Sourced, VId, Traits> {
+template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
+class dynamic_graph : public dynamic_graph_base<EV, VV, GV, VId, Sourced, Traits> {
 
 public: // Types & Constants
-  using base_type      = dynamic_graph_base<EV, VV, GV, Sourced, VId, Traits>;
-  using graph_type     = dynamic_graph<EV, VV, GV, Sourced, VId, Traits>;
+  using base_type      = dynamic_graph_base<EV, VV, GV, VId, Sourced, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
   using graph_traits   = Traits;
   using vertex_id_type = VId;
   using value_type     = GV;
@@ -1323,7 +1323,7 @@ public: // Types & Constants
 
   using edges_type          = typename Traits::edges_type;
   using edge_allocator_type = typename edges_type::allocator_type;
-  using edge_type           = dynamic_edge<EV, VV, GV, Sourced, VId, Traits>;
+  using edge_type           = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
 
   constexpr inline const static bool sourced = Sourced;
 
@@ -1664,13 +1664,13 @@ private: // tag_invoke properties
  * @tparam VId     @showinitializer =uint32_t Vertex id type
  * @tparam Traits  @showinitializer =vofl_graph_traits<EV,VV,GV,Sourced,VId> Defines the types for vertex and edge containers.
 */
-template <class EV, class VV, bool Sourced, class VId, class Traits>
-class dynamic_graph<EV, VV, void, Sourced, VId, Traits>
-      : public dynamic_graph_base<EV, VV, void, Sourced, VId, Traits> {
+template <class EV, class VV, class VId, bool Sourced, class Traits>
+class dynamic_graph<EV, VV, void, VId, Sourced, Traits>
+      : public dynamic_graph_base<EV, VV, void, VId, Sourced, Traits> {
 
 public: // Types & Constants
-  using base_type      = dynamic_graph_base<EV, VV, void, Sourced, VId, Traits>;
-  using graph_type     = dynamic_graph<EV, VV, void, Sourced, VId, Traits>;
+  using base_type      = dynamic_graph_base<EV, VV, void, VId, Sourced, Traits>;
+  using graph_type     = dynamic_graph<EV, VV, void, VId, Sourced, Traits>;
   using graph_traits   = Traits;
   using vertex_id_type = VId;
   using value_type     = void;
@@ -1679,7 +1679,7 @@ public: // Types & Constants
 
   using edges_type          = typename Traits::edges_type;
   using edge_allocator_type = typename edges_type::allocator_type;
-  using edge_type           = dynamic_edge<EV, VV, void, Sourced, VId, Traits>;
+  using edge_type           = dynamic_edge<EV, VV, void, VId, Sourced, Traits>;
 
   constexpr inline const static bool sourced = Sourced;
 
