@@ -228,17 +228,18 @@ public:
   source_vertex() = default;
 };
 
-/// <summary>
-/// ref_to_ptr changes a reference to a pointer and stores it as a pointer in value.
-/// Pointers and values are stored as-is.
-///
-/// ref_to_ptr is similar to reference_wrapper but there are a couple of
-/// differences when used in a view iterator that are important:
-/// 1.  It is default constructible, as long as the value being stored is default
-///     constructible.
-/// 2.  It stores a copy of the value if not a reference or a pointer.
-/// </summary>
-/// <typeparam name="T">The type to store</typeparam>
+/**
+ * @brief ref_to_ptr changes a reference to a pointer and stores it as a pointer in value.
+ *        Pointers and values are stored as-is.
+ *
+ * @c ref_to_ptr is similar to @c reference_wrapper but there are a couple of
+ * differences when used in a view iterator that are important:
+ * 1.  It is default constructible, as long as the value being stored is default
+ *     constructible.
+ * 2.  It stores a copy of the value if not a reference or a pointer.
+ *
+ * @tparam T    The type to store
+*/
 namespace _detail {
   template <class T>
   class ref_to_ptr {

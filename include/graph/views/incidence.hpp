@@ -20,11 +20,12 @@ namespace std::graph {
 template <adjacency_list G, bool Sourced = false, class EVF = void>
 class incidence_iterator;
 
-/// <summary>
-/// Iterator for an incidence range of edges for a vertex.
-/// </summary>
-/// <typeparam name="G">Graph type</typeparam>
-/// <typeparam name="EVF">Edge Value Function</typeparam>
+/**
+ * @brief Iterator for an incidence range of edges for a vertex.
+ *
+ * @tparam G    Graph type
+ * @tparam EVF  Edge Value Function type
+*/
 template <adjacency_list G, bool Sourced, class EVF>
 class incidence_iterator : source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
 public:

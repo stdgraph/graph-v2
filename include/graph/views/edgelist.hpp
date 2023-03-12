@@ -27,14 +27,15 @@ class edgelist_iterator_base {
   using edge_iterator   = vertex_edge_iterator_t<G>;
 
 protected:
-  /// <summary>
-  /// If the current vertex is non-empty then uvi is set to begin(edges(g,*ui)).
-  /// Otherwise, skip past vertices until we find one with edges, and set uvi to the first edge.
-  /// If no vertices with edges are found, ui = end(vertices(g)).
-  /// </summary>
-  /// <param name="g">graph</param>
-  /// <param name="ui">Current vertex</param>
-  /// <param name="uvi">Current edge</param>
+  /**
+   * If the current vertex is non-empty then uvi is set to begin(edges(g,*ui)).
+   * Otherwise, skip past vertices until we find one with edges, and set uvi to the first edge.
+   * If no vertices with edges are found, ui = end(vertices(g)).
+   *
+   * @param g   Graph instance
+   * @param ui  Current vertex
+   * @param uvi Current edge
+  */
   constexpr void find_non_empty_vertex(G& g, vertex_iterator& ui, edge_iterator& uvi) noexcept {
     for (; ui != ranges::end(vertices(g)); ++ui) {
       if (!ranges::empty(edges(g, *ui))) {
@@ -44,13 +45,15 @@ protected:
     }
   }
 
-  /// <summary>
-  /// Find the next edge. Assumes current vertex & edge iterators point to valid
-  /// objects.
-  /// </summary>
-  /// <param name="g">Graph</param>
-  /// <param name="ui">Current vertex</param>
-  /// <param name="uvi">Current edge</param>
+  /**
+   * @brief Find the next edge. 
+   *
+   * Assumes current vertex & edge iterators point to valid objects.
+   * 
+   * @param g   Graph instance
+   * @param ui  Current vertex
+   * @param uvi Current edge
+  */
   constexpr void find_next_edge(G& g, vertex_iterator& ui, edge_iterator& uvi) noexcept {
     assert(ui != ranges::end(vertices(g)));
     assert(uvi != ranges::end(edges(g, *ui)));
@@ -62,11 +65,12 @@ protected:
 };
 
 
-/// <summary>
-/// Iterator for an edgelist range of edges for a vertex.
-/// </summary>
-/// <typeparam name="G">Graph type</typeparam>
-/// <typeparam name="EVF">Edge Value Function</typeparam>
+/**
+ * @brief Iterator for an edgelist range of edges for a vertex.
+ *
+ * @tparam G    Graph type
+ * @tparam EVF  Edge Value Function type
+*/
 template <adjacency_list G, class EVF>
 class edgelist_iterator : public edgelist_iterator_base<G> {
 public:
