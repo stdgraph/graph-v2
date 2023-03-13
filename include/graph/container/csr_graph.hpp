@@ -195,7 +195,7 @@ public: // Operations
       // resize_vertices(n) with enough entries for all the values.
       assert(static_cast<size_t>(id) < size());
 
-      (*this)[id] = move(value);
+      (*this)[id] = std::move(value);
     }
   }
 

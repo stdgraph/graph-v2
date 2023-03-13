@@ -367,7 +367,7 @@ public:
 
 public:
   constexpr dynamic_edge_value(const value_type& value) : value_(value) {}
-  constexpr dynamic_edge_value(value_type&& value) : value_(move(value)) {}
+  constexpr dynamic_edge_value(value_type&& value) : value_(std::move(value)) {}
 
   constexpr dynamic_edge_value()                          = default;
   constexpr dynamic_edge_value(const dynamic_edge_value&) = default;
@@ -576,7 +576,7 @@ public:
   constexpr dynamic_edge(vertex_id_type target_id, const value_type& val)
         : base_target_type(target_id), base_value_type(val) {}
   constexpr dynamic_edge(vertex_id_type target_id, value_type&& val)
-        : base_target_type(target_id), base_value_type(move(val)) {}
+        : base_target_type(target_id), base_value_type(std::move(val)) {}
 
   constexpr dynamic_edge()                    = default;
   constexpr dynamic_edge(const dynamic_edge&) = default;
@@ -701,14 +701,14 @@ private: // tag_invoke properties
     return u.edges_;
   }
 
-  friend constexpr edges_type::iterator
+  friend constexpr typename edges_type::iterator
   tag_invoke(::std::graph::tag_invoke::find_vertex_edge_fn_t, graph_type& g, vertex_id_type uid, vertex_id_type vid) {
     return ranges::find(g[uid].edges_, [&g, &vid](const edge_type& uv) -> bool { return target_id(g, uv) == vid; });
   }
-  friend constexpr edges_type::const_iterator tag_invoke(::std::graph::tag_invoke::find_vertex_edge_fn_t,
-                                                         const graph_type& g,
-                                                         vertex_id_type    uid,
-                                                         vertex_id_type    vid) {
+  friend constexpr typename edges_type::const_iterator tag_invoke(::std::graph::tag_invoke::find_vertex_edge_fn_t,
+                                                                  const graph_type& g,
+                                                                  vertex_id_type    uid,
+                                                                  vertex_id_type    vid) {
     return ranges::find(g[uid].edges_, [&g, &vid](const edge_type& uv) -> bool { return target_id(g, uv) == vid; });
   }
 };
@@ -858,7 +858,7 @@ public: // types
   using vertex_type           = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
   using vertices_type         = typename Traits::vertices_type;
   using vertex_allocator_type = typename vertices_type::allocator_type;
-  using size_type             = vertices_type::size_type;
+  using size_type             = typename vertices_type::size_type;
 
   using edges_type          = typename Traits::edges_type;
   using edge_allocator_type = typename edges_type::allocator_type;
@@ -1064,7 +1064,7 @@ public: // Load operations
       size_t k           = static_cast<size_t>(id);
       if constexpr (ranges::random_access_range<vertices_type>)
         assert(k < vertices_.size());
-      vertices_[k].value() = move(value);
+      vertices_[k].value() = std::move(value);
     }
   }
 
@@ -1117,15 +1117,15 @@ public: // Load operations
       auto&& edge_adder = push_or_insert(vertices_[e.source_id].edges());
       if constexpr (Sourced) {
         if constexpr (is_void_v<EV>) {
-          edge_adder(edge_type(move(e.source_id), move(e.target_id)));
+          edge_adder(edge_type(std::move(e.source_id), std::move(e.target_id)));
         } else {
-          edge_adder(edge_type(move(e.source_id), move(e.target_id), move(e.value)));
+          edge_adder(edge_type(std::move(e.source_id), std::move(e.target_id), std::move(e.value)));
         }
       } else {
         if constexpr (is_void_v<EV>) {
-          edge_adder(edge_type(move(e.target_id)));
+          edge_adder(edge_type(std::move(e.target_id)));
         } else {
-          edge_adder(edge_type(move(e.target_id), move(e.value)));
+          edge_adder(edge_type(std::move(e.target_id), std::move(e.value)));
         }
       }
     }
@@ -1184,15 +1184,15 @@ public: // Load operations
       auto&& edge_adder = push_or_insert(vertices_[e.source_id].edges());
       if constexpr (Sourced) {
         if constexpr (is_void_v<EV>) {
-          edge_adder(edge_type(move(e.source_id), move(e.target_id)));
+          edge_adder(edge_type(std::move(e.source_id), std::move(e.target_id)));
         } else {
-          edge_adder(edge_type(move(e.source_id), move(e.target_id), move(e.value)));
+          edge_adder(edge_type(std::move(e.source_id), std::move(e.target_id), std::move(e.value)));
         }
       } else {
         if constexpr (is_void_v<EV>) {
-          edge_adder(edge_type(move(e.target_id)));
+          edge_adder(edge_type(std::move(e.target_id)));
         } else {
-          edge_adder(edge_type(move(e.target_id), move(e.value)));
+          edge_adder(edge_type(std::move(e.target_id), std::move(e.value)));
         }
       }
     }
@@ -1230,8 +1230,8 @@ public: // Properties
 
   constexpr auto size() const noexcept { return vertices_.size(); }
 
-  constexpr vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
-  constexpr const vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
+  constexpr typename vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
+  constexpr const typename vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
 
 public: // Operations
   void reserve_vertices(size_type count) {
@@ -1262,8 +1262,9 @@ private: // tag_invoke properties
     return g.vertices_;
   }
 
-  friend vertex_id_type
-  tag_invoke(::std::graph::tag_invoke::vertex_id_fn_t, const dynamic_graph_base& g, vertices_type::const_iterator ui) {
+  friend vertex_id_type tag_invoke(::std::graph::tag_invoke::vertex_id_fn_t,
+                                   const dynamic_graph_base&              g,
+                                   typename vertices_type::const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
   }
 
@@ -1675,7 +1676,7 @@ public: // Types & Constants
   using vertex_id_type = VId;
   using value_type     = void;
   using allocator_type = typename Traits::vertices_type::allocator_type;
-  using base_type::vertices_type;
+  using typename base_type::vertices_type;
 
   using edges_type          = typename Traits::edges_type;
   using edge_allocator_type = typename edges_type::allocator_type;

@@ -38,8 +38,8 @@ struct city_id {
 
   template <typename OS>
   friend OS& operator<<(OS& os, const city_id& rhs) {
-    auto&& [g, id] = rhs;
-    os << vertex_value(g, *find_vertex(g, id)) << " [" << id << "]";
+    auto&& [_g, _id] = rhs;
+    os << vertex_value(_g, *find_vertex(_g, _id)) << " [" << _id << "]";
     return os;
   }
 };
@@ -56,8 +56,8 @@ struct city {
 
   template <typename OS>
   friend OS& operator<<(OS& os, const city& rhs) {
-    auto&& [g, id] = rhs;
-    os << vertex_value(g, *find_vertex(g, id));
+    auto&& [_g, _id] = rhs;
+    os << vertex_value(_g, *find_vertex(_g, _id));
     return os;
   }
 };
@@ -113,42 +113,42 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
   // Shortest Paths (segments)
   {
     auto                        weight_1 = [](edge_reference_t<G> uv) -> int { return 1; };
-    std::vector<int>            distance(size(vertices(g)));
+    std::vector<int>            distances(size(vertices(g)));
     std::vector<vertex_id_t<G>> predecessor(size(vertices(g)));
-    dijkstra_clrs(g, frankfurt_id, distance, predecessor, weight_1);
+    dijkstra_clrs(g, frankfurt_id, distances, predecessor, weight_1);
 
     cout << "Shortest distance (segments) from " << city_id(g, frankfurt_id) << endl;
     for (vertex_id_t<G> uid = 0; uid < size(vertices(g)); ++uid)
-      if (distance[uid] > 0)
-        cout << "  --> " << city_id(g, uid) << " - " << distance[uid] << " segments" << endl;
+      if (distances[uid] > 0)
+        cout << "  --> " << city_id(g, uid) << " - " << distances[uid] << " segments" << endl;
   }
 
   // Shortest Paths (km)
   {
     auto                        weight = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); }; // { return 1; };
-    std::vector<double>         distance(size(vertices(g)));
+    std::vector<double>         distances(size(vertices(g)));
     std::vector<vertex_id_t<G>> predecessor(size(vertices(g)));
-    dijkstra_clrs(g, frankfurt_id, distance, predecessor, weight);
+    dijkstra_clrs(g, frankfurt_id, distances, predecessor, weight);
 
     cout << "Shortest distance (km) from " << vertex_value(g, frankfurt) << endl;
     for (vertex_id_t<G> uid = 0; uid < size(vertices(g)); ++uid) {
-      if (distance[uid] > 0)
-        cout << "  --> " << city_id(g, uid) << " - " << distance[uid] << "km" << endl;
+      if (distances[uid] > 0)
+        cout << "  --> " << city_id(g, uid) << " - " << distances[uid] << "km" << endl;
     }
 
     // Find farthest city
     vertex_id_t<G> farthest_id   = frankfurt_id;
     double         farthest_dist = 0.0;
     for (vertex_id_t<G> uid = 0; uid < size(vertices(g)); ++uid) {
-      if (distance[uid] > farthest_dist) {
-        farthest_dist = distance[uid];
+      if (distances[uid] > farthest_dist) {
+        farthest_dist = distances[uid];
         farthest_id   = uid;
       }
     }
 
     // Output path for farthest distance
     cout << "The farthest city from " << city(g, frankfurt_id) << " is " << city(g, farthest_id) << " at "
-         << distance[farthest_id] << "km" << endl;
+         << distances[farthest_id] << "km" << endl;
     cout << "The shortest path from " << city(g, farthest_id) << " to " << city(g, frankfurt_id) << " is: " << endl
          << "  ";
     for (vertex_id_t<G> uid = farthest_id; uid != frankfurt_id; uid = predecessor[uid]) {

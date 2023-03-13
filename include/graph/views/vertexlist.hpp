@@ -228,7 +228,7 @@ constexpr auto vertexlist(G&& g) {
   if constexpr (std::graph::tag_invoke::_has_vertexlist_g_adl<G>)
     return std::graph::tag_invoke::vertexlist(forward<G>(g));
   else
-    return vertexlist_view<G>(vertices(forward<G>(g)));
+    return vertexlist_view<G>(vertices(std::forward<G>(g)));
 }
 
 template <adjacency_list G, class VVF>
