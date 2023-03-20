@@ -8,6 +8,9 @@ set(GRAPH_VERSION 0.2.0)
 project("graph" VERSION ${GRAPH_VERSION} LANGUAGES CXX)
 include(cmake/StandardProjectSettings.cmake)
 
+set (CMAKE_CXX_STANDARD 20)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)

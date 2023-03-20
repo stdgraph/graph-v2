@@ -24,6 +24,7 @@
 namespace std::graph {
 
 /**
+ * @ingroup graph_algorithms
  * @brief Requirements for an edge value function: evf(uv) -> value.
  * 
  * @tparam G Graph type.
@@ -34,6 +35,7 @@ concept edge_weight_function = // e.g. weight(uv)
       copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
 
 /**
+ * @ingroup graph_algorithms
  * @brief A concept that describes a queueable container. It reflects the capabilities of
  * std::queue and std::priority_queue.
  * 
@@ -84,6 +86,7 @@ struct weighted_vertex {
 };
 
 /**
+ * @ingroup graph_algorithms
  * @brief Returns a value to define an invalid distance type used to initialize distance values
  * in the distance range before calling dijkstra_shortest_paths() and dijkstra_shortest_distances().
  * 
@@ -98,6 +101,7 @@ auto dijkstra_invalid_distance() {
 }
 
 /**
+ * @ingroup graph_algorithms
  * @brief Find the shortest paths and distances to vertices reachable from a single seed vertex for
  * non-negative weights.
  * 
@@ -168,6 +172,7 @@ constexpr void dijkstra_shortest_paths(
 }
 
 /**
+ * @ingroup graph_algorithms
  * @brief Find the shortest paths and distances to vertices reachable from a single seed vertex for
  * non-negative weights.
  * 

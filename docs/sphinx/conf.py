@@ -39,7 +39,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinx_toolbox.more_autodoc.overloads',
     # 'sphinx_book_theme', 
-    # 'sphinx_rtd_theme',
+    #'sphinx_rtd_theme',
     'breathe', 
     'nw_exhale',
     'myst_parser'
@@ -90,8 +90,8 @@ mathjax3_config = {
 
 html_theme_path = [ "_themes" ]
 #html_theme = 'sphinx13'
-# html_theme = 'sphinx_rtd_theme'
-html_theme = 'sphinx_book_theme'
+html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_book_theme'
 html_title = "std::graph Documentation"
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -159,6 +159,13 @@ exhale_args = {
     GENERATE_HTML          = YES
     HIDE_UNDOC_CLASSES     = YES
     HIDE_UNDOC_MEMBERS     = YES
+    LAYOUT_FILE            = "/Users/lums/Contrib/stdgraph/graph-v2/docs/sphinx/layout.xml"
+    HTML_COLORSTYLE_HUE    = 75
+    HTML_DYNAMIC_SECTIONS  = YES
+    HTML_INDEX_NUM_ENTRIES = 0
+    DISABLE_INDEX          = YES
+    GENERATE_TREEVIEW      = YES
+    TREEVIEW_WIDTH         = 270
     '''),
     # "verboseBuild": True,
     "listingExclude": [ r'.*_tag_invoke*', 'edge_list_c' ],

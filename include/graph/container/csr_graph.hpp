@@ -27,15 +27,22 @@
 //
 namespace std::graph::container {
 
-/// <summary>
-/// Scans a range used for input for loading edges to determine the largest vertex id used.
-/// </summary>
-/// <typeparam name="EProj">Edge Projection to convert from the input object to a copyable_edge_t<VId,EV></typeparam>
-/// <typeparam name="VId">Vertex Id type</typeparam>
-/// <typeparam name="EV">Edge Value type</typeparam>
-/// <param name="erng">Input range to scan</param>
-/// <param name="eprojection">Projects (converts) a value in erng to a copyable_edge_t<VId,EV></param>
-/// <returns>A pair<VId,size_t> with the max vertex id used and the number of edges scanned.</returns>
+/**
+ * @ingroup graph_containers
+ * @brief Scans a range used for input for loading edges to determine the largest vertex id used.
+ * 
+ * @tparam VId   Vertex Id type.
+ * @tparam EV    Edge value type. It may be void.
+ * @tparam ERng  Edge data range type.
+ * @tparam EProj Edge Projection function type to convert from an @c ERng value type to a @c copyable_edge_t<VId,EV>.
+ *               If the @c ERng value type is already copyable_edge_t<VId,EV> identity can be used.
+ * 
+ * @param erng        The edge data range type.
+ * @param eprojection The edge projection function that converts a @c ERng value type to a @c copyable_edge_t<VId,EV>.
+ *                    If @c erng value type is already copyable_edge_t<VId,EV>, identity() can be used.
+ * 
+ * @return A @c pair<VId,size_t> with the max vertex id used and the number of edges scanned.
+*/
 template <class VId, class EV, ranges::forward_range ERng, class EProj = identity>
 requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
 constexpr auto max_vertex_id(const ERng& erng, const EProj& eprojection) {
@@ -61,18 +68,26 @@ template <class EV        = void,            // edge value type
           class Alloc     = allocator<uint32_t>> // for internal containers
 class csr_graph;
 
-/// <summary>
-/// Wrapper struct for the row index to distinguish it from a vertex_id_type (VId).
-/// </summary>
+/**
+ * @ingroup graph_containers
+ * @brief Wrapper struct for the row index to distinguish it from a vertex_id_type (VId).
+ * 
+ * @tparam EIndex  The type for storing an edge index. It must be able to store a value of |E|+1,
+ *                 where |E| is the total number of edges in the graph.
+*/
 template <integral EIndex>
 struct csr_row {
   using edge_index_type = EIndex;
   edge_index_type index = 0;
 };
 
-/// <summary>
-/// Wrapper struct for the col (edge) index to distinguish it from a vertex_id_type (VId).
-/// </summary>
+/**
+ * @ingroup graph_containers
+ * @brief Wrapper struct for the col (edge) index to distinguish it from a vertex_id_type (VId).
+ * 
+ * @tparam VId     Vertex id type. The type must be able to store a value of |V|+1, where |V| is the
+ *                 number of vertices in the graph.
+*/
 template <integral VId>
 struct csr_col {
   using vertex_id_type = VId;
@@ -80,17 +95,25 @@ struct csr_col {
 };
 
 
-/// <summary>
-/// Class to hold vertex values in a vector that is the same size as row_index_.
-/// If is_void_v<VV> then the class is empty with a single
-/// constructor that accepts (and ignores) an allocator.
-/// </summary>
-/// <typeparam name="EV">Edge Value type, or void if there is none</typeparam>
-/// <typeparam name="VV">Vertex Value type, or void if there is none</typeparam>
-/// <typeparam name="GV">Graph Value type, or void if there is none</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
-/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
-/// <typeparam name="Alloc">Allocator type</typeparam>
+/**
+ * @ingroup graph_containers
+ * @brief Holds vertex values in a vector that is the same size as @c row_index_.
+ * 
+ * If @c is_void_v<VV> then a specialization class is defined that is empty with a single 
+ * constructor that accepts (and ignores) an allocator.
+ * 
+ * @tparam EV      The edge value type. If "void" is used no user value is stored on the edge and 
+ *                 calls to @c edge_value(g,uv) will generate a compile error.
+ * @tparam VV      The vertex value type. If "void" is used no user value is stored on the vertex
+ *                 and calls to @c vertex_value(g,u) will generate a compile error.
+ * @tparam GV      The graph value type. If "void" is used no user value is stored on the graph
+ *                 and calls to @c graph_value(g) will generate a compile error.
+ * @tparam VId     Vertex id type. The type must be able to store a value of |V|+1, where |V| is the
+ *                 number of vertices in the graph.
+ * @tparam EIndex  The type for storing an edge index. It must be able to store a value of |E|+1,
+ *                 where |E| is the total number of edges in the graph.
+ * @tparam Alloc   The allocator type.
+*/
 template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
 class csr_row_values {
   using row_type           = csr_row<EIndex>; // index into col_index_
@@ -223,17 +246,25 @@ public: // Operations
 };
 
 
-/// <summary>
-/// Class to hold vertex values in a vector that is the same size as col_index_.
-/// If is_void_v<EV> then the class is empty with a single
-/// constructor that accepts (and ignores) an allocator.
-/// </summary>
-/// <typeparam name="EV">Edge Value type, or void if there is none</typeparam>
-/// <typeparam name="VV">Vertex Value type, or void if there is none</typeparam>
-/// <typeparam name="GV">Graph Value type, or void if there is none</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
-/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
-/// <typeparam name="Alloc">Allocator type</typeparam>
+/**
+ * @ingroup graph_containers
+ * @brief Class to hold vertex values in a vector that is the same size as col_index_.
+ * 
+ * If is_void_v<EV> then the class is empty with a single
+ * constructor that accepts (and ignores) an allocator.
+ *
+ * @tparam EV      The edge value type. If "void" is used no user value is stored on the edge and 
+ *                 calls to @c edge_value(g,uv) will generate a compile error.
+ * @tparam VV      The vertex value type. If "void" is used no user value is stored on the vertex
+ *                 and calls to @c vertex_value(g,u) will generate a compile error.
+ * @tparam GV      The graph value type. If "void" is used no user value is stored on the graph
+ *                 and calls to @c graph_value(g) will generate a compile error.
+ * @tparam VId     Vertex id type. The type must be able to store a value of |V|+1, where |V| is the
+ *                 number of vertices in the graph.
+ * @tparam EIndex  The type for storing an edge index. It must be able to store a value of |E|+1,
+ *                 where |E| is the total number of edges in the graph.
+ * @tparam Alloc   The allocator type.
+*/
 template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
 class csr_col_values {
   using col_type           = csr_col<VId>; // target_id
@@ -329,16 +360,22 @@ public: // Operations
 };
 
 
-/// <summary>
-/// csr_graph_base - base class for compressed sparse row adjacency graph
-///
-/// </summary>
-/// <typeparam name="EV">Edge value type</typeparam>
-/// <typeparam name="VV">Vertex value type</typeparam>
-/// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
-/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
-/// <typeparam name="Alloc">Allocator</typeparam>
+/**
+ * @ingroup graph_containers
+ * @brief Base class for compressed sparse row adjacency graph
+ *
+ * @tparam EV      The edge value type. If "void" is used no user value is stored on the edge and 
+ *                 calls to @c edge_value(g,uv) will generate a compile error.
+ * @tparam VV      The vertex value type. If "void" is used no user value is stored on the vertex
+ *                 and calls to @c vertex_value(g,u) will generate a compile error.
+ * @tparam GV      The graph value type. If "void" is used no user value is stored on the graph
+ *                 and calls to @c graph_value(g) will generate a compile error.
+ * @tparam VId     Vertex id type. The type must be able to store a value of |V|+1, where |V| is the
+ *                 number of vertices in the graph.
+ * @tparam EIndex  The type for storing an edge index. It must be able to store a value of |E|+1,
+ *                 where |E| is the total number of edges in the graph.
+ * @tparam Alloc   The allocator type.
+*/
 template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
 class csr_graph_base
       : public csr_row_values<EV, VV, GV, VId, EIndex, Alloc>
@@ -386,14 +423,18 @@ public: // Construction/Destruction
   constexpr csr_graph_base(const Alloc& alloc)
         : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {}
 
-  /// <summary>
-  /// Constructor that takes a edge range to create the CSR graph.
-  /// Edges must be ordered by source_id (enforced by asssertion).
-  /// </summary>
-  /// <typeparam name="EProj">Edge projection function</typeparam>
-  /// <param name="erng">The input range of edges</param>
-  /// <param name="eprojection">Projection function that creates a copyable_edge_t<VId,EV> from an erng value</param>
-  /// <param name="alloc">Allocator to use for internal containers</param>
+  /**
+   * @brief Constructor that takes a edge range to create the CSR graph.
+   * 
+   * Edges must be ordered by source_id (enforced by asssertion).
+   * 
+   * @tparam ERng   Edge range type
+   * @tparam EProj  Edge projection function type
+   * 
+   * @param erng        The input range of edges
+   * @param eprojection Projection function that creates a @c copyable_edge_t<VId,EV> from an erng value
+   * @param alloc       Allocator to use for internal containers
+  */
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr csr_graph_base(const ERng& erng, EProj eprojection = {}, const Alloc& alloc = Alloc())
@@ -402,18 +443,22 @@ public: // Construction/Destruction
     load_edges(erng, eprojection);
   }
 
-  /// <summary>
-  /// Constructor that takes edge range and vertex range to create the CSR graph.
-  /// Edges must be ordered by source_id (enforced by asssertion).
-  /// </summary>
-
-  /// <typeparam name="EProj">Edge projection function</typeparam>
-  /// <typeparam name="VProj">Vertex projection function</typeparam>
-  /// <param name="erng">The input range of edges</param>
-  /// <param name="vrng">The input range of vertices</param>
-  /// <param name="eprojection">Projection function that creates a copyable_edge_t<VId,EV> from an erng value</param>
-  /// <param name="vprojection">Projection function that creates a copyable_vertex_t<VId,EV> from a vrng value</param>
-  /// <param name="alloc">Allocator to use for internal containers</param>
+  /**
+   * @brief Constructor that takes edge range and vertex range to create the CSR graph.
+   * 
+   * Edges must be ordered by source_id (enforced by asssertion).
+   *
+   * @tparam ERng   Edge Range type
+   * @tparam VRng   Vetex range type
+   * @tparam EProj  Edge projection function type
+   * @tparam VProj  Vertex projection function type
+   * 
+   * @param erng        The input range of edges
+   * @param vrng        The input range of vertices
+   * @param eprojection Projection function that creates a @c copyable_edge_t<VId,EV> from an @c erng value
+   * @param vprojection Projection function that creates a @c copyable_vertex_t<VId,EV> from a @c vrng value
+   * @param alloc       Allocator to use for internal containers
+  */
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
   //      copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
@@ -427,12 +472,13 @@ public: // Construction/Destruction
     load(erng, vrng, eprojection, vprojection);
   }
 
-  /// <summary>
-  /// Constructor for easy creation of a graph that takes an initializer list
-  /// of copyable_edge_t<VId,EV> -> [source_id, target_id, value].
-  /// </summary>
-  /// <param name="ilist">Initializer list of copyable_edge_t<VId,EV> -> [source_id, target_id, value]</param>
-  /// <param name="alloc">Allocator to use for internal containers</param>
+  /**
+   * @brief Constructor for easy creation of a graph that takes an initializer list 
+   *        of @c copyable_edge_t<VId,EV> -> [source_id, target_id, value].
+   *
+   * @param ilist   Initializer list of @c copyable_edge_t<VId,EV> -> [source_id, target_id, value]
+   * @param alloc   Allocator to use for internal containers
+  */
   constexpr csr_graph_base(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
     load_edges(ilist, identity());
@@ -458,69 +504,79 @@ public: // Operations
     static_cast<col_values_base&>(*this).reserve(count);
   }
 
-  /// <summary>
-  /// Load vertex values. This can be called either before or after load_edges(erng,eproj).
-  ///
-  /// If load_edges(vrng,vproj) has been called before this, the row_values_ vector will be
-  /// extended to match the number of row_index_.size()-1 to avoid out-of-bounds errors when
-  /// accessing vertex values.
-  /// </summary>
-  /// <typeparam name="VProj">Projection function for vrng values</typeparam>
-  /// <param name="vrng">Range of values to load for vertices. The order of the values is preserved in the internal vector.</param>
-  /// <param name="vprojection">Projection function for vrng values</param>
+  /**
+   * @brief Load vertex values, callable either before or after @c load_edges(erng,eproj).
+   *
+   * If @c load_edges(vrng,vproj) has been called before this, the @c row_values_ vector will be
+   * extended to match the number of @c row_index_.size()-1 to avoid out-of-bounds errors when
+   * accessing vertex values.
+   *
+   * @tparam VRng   Vertex range type
+   * @tparam VProj  Vertex projection function type
+   * 
+   * @param  vrng           Range of values to load for vertices. The order of the values is 
+   *                        preserved in the internal vector.
+   * @param  vprojection    Projection function for @c vrng values
+  */
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr void load_vertices(const VRng& vrng, VProj vprojection, size_type vertex_count = 0) {
     row_values_base::load_row_values(vrng, vprojection, max(vertex_count, ranges::size(vrng)));
   }
 
-  /// <summary>
-  /// Load vertex values. This can be called either before or after load_edges(erng,eproj).
-  ///
-  /// If load_edges(vrng,vproj) has been called before this, the row_values_ vector will be
-  /// extended to match the number of row_index_.size()-1 to avoid out-of-bounds errors when
-  /// accessing vertex values.
-  /// </summary>
-  /// <typeparam name="VProj">Projection function for vrng values</typeparam>
-  /// <param name="vrng">Range of values to load for vertices. The order of the values is preserved in the internal vector.</param>
-  /// <param name="vprojection">Projection function for vrng values</param>
+  /**
+   * Load vertex values, callable either before or after @c load_edges(erng,eproj).
+   *
+   * If @c load_edges(vrng,vproj) has been called before this, the @c row_values_ vector will be
+   * extended to match the number of @c row_index_.size()-1 to avoid out-of-bounds errors when
+   * accessing vertex values.
+   *
+   * @tparam VRng   Vertex range type
+   * @tparam VProj  Projection function type
+   * 
+   * @param vrng        Range of values to load for vertices. The order of the values is preserved in the internal vector.
+   * @param vprojection Projection function for @c vrng values
+  */
   template <ranges::forward_range VRng, class VProj = identity>
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr void load_vertices(VRng& vrng, VProj vprojection = {}, size_type vertex_count = 0) {
     row_values_base::load_row_values(vrng, vprojection, max(vertex_count, ranges::size(vrng)));
   }
 
-  /// <summary>
-  /// Load the edges for the graph. This can be called either before or after load_vertices(erng,eproj).
-  ///
-  /// erng must be ordered by source_id (copyable_edge_t) and is enforced by assertion. target_id
-  /// can be unordered within a source_id.
-  ///
-  /// If erng is bi-directional, the source_id in the last entry is used to determine the maximum
-  /// number of rows and is used to reserve space in the internal row_index and row_value vectors.
-  /// If erng is an input_range or forward_range that evaluation can't be done and the internal
-  /// row_index vector is grown and resized normally as needed (the row_value vector is updated by
-  /// load_vertices(vrng,vproj)). If the caller knows the number of rows/vertices, they can call
-  /// reserve_vertices(n) to reserve the space.
-  ///
-  /// If erng is a sized_range, size(erng) is used to reserve space for the internal col_index and
-  /// v vectors. If it isn't a sized range, the vectors will be grown and resized normally as needed
-  /// as new indexes and values are added. If the caller knows the number of columns/edges, they
-  /// can call reserve_edges(n) to reserve the space.
-  ///
-  /// If row indexes have been referenced in the edges but there are no edges defined for them
-  /// (with source_id), rows will be added to fill out the row_index vector to avoid out-of-bounds
-  /// references.
-  ///
-  /// If load_vertices(vrng,vproj) has been called before this, the row_values_ vector will be
-  /// extended to match the number of row_index_.size()-1 to avoid out-of-bounds errors when
-  /// accessing vertex values.
-  ///
-  /// TODO: ERng not a forward_range because CSV reader doesn't conform to be a forward_range
-  /// </summary>
-  /// <typeparam name="EProj">Edge Projection</typeparam>
-  /// <param name="erng">Input range for edges.</param>
-  /// <param name="eprojection">Edge projection function that returns a copyable_edge_t<VId,EV> for an element in erng</param>
+  /**
+   * @brief Load the edges for the graph, callable either before or after @c load_vertices(erng,eproj).
+   *
+   * @c erng must be ordered by source_id (copyable_edge_t) and is enforced by assertion. target_id
+   * can be unordered within a source_id.
+   *
+   * If @c erng is bi-directional, the source_id in the last entry is used to determine the maximum
+   * number of rows and is used to reserve space in the internal row_index and row_value vectors.
+   * If @c erng is an input_range or forward_range that evaluation can't be done and the internal
+   * row_index vector is grown and resized normally as needed (the row_value vector is updated by
+   * @c load_vertices(vrng,vproj)). If the caller knows the number of rows/vertices, they can call
+   * @c reserve_vertices(n) to reserve the space.
+   *
+   * If @c erng is a sized_range, @c size(erng) is used to reserve space for the internal col_index and
+   * v vectors. If it isn't a sized range, the vectors will be grown and resized normally as needed
+   * as new indexes and values are added. If the caller knows the number of columns/edges, they
+   * can call @c reserve_edges(n) to reserve the space.
+   *
+   * If row indexes have been referenced in the edges but there are no edges defined for them
+   * (with source_id), rows will be added to fill out the row_index vector to avoid out-of-bounds
+   * references.
+   *
+   * If @c load_vertices(vrng,vproj) has been called before this, the row_values_ vector will be
+   * extended to match the number of @c row_index_.size()-1 to avoid out-of-bounds errors when
+   * accessing vertex values.
+   *
+   * @todo @c ERng not a forward_range because CSV reader doesn't conform to be a forward_range
+   * 
+   * @tparam ERng   Edge range type
+   * @tparam EProj  Edge projection function type
+   * 
+   * @param erng        Input range for edges
+   * @param eprojection Edge projection function that returns a @ copyable_edge_t<VId,EV> for an element in @c erng
+  */
   template <class ERng, class EProj = identity>
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr void load_edges(ERng&& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
@@ -625,16 +681,19 @@ public: // Operations
       row_values_base::resize(vertex_count);
   }
 
-  /// <summary>
-  /// Load edges and then vertices for the graph. See load_edges() and load_vertices() for more
-  /// information.
-  /// </summary>
-  /// <typeparam name="EProj">Edge Projection Function Type</typeparam>
-  /// <typeparam name="VProj">Vertex Projectiong Function Type</typeparam>
-  /// <param name="erng">Input edge range</param>
-  /// <param name="vrng">Input vertex range</param>
-  /// <param name="eprojection">Edge projection function object</param>
-  /// <param name="vprojection">Vertex projection function object</param>
+  /**
+   * @brief Load edges and then vertices for the graph. 
+   *
+   * See @c load_edges() and @c load_vertices() for more information.
+   *
+   * @tparam EProj Edge Projection Function type
+   * @tparam VProj Vertex Projectiong Function type
+   * 
+   * @param erng        Input edge range
+   * @param vrng        Input vertex range
+   * @param eprojection Edge projection function object
+   * @param vprojection Vertex projection function object
+  */
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
   //      views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
@@ -755,16 +814,17 @@ private: // tag_invoke properties
 };
 
 
-/// <summary>
-/// csr_graph - compressed sparse row adjacency graph
-///
-/// </summary>
-/// <typeparam name="EV">Edge value type</typeparam>
-/// <typeparam name="VV">Vertex value type</typeparam>
-/// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
-/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
-/// <typeparam name="Alloc">Allocator</typeparam>
+/**
+ * @ingroup graph_containers
+ * @brief Compressed Sparse Row adjacency graph container.
+ *
+ * @tparam EV Edge value type
+ * @tparam VV Vertex value type
+ * @tparam GV Graph value type
+ * @tparam VI Vertex Id type. This must be large enough for the count of vertices.
+ * @tparam EIndex Edge Index type. This must be large enough for the count of edges.
+ * @tparam Alloc Allocator type
+*/
 template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
 class csr_graph : public csr_graph_base<EV, VV, GV, VId, EIndex, Alloc> {
 public: // Types
@@ -866,16 +926,16 @@ private: // Member variables
   graph_value_type value_ = graph_value_type();
 };
 
-/// <summary>
-/// csr_graph - compressed sparse row adjacency graph
-///
-/// </summary>
-/// <typeparam name="EV">Edge value type</typeparam>
-/// <typeparam name="VV">Vertex value type</typeparam>
-/// <typeparam name="GV">Graph value type</typeparam>
-/// <typeparam name="VId">Vertex Id type. This must be large enough for the count of vertices.</typeparam>
-/// <typeparam name="EIndex">Edge Index type. This must be large enough for the count of edges.</typeparam>
-/// <typeparam name="Alloc">Allocator</typeparam>
+/**
+ * @ingroup graph_containers
+ * @brief Compressed Sparse Row adjacency graph container.
+ *
+ * @tparam EV Edge value type
+ * @tparam VV Vertex value type
+ * @tparam VI Vertex Id type. This must be large enough for the count of vertices.
+ * @tparam EIndex Edge Index type. This must be large enough for the count of edges.
+ * @tparam Alloc Allocator type
+*/
 template <class EV, class VV, integral VId, integral EIndex, class Alloc>
 class csr_graph<EV, VV, void, VId, EIndex, Alloc> : public csr_graph_base<EV, VV, void, VId, EIndex, Alloc> {
 public: // Types

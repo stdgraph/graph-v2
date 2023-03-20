@@ -1,5 +1,22 @@
 #pragma once
 
+/**
+ * @defgroup general_concepts   Concepts
+ * 
+ * @defgroup graph_algorithms   Algorithms
+ * @defgroup graph_views        Views / Adaptors
+ * @defgroup graph_containers   Containers
+ * @defgroup graph_construction Graph Construction
+ * @defgroup graph_io           Graph I/O
+ * @defgroup graph_utilities    Utilities
+ * 
+ * @defgroup graph_concepts Graph Concepts
+ * @ingroup general_concepts
+ * 
+ * @defgroup graph_properties Graph Property Concepts
+ * @ingroup general_concepts
+ */
+
 #include <ranges>
 #include <concepts>
 #include <type_traits>
@@ -36,6 +53,7 @@
 
 namespace std::graph {
 /**
+ * @ingroup graph_properties
  * @brief Override for an edge type where source and target are unordered
  * 
  * For instance, given:
@@ -68,7 +86,14 @@ inline constexpr bool is_undirected_edge_v = false;
 
 
 /**
+ * @ingroup graph_concepts
  * @brief Concept for a range of vertices.
+ * 
+ * A vertex range must be a sized forward range, at a minimum.
+ *
+ * Required functions that must also be defined include
+ *  * @c vertices(g) that returns a range of vertices of a graph.
+ *  * @c vertex_id(g,ui) that returns a vertex id for a graph and vertex iterator of the graph.
  * 
  * @tparam G The graph type.
  */
@@ -80,6 +105,7 @@ concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized
                        };
 
 /**
+ * @ingroup graph_concepts
  * @brief Concept for a targeted edge.
  * 
  * A targeted edge has both @c target_id(g,uv) and @c target(g,uv) functions defined for it.
@@ -94,6 +120,7 @@ concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
                         };
 
 /**
+ * @ingroup graph_concepts
  * @brief Concept for a sourced edge.
  * 
  * A sourced edge has both @c source_id(g,uv) and @c source(g,uv) functions defined for it.
@@ -130,6 +157,7 @@ template <class G, class E>
 inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
 
 /**
+ * @ingroup graph_concepts
  * @brief Concept for an adjacency list graph.
  * 
  * An adjacency list requires that the vertices range is a forward range, it has a targeted edge,
@@ -147,6 +175,7 @@ concept adjacency_list =
 //      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
 /**
+ * @ingroup graph_concepts
  * @brief Concept for a sourced adjacency list.
  * 
  * A sourced adjacency list extends the adjacency list by requiring that edges are souced edges
@@ -163,6 +192,7 @@ concept sourced_adjacency_list =
 //
 
 /**
+ * @ingroup graph_properties
  * @brief Concept for the existance of degree function for graph G.
  * 
  * Returns true if degree(g) exists for graph G.
@@ -179,6 +209,7 @@ concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
 //
 
 /**
+ * @ingroup graph_properties
  * @brief Concept for the existance of the find_vertex(g,uid) function for graph G.
  * 
  * Returns true if find_vertex(g,uid) exists for graph G.
@@ -191,6 +222,7 @@ concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
                           };
 
 /**
+ * @ingroup graph_properties
  * @brief Concept for the existance of the find_vertex_edge(g,uid,vid) function for graph G.
  * 
  * Returns true if find_vertex_edge(g,u,vid) and find_vertex_edge(g,uid,vid) exists for graph G.
@@ -204,6 +236,7 @@ concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G
                                };
 
 /**
+ * @ingroup graph_properties
  * @brief Concept for the existance of the has_contains_edge(g,uid,vid) function for graph G.
  * 
  * Returns true if has_contains_edge(g,uid,vid) exists for graph G.
@@ -216,36 +249,39 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
                             };
 
 
-/// <summary>
-/// Override for a graph type where source_id and target_id are unordered
-/// on an edge so views and algorithms know to choose the correct target
-/// based on where they came from.
-///
-/// An unordered edge implies sourced_edge<G> is true so that an algorithm can
-/// decide if source_id(g,uv) or target_id(g,uv) is the true target, based on
-/// where the algorithm came from.
-///
-/// If a graph container implementation has a run-time property of ordered or
-/// unordered (e.g. it can't be determined at compile-time) then unordered_edge<G,E>
-/// should be true_type. The only consequence is that an additional if is done to
-/// check whether source_id or target_id is used for the target in this library.
-/// The container implementation can still preserve its implementation of order,
-/// assuming it always includes a source_id on the edge.
-///
-/// Example:
-///  namespace my_namespace {
-///      template <class T>
-///      class my_graph { ... };
-///      template class< T>
-///      class my_edge { int src_id; int tgt_id; ... };
-///  }
-///  namespace std::graph {
-///     template<class T>
-///     struct define_unordered_edge<my_namespace::my_graph<T>, my_namespace::my_edge<T>> : public true_type {};
-///  }
-/// </summary>
-/// <typeparam name="G">Graph</typeparam>
-///
+/**
+ * @ingroup graph_properties
+ * @ brief Specializable to define that a graph type has unordered edges.
+ * 
+ * Override for a graph type where source_id and target_id are unordered
+ * on an edge so views and algorithms know to choose the correct target
+ * based on where they came from.
+ *
+ * An unordered edge implies sourced_edge<G> is true so that an algorithm can
+ * decide if source_id(g,uv) or target_id(g,uv) is the true target, based on
+ * where the algorithm came from.
+ *
+ * If a graph container implementation has a run-time property of ordered or
+ * unordered (e.g. it can't be determined at compile-time) then unordered_edge<G,E>
+ * should be true_type. The only consequence is that an additional if is done to
+ * check whether source_id or target_id is used for the target in this library.
+ * The container implementation can still preserve its implementation of order,
+ * assuming it always includes a source_id on the edge.
+ *
+ * Example:
+ *  namespace my_namespace {
+ *      template <class T>
+ *      class my_graph { ... };
+ *      template class< T>
+ *      class my_edge { int src_id; int tgt_id; ... };
+ *  }
+ *  namespace std::graph {
+ *     template<class T>
+ *     struct define_unordered_edge<my_namespace::my_graph<T>, my_namespace::my_edge<T>> : public true_type {};
+ *  }
+ *
+ * @tparam G Graph type
+ */
 
 template <class E>
 struct define_unordered_edge : public false_type {}; // specialized for graph container edge

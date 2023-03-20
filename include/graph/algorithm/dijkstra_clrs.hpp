@@ -16,7 +16,7 @@ class null_range_type : public std::vector<size_t> {
   using Base      = std::vector<T, Allocator>;
 
 public:
-  null_range_type() noexcept(noexcept(Allocator())) {}
+  null_range_type() noexcept(noexcept(Allocator())) = default;
   explicit null_range_type(const Allocator& alloc) noexcept {}
   null_range_type(Base::size_type count, const T& value, const Allocator& alloc = Allocator()) {}
   explicit null_range_type(Base::size_type count, const Allocator& alloc = Allocator()) {}
@@ -41,7 +41,27 @@ constexpr auto print_types(Ts...) {
 }
 
 
-// The index into weight vector stored as the first property
+/**
+ * @ingroup graph_algorithms
+ * @brief Dijkstra's algorithm for finding the shortest path from a source vertex to all other vertices in a graph.
+ * @tparam G The graph type.
+ * @tparam WF The edge weight function type.
+ * @tparam Distance The distance range type.
+ * @tparam Predecessor The predecessor range type.
+ *
+ * @param graph The graph.
+ * @param source The source vertex.
+ * @param distance The distance vector.
+ * @param predecessor The predecessor vector.
+ * @param weight The edge weight function.
+ *        The edge weight function must be a function object that returns the weight of an edge.
+ *        The edge weight function must be copy constructible.
+ *        The edge weight function must be invocable with an edge reference.
+ *        The edge weight function must return a value that is arithmetic.
+ *        The edge weight function must return a value that is convertible to the weight type.
+ *        The edge weight function must not throw an exception.
+ *        The edge weight function must not modify the graph, the edge, or the vertex (nor any of their associated data).
+ */
 template <adjacency_list              G,
           ranges::random_access_range Distance,
           ranges::random_access_range Predecessor,

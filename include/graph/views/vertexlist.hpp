@@ -187,10 +187,10 @@ concept _has_vertexlist_g_adl = vertex_range<G> && requires(G&& g) {
                                                    };
 
 template <class G, class VVF>
-concept _has_vertexlist_g_fn_adl = vertex_range<G> && requires(G&& g, const VVF& fn) {
-                                                        invocable<VVF, vertex_reference_t<G>>;
-                                                        { vertexlist(g, fn) };
-                                                      };
+concept _has_vertexlist_g_fn_adl =
+      vertex_range<G> && invocable<VVF, vertex_reference_t<G>> && requires(G&& g, const VVF& fn) {
+                                                                    { vertexlist(g, fn) };
+                                                                  };
 
 template <class G>
 concept _has_vertexlist_i_i_adl = vertex_range<G> && requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi) {
@@ -198,11 +198,10 @@ concept _has_vertexlist_i_i_adl = vertex_range<G> && requires(G&& g, vertex_iter
                                                      };
 
 template <class G, class VVF>
-concept _has_vertexlist_i_i_fn_adl =
-      vertex_range<G> && requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi, const VVF& fn) {
-                           invocable<VVF, vertex_reference_t<G>>;
-                           { vertexlist(g, ui, vi, fn) };
-                         };
+concept _has_vertexlist_i_i_fn_adl = vertex_range<G> && invocable<VVF, vertex_reference_t<G>> &&
+                                     requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi, const VVF& fn) {
+                                       { vertexlist(g, ui, vi, fn) };
+                                     };
 
 template <class G, class VR>
 concept _has_vertexlist_vrng_adl =
@@ -213,10 +212,9 @@ concept _has_vertexlist_vrng_adl =
 template <class G, class VR, class VVF>
 concept _has_vertexlist_vrng_fn_adl =
       vertex_range<G> && ranges::random_access_range<VR> && convertible_to<ranges::range_value_t<VR>, vertex_t<G>> &&
-      requires(G&& g, VR&& vr, const VVF& fn) {
-        invocable<VVF, vertex_reference_t<G>>;
-        { vertexlist(g, vr, fn) };
-      };
+      invocable<VVF, vertex_reference_t<G>> && requires(G&& g, VR&& vr, const VVF& fn) {
+                                                 { vertexlist(g, vr, fn) };
+                                               };
 
 
 } // namespace std::graph::tag_invoke
