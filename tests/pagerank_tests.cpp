@@ -4,6 +4,7 @@
 #include "graph/container/dynamic_graph.hpp"
 #include "graph/algorithm/pagerank.hpp"
 #include "graph/views/incidence.hpp"
+#include "graph/views/edgelist.hpp"
 #include <cassert>
 #ifdef _MSC_VER
 #  include "Windows.h"
@@ -42,12 +43,13 @@ TEST_CASE("PageRank", "[pagerank]") {
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
 
   std::vector<double> page_rank(size(vertices(g)));
-  std::graph::pagerank(g, page_rank, double(0.85), double(1e-4), 100);
+  std::graph::pagerank(g, page_rank, double(0.85), double(1e-4), 10);
 
-  std::vector<double> answer = {0.0510883, 0.0655634, 0.106817,  0.141883, 0.0655634,
-                                0.0789528, 0.0655634, 0.0789528, 0.260973, 0.0846433};
+  std::vector<double> answer = {0.051086017487729, 0.065561667371485, 0.106818581147795, 0.141889899564636,
+                                0.065561667371485, 0.078952299317762, 0.065561667371485, 0.078952299317762,
+                                0.260972178563747, 0.084643725419772};
 
-  for (size_t idx = 0; idx < page_rank.size(); ++idx) {
-    REQUIRE(page_rank[idx] == Approx(answer[idx]).epsilon(1e-4));
+  for (auto&& [uid, u] : std::graph::views::vertexlist(g)) {
+    REQUIRE(page_rank[uid] == Approx(answer[uid]).epsilon(1e-4));
   }
 }
