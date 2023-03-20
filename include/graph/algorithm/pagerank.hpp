@@ -43,7 +43,7 @@ concept edge_weight_function = // e.g. weight(uv)
  * @tparam EVF The edge value function that returns the weight of an edge.
  * 
  * @param g The adjacency graph. 
- * @param page_rank [out] The page rank of each vertex in the graph, accessible through page_rank[uid], where uid is the vertex_id. The caller must assure size(page_rank) >= size(vertices(g)).
+ * @param scores [out] The page rank of each vertex in the graph, accessible through scores[uid], where uid is the vertex_id. The caller must assure size(scores) >= size(vertices(g)).
  * @param damping_factor The alpha/damping factor (default = 0.85.)
  * @param threshold The error threshold for convergence (default = 1e-4.)
  * @param max_iterations Maximum number of iterations for convergence (default = std::numeric_limits<unsigned int>::max().) 
@@ -53,10 +53,10 @@ template <adjacency_list              G,
           ranges::random_access_range PageRank,
           class EVF = std::function<ranges::range_value_t<PageRank>(edge_reference_t<G>)>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-         is_arithmetic_v<ranges::range_value_t<PageRank>> && edge_weight_function<G, EVF>
+      is_arithmetic_v<ranges::range_value_t<PageRank>> && edge_weight_function<G, EVF>
 void pagerank(
-      G&&               g,         // graph
-      PageRank&         page_rank, // out: page rank scores
+      G&&               g,      // graph
+      PageRank&         scores, // out: page rank scores
       const double      damping_factor = 0.85,
       const double      threshold      = 1e-4,
       const std::size_t max_iterations = std::numeric_limits<unsigned int>::max(),
@@ -66,12 +66,13 @@ void pagerank(
 
   std::vector<weight_type> plast(size(vertices(g)));
   std::vector<id_type>     degrees(size(vertices(g)));
+
   // alpha * 1 / (sum of outgoing weights) -- used to determine
   // out of mass spread from src to dst
   std::vector<weight_type> iweights(size(vertices(g)));
 
   // Initialize the data, pagerank as 1/n_vertices.
-  std::ranges::fill(page_rank, 1.0 / size(vertices(g)));
+  std::ranges::fill(scores, 1.0f / size(vertices(g)));
 
   for (auto&& [uid, u] : views::vertexlist(g)) {
     // Calculate the degree of each vertex.
@@ -92,21 +93,22 @@ void pagerank(
   size_t iter;
   for (iter = 0; iter < max_iterations; ++iter) {
     // Make a copy of pagerank from previous iteration.
-    std::ranges::copy(page_rank.begin(), page_rank.end(), plast.begin());
+    std::ranges::copy(scores.begin(), scores.end(), plast.begin());
 
     // Handle "dangling nodes" (nodes w/ zero outdegree)
     // could skip this if no nodes have sero outdegree
     weight_type dsum = 0.0f;
     for (auto&& [uid, u] : views::vertexlist(g)) {
-      dsum += (iweights[uid] == 0) ? damping_factor * page_rank[uid] : 0;
+      dsum += (iweights[uid] == 0) ? damping_factor * scores[uid] : 0;
     }
-    std::ranges::fill(page_rank, (1 - damping_factor + dsum) / size(vertices(g)));
+
+    std::ranges::fill(scores, (1 - damping_factor + dsum) / size(vertices(g)));
 
     double error = 0;
     for (auto&& [uid, vid, uv, val] : views::edgelist(g, weight_fn)) {
       weight_type update = plast[uid] * iweights[uid] * val;
-      page_rank[vid] += update;
-      error += fabs(page_rank[uid] - plast[uid]);
+      scores[vid] += update;
+      error += fabs(scores[uid] - plast[uid]);
     }
 
     // Check for convergence
