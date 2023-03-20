@@ -53,7 +53,7 @@ template <adjacency_list              G,
           ranges::random_access_range PageRank,
           class EVF = std::function<ranges::range_value_t<PageRank>(edge_reference_t<G>)>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-      is_arithmetic_v<ranges::range_value_t<PageRank>> && edge_weight_function<G, EVF>
+         is_arithmetic_v<ranges::range_value_t<PageRank>> && edge_weight_function<G, EVF>
 void pagerank(
       G&&               g,      // graph
       PageRank&         scores, // out: page rank scores
