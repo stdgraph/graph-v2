@@ -91,10 +91,10 @@ target_include_directories(graph INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/
 
 if(ENABLE_TESTING)
   enable_testing()
-  message("Building Tests. Be sure to check out test/constexpr_tests for constexpr testing")
+  message(STATUS "Building tests.")
   set(TEST_DATA_ROOT_DIR "${CMAKE_SOURCE_DIR}/data/")
-  set(TEST_OUTPUT_ROOT_DIR "${CMAKE_SOURCE_DIR}/test/")
-  add_subdirectory(test)
+  set(TEST_OUTPUT_ROOT_DIR "${CMAKE_SOURCE_DIR}/tests/")
+  add_subdirectory(tests)
 endif()
 
 if(ENABLE_EXAMPLES)
