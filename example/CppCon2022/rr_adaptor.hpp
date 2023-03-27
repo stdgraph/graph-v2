@@ -79,7 +79,7 @@ public:
   template <std::ranges::forward_range ERng, class EProj = std::identity>
   rr_adaptor(VVR&         vertex_values,       //
              const ERng&  erng,                //
-             const EProj& eproj     = EProj(), // EProj(ERng::value_type&) -> edge_view<VId,true[,val]>
+             const EProj& eproj     = EProj(), // EProj(ERng::value_type&) -> edge_descriptor<VId,true[,val]>
              bool         dup_edges = false)
         : vertex_values_(vertex_values) {
     vertex_id_type max_vid = max_vertex_id(erng, eproj);

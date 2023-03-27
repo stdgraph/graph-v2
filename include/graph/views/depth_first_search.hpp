@@ -232,7 +232,7 @@ public:
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = vertex_view<const vertex_id_type, vertex_type&, vertex_value_type>;
+    using value_type        = vertex_descriptor<const vertex_id_type, vertex_type&, vertex_value_type>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -246,7 +246,7 @@ public:
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_vertex_type = remove_reference_t<vertex_reference>;
     using shadow_value_type =
-          vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+          vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
   public:
     iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
@@ -329,7 +329,7 @@ public:
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = vertex_view<const vertex_id_type, vertex_type&, void>;
+    using value_type        = vertex_descriptor<const vertex_id_type, vertex_type&, void>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -342,7 +342,7 @@ public:
     // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_vertex_type = remove_reference_t<vertex_reference>;
-    using shadow_value_type  = vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, void>;
+    using shadow_value_type  = vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, void>;
 
   public:
     iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
@@ -435,7 +435,7 @@ public:
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = edge_view<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
+    using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -449,7 +449,7 @@ public:
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_edge_type = remove_reference_t<edge_reference_type>;
     using shadow_value_type =
-          edge_view<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+          edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
   public:
     iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
@@ -529,7 +529,7 @@ public:
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = edge_view<const vertex_id_type, Sourced, edge_reference_type, void>;
+    using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, void>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -542,7 +542,7 @@ public:
     // avoid difficulty in undefined vertex reference value in value_type
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-    using shadow_value_type = edge_view<vertex_id_type, Sourced, shadow_edge_type*, void>;
+    using shadow_value_type = edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, void>;
 
   public:
     iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
