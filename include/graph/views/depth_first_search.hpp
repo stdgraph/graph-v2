@@ -23,8 +23,8 @@
 //  dfs.cancel(cancel_search::cancel_all) will stop searching and the iterator will be at the end()
 //
 
-#include "../graph.hpp"
-#include "graph/views/views_utility.hpp"
+#include "graph/graph.hpp"
+#include "graph/graph_utility.hpp"
 #include <stack>
 #include <vector>
 #include <functional>

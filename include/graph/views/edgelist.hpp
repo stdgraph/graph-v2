@@ -114,8 +114,9 @@ public:
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
-  using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-  using shadow_value_type = edge_descriptor<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+  using shadow_edge_type = remove_reference_t<edge_reference_type>;
+  using shadow_value_type =
+        edge_descriptor<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
 public:
   constexpr reference operator*() const {

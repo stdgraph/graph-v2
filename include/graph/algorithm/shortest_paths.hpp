@@ -16,7 +16,7 @@
 #include <queue>
 #include <vector>
 #include <ranges>
-#include "../graph.hpp"
+#include "graph/graph.hpp"
 
 #ifndef GRAPH_SHORTEST_PATHS_HPP
 #  define GRAPH_SHORTEST_PATHS_HPP
