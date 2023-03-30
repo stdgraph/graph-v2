@@ -25,6 +25,7 @@
         }
       }
     },
+
     {
       "name": "linux-gcc",
       "inherits": "linux-common",
@@ -66,6 +67,52 @@
       "displayName": "Linux MinSizeRel",
       "description": "Target WSL or a remote Linux system with g++.",
       "inherits": "linux-gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel"
+      }
+    },
+
+    {
+      "name": "linux-clang",
+      "inherits": "linux-common",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-14",
+        "CMAKE_CXX_COMPILER": "clang++-14"
+      }
+    },
+    {
+      "name": "linux-clang-debug",
+      "displayName": "Linux Debug",
+      "description": "Target WSL or a remote Linux system with clang++.",
+      "inherits": "linux-clang",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "linux-clang-release",
+      "displayName": "Linux Release",
+      "description": "Target WSL or a remote Linux system with clang++.",
+      "inherits": "linux-clang",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux-clang-relWithDebInfo",
+      "displayName": "Linux RelWithDebInfo",
+      "description": "Target WSL or a remote Linux system with clang++.",
+      "inherits": "linux-clang",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "linux-clang-minSizeRel",
+      "displayName": "Linux MinSizeRel",
+      "description": "Target WSL or a remote Linux system with clang++.",
+      "inherits": "linux-clang",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "MinSizeRel"
       }
@@ -159,7 +206,54 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "MinSizeRel"
       }
+    },
+
+    {
+      "name": "win-clang-common",
+      "inherits": "windows-common",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang.exe",
+        "CMAKE_CXX_COMPILER": "clang.exe"
+      }
+    },
+    {
+      "name": "win-clang-debug",
+      "inherits": "win-clang-common",
+      "displayName": "Windows x64 Debug",
+      "description": "Target Windows with Visual C++.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "win-clang-release",
+      "inherits": "win-clang-common",
+      "displayName": "Windows x64 Release",
+      "description": "Target Windows with Visual C++.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "win-clang-relWithDebInfo",
+      "inherits": "win-clang-common",
+      "displayName": "Windows x64 RelWithDebInfo",
+      "description": "Target Windows with Visual C++.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "win-clang-minSizeRel",
+      "inherits": "win-clang-common",
+      "displayName": "Windows x64 MinSizeRel",
+      "description": "Target Windows with Visual C++.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel"
+      }
     }
+
   ],
   "buildPresets": [
     {
@@ -183,6 +277,26 @@
       "configuration": "MinSizeRel"
     },
     {
+      "name": "clang-debug",
+      "configurePreset": "linux-clang-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "clang-release",
+      "configurePreset": "linux-clang-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "clang-relWithDebInfo",
+      "configurePreset": "linux-clang-relWithDebInfo",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "clang-minSizeRel",
+      "configurePreset": "linux-clang-minSizeRel",
+      "configuration": "MinSizeRel"
+    },
+    {
       "name": "msvc-debug",
       "configurePreset": "msvc-debug",
       "configuration": "Debug"
@@ -201,6 +315,26 @@
       "name": "msvc-minSizeRel",
       "configurePreset": "msvc-minSizeRel",
       "configuration": "MinSizeRel"
+    },
+    {
+      "name": "win-clang-debug",
+      "configurePreset": "win-clang-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "win-clang-release",
+      "configurePreset": "win-clang-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "win-clang-relWithDebInfo",
+      "configurePreset": "win-clang-relWithDebInfo",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "win-clang-minSizeRel",
+      "configurePreset": "win-clang-minSizeRel",
+      "configuration": "MinSizeRel"
     }
   ],
   "testPresets": [
@@ -218,10 +352,36 @@
       }
     },
     {
+      "name": "clang-debug-test",
+      "description": "test clang",
+      "displayName": "test clang",
+      "configurePreset": "linux-clang-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": true
+      }
+    },
+    {
       "name": "msvc-debug-test",
       "description": "test msvc",
       "displayName": "test msvc",
       "configurePreset": "msvc-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": true
+      }
+    },
+    {
+      "name": "win-clang-debug-test",
+      "description": "test win-clang",
+      "displayName": "test win-clang",
+      "configurePreset": "win-clang-debug",
       "output": {
         "outputOnFailure": true
       },

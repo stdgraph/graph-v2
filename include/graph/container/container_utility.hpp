@@ -24,8 +24,8 @@ concept has_emplace_back = requires(C& container, typename C::value_type&& value
                              { container.emplace_back(move(value)) };
                            };
 template <class C>
-concept has_push_back = requires(C& container, const typename C::value_type& value) {
-                          { container.push_back(value) };
+concept has_push_back = requires(C& container, std::ranges::range_reference_t<C> val) {
+                          { container.push_back(val) };
                         };
 template <class C>
 concept has_emplace_front = requires(C& container, typename C::value_type&& value) {
@@ -54,17 +54,17 @@ template <class C>
 constexpr auto push_or_insert(C& container) {
   // favor pushing to the back over the front for things like list & deque
   if constexpr (has_emplace_back<C>)
-    return [&container](C::value_type&& value) { container.emplace_back(move(value)); };
+    return [&container](typename C::value_type&& value) { container.emplace_back(std::move(value)); };
   else if constexpr (has_push_back<C>) {
-    return [&container](const C::value_type& value) { container.push_back(value); };
+    return [&container](const typename C::value_type& value) { container.push_back(value); };
   } else if constexpr (has_emplace_front<C>)
-    return [&container](C::value_type&& value) { container.emplace_front(move(value)); };
+    return [&container](typename C::value_type&& value) { container.emplace_front(std::move(value)); };
   else if constexpr (has_push_front<C>) {
-    return [&container](const C::value_type& value) { container.push_front(value); };
+    return [&container](const typename C::value_type& value) { container.push_front(value); };
   } else if constexpr (has_emplace<C>)
-    return [&container](C::value_type&& value) { container.emplace(move(value)); };
+    return [&container](typename C::value_type&& value) { container.emplace(std::move(value)); };
   else if constexpr (has_insert<C>) {
-    return [&container](const C::value_type& value) { container.insert(value); };
+    return [&container](const typename C::value_type& value) { container.insert(value); };
   }
 #  ifdef _MSC_VER
   // This didn't assert if a previous if was true until MSVC 1931; gcc has always asserted
@@ -84,13 +84,13 @@ requires has_array_operator<C, K>
 constexpr auto assign_or_insert(C& container) {
   if constexpr (ranges::random_access_range<C>) {
     static_assert(ranges::sized_range<C>, "random_access container is assumed to have size()");
-    return [&container](const K& id, C::value_type&& value) {
-      typename C::size_type k = static_cast<C::size_type>(id);
+    return [&container](const K& id, typename C::value_type&& value) {
+      typename C::size_type k = static_cast<typename C::size_type>(id);
       assert(k < container.size());
       container[k] = move(value);
     };
   } else if constexpr (has_array_operator<C, K>) {
-    return [&container](const K& id, C::value_type&& value) { container[id] = move(value); };
+    return [&container](const K& id, typename C::value_type&& value) { container[id] = move(value); };
   }
 }
 
@@ -155,7 +155,7 @@ struct name_value {
   name_value(const name_value&)            = default;
   name_value& operator=(const name_value&) = default;
   name_value(const string& s) : name(s) {}
-  name_value(string&& s) : name(move(s)) {}
+  name_value(string&& s) : name(std::move(s)) {}
 };
 
 } // namespace std::graph::container

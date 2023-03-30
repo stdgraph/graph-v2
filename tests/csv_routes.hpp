@@ -232,7 +232,8 @@ auto load_graph(csv::string_view csv_file) {
   graph_type g;
 
   // Load vertices
-  auto city_id_getter = [&city_names](const city_id_map& name_id) {
+  auto&& cnames         = city_names; // Clang-15 not finding city_names for following capture
+  auto   city_id_getter = [&cnames](const city_id_map& name_id) {
     using copyable_id_name = std::graph::copyable_vertex_t<vertex_id_type, std::string>;
     return copyable_id_name{name_id.second,
                             name_id.first}; // {id,name} don't move name b/c we need to keep it in the map
@@ -368,7 +369,7 @@ auto load_ordered_graph(csv::string_view        csv_file,
   g.load_vertices(ordered_cities, city_name_getter);
 
   // load edges
-  auto eproj = [&g](csv_row_type& row) {
+  auto eproj = [](csv_row_type& row) {
     using graph_copyable_edge_type = copyable_edge_t<vertex_id_type, edge_value_type>;
     graph_copyable_edge_type retval{static_cast<vertex_id_type>(row.source_id->second),
                                     static_cast<vertex_id_type>(row.target_id->second), row.value};
