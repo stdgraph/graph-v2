@@ -44,13 +44,13 @@ public:
   using edge_type     = edge_t<graph_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
-  using difference_type   = ranges::range_difference_t<edge_range>;
-  using pointer           = value_type*;
-  using const_pointer     = const value_type*;
-  using reference         = value_type&;
-  using const_reference   = const value_type&;
-  using rvalue_reference  = value_type&&;
+  using value_type       = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
+  using difference_type  = ranges::range_difference_t<edge_range>;
+  using pointer          = value_type*;
+  using const_pointer    = const value_type*;
+  using reference        = value_type&;
+  using const_reference  = const value_type&;
+  using rvalue_reference = value_type&&;
 
 public:
   neighbor_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter, const VVF& value_fn)
@@ -147,13 +147,13 @@ public:
   using edge_type     = edge_t<graph_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
-  using difference_type   = ranges::range_difference_t<edge_range>;
-  using pointer           = value_type*;
-  using const_pointer     = const value_type*;
-  using reference         = value_type&;
-  using const_reference   = const value_type&;
-  using rvalue_reference  = value_type&&;
+  using value_type       = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
+  using difference_type  = ranges::range_difference_t<edge_range>;
+  using pointer          = value_type*;
+  using const_pointer    = const value_type*;
+  using reference        = value_type&;
+  using const_reference  = const value_type&;
+  using rvalue_reference = value_type&&;
 
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
