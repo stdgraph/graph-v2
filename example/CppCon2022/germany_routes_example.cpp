@@ -75,22 +75,22 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
   // edge data (edgelist)
   using route_data                  = copyable_edge_t<city_id_type, double>; // {source_id, target_id, value}
   vector<route_data> routes_doubled = {
-        {0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, //
-        {1, 0, 85.0},  {1, 2, 80.0},                 //
-        {2, 1, 80.0},  {2, 3, 250.0},                //
-        {3, 2, 250.0}, {3, 8, 84.0},                 //
-        {4, 0, 217.0}, {4, 5, 103.0}, {4, 7, 186.0}, //
-        {5, 4, 103.0}, {5, 8, 167.0}, {5, 9, 183.0}, //
-        {6, 0, 173.0}, {6, 8, 502.0},                //
-        {7, 4, 186.0},                               //
-        {8, 3, 84.0},  {8, 5, 167.0}, {8, 6, 502.0}, //
+        {0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0},                         //
+        {1, 0, 85.0},  {1, 2, 80.0},                                         //
+        {2, 1, 80.0},  {2, 3, 250.0},                                        //
+        {3, 2, 250.0}, {3, 8, 84.0},                                         //
+        {4, 0, 217.0}, {4, 5, 103.0}, {4, 7, 186.0},                         //
+        {5, 4, 103.0}, {5, 8, 167.0}, {5, 9, 183.0},                         //
+        {6, 0, 173.0}, {6, 8, 502.0},                                        //
+        {7, 4, 186.0},                                                       //
+        {8, 3, 84.0},  {8, 5, 167.0}, {8, 6, 502.0},                         //
         {9, 5, 183.0},
   };
 
   // Graph definition
-  struct route { // edge
+  struct route {                                        // edge
     city_id_type target_id = 0;
-    double       distance  = 0.0; // km
+    double       distance  = 0.0;                       // km
   };
   using AdjList = vector<list<route>>;                  // range of ranges
   using G       = rr_adaptor<AdjList, city_names_type>; // graph

@@ -12,42 +12,42 @@ namespace std::graph::container {
 
 template <class C>
 concept reservable = requires(C& container, typename C::size_type n) {
-                       { container.reserve(n) };
-                     };
+  { container.reserve(n) };
+};
 template <class C>
 concept resizable = requires(C& container, typename C::size_type n) {
-                      { container.resize(n) };
-                    };
+  { container.resize(n) };
+};
 
 template <class C>
 concept has_emplace_back = requires(C& container, typename C::value_type&& value) {
-                             { container.emplace_back(move(value)) };
-                           };
+  { container.emplace_back(move(value)) };
+};
 template <class C>
 concept has_push_back = requires(C& container, std::ranges::range_reference_t<C> val) {
-                          { container.push_back(val) };
-                        };
+  { container.push_back(val) };
+};
 template <class C>
 concept has_emplace_front = requires(C& container, typename C::value_type&& value) {
-                              { container.emplace_front(move(value)) };
-                            };
+  { container.emplace_front(move(value)) };
+};
 template <class C>
 concept has_push_front = requires(C& container, const typename C::value_type& value) {
-                           { container.push_front(value) };
-                         };
+  { container.push_front(value) };
+};
 template <class C>
 concept has_emplace = requires(C& container, typename C::value_type&& value) {
-                        { container.emplace(move(value)) };
-                      };
+  { container.emplace(move(value)) };
+};
 template <class C>
 concept has_insert = requires(C& container, const typename C::value_type& value) {
-                       { container.insert(value) };
-                     };
+  { container.insert(value) };
+};
 
 template <class C, class Idx>
 concept has_array_operator = requires(C&& container, Idx idx) {
-                               { container[idx] }; //->is_lvalue_reference_v;
-                             };
+  { container[idx] }; //->is_lvalue_reference_v;
+};
 
 // return a lambda to push/insert/emplace an element in a container
 template <class C>

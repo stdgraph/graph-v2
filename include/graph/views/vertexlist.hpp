@@ -183,19 +183,19 @@ TAG_INVOKE_DEF(vertexlist); // vertexlist(g)               -> vertices[uid,u]
 
 template <class G>
 concept _has_vertexlist_g_adl = vertex_range<G> && requires(G&& g) {
-                                                     { vertexlist(g) };
-                                                   };
+  { vertexlist(g) };
+};
 
 template <class G, class VVF>
 concept _has_vertexlist_g_fn_adl =
       vertex_range<G> && invocable<VVF, vertex_reference_t<G>> && requires(G&& g, const VVF& fn) {
-                                                                    { vertexlist(g, fn) };
-                                                                  };
+        { vertexlist(g, fn) };
+      };
 
 template <class G>
 concept _has_vertexlist_i_i_adl = vertex_range<G> && requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi) {
-                                                       { vertexlist(g, ui, vi) };
-                                                     };
+  { vertexlist(g, ui, vi) };
+};
 
 template <class G, class VVF>
 concept _has_vertexlist_i_i_fn_adl = vertex_range<G> && invocable<VVF, vertex_reference_t<G>> &&
@@ -206,15 +206,15 @@ concept _has_vertexlist_i_i_fn_adl = vertex_range<G> && invocable<VVF, vertex_re
 template <class G, class VR>
 concept _has_vertexlist_vrng_adl =
       vertex_range<G> && ranges::random_access_range<VR> && requires(G&& g, vertex_range_t<G>& vr) {
-                                                              { vertexlist(g, vr) };
-                                                            };
+        { vertexlist(g, vr) };
+      };
 
 template <class G, class VR, class VVF>
 concept _has_vertexlist_vrng_fn_adl =
       vertex_range<G> && ranges::random_access_range<VR> && convertible_to<ranges::range_value_t<VR>, vertex_t<G>> &&
       invocable<VVF, vertex_reference_t<G>> && requires(G&& g, VR&& vr, const VVF& fn) {
-                                                 { vertexlist(g, vr, fn) };
-                                               };
+        { vertexlist(g, vr, fn) };
+      };
 
 
 } // namespace std::graph::tag_invoke

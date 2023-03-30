@@ -134,8 +134,8 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_vertex_id_adl = requires(G&& g, vertex_iterator_t<G> ui) {
-                                 { vertex_id(g, ui) };
-                               };
+    { vertex_id(g, ui) };
+  };
 } // namespace tag_invoke
 
 /**
@@ -194,8 +194,8 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_find_vertex_adl = requires(G&& g, vertex_id_t<G> uid) {
-                                   { find_vertex(g, uid) };
-                                 };
+    { find_vertex(g, uid) };
+  };
 } // namespace tag_invoke
 
 /**
@@ -234,13 +234,13 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_edges_vtxref_adl = requires(G&& g, vertex_reference_t<G> u) {
-                                    { edges(g, u) };
-                                  };
+    { edges(g, u) };
+  };
 
   template <class G>
   concept _has_edges_vtxid_adl = requires(G&& g, vertex_id_t<G> uid) {
-                                   { edges(g, uid) };
-                                 };
+    { edges(g, uid) };
+  };
 } // namespace tag_invoke
 
 /**
@@ -345,14 +345,14 @@ namespace tag_invoke {
 
   template <class G, class ER>
   concept _has_target_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-                              { target(g, uv) };
-                            };
+    { target(g, uv) };
+  };
 } // namespace tag_invoke
 template <class G, class ER>
 concept _can_eval_target =
       ranges::random_access_range<vertex_range_t<G>> && requires(G&& g, ranges::range_reference_t<ER> uv) {
-                                                          { target_id(g, uv) } -> integral;
-                                                        };
+        { target_id(g, uv) } -> integral;
+      };
 
 /**
  * @brief Get the target vertex of an edge.
@@ -415,14 +415,14 @@ namespace tag_invoke {
 
   template <class G, class ER>
   concept _has_source_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-                              { source(g, uv) };
-                            };
+    { source(g, uv) };
+  };
 } // namespace tag_invoke
 
 template <class G, class ER>
 concept _can_eval_source_id = ranges::random_access_range<ER> && requires(G&& g, ranges::range_reference_t<ER> uv) {
-                                                                   { source_id(g, uv) } -> integral;
-                                                                 };
+  { source_id(g, uv) } -> integral;
+};
 
 /**
  * @brief Get the source vertex of an edge.
@@ -460,15 +460,15 @@ namespace tag_invoke {
 
   template <class G, class ER>
   concept _has_edge_id_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-                               { edge_id(g, uv) };
-                             };
+    { edge_id(g, uv) };
+  };
 } // namespace tag_invoke
 
 template <class G, class ER>
 concept _can_eval_edge_id = requires(G&& g, ranges::range_reference_t<ER> uv) {
-                              { target_id(g, uv) };
-                              { source_id(g, uv) };
-                            };
+  { target_id(g, uv) };
+  { source_id(g, uv) };
+};
 
 /**
  * @brief Get the edge id of an edge.
@@ -508,8 +508,8 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_find_vertex_edge_adl = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
-                                        { find_vertex_edge(g, u, vid) };
-                                      };
+    { find_vertex_edge(g, u, vid) };
+  };
   template <class G>
   concept _has_find_vertex_id_edge_adl =
         requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
@@ -572,8 +572,8 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_contains_edge_adl = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-                                     { contains_edge(g, uid, vid) };
-                                   };
+    { contains_edge(g, uid, vid) };
+  };
 } // namespace tag_invoke
 
 /**
@@ -610,8 +610,8 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_degree_adl = requires(G&& g, vertex_reference_t<G> u) {
-                              { degree(g, u) };
-                            };
+    { degree(g, u) };
+  };
 } // namespace tag_invoke
 
 /**

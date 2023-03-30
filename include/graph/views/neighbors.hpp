@@ -239,12 +239,12 @@ TAG_INVOKE_DEF(neighbors); // neighbors(g,uid)            -> edges[vid,uv]
 
 template <class G>
 concept _has_neighbors_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-                                                        { neighbors(g, uid) };
-                                                      };
+  { neighbors(g, uid) };
+};
 template <class G, class VVF>
 concept _has_neighbors_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-                                                            { neighbors(g, uid, vvf) };
-                                                          };
+  { neighbors(g, uid, vvf) };
+};
 } // namespace std::graph::tag_invoke
 
 namespace std::graph::views {
