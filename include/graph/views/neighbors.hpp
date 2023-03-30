@@ -1,9 +1,9 @@
 #pragma once
 #include "graph/graph.hpp"
-#include "views_utility.hpp"
+#include "graph/graph_utility.hpp"
 
 //
-// neighbors(g,u) -> neighbor_view<VId,false,E,EV> -> {target_id, vertex& [,value]}
+// neighbors(g,u) -> neighbor_descriptor<VId,false,E,EV> -> {target_id, vertex& [,value]}
 //
 // given:    auto vvf = [&g](vertex_reference_t<G> v) { return vertex_value(g,v); }
 //
@@ -44,7 +44,7 @@ public:
   using edge_type     = edge_t<graph_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = neighbor_view<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
+  using value_type        = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -71,7 +71,7 @@ protected:
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type =
-        neighbor_view<vertex_id_type, Sourced, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+        neighbor_descriptor<vertex_id_type, Sourced, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
 public:
   constexpr reference operator*() const {
@@ -147,7 +147,7 @@ public:
   using edge_type     = edge_t<graph_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = neighbor_view<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
+  using value_type        = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -159,7 +159,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
-  using shadow_value_type  = neighbor_view<vertex_id_type, Sourced, shadow_vertex_type*, vertex_value_type>;
+  using shadow_value_type  = neighbor_descriptor<vertex_id_type, Sourced, shadow_vertex_type*, vertex_value_type>;
 
 public:
   neighbor_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter)
