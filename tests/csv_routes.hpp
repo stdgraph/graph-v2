@@ -6,7 +6,7 @@
 #  pragma warning(disable : 4458) // declaration of 'value' hides class member
 #  pragma warning(disable : 4244) // conversion from 'double' to 'unsigned __int64', possible loss of data
 #  pragma warning(                                                                                                     \
-        disable : 4996) // 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+              disable : 4996) // 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
 #else
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -109,7 +109,7 @@ auto unique_vertex_labels2(csv::string_view        csv_file,
                            ColNumOrName            col1,
                            ColNumOrName            col2,
                            const name_order_policy order_policy) {
-  csv::CSVReader reader(csv_file); // CSV file reader
+  csv::CSVReader reader(csv_file);                 // CSV file reader
 
   using label_id_map = std::map<std::string, VId>; // label, vertex id
   label_id_map lbls;
@@ -165,7 +165,7 @@ auto max_vertex_id(csv::string_view csv_file, ColNumOrName col1, ColNumOrName co
 
   return std::pair(max_id, reader.n_rows()); // return (max_id, num rows read)
 }
-#endif // FUTURE
+#endif                                       // FUTURE
 
 
 template <typename G>
@@ -232,7 +232,8 @@ auto load_graph(csv::string_view csv_file) {
   graph_type g;
 
   // Load vertices
-  auto city_id_getter = [&city_names](const city_id_map& name_id) {
+  auto&& cnames         = city_names; // Clang-15 not finding city_names for following capture
+  auto   city_id_getter = [&cnames](const city_id_map& name_id) {
     using copyable_id_name = std::graph::copyable_vertex_t<vertex_id_type, std::string>;
     return copyable_id_name{name_id.second,
                             name_id.first}; // {id,name} don't move name b/c we need to keep it in the map
@@ -368,7 +369,7 @@ auto load_ordered_graph(csv::string_view        csv_file,
   g.load_vertices(ordered_cities, city_name_getter);
 
   // load edges
-  auto eproj = [&g](csv_row_type& row) {
+  auto eproj = [](csv_row_type& row) {
     using graph_copyable_edge_type = copyable_edge_t<vertex_id_type, edge_value_type>;
     graph_copyable_edge_type retval{static_cast<vertex_id_type>(row.source_id->second),
                                     static_cast<vertex_id_type>(row.target_id->second), row.value};

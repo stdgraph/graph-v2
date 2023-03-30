@@ -115,9 +115,9 @@ concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized
  */
 template <class G, class E>
 concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
-                          target_id(g, uv);
-                          target(g, uv);
-                        };
+  target_id(g, uv);
+  target(g, uv);
+};
 
 /**
  * @ingroup graph_concepts
@@ -130,9 +130,9 @@ concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
  */
 template <class G, class E>
 concept sourced_edge = requires(G&& g, E& uv) {
-                         source_id(g, uv);
-                         source(g, uv);
-                       };
+  source_id(g, uv);
+  source(g, uv);
+};
 
 /**
  * @brief Type trait to determine if an edge is sourced.
@@ -168,9 +168,9 @@ inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
 template <class G>
 concept adjacency_list =
       vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid) {
-                                                          { edges(g, u) } -> ranges::forward_range;
-                                                          { edges(g, uid) } -> ranges::forward_range;
-                                                        };
+        { edges(g, u) } -> ranges::forward_range;
+        { edges(g, uid) } -> ranges::forward_range;
+      };
 // !is_same_v<vertex_range_t<G>, vertex_edge_range_t<G>>
 //      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
@@ -201,8 +201,8 @@ concept sourced_adjacency_list =
 */
 template <class G>
 concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
-                       { degree(g, u) };
-                     };
+  { degree(g, u) };
+};
 
 //
 // find/contains concepts
@@ -218,8 +218,8 @@ concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
 */
 template <class G>
 concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
-                            { find_vertex(g, uid) } -> forward_iterator;
-                          };
+  { find_vertex(g, uid) } -> forward_iterator;
+};
 
 /**
  * @ingroup graph_properties
@@ -231,9 +231,9 @@ concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
 */
 template <class G>
 concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
-                                 { find_vertex_edge(g, u, vid) } -> forward_iterator;
-                                 { find_vertex_edge(g, uid, vid) } -> forward_iterator;
-                               };
+  { find_vertex_edge(g, u, vid) } -> forward_iterator;
+  { find_vertex_edge(g, uid, vid) } -> forward_iterator;
+};
 
 /**
  * @ingroup graph_properties
@@ -245,8 +245,8 @@ concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G
 */
 template <class G>
 concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-                              { contains_edge(g, uid, vid) } -> convertible_to<bool>;
-                            };
+  { contains_edge(g, uid, vid) } -> convertible_to<bool>;
+};
 
 
 /**

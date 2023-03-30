@@ -44,16 +44,16 @@ concept edge_weight_function = // e.g. weight(uv)
 */
 template <class Q>
 concept queueable = requires(Q&& q, typename Q::value_type value) {
-                      typename Q::value_type;
-                      typename Q::size_type;
-                      typename Q::reference;
+  typename Q::value_type;
+  typename Q::size_type;
+  typename Q::reference;
 
-                      { q.top() };
-                      { q.push(value) };
-                      { q.pop() };
-                      { q.empty() };
-                      { q.size() };
-                    };
+  { q.top() };
+  { q.push(value) };
+  { q.pop() };
+  { q.empty() };
+  { q.size() };
+};
 
 /**
  * @brief Internal sentinal type to indicate that predecessor evaluation isn't needed when calling 

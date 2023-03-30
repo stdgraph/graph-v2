@@ -341,8 +341,8 @@ namespace _detail {
 
   template <class A>
   concept is_allocator_v = is_copy_constructible_v<A> && requires(A alloc, size_t n) {
-                                                           { alloc.allocate(n) };
-                                                         };
+    { alloc.allocate(n) };
+  };
 
 
 } // namespace _detail

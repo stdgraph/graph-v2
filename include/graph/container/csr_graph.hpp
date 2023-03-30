@@ -195,7 +195,7 @@ public: // Operations
       // resize_vertices(n) with enough entries for all the values.
       assert(static_cast<size_t>(id) < size());
 
-      (*this)[id] = move(value);
+      (*this)[id] = std::move(value);
     }
   }
 
@@ -232,7 +232,7 @@ public:
   using value_type = void;
   using size_type  = size_t; //VId;
 
-public: // Properties
+public:                      // Properties
   [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
   [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
   [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
@@ -346,7 +346,7 @@ public:
   using value_type = void;
   using size_type  = size_t; //VId;
 
-public: // Properties
+public:                      // Properties
   [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
   [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
   [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
@@ -485,7 +485,7 @@ public: // Construction/Destruction
   }
 
 public:
-public: // Operations
+public:                            // Operations
   void reserve_vertices(size_type count) {
     row_index_.reserve(count + 1); // +1 for terminating row
     row_values_base::reserve(count);
@@ -745,13 +745,13 @@ private:                       // Member variables
 private: // tag_invoke properties
   friend constexpr vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, csr_graph_base& g) {
     if (g.row_index_.empty())
-      return vertices_type(g.row_index_); // really empty
+      return vertices_type(g.row_index_);                                 // really empty
     else
       return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
   friend constexpr const_vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, const csr_graph_base& g) {
     if (g.row_index_.empty())
-      return const_vertices_type(g.row_index_); // really empty
+      return const_vertices_type(g.row_index_);                                 // really empty
     else
       return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
@@ -764,7 +764,7 @@ private: // tag_invoke properties
   friend constexpr edges_type tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size());    // in row_index_ bounds?
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
@@ -773,7 +773,7 @@ private: // tag_invoke properties
   tag_invoke(::std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     const vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size());    // in row_index_ bounds?
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     return const_edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);

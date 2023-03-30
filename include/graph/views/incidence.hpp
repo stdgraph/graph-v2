@@ -223,12 +223,12 @@ TAG_INVOKE_DEF(incidence); // incidence(g,uid)            -> edges[vid,v]
 
 template <class G>
 concept _has_incidence_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-                                                        { incidence(g, uid) };
-                                                      };
+  { incidence(g, uid) };
+};
 template <class G, class EVF>
 concept _has_incidence_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-                                                            { incidence(g, uid, evf) };
-                                                          };
+  { incidence(g, uid, evf) };
+};
 } // namespace std::graph::tag_invoke
 
 namespace std::graph::views {
