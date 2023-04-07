@@ -27,7 +27,7 @@ jobs:
         with:
           submodules: recursive
 
-      - run: sudo apt update && sudo apt install gcc-11 g++-11
+      - run: sudo apt update && sudo apt install gcc-11 g++-11 lcov
         shell: bash
       
       - name: Configure cmake
@@ -44,6 +44,10 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir ${{github.workspace}}/build/tests
+
+      - name: Coverage
+        shell: bash
+        run: cd ${{github.workspace}}/build && make coverage
         
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3

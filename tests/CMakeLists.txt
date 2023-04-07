@@ -1,3 +1,22 @@
+option(ENABLE_COVERAGE "Enable coverage build." OFF)
+
+if(ENABLE_COVERAGE)
+  # set compiler flags
+  set(CMAKE_CXX_FLAGS "-O0 -coverage")
+
+  # find required tools
+  find_program(LCOV lcov REQUIRED)
+  find_program(GENHTML genhtml REQUIRED)
+
+  # add coverage target
+  add_custom_target(coverage
+    # gather data
+    COMMAND ${LCOV} --directory . --capture --output-file coverage.txt
+    # generate report
+    COMMAND ${GENHTML} --demangle-cpp -o coverage coverage.txt
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+endif()
+
 add_compile_definitions(TEST_DATA_ROOT_DIR="${TEST_DATA_ROOT_DIR}")
 add_compile_definitions(TEST_OUTPUT_ROOT_DIR="${TEST_EXAMPLE_ROOT_DIR}/output/")
 
