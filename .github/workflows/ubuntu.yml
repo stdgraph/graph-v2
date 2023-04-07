@@ -40,7 +40,7 @@ jobs:
           CXX:  g++-11
         
       - name: Build all applications
-        run: cmake  --build ${{github.workspace}}/build
+        run: cmake --build ${{github.workspace}}/build -DENABLE_COVERAGE=ON
 
       - name: Run tests
         run: ctest --test-dir ${{github.workspace}}/build/tests
