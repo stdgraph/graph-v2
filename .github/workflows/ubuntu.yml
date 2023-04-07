@@ -27,23 +27,27 @@ jobs:
         with:
           submodules: recursive
 
-      - run: sudo apt update && sudo apt install gcc-11 g++-11
+      - run: sudo apt update && sudo apt install gcc-11 g++-11 lcov
         shell: bash
       
       - name: Configure cmake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B ${{github.workspace}}/build
+        run: cmake -B ${{github.workspace}}/build -D ENABLE_COVERAGE=ON
         shell: bash
         env:
           CC:   gcc-11
           CXX:  g++-11
         
       - name: Build all applications
-        run: cmake  --build ${{github.workspace}}/build
+        run: cmake --build ${{github.workspace}}/build
 
       - name: Run tests
         run: ctest --test-dir ${{github.workspace}}/build/tests
+
+      - name: Coverage
+        shell: bash
+        run: cd ${{github.workspace}}/build && make coverage
         
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
