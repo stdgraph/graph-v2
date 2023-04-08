@@ -3,6 +3,7 @@
 #include "graph/graph.hpp"
 #include "graph/algorithm/mst.hpp"
 #include "graph/container/dynamic_graph.hpp"
+#include "graph/container/utility_edgelist.hpp"
 #ifdef _MSC_VER
 #  include "Windows.h"
 #endif
@@ -31,28 +32,7 @@ using std::graph::vertex_id;
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
-template<class VId, class EV>
-class test_edge_list {
-public:
-  test_edge_list() { max = 0; }
-  void push_back( std::tuple<VId, VId, EV> edge ) {
-    if ( std::get<0>(edge) > max ) {
-        max = std::get<0>(edge);
-    }
-    if ( std::get<1>(edge) > max ) {
-        max = std::get<1>(edge);
-    }
-    e.push_back( edge );
-  }
-  auto begin() { return e.begin(); }
-  auto end() { return e.end(); }
-  VId size() { return max + 1; }
-  using value_type = std::tuple<VId, VId, EV>;
-
-private:
-  std::vector<std::tuple<VId, VId, EV>> e;
-  VId                                   max;
-};
+using edgelist = std::graph::container::utility_edgelist<vertex_id_t<routes_vol_graph_type>, vertex_id_t<routes_vol_graph_type>, double>;
 
 TEST_CASE("Kruskal Min ST Algorithm", "[min st]") {
     init_console();
@@ -65,18 +45,21 @@ TEST_CASE("Kruskal Min ST Algorithm", "[min st]") {
       M += std::graph::degree(g, u);
     }
     
-    test_edge_list<vertex_id_t<G>, double> e, t;
+    edgelist e, t;
 
     auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
     for (auto && [uid,vid,uv] : std::graph::views::edgelist(g)) {
       e.push_back(std::make_tuple(uid,vid,evf(uv)));
     }
     
-    //Replace with whatever conforms to std::graph::edge_list
-    std::graph::kruskal<vertex_id_t<G>, edge_value_t<G>>(e, std::back_inserter(t));
-    /*for( auto&& [u,v,val] : t ) {
-      cout << u << " " << v << " " << val << endl;
-	  }*/
+    //Replace with whatever conforms to std::graph::edgelist
+    std::graph::kruskal(e, t);
+    double last = -1;
+    for( auto&& [u,v,val] : t ) {
+      REQUIRE ( val > last );
+      last = val;
+      //cout << u << " " << v << " " << val << endl;
+	  }
 }
 
 TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
@@ -90,19 +73,22 @@ TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
       M += std::graph::degree(g, u);
     }
     
-    test_edge_list<vertex_id_t<G>, double> e, t;
+    edgelist e, t;
 
     auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
     for (auto && [uid,vid,uv] : std::graph::views::edgelist(g)) {
       e.push_back(std::make_tuple(uid,vid,evf(uv)));
     }
     
-    //Replace with whatever conforms to std::graph::edge_list
-    std::graph::kruskal<vertex_id_t<G>,double>(e, std::back_inserter(t),
+    //Replace with whatever conforms to std::graph::edgelist
+    std::graph::kruskal(e, t,
       [](auto&& i, auto&& j){return i > j;});
-    /*for( auto&& [u,v,val] : t ) {
-      cout << u << " " << v << " " << val << endl;
-	  }*/
+    double last = std::numeric_limits<double>::max();
+    for( auto&& [u,v,val] : t ) {
+      REQUIRE( val < last );
+      last = val;
+      //cout << u << " " << v << " " << val << endl;
+	  }
 }
 
 TEST_CASE("Prim Min ST Algorithm", "[prim min st]") {

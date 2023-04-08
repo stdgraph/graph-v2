@@ -13,6 +13,7 @@
  */
 
 #include "graph/graph.hpp"
+#include "graph/edgelist.hpp"
 #include "graph/views/edgelist.hpp"
 #include <queue>
 
@@ -93,19 +94,18 @@ bool disjoint_union_find(
  * 
  * Complexity: O(|E|log|V|)
  * 
- * @tparam E                The edge list type.
- * @tparam PredecessorRange The predecessor range type.
+ * @tparam E                The input egelist type.
+ * @tparam T                The output edgelist type.
  * 
- * @param e           The edge list.
- * @param t           The output edge list iterator containing the tree.
+ * @param e           The input edgelist.
+ * @param t           The output edgelist containing the tree.
  */
-template<class VId, class EV, class E, class Iter>
-requires std::output_iterator<Iter, std::tuple<VId,VId,EV>>
+template<edgelist::edgelist E, edgelist::edgelist T>
 void kruskal(
-    E&&  e, // edge list
-    Iter t  // out: spanning tree edge list
+    E&& e, // edge list
+    T&& t  // out: spanning tree edge list
 ) {
-  kruskal<VId, EV>(e, t, [](auto&& i, auto&& j){ return i < j; });
+  kruskal(e, t, [](auto&& i, auto&& j){ return i < j; });
 }
 
 /**
@@ -114,27 +114,27 @@ void kruskal(
  * 
  * Complexity: O(|E|log|V|)
  * 
- * @tparam E                The edge list type.
- * @tparam Iter             The output iteratortype.
+ * @tparam E             The input edgelist type.
+ * @tparam T             The output edgelist type.
  * @tparam CompareOp
  * 
- * @param e           The edge list.
- * @param t           The output edge list iterator containing the tree.
+ * @param e           The input edgelist.
+ * @param t           The output edgelist containing the tree.
  * @param compare     The comparison operator.
  */
-template<class VId, class EV, class E, class Iter, class CompareOp>
-requires std::output_iterator<Iter, std::tuple<VId, VId, EV>>
+template<edgelist::edgelist E, edgelist::edgelist T, class CompareOp>
 void kruskal(
-    E&&     e,      // graph
-    Iter    t,      // out: spanning tree edge list
+    E&&       e,      // graph
+    T&&       t,      // out: spanning tree edge list
     CompareOp compare // edge value comparitor
 ) {
-  
+  using VId = edgelist::vertex_source_id_t<E>;
+
   auto outer_compare = [&](auto&& i, auto &&j)
     { return compare(std::get<2>(i), std::get<2>(j)); };
   std::sort(e.begin(), e.end(), outer_compare);
 
-  VId N = e.size();
+  VId N = e.max_vid();
   std::vector<std::pair<VId, size_t>> subsets(N);
   for ( VId uid = 0; uid < N; ++uid ) {
     subsets[uid].first  = uid;
@@ -146,7 +146,7 @@ void kruskal(
     VId v = std::get<1>(*iter);
     
     if (disjoint_union_find(subsets, u, v)) {
-      *t++ = *iter;
+      t.push_back(*iter);
     }
   }
 }
