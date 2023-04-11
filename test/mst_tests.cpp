@@ -59,7 +59,7 @@ TEST_CASE("Kruskal Min ST Algorithm", "[min st]") {
       REQUIRE ( val > last );
       last = val;
       //cout << u << " " << v << " " << val << endl;
-	  }
+    }
 }
 
 TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
@@ -88,7 +88,7 @@ TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
       REQUIRE( val < last );
       last = val;
       //cout << u << " " << v << " " << val << endl;
-	  }
+    }
 }
 
 TEST_CASE("Prim Min ST Algorithm", "[prim min st]") {
@@ -99,9 +99,12 @@ TEST_CASE("Prim Min ST Algorithm", "[prim min st]") {
     std::vector<vertex_id_t<G>> preds(size(vertices(g)));
     std::vector<double> weights(size(vertices(g)));
     std::graph::prim(g, preds, weights);
-    /*for( auto && [uid, u] : std::graph::views::vertexlist(g)) {
-        cout << "pred of " << uid << " is " << preds[uid] << " with val " << weights[uid] << endl;
-    }*/
+    double treeweight = 0;
+    for( auto && [uid, u] : std::graph::views::vertexlist(g)) {
+      //cout << "pred of " << uid << " is " << preds[uid] << " with val " << weights[uid] << endl;
+      treeweight += weights[uid];
+    }
+    REQUIRE( treeweight == 1361 );
 }
 
 TEST_CASE("Prim Max ST Algorithm", "[prim max st]") {
@@ -114,7 +117,10 @@ TEST_CASE("Prim Max ST Algorithm", "[prim max st]") {
     
     std::graph::prim(g, preds, weights,
       [](auto&& i, auto&& j){return i > j;}, 0);
-    /*for( auto && [uid, u] : std::graph::views::vertexlist(g)) {
-        cout << "pred of " << uid << " is " << preds[uid] << " with val " << weights[uid] << endl;
-    }*/
+    double treeweight = 0;
+    for( auto && [uid, u] : std::graph::views::vertexlist(g)) {
+      //cout << "pred of " << uid << " is " << preds[uid] << " with val " << weights[uid] << endl;
+      treeweight += weights[uid];
+    }
+    REQUIRE( treeweight == 1779 );
 }

@@ -134,7 +134,7 @@ void kruskal(
     { return compare(std::get<2>(i), std::get<2>(j)); };
   std::sort(e.begin(), e.end(), outer_compare);
 
-  VId N = e.max_vid();
+  VId N = e.max_vid() + 1;
   std::vector<std::pair<VId, size_t>> subsets(N);
   for ( VId uid = 0; uid < N; ++uid ) {
     subsets[uid].first  = uid;
