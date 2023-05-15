@@ -109,7 +109,7 @@ auto unique_vertex_labels2(csv::string_view        csv_file,
                            ColNumOrName            col1,
                            ColNumOrName            col2,
                            const name_order_policy order_policy) {
-  csv::CSVReader reader(csv_file);                 // CSV file reader
+  csv::CSVReader reader(csv_file); // CSV file reader
 
   using label_id_map = std::map<std::string, VId>; // label, vertex id
   label_id_map lbls;
@@ -165,7 +165,7 @@ auto max_vertex_id(csv::string_view csv_file, ColNumOrName col1, ColNumOrName co
 
   return std::pair(max_id, reader.n_rows()); // return (max_id, num rows read)
 }
-#endif                                       // FUTURE
+#endif // FUTURE
 
 
 template <typename G>
