@@ -46,6 +46,7 @@ set(UNITTEST_SOURCES
     "bfs_tests.cpp"
     "mis_tests.cpp" 
     "pagerank_tests.cpp"
+    "mst_tests.cpp"
 )
 
 foreach(SOURCE IN LISTS UNITTEST_SOURCES)

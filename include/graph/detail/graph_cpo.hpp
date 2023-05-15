@@ -721,6 +721,59 @@ auto&& graph_value(G&& g) {
 template <class G>
 using graph_value_t = decltype(graph_value(declval<G&&>()));
 
+namespace edgelist {
+namespace tag_invoke {
+  TAG_INVOKE_DEF(edges); // edges(e) -> [edge list vertices]
+}
+
+template <class E>
+auto edges(E&& el) -> decltype(tag_invoke::edges(el)) {
+  return tag_invoke::edges(el);
+}
+
+template <class E>
+using edgelist_range_t = decltype(std::graph::edgelist::edges(declval<E&&>()));
+
+template <class E>
+using edgelist_iterator_t = ranges::iterator_t<edgelist_range_t<E&&>>;
+
+namespace tag_invoke {
+  TAG_INVOKE_DEF(vertex_id_source);
+}
+
+template <class E>
+auto vertex_id_source(E&& el, edgelist_iterator_t<E> e) {
+    return tag_invoke::vertex_id_source(el, e);
+}
+
+template <class E>
+using vertex_source_id_t = decltype(vertex_id_source(declval<E&&>(), declval<edgelist_iterator_t<E>>()));
+
+namespace tag_invoke {
+  TAG_INVOKE_DEF(vertex_id_target);
+}
+
+template <class E>
+auto vertex_id_target(E&& el, edgelist_iterator_t<E> e) {
+    return tag_invoke::vertex_id_target(el, e);
+}
+
+template <class E>
+using vertex_target_id_t = decltype(vertex_id_target(declval<E&&>(), declval<edgelist_iterator_t<E>>()));
+
+
+namespace tag_invoke {
+  TAG_INVOKE_DEF(edge_value);
+}
+
+template <class E>
+auto edge_value(E&& el, edgelist_iterator_t<E> e) {
+    return tag_invoke::edge_value(el, e);
+}
+
+template <class E>
+using edge_value_t = decltype(edge_value(declval<E&&>(), declval<edgelist_iterator_t<E>>()));
+}
 
 #  if 0
 // bipartite idea
