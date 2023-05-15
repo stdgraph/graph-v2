@@ -1,9 +1,9 @@
 #pragma once
 #include "graph/graph.hpp"
-#include "graph/views/views_utility.hpp"
+#include "graph/graph_utility.hpp"
 
 //
-// vertexlist(g) -> vertex_view<VId,V,VV> -> {id, vertex& [,value]}
+// vertexlist(g) -> vertex_descriptor<VId,V,VV> -> {id, vertex& [,value]}
 //
 // given:    vvf = [&g](vertex_reference_t<G> u) -> decl_type(vertex_value(g)) { return vertex_value(g,u);}
 //           (trailing return type is required if defined inline as vertexlist parameter)
@@ -40,7 +40,7 @@ public:
   using vertex_value_type     = invoke_result_t<VVF, vertex_type&>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = vertex_view<const vertex_id_t<graph_type>, vertex_reference_type, vertex_value_type>;
+  using value_type        = vertex_descriptor<const vertex_id_t<graph_type>, vertex_reference_type, vertex_value_type>;
   using difference_type   = ranges::range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -52,7 +52,7 @@ protected:
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type =
-        vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+        vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
 public:
   vertexlist_iterator(graph_type& g, const VVF& value_fn, vertex_iterator_type iter, vertex_id_type start_at = 0)
@@ -113,7 +113,7 @@ public:
   using vertex_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = vertex_view<const vertex_id_type, vertex_reference_type, void>;
+  using value_type        = vertex_descriptor<const vertex_id_type, vertex_reference_type, void>;
   using difference_type   = ranges::range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -125,7 +125,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
-  using shadow_value_type  = vertex_view<vertex_id_type, shadow_vertex_type*, void>;
+  using shadow_value_type  = vertex_descriptor<vertex_id_type, shadow_vertex_type*, void>;
 
 public:
   vertexlist_iterator(graph_type& g) : iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
@@ -183,38 +183,36 @@ TAG_INVOKE_DEF(vertexlist); // vertexlist(g)               -> vertices[uid,u]
 
 template <class G>
 concept _has_vertexlist_g_adl = vertex_range<G> && requires(G&& g) {
-                                                     { vertexlist(g) };
-                                                   };
+  { vertexlist(g) };
+};
 
 template <class G, class VVF>
-concept _has_vertexlist_g_fn_adl = vertex_range<G> && requires(G&& g, const VVF& fn) {
-                                                        invocable<VVF, vertex_reference_t<G>>;
-                                                        { vertexlist(g, fn) };
-                                                      };
+concept _has_vertexlist_g_fn_adl =
+      vertex_range<G> && invocable<VVF, vertex_reference_t<G>> && requires(G&& g, const VVF& fn) {
+        { vertexlist(g, fn) };
+      };
 
 template <class G>
 concept _has_vertexlist_i_i_adl = vertex_range<G> && requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi) {
-                                                       { vertexlist(g, ui, vi) };
-                                                     };
+  { vertexlist(g, ui, vi) };
+};
 
 template <class G, class VVF>
-concept _has_vertexlist_i_i_fn_adl =
-      vertex_range<G> && requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi, const VVF& fn) {
-                           invocable<VVF, vertex_reference_t<G>>;
-                           { vertexlist(g, ui, vi, fn) };
-                         };
+concept _has_vertexlist_i_i_fn_adl = vertex_range<G> && invocable<VVF, vertex_reference_t<G>> &&
+                                     requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi, const VVF& fn) {
+                                       { vertexlist(g, ui, vi, fn) };
+                                     };
 
 template <class G, class VR>
 concept _has_vertexlist_vrng_adl =
       vertex_range<G> && ranges::random_access_range<VR> && requires(G&& g, vertex_range_t<G>& vr) {
-                                                              { vertexlist(g, vr) };
-                                                            };
+        { vertexlist(g, vr) };
+      };
 
 template <class G, class VR, class VVF>
 concept _has_vertexlist_vrng_fn_adl =
       vertex_range<G> && ranges::random_access_range<VR> && convertible_to<ranges::range_value_t<VR>, vertex_t<G>> &&
-      requires(G&& g, VR&& vr, const VVF& fn) {
-        invocable<VVF, vertex_reference_t<G>>;
+      invocable<VVF, vertex_reference_t<G>> && requires(G&& g, VR&& vr, const VVF& fn) {
         { vertexlist(g, vr, fn) };
       };
 
@@ -230,7 +228,7 @@ constexpr auto vertexlist(G&& g) {
   if constexpr (std::graph::tag_invoke::_has_vertexlist_g_adl<G>)
     return std::graph::tag_invoke::vertexlist(forward<G>(g));
   else
-    return vertexlist_view<G>(vertices(forward<G>(g)));
+    return vertexlist_view<G>(vertices(std::forward<G>(g)));
 }
 
 template <adjacency_list G, class VVF>

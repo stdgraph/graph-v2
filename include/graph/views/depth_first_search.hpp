@@ -23,8 +23,8 @@
 //  dfs.cancel(cancel_search::cancel_all) will stop searching and the iterator will be at the end()
 //
 
-#include "../graph.hpp"
-#include "graph/views/views_utility.hpp"
+#include "graph/graph.hpp"
+#include "graph/graph_utility.hpp"
 #include <stack>
 #include <vector>
 #include <functional>
@@ -34,19 +34,22 @@
 
 namespace std::graph {
 
-/// <summary>
-/// The element in a depth-first search stack.
-/// </summary>
+/**
+ * @brief The element in a depth-first search stack.
+*/
 template <adjacency_list G>
 struct dfs_element {
   vertex_id_t<G>            u_id;
   vertex_edge_iterator_t<G> uv;
 };
 
-//---------------------------------------------------------------------------------------
-/// depth-first search view for vertices, given a single seed vertex.
-///
-
+/**
+ * @brief Depth-first search view for vertices, given a single seed vertex.
+ * 
+ * @tparam G     Graph type
+ * @tparam Stack Stack type for internal use
+ * @tparam Alloc Allocator type
+*/
 template <adjacency_list G, class Stack, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class dfs_base : public ranges::view_base {
@@ -184,10 +187,14 @@ protected:
 };
 
 
-//---------------------------------------------------------------------------------------
-/// depth-first search range for vertices, given a single seed vertex.
-///
-
+/**
+ * @brief Depth-first search range for vertices, given a single seed vertex.
+ * 
+ * @tparam G     Graph type
+ * @tparam VVF   Vertex Value Function type
+ * @tparam Stack Stack type for internal use
+ * @tparam Alloc Allocator type
+*/
 template <adjacency_list G, class VVF = void, class Stack = stack<dfs_element<G>>, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertices_depth_first_search_view : public dfs_base<G, Stack, Alloc> {
@@ -225,7 +232,7 @@ public:
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = vertex_view<const vertex_id_type, vertex_type&, vertex_value_type>;
+    using value_type        = vertex_descriptor<const vertex_id_type, vertex_type&, vertex_value_type>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -239,7 +246,7 @@ public:
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_vertex_type = remove_reference_t<vertex_reference>;
     using shadow_value_type =
-          vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+          vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
   public:
     iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
@@ -322,7 +329,7 @@ public:
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = vertex_view<const vertex_id_type, vertex_type&, void>;
+    using value_type        = vertex_descriptor<const vertex_id_type, vertex_type&, void>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -335,7 +342,7 @@ public:
     // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_vertex_type = remove_reference_t<vertex_reference>;
-    using shadow_value_type  = vertex_view<vertex_id_t<graph_type>, shadow_vertex_type*, void>;
+    using shadow_value_type  = vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, void>;
 
   public:
     iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
@@ -384,9 +391,15 @@ public:
 };
 
 
-//---------------------------------------------------------------------------------------
-/// depth-first search view for edges, given a single seed vertex.
-///
+/**
+ * @brief Depth-first search view for edges, given a single seed vertex.
+ * 
+ * @tparam G       Graph type
+ * @tparam EVF     Edge Value Function type
+ * @tparam Sourced Does graph G support @c source_id()?
+ * @tparam Stack   Stack type for use internally
+ * @tparam Alloc   Allocator type
+*/
 template <adjacency_list G,
           class EVF    = void,
           bool Sourced = false,
@@ -422,7 +435,7 @@ public:
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = edge_view<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
+    using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -436,7 +449,7 @@ public:
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_edge_type = remove_reference_t<edge_reference_type>;
     using shadow_value_type =
-          edge_view<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+          edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
   public:
     iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
@@ -516,7 +529,7 @@ public:
   class iterator {
   public:
     using iterator_category = input_iterator_tag;
-    using value_type        = edge_view<const vertex_id_type, Sourced, edge_reference_type, void>;
+    using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, void>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -529,7 +542,7 @@ public:
     // avoid difficulty in undefined vertex reference value in value_type
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-    using shadow_value_type = edge_view<vertex_id_type, Sourced, shadow_edge_type*, void>;
+    using shadow_value_type = edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, void>;
 
   public:
     iterator(const dfs_range_type& range) : the_range_(&const_cast<dfs_range_type&>(range)) {}
@@ -586,12 +599,12 @@ TAG_INVOKE_DEF(vertices_depth_first_search); // vertices_depth_first_search(g,se
 
 template <class G, class A>
 concept _has_vtx_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-                                                { vertices_depth_first_search(g, seed, alloc) };
-                                              };
+  { vertices_depth_first_search(g, seed, alloc) };
+};
 template <class G, class VVF, class A>
 concept _has_vtx_dfs_vvf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const VVF& vvf, const A& alloc) {
-                                                    { vertices_depth_first_search(g, seed, vvf, alloc) };
-                                                  };
+  { vertices_depth_first_search(g, seed, vvf, alloc) };
+};
 
 // edges_depth_first_search CPO
 //  sourced_edges_depth_first_search
@@ -602,22 +615,22 @@ TAG_INVOKE_DEF(sourced_edges_depth_first_search); // sourced_edges_depth_first_s
 
 template <class G, class A>
 concept _has_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-                                                { edges_depth_first_search(g, seed, alloc) };
-                                              };
+  { edges_depth_first_search(g, seed, alloc) };
+};
 template <class G, class EVF, class A>
 concept _has_edg_dfs_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
-                                                    { edges_depth_first_search(g, seed, evf, alloc) };
-                                                  };
+  { edges_depth_first_search(g, seed, evf, alloc) };
+};
 
 template <class G, class A>
 concept _has_src_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-                                                    { sourced_edges_depth_first_search(g, seed, alloc) };
-                                                  };
+  { sourced_edges_depth_first_search(g, seed, alloc) };
+};
 template <class G, class EVF, class A>
 concept _has_src_edg_dfs_evf_adl =
       vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
-                           { sourced_edges_depth_first_search(g, seed, evf, alloc) };
-                         };
+        { sourced_edges_depth_first_search(g, seed, evf, alloc) };
+      };
 } // namespace std::graph::tag_invoke
 
 

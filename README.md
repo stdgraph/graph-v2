@@ -1,5 +1,5 @@
 # Graph Library Proposal for the C++ Standard
-[![MacOS](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml) [![Ubuntu](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml) [![Windows](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml) [![Documentation](https://github.com/stdgraph/graph-v2/actions/workflows/pages.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/pages.yml)
+[![codecov](https://codecov.io/github/stdgraph/graph-v2/branch/master/graph/badge.svg?token=49LGWDN0U1)](https://codecov.io/github/stdgraph/graph-v2) [![MacOS](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml) [![Ubuntu](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml) [![Windows](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml) [![Documentation](https://github.com/stdgraph/graph-v2/actions/workflows/pages.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/pages.yml)
 
 > This library is in the alpha stage that may include significant changes to the interface. It is not recommended for general use.
 
@@ -10,7 +10,7 @@ to provide easy integration with external adjacency list graphs.
 
 - bi-partite and n-partite graphs are under investigation.
 - Hyper-graphs are outside the scope of this project.
-- Comments and questions are welcome and can be directed to phil.ratzloff@sas.com.
+- Comments and questions are welcome and can be directed to GitHub [discussions](https://github.com/stdgraph/graph-v2/discussions) or [issues](https://github.com/stdgraph/graph-v2/issues).
 
 ### Purpose
 This prototype library is an implementation of the proposed Graph Library for ISO Standard C++ as described in P1709. 

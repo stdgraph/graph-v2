@@ -38,8 +38,8 @@ struct city_id {
 
   template <typename OS>
   friend OS& operator<<(OS& os, const city_id& rhs) {
-    auto&& [g, id] = rhs;
-    os << vertex_value(g, *find_vertex(g, id)) << " [" << id << "]";
+    auto&& [_g, _id] = rhs;
+    os << vertex_value(_g, *find_vertex(_g, _id)) << " [" << _id << "]";
     return os;
   }
 };
@@ -56,8 +56,8 @@ struct city {
 
   template <typename OS>
   friend OS& operator<<(OS& os, const city& rhs) {
-    auto&& [g, id] = rhs;
-    os << vertex_value(g, *find_vertex(g, id));
+    auto&& [_g, _id] = rhs;
+    os << vertex_value(_g, *find_vertex(_g, _id));
     return os;
   }
 };
@@ -75,22 +75,22 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
   // edge data (edgelist)
   using route_data                  = copyable_edge_t<city_id_type, double>; // {source_id, target_id, value}
   vector<route_data> routes_doubled = {
-        {0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, //
-        {1, 0, 85.0},  {1, 2, 80.0},                 //
-        {2, 1, 80.0},  {2, 3, 250.0},                //
-        {3, 2, 250.0}, {3, 8, 84.0},                 //
-        {4, 0, 217.0}, {4, 5, 103.0}, {4, 7, 186.0}, //
-        {5, 4, 103.0}, {5, 8, 167.0}, {5, 9, 183.0}, //
-        {6, 0, 173.0}, {6, 8, 502.0},                //
-        {7, 4, 186.0},                               //
-        {8, 3, 84.0},  {8, 5, 167.0}, {8, 6, 502.0}, //
+        {0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0},                         //
+        {1, 0, 85.0},  {1, 2, 80.0},                                         //
+        {2, 1, 80.0},  {2, 3, 250.0},                                        //
+        {3, 2, 250.0}, {3, 8, 84.0},                                         //
+        {4, 0, 217.0}, {4, 5, 103.0}, {4, 7, 186.0},                         //
+        {5, 4, 103.0}, {5, 8, 167.0}, {5, 9, 183.0},                         //
+        {6, 0, 173.0}, {6, 8, 502.0},                                        //
+        {7, 4, 186.0},                                                       //
+        {8, 3, 84.0},  {8, 5, 167.0}, {8, 6, 502.0},                         //
         {9, 5, 183.0},
   };
 
   // Graph definition
-  struct route { // edge
+  struct route {                                        // edge
     city_id_type target_id = 0;
-    double       distance  = 0.0; // km
+    double       distance  = 0.0;                       // km
   };
   using AdjList = vector<list<route>>;                  // range of ranges
   using G       = rr_adaptor<AdjList, city_names_type>; // graph
@@ -113,42 +113,42 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
   // Shortest Paths (segments)
   {
     auto                        weight_1 = [](edge_reference_t<G> uv) -> int { return 1; };
-    std::vector<int>            distance(size(vertices(g)));
+    std::vector<int>            distances(size(vertices(g)));
     std::vector<vertex_id_t<G>> predecessor(size(vertices(g)));
-    dijkstra_clrs(g, frankfurt_id, distance, predecessor, weight_1);
+    dijkstra_clrs(g, frankfurt_id, distances, predecessor, weight_1);
 
     cout << "Shortest distance (segments) from " << city_id(g, frankfurt_id) << endl;
     for (vertex_id_t<G> uid = 0; uid < size(vertices(g)); ++uid)
-      if (distance[uid] > 0)
-        cout << "  --> " << city_id(g, uid) << " - " << distance[uid] << " segments" << endl;
+      if (distances[uid] > 0)
+        cout << "  --> " << city_id(g, uid) << " - " << distances[uid] << " segments" << endl;
   }
 
   // Shortest Paths (km)
   {
     auto                        weight = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); }; // { return 1; };
-    std::vector<double>         distance(size(vertices(g)));
+    std::vector<double>         distances(size(vertices(g)));
     std::vector<vertex_id_t<G>> predecessor(size(vertices(g)));
-    dijkstra_clrs(g, frankfurt_id, distance, predecessor, weight);
+    dijkstra_clrs(g, frankfurt_id, distances, predecessor, weight);
 
     cout << "Shortest distance (km) from " << vertex_value(g, frankfurt) << endl;
     for (vertex_id_t<G> uid = 0; uid < size(vertices(g)); ++uid) {
-      if (distance[uid] > 0)
-        cout << "  --> " << city_id(g, uid) << " - " << distance[uid] << "km" << endl;
+      if (distances[uid] > 0)
+        cout << "  --> " << city_id(g, uid) << " - " << distances[uid] << "km" << endl;
     }
 
     // Find farthest city
     vertex_id_t<G> farthest_id   = frankfurt_id;
     double         farthest_dist = 0.0;
     for (vertex_id_t<G> uid = 0; uid < size(vertices(g)); ++uid) {
-      if (distance[uid] > farthest_dist) {
-        farthest_dist = distance[uid];
+      if (distances[uid] > farthest_dist) {
+        farthest_dist = distances[uid];
         farthest_id   = uid;
       }
     }
 
     // Output path for farthest distance
     cout << "The farthest city from " << city(g, frankfurt_id) << " is " << city(g, farthest_id) << " at "
-         << distance[farthest_id] << "km" << endl;
+         << distances[farthest_id] << "km" << endl;
     cout << "The shortest path from " << city(g, farthest_id) << " to " << city(g, frankfurt_id) << " is: " << endl
          << "  ";
     for (vertex_id_t<G> uid = farthest_id; uid != frankfurt_id; uid = predecessor[uid]) {

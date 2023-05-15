@@ -13,10 +13,15 @@ struct reaches {
   vertex_id_t<G> to;
 };
 
-/// Transitive closure returns all vertices that can be reached from a source vertex,
-/// for all source vertices. This algorithm specializes on a dense graph using
-/// Warshall's algorithm. Complexity is O(n^3).
-//
+/**
+ * @ingroup graph_algorithms
+ * @brief Warshall's Transitive Closure algorithm to find all reachable vertices from
+ *        source vertices.
+ * 
+ * Transitive closure returns all vertices that can be reached from a source vertex,
+ * for all source vertices. This algorithm specializes on a dense graph using
+ * Warshall's algorithm. Complexity is O(n^3).
+ */
 // clang-format off
 template <adjacency_list G, typename OutIter, typename Alloc = allocator<bool>>
   requires ranges::random_access_range<vertex_range_t<G>> && 

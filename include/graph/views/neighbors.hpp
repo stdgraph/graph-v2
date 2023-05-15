@@ -1,9 +1,9 @@
 #pragma once
 #include "graph/graph.hpp"
-#include "views_utility.hpp"
+#include "graph/graph_utility.hpp"
 
 //
-// neighbors(g,u) -> neighbor_view<VId,false,E,EV> -> {target_id, vertex& [,value]}
+// neighbors(g,u) -> neighbor_descriptor<VId,false,E,EV> -> {target_id, vertex& [,value]}
 //
 // given:    auto vvf = [&g](vertex_reference_t<G> v) { return vertex_value(g,v); }
 //
@@ -20,11 +20,12 @@ template <adjacency_list G, bool Sourced = false, class VVF = void>
 class neighbor_iterator;
 
 
-/// <summary>
-/// Iterator for an neighbors range of edges for a vertex.
-/// </summary>
-/// <typeparam name="G">Graph type</typeparam>
-/// <typeparam name="VVF">Edge Value Function</typeparam>
+/**
+ * @brief Iterator for an neighbors range of edges for a vertex.
+ *
+ * @tparam G    Graph type
+ * @tparam VVF  Edge Value Function type
+*/
 template <adjacency_list G, bool Sourced, class VVF>
 class neighbor_iterator
       : public source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
@@ -43,13 +44,13 @@ public:
   using edge_type     = edge_t<graph_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = neighbor_view<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
-  using difference_type   = ranges::range_difference_t<edge_range>;
-  using pointer           = value_type*;
-  using const_pointer     = const value_type*;
-  using reference         = value_type&;
-  using const_reference   = const value_type&;
-  using rvalue_reference  = value_type&&;
+  using value_type       = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
+  using difference_type  = ranges::range_difference_t<edge_range>;
+  using pointer          = value_type*;
+  using const_pointer    = const value_type*;
+  using reference        = value_type&;
+  using const_reference  = const value_type&;
+  using rvalue_reference = value_type&&;
 
 public:
   neighbor_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter, const VVF& value_fn)
@@ -70,7 +71,7 @@ protected:
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type =
-        neighbor_view<vertex_id_type, Sourced, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+        neighbor_descriptor<vertex_id_type, Sourced, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
 public:
   constexpr reference operator*() const {
@@ -146,19 +147,19 @@ public:
   using edge_type     = edge_t<graph_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = neighbor_view<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
-  using difference_type   = ranges::range_difference_t<edge_range>;
-  using pointer           = value_type*;
-  using const_pointer     = const value_type*;
-  using reference         = value_type&;
-  using const_reference   = const value_type&;
-  using rvalue_reference  = value_type&&;
+  using value_type       = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
+  using difference_type  = ranges::range_difference_t<edge_range>;
+  using pointer          = value_type*;
+  using const_pointer    = const value_type*;
+  using reference        = value_type&;
+  using const_reference  = const value_type&;
+  using rvalue_reference = value_type&&;
 
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
-  using shadow_value_type  = neighbor_view<vertex_id_type, Sourced, shadow_vertex_type*, vertex_value_type>;
+  using shadow_value_type  = neighbor_descriptor<vertex_id_type, Sourced, shadow_vertex_type*, vertex_value_type>;
 
 public:
   neighbor_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter)
@@ -238,12 +239,12 @@ TAG_INVOKE_DEF(neighbors); // neighbors(g,uid)            -> edges[vid,uv]
 
 template <class G>
 concept _has_neighbors_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-                                                        { neighbors(g, uid) };
-                                                      };
+  { neighbors(g, uid) };
+};
 template <class G, class VVF>
 concept _has_neighbors_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-                                                            { neighbors(g, uid, vvf) };
-                                                          };
+  { neighbors(g, uid, vvf) };
+};
 } // namespace std::graph::tag_invoke
 
 namespace std::graph::views {

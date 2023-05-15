@@ -2,7 +2,7 @@
 #include "graph/graph.hpp"
 
 //
-// edgelist(g,u) -> edge_view<VId,true,E,EV> -> {source_id, target_id, edge& [,value]}
+// edgelist(g,u) -> edge_descriptor<VId,true,E,EV> -> {source_id, target_id, edge& [,value]}
 //
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(uv); }
 //
@@ -27,14 +27,15 @@ class edgelist_iterator_base {
   using edge_iterator   = vertex_edge_iterator_t<G>;
 
 protected:
-  /// <summary>
-  /// If the current vertex is non-empty then uvi is set to begin(edges(g,*ui)).
-  /// Otherwise, skip past vertices until we find one with edges, and set uvi to the first edge.
-  /// If no vertices with edges are found, ui = end(vertices(g)).
-  /// </summary>
-  /// <param name="g">graph</param>
-  /// <param name="ui">Current vertex</param>
-  /// <param name="uvi">Current edge</param>
+  /**
+   * If the current vertex is non-empty then uvi is set to begin(edges(g,*ui)).
+   * Otherwise, skip past vertices until we find one with edges, and set uvi to the first edge.
+   * If no vertices with edges are found, ui = end(vertices(g)).
+   *
+   * @param g   Graph instance
+   * @param ui  Current vertex
+   * @param uvi Current edge
+  */
   constexpr void find_non_empty_vertex(G& g, vertex_iterator& ui, edge_iterator& uvi) noexcept {
     for (; ui != ranges::end(vertices(g)); ++ui) {
       if (!ranges::empty(edges(g, *ui))) {
@@ -44,13 +45,15 @@ protected:
     }
   }
 
-  /// <summary>
-  /// Find the next edge. Assumes current vertex & edge iterators point to valid
-  /// objects.
-  /// </summary>
-  /// <param name="g">Graph</param>
-  /// <param name="ui">Current vertex</param>
-  /// <param name="uvi">Current edge</param>
+  /**
+   * @brief Find the next edge. 
+   *
+   * Assumes current vertex & edge iterators point to valid objects.
+   * 
+   * @param g   Graph instance
+   * @param ui  Current vertex
+   * @param uvi Current edge
+  */
   constexpr void find_next_edge(G& g, vertex_iterator& ui, edge_iterator& uvi) noexcept {
     assert(ui != ranges::end(vertices(g)));
     assert(uvi != ranges::end(edges(g, *ui)));
@@ -62,11 +65,12 @@ protected:
 };
 
 
-/// <summary>
-/// Iterator for an edgelist range of edges for a vertex.
-/// </summary>
-/// <typeparam name="G">Graph type</typeparam>
-/// <typeparam name="EVF">Edge Value Function</typeparam>
+/**
+ * @brief Iterator for an edgelist range of edges for a vertex.
+ *
+ * @tparam G    Graph type
+ * @tparam EVF  Edge Value Function type
+*/
 template <adjacency_list G, class EVF>
 class edgelist_iterator : public edgelist_iterator_base<G> {
 public:
@@ -84,7 +88,7 @@ public:
   using edge_value_type     = invoke_result_t<EVF, edge_reference_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_view<const vertex_id_type, true, edge_reference_type, edge_value_type>;
+  using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -110,8 +114,9 @@ public:
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
-  using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-  using shadow_value_type = edge_view<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+  using shadow_edge_type = remove_reference_t<edge_reference_type>;
+  using shadow_value_type =
+        edge_descriptor<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
 public:
   constexpr reference operator*() const {
@@ -172,7 +177,7 @@ public:
   using edge_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_view<const vertex_id_type, true, edge_reference_type, edge_value_type>;
+  using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
   using difference_type   = ranges::range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -184,7 +189,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-  using shadow_value_type = edge_view<vertex_id_type, true, shadow_edge_type*, edge_value_type>;
+  using shadow_value_type = edge_descriptor<vertex_id_type, true, shadow_edge_type*, edge_value_type>;
 
 public:
   edgelist_iterator(graph_type& g, vertex_iterator ui) : base_type(), g_(g), ui_(ui), uvi_() {
@@ -252,21 +257,21 @@ namespace tag_invoke {
 
   template <class G>
   concept _has_edgelist_g_adl = adjacency_list<G> && requires(G&& g) {
-                                                       { edgelist(g) };
-                                                     };
+    { edgelist(g) };
+  };
   template <class G>
   concept _has_edgelist_g_uid_adl = adjacency_list<G> && requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-                                                           { edgelist(g, uid, vid) };
-                                                         };
+    { edgelist(g, uid, vid) };
+  };
   template <class G, class EVF>
   concept _has_edgelist_g_evf_adl = adjacency_list<G> && requires(G&& g, const EVF& evf) {
-                                                           { edgelist(g, evf) };
-                                                         };
+    { edgelist(g, evf) };
+  };
   template <class G, class EVF>
   concept _has_edgelist_g_uid_evf_adl =
         adjacency_list<G> && requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, const EVF& evf) {
-                               { edgelist(g, uid, vid, evf) };
-                             };
+          { edgelist(g, uid, vid, evf) };
+        };
 
 } // namespace tag_invoke
 

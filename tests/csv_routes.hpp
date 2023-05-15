@@ -6,7 +6,7 @@
 #  pragma warning(disable : 4458) // declaration of 'value' hides class member
 #  pragma warning(disable : 4244) // conversion from 'double' to 'unsigned __int64', possible loss of data
 #  pragma warning(                                                                                                     \
-        disable : 4996) // 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+              disable : 4996) // 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
 #else
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -41,15 +41,19 @@
 
 void init_console(); // init cout for UTF-8
 
-/// <summary>
-/// Scans 2 columns in a CSV file and returns all the unique values in an ordered vector.
-/// This is used to get all the unique labels for vertices.
-/// </summary>
-/// <typeparam name="ColNumOrName">A name or integer for a column in the CSV file</typeparam>
-/// <param name="csv_file">The CSV file name (path)</param>
-/// <param name="col1">The first column to get labels from. If the column doesn't exist the function is undefined.</param>
-/// <param name="col2">The second column to get labels from. If the column doesn't exist the function is undefined.</param>
-/// <returns></returns>
+/**
+ * @brief Scans 2 columns in a CSV file and returns all the unique values in an ordered vector.
+ * 
+ * This is used to get all the unique labels for vertices.
+ *
+ * @tparam ColNumOrName A name or integer for a column in the CSV file
+ * 
+ * @param csv_file  The CSV file name (path)
+ * @param col1      The first column to get labels from. If the column doesn't exist the function is undefined.
+ * @param col2      The second column to get labels from. If the column doesn't exist the function is undefined.
+ * 
+ * @return @c pair<vector<string>,size_t> as unique labels, number of rows read
+*/
 template <typename ColNumOrName>
 auto unique_vertex_labels(csv::string_view csv_file, ColNumOrName col1, ColNumOrName col2) {
   csv::CSVReader reader(csv_file); // CSV file reader
@@ -83,25 +87,29 @@ enum struct name_order_policy : int8_t {
   alphabetical        // id assigned after all ids found, in name order
 };
 
-/// <summary>
-/// Scans 2 columns in a CSV file and returns a map<string_view,size>, where the string_view is a
-/// unique label in occurring in either column and size_t is it's unique id.
-/// </summary>
-/// <typeparam name="ColNumOrName">Column name or column number to specify the column in the CSV file</typeparam>
-/// <param name="csv_file">CSV filename</param>
-/// <param name="col1">First column to use</param>
-/// <param name="col2">Second column to use</param>
-/// <param name="order_policy">For order_policy=order_found, the label id is assigned to the row it was
-/// first encountered in the first column. Labels that only occur in the second column will be assigned
-/// a id that follows the other ids in the first column. For order_policy=alphabetical, the id will be
-/// assigned based on the alphabetical ordering of the labels.</param>
-/// <returns></returns>
+/**
+ * @brief Scans 2 columns in a CSV file and returns a @c map<string_view,size>, where the @c string_view is a
+ *        unique label in occurring in either column and @c size_t is it's unique id.
+ *
+ * @tparam ColNumOrName Column name or column number to specify the column in the CSV file
+ * 
+ * @param csv_file      CSV filename
+ * @param col1          First column to use
+ * @param col2          Second column to use
+ * @param order_policy  For @c order_policy=order_found, the label id is assigned to the row it was first 
+ *                      encountered in the first column. Labels that only occur in the second column will 
+ *                      be assigned a id that follows the other ids in the first column. For 
+ *                      @c order_policy=alphabetical, the id will be assigned based on the alphabetical 
+ *                      ordering of the labels.
+ *
+ * @return @c pair<vector<string>,size_t> as unique labels, number of rows read
+*/
 template <typename ColNumOrName, typename VId = uint32_t>
 auto unique_vertex_labels2(csv::string_view        csv_file,
                            ColNumOrName            col1,
                            ColNumOrName            col2,
                            const name_order_policy order_policy) {
-  csv::CSVReader reader(csv_file); // CSV file reader
+  csv::CSVReader reader(csv_file);                 // CSV file reader
 
   using label_id_map = std::map<std::string, VId>; // label, vertex id
   label_id_map lbls;
@@ -136,15 +144,18 @@ auto unique_vertex_labels2(csv::string_view        csv_file,
 
 
 #ifdef FUTURE
-/// <summary>
-/// Gets the maximum value of two columns in a CSV file with integral values.
-/// </summary>
-/// <typeparam name="T">The integer type that is used to hold the maximum value found</typeparam>
-/// <typeparam name="ColNumOrName">A name or integer for a column in the CSV file</typeparam>
-/// <param name="csv_file">The CSV file name (path)</param>
-/// <param name="col1">The first column to get labels from. If the column doesn't exist the function is undefined</param>
-/// <param name="col2">The second column to get labels from. If the column doesn't exist the function is undefined</param>
-/// <returns></returns>
+/**
+ * @brief Gets the maximum value of two columns in a CSV file with integral values.
+ *
+ * @tparam T            The integer type that is used to hold the maximum value found
+ * @tparam ColNumOrName A name or integer for a column in the CSV file
+ * 
+ * @param csv_file  The CSV file name (path)
+ * @param col1      The first column to get labels from. If the column doesn't exist the function is undefined
+ * @param col2      The second column to get labels from. If the column doesn't exist the function is undefined
+ * 
+ * @return pair<T, size_t> as max_id, number of rows read
+*/
 template <std::integral T, typename ColNumOrName>
 auto max_vertex_id(csv::string_view csv_file, ColNumOrName col1, ColNumOrName col2) {
   csv::CSVReader reader(csv_file); // CSV file reader
@@ -154,7 +165,7 @@ auto max_vertex_id(csv::string_view csv_file, ColNumOrName col1, ColNumOrName co
 
   return std::pair(max_id, reader.n_rows()); // return (max_id, num rows read)
 }
-#endif // FUTURE
+#endif                                       // FUTURE
 
 
 template <typename G>
@@ -191,16 +202,20 @@ std::graph::vertex_id_t<G> find_city_id(G&& g, std::string_view city_name) {
                                                  begin(std::graph::vertices(g))); // == size(vertices(g)) if not found
 }
 
-/// <summary>
-/// Loads graph such that the vertices are ordered in the same order as the source_id on the edges.
-/// The value of the source_id is not significant. Edges must be ordered by their source_id.
-///
-/// Uses 2 passes the the CSV file. The first is to get the set of unique vertex ids and to create
-/// the vertices. The second pass is used to create the edges.
-/// </summary>
-/// <typeparam name="G"></typeparam>
-/// <param name="csv_file"></param>
-/// <returns></returns>
+/**
+ * @brief Loads graph such that the vertices are ordered in the same order as the source_id on the edges.
+ * 
+ * The value of the source_id is not significant. Edges must be ordered by their source_id.
+ *
+ * Uses 2 passes the the CSV file. The first is to get the set of unique vertex ids and to create
+ * the vertices. The second pass is used to create the edges.
+ *
+ * @tparam G Graph type
+ * 
+ * @param csv_file CSV filename
+ * 
+ * @return A new graph of type G with vertices and edges defined by @c csv_file.
+*/
 template <typename G>
 auto load_graph(csv::string_view csv_file) {
   using namespace std::graph;
@@ -217,7 +232,8 @@ auto load_graph(csv::string_view csv_file) {
   graph_type g;
 
   // Load vertices
-  auto city_id_getter = [&city_names](const city_id_map& name_id) {
+  auto&& cnames         = city_names; // Clang-15 not finding city_names for following capture
+  auto   city_id_getter = [&cnames](const city_id_map& name_id) {
     using copyable_id_name = std::graph::copyable_vertex_t<vertex_id_type, std::string>;
     return copyable_id_name{name_id.second,
                             name_id.first}; // {id,name} don't move name b/c we need to keep it in the map
@@ -241,21 +257,29 @@ auto load_graph(csv::string_view csv_file) {
   return g;
 }
 
-/// <summary>
-/// Loads a graph such that the vertices are ordered alphabetically by their label so that find_city()
-/// can use std::lower_bound. Edges are shown in the same order as they appear in the CSV, relative
-/// to the source city.
-///
-/// Requires a single pass throught the CSV file to build both a map of unique labels --> vertex_id,
-/// and a "copy" of the rows. The rows have iterators to the unique labels for source and target ids
-/// plus a copy of the values stored.
-///
-/// The resulting graph should give the order as load_graph(csv_file) for vertices but edges may be
-/// ordered differently.
-/// </summary>
-/// <typeparam name="G"></typeparam>
-/// <param name="csv_file"></param>
-/// <returns></returns>
+/**
+ * @brief Loads a graph such that the vertices are ordered alphabetically by their label so that 
+ *        @c find_city() can use @c std::lower_bound(). 
+ *
+ * Edges are shown in the same order as they appear in the CSV, relative to the source city.
+ *
+ * Requires a single pass throught the CSV file to build both a map of unique labels --> vertex_id,
+ * and a "copy" of the rows. The rows have iterators to the unique labels for source and target ids
+ * plus a copy of the values stored.
+ *
+ * The resulting graph should give the order as @c load_graph(csv_file) for vertices but edges may be
+ * ordered differently.
+ * 
+ * @tparam G Graph type
+ * 
+ * @param csv_file              CSV filename
+ * @param order_policy          How should id's be defined? When a vertex name is first encountered or 
+ *                              overall alphabetical order?
+ * @param add_reversed_src_tgt  Should an edge be duplicated with its source_id and target_id reversed?
+ *                              Useful to represent unordered graphs.
+ * 
+ * @return A new graph of type G with vertices and edges defined by @c csv_file.
+*/
 template <typename G>
 auto load_ordered_graph(csv::string_view        csv_file,
                         const name_order_policy order_policy         = name_order_policy::alphabetical,
@@ -345,7 +369,7 @@ auto load_ordered_graph(csv::string_view        csv_file,
   g.load_vertices(ordered_cities, city_name_getter);
 
   // load edges
-  auto eproj = [&g](csv_row_type& row) {
+  auto eproj = [](csv_row_type& row) {
     using graph_copyable_edge_type = copyable_edge_t<vertex_id_type, edge_value_type>;
     graph_copyable_edge_type retval{static_cast<vertex_id_type>(row.source_id->second),
                                     static_cast<vertex_id_type>(row.target_id->second), row.value};
@@ -451,17 +475,19 @@ OS& operator<<(OS& os, const ostream_indenter& indent) {
 }
 
 
-/// <summary>
-/// Outputs a graphviz file for the routes graph passed.
-///
-/// Example command line to generate image files for file "routes.gv"
-/// dot -Tpdf -O routes.gv
-/// dot -Tpng -O routes.gv
-/// neato -Tpng -O routes.gv
-/// </summary>
-/// <typeparam name="G">Graph type</typeparam>
-/// <param name="g">Grape instance</param>
-/// <param name="filename">Graphviz filename to output</param>
+/**
+ * @brief Outputs a graphviz file for the routes graph passed.
+ *
+ * Example command line to generate image files for file "routes.gv"
+ * dot -Tpdf -O routes.gv
+ * dot -Tpng -O routes.gv
+ * neato -Tpng -O routes.gv
+ *
+ * @tparam G Graph type
+ * 
+ * @param g     Graph instance
+ * @filename    Filename to write to. If the file already exists it will be overwritten.
+*/
 template <class G>
 void output_routes_graphviz(
       const G&           g,
@@ -591,12 +617,14 @@ void output_routes_graphviz_dfs_vertices(
 }
 
 
-/// <summary>
-/// Generates code that can be used for unit tests to validate graph contents haven't changed.
-/// </summary>
-/// <typeparam name="G">Graph type</typeparam>
-/// <param name="g">Graph instance</param>
-/// <param name="name">Descriptive name of the graph</param>
+/**
+ * @brief Generates code that can be used for unit tests to validate graph contents haven't changed.
+ * 
+ * @tparam G Graph type
+ * 
+ * @param g     Graph instance
+ * @param name  Descriptive name of the graph
+*/
 template <class G>
 void generate_routes_tests(const G& g, std::string_view name) {
   using namespace std::graph;

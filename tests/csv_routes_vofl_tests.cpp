@@ -4,8 +4,8 @@
 #include "graph/algorithm/dijkstra_clrs.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/neighbors.hpp"
+//#include "graph/view/edgelist_view.hpp"
 #include "graph/container/dynamic_graph.hpp"
-#include <deque>
 #include <cassert>
 
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
@@ -22,6 +22,7 @@ using std::is_const_v;
 
 using std::graph::vertex_t;
 using std::graph::vertex_id_t;
+using std::graph::vertex_value_t;
 using std::graph::vertex_edge_range_t;
 using std::graph::edge_t;
 using std::graph::edge_reference_t;
@@ -39,25 +40,9 @@ using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
 
-template <typename EV = void, typename VV = void, typename GV = void, bool Sourced = false, typename VId = uint32_t>
-struct dov_graph_traits {
-  using edge_value_type                      = EV;
-  using vertex_value_type                    = VV;
-  using graph_value_type                     = GV;
-  using vertex_id_type                       = VId;
-  constexpr inline const static bool sourced = Sourced;
 
-  using edge_type   = std::graph::container::dynamic_edge<EV, VV, GV, Sourced, VId, dov_graph_traits>;
-  using vertex_type = std::graph::container::dynamic_vertex<EV, VV, GV, Sourced, VId, dov_graph_traits>;
-  using graph_type  = std::graph::container::dynamic_graph<EV, VV, GV, Sourced, VId, dov_graph_traits>;
-
-  using vertices_type = std::deque<vertex_type>;
-  using edges_type    = std::vector<edge_type>;
-};
-
-
-using routes_dov_graph_traits = dov_graph_traits<double, std::string, std::string>;
-using routes_dov_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_dov_graph_traits>;
+using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string, std::string>;
+using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -70,14 +55,15 @@ auto find_frankfurt(G&& g) {
 }
 
 
-TEST_CASE("Germany routes CSV+dov dijkstra_clrs", "[csv][dov][germany][dijkstra][clrs]") {
+TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstra][clrs]") {
   init_console();
-  using G  = routes_dov_graph_type;
+  using G  = routes_volf_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
-  auto frankfurt    = find_frankfurt(g);
-  auto frankfurt_id = find_frankfurt_id(g);
-  auto weight       = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
+  auto frankfurt      = find_frankfurt(g);
+  auto frankfurt_id   = find_frankfurt_id(g);
+  using neighbor_type = edge_reference_t<G>;
+  auto weight         = [&g](neighbor_type uv) { return edge_value(g, uv); };
 
   std::vector<std::graph::vertex_id_t<G>> predecessors(size(g));
 
@@ -88,12 +74,13 @@ TEST_CASE("Germany routes CSV+dov dijkstra_clrs", "[csv][dov][germany][dijkstra]
   std::graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
 }
 
-TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
-  using G = routes_dov_graph_type; // use it because it's easy
+
+TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
+  using G = routes_volf_graph_type; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
-  //using init_edge_value = std::graph::views::copyable_edge_t<routes_dov_graph_traits::vertex_id_type,
-  //                                                           routes_dov_graph_traits::edge_value_type>;
+  //using init_edge_value = std::graph::views::copyable_edge_t<routes_volf_graph_traits::vertex_id_type,
+  //                                                           routes_volf_graph_traits::edge_value_type>;
 
   // Define the graph. It's the same as the germany routes using source_order_found
   G g = {{0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, {1, 2, 80.0},  {2, 3, 250.0}, {3, 8, 84.0},
@@ -140,11 +127,11 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     auto& uval = vertex_value(g, *uit);
     REQUIRE(std::is_same_v<std::string&, decltype(uval)>);
     REQUIRE("Karlsruhe" == uval);
-    auto deg = degree(g, *uit);
-    REQUIRE(1 == deg);
+    //auto deg = degree(g, *uit); // forward_list doesn't have size()
+    //REQUIRE(1 == deg);
 
     auto& uu = edges(g, *uit);
-    REQUIRE(1 == std::ranges::size(uu));
+    //REQUIRE(1 == std::ranges::size(uu)); // forward_list doesn't have size()
     auto& uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g, uv));
     REQUIRE(250.0 == edge_value(g, uv));
@@ -169,11 +156,11 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     auto& uval = vertex_value(g2, *uit);
     REQUIRE(std::is_same_v<const std::string&, decltype(uval)>);
     REQUIRE("Karlsruhe" == uval);
-    auto deg = degree(g2, *uit);
-    REQUIRE(1 == deg);
+    //auto deg = degree(g2, *uit); // forward_list doesn't have size()
+    //REQUIRE(1 == deg);
 
     auto& uu = edges(g2, *uit);
-    REQUIRE(1 == std::ranges::size(uu));
+    //REQUIRE(1 == std::ranges::size(uu)); // forward_list doesn't have size()
     auto& uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g2, uv));
     REQUIRE(250.0 == edge_value(g2, uv));
@@ -187,9 +174,9 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
   }
 };
 
-TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
+TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
   init_console();
-  using G  = routes_dov_graph_type;
+  using G  = routes_volf_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
 
   auto frankfurt    = find_frankfurt(g);
@@ -203,41 +190,30 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
 
   SECTION("metadata") {
     REQUIRE(10 == std::ranges::size(vertices(g)));
-    size_t total_edge_cnt = 0;
-    double total_dist     = 0;
+    size_t edge_cnt   = 0;
+    double total_dist = 0;
     for (auto&& u : vertices(g)) {
-      size_t edge_cnt = 0;
       for (auto&& uv : edges(g, u)) {
         ++edge_cnt; // forward_list doesn't have size()
         total_dist += edge_value(g, uv);
       }
-      total_edge_cnt += edge_cnt;
-#if 0
-      auto&& ee = (edges(g, u));
-      int    x  = 0;
-#else
-      static_assert(std::ranges::sized_range<vertex_edge_range_t<G>>); // begin(r), end(r), size(r)?
-      if constexpr (std::ranges::sized_range<vertex_edge_range_t<G>>) {
-        REQUIRE(edge_cnt == std::graph::degree(g, u));
-      }
-#endif
     }
-    REQUIRE(total_edge_cnt == 11);
+    REQUIRE(edge_cnt == 11);
     REQUIRE(total_dist == 2030.0);
   }
 
   SECTION("content") {
-    std::string_view test_name = "Germany Routes using deque+vector";
+    std::string_view test_name = "Germany Routes using vector+forward_list";
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-    cout << "\n" << test_name << "\n---------------------------------" << endl << routes_graph(g) << endl;
-    int x = 0; // results are identifcal with csv_routes_csr_tests
+    cout << "\n" << test_name << "\n----------------------------------------" << endl << routes_graph(g) << endl;
+    int x = 0; // results have edges in reverse order from other tests because forward_list can only push_front
 
-    //Germany Routes using deque+vector
-    //---------------------------------
+               //Germany Routes using vector+forward_list
+    //----------------------------------------
     //[0 Frankfürt]
-    //  --> [1 Mannheim] 85km
-    //  --> [4 Würzburg] 217km
     //  --> [6 Kassel] 173km
+    //  --> [4 Würzburg] 217km
+    //  --> [1 Mannheim] 85km
     //[1 Mannheim]
     //  --> [2 Karlsruhe] 80km
     //[2 Karlsruhe]
@@ -245,16 +221,17 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     //[3 Augsburg]
     //  --> [8 München] 84km
     //[4 Würzburg]
-    //  --> [5 Nürnberg] 103km
     //  --> [7 Erfurt] 186km
+    //  --> [5 Nürnberg] 103km
     //[5 Nürnberg]
-    //  --> [8 München] 167km
     //  --> [9 Stuttgart] 183km
+    //  --> [8 München] 167km
     //[6 Kassel]
     //  --> [8 München] 502km
     //[7 Erfurt]
     //[8 München]
     //[9 Stuttgart]
+
 #elif TEST_OPTION == TEST_OPTION_GEN
     generate_routes_tests(g, test_name);
     int x = 0;
@@ -267,9 +244,9 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
 
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
-      REQUIRE(1 == target_id(g, *uvi));
-      REQUIRE("Mannheim" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(85 == edge_value(g, *uvi));
+      REQUIRE(6 == target_id(g, *uvi));
+      REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(173 == edge_value(g, *uvi));
       ++uv_cnt;
 
       ++uvi;
@@ -279,9 +256,9 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
       ++uv_cnt;
 
       ++uvi;
-      REQUIRE(6 == target_id(g, *uvi));
-      REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(173 == edge_value(g, *uvi));
+      REQUIRE(1 == target_id(g, *uvi));
+      REQUIRE("Mannheim" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(85 == edge_value(g, *uvi));
       ++uv_cnt;
 
       REQUIRE(3 == uv_cnt);
@@ -331,15 +308,15 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
 
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
-      REQUIRE(5 == target_id(g, *uvi));
-      REQUIRE("N\xc3\xbcrnberg" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(103 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
       REQUIRE(7 == target_id(g, *uvi));
       REQUIRE("Erfurt" == vertex_value(g, target(g, *uvi)));
       REQUIRE(186 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
+      REQUIRE(5 == target_id(g, *uvi));
+      REQUIRE("N\xc3\xbcrnberg" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(103 == edge_value(g, *uvi));
       ++uv_cnt;
 
       REQUIRE(2 == uv_cnt);
@@ -350,15 +327,15 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
 
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
-      REQUIRE(8 == target_id(g, *uvi));
-      REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
-      REQUIRE(167 == edge_value(g, *uvi));
-      ++uv_cnt;
-
-      ++uvi;
       REQUIRE(9 == target_id(g, *uvi));
       REQUIRE("Stuttgart" == vertex_value(g, target(g, *uvi)));
       REQUIRE(183 == edge_value(g, *uvi));
+      ++uv_cnt;
+
+      ++uvi;
+      REQUIRE(8 == target_id(g, *uvi));
+      REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
+      REQUIRE(167 == edge_value(g, *uvi));
       ++uv_cnt;
 
       REQUIRE(2 == uv_cnt);

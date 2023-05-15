@@ -1,5 +1,7 @@
 #pragma once
 
+#include "graph/container/container_utility.hpp"
+
 // references for to_tuple
 // https://www.reddit.com/r/cpp/comments/4yp7fv/c17_structured_bindings_convert_struct_to_a_tuple/
 // https://gist.github.com/utilForever/1a058050b8af3ef46b58bcfa01d5375d
@@ -41,14 +43,14 @@ auto to_tuple(T&& object) noexcept {
 template <class T>
 using to_tuple_t = decltype(to_tuple(std::declval<T>()));
 
-template <class C>
-concept has_push_back = requires(C& container, std::ranges::range_reference_t<C> val) {
-                          { container.push_back(val) };
-                        };
-template <class C>
-concept has_push_front = requires(C& container, std::ranges::range_reference_t<C> val) {
-                           { container.push_front(val) };
-                         };
+//template <class C>
+//concept has_push_back = requires(C& container, std::ranges::range_reference_t<C> val) {
+//                          { container.push_back(val) };
+//                        };
+//template <class C>
+//concept has_push_front = requires(C& container, std::ranges::range_reference_t<C> val) {
+//                           { container.push_front(val) };
+//                         };
 
 template <class Outer>
 concept range_of_ranges =
@@ -79,7 +81,7 @@ public:
   template <std::ranges::forward_range ERng, class EProj = std::identity>
   rr_adaptor(VVR&         vertex_values,       //
              const ERng&  erng,                //
-             const EProj& eproj     = EProj(), // EProj(ERng::value_type&) -> edge_view<VId,true[,val]>
+             const EProj& eproj     = EProj(), // EProj(ERng::value_type&) -> edge_descriptor<VId,true[,val]>
              bool         dup_edges = false)
         : vertex_values_(vertex_values) {
     vertex_id_type max_vid = max_vertex_id(erng, eproj);
@@ -114,9 +116,9 @@ private:
   }
 
   void push(edges_range& edges, const edge_type& val) {
-    if constexpr (has_push_back<edges_range>)
+    if constexpr (std::graph::container::has_push_back<edges_range>)
       edges.push_back(val);
-    else if constexpr (has_push_front<edges_range>)
+    else if constexpr (std::graph::container::has_push_front<edges_range>)
       edges.push_front(val);
   }
 
@@ -210,7 +212,7 @@ struct rr_edge_value_type {
                                 void>; // Doesn't handle tuple<VId,...>
 };
 template <class V>
-using rr_edge_value_type_t = rr_edge_value_type<V>::type;
+using rr_edge_value_type_t = typename rr_edge_value_type<V>::type;
 
 template <class V>
 struct rr_has_vertex_value : public std::integral_constant<bool, (std::tuple_size_v<to_tuple_t<V>> > 1)> {};
@@ -222,7 +224,7 @@ struct rr_vertex_edges_type {
   using type = std::tuple_element_t<0, to_tuple_t<V>>; // type of scaler or first element of pair, tuple, struct, class
 };
 template <class V>
-using rr_vertex_edges_type_t = rr_vertex_edges_type<V>::type;
+using rr_vertex_edges_type_t = typename rr_vertex_edges_type<V>::type;
 
 template <class V>
 struct rr_vertex_value_type {
@@ -231,7 +233,7 @@ struct rr_vertex_value_type {
                                 void>; // Doesn't handle tuple<T,...>
 };
 template <class V>
-using rr_vertex_value_type_t = rr_vertex_value_type<V>::type;
+using rr_vertex_value_type_t = typename rr_vertex_value_type<V>::type;
 
 template <class Outer>
 concept range_of_ranges2 =
@@ -350,9 +352,9 @@ private:
   }
 
   void push(edges_range& edges, const edge_type& val) {
-    if constexpr (has_push_back<edges_range>)
+    if constexpr (std::graph::container::has_push_back<edges_range>)
       edges.push_back(val);
-    else if constexpr (has_push_front<edges_range>)
+    else if constexpr (std::graph::container::has_push_front<edges_range>)
       edges.push_front(val);
   }
 
