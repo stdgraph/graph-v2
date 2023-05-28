@@ -236,7 +236,10 @@ public:
   vertices_breadth_first_search_view& operator=(vertices_breadth_first_search_view&&)      = default;
 
 public:
-  struct end_sentinel {};
+  class iterator;
+  struct end_sentinel {
+    bool operator==(const iterator& rhs) const noexcept { return rhs.the_range_->Q_.empty(); }
+  };
 
   class iterator {
   public:
@@ -293,6 +296,7 @@ public:
   private:
     mutable shadow_value_type value_     = {};
     bfs_range_type*           the_range_ = nullptr;
+    friend end_sentinel;
   };
 
   auto begin() { return iterator(*this); }
@@ -340,7 +344,10 @@ public:
   vertices_breadth_first_search_view& operator=(vertices_breadth_first_search_view&&)      = default;
 
 public:
-  struct end_sentinel {};
+  class iterator;
+  struct end_sentinel {
+    bool operator==(const iterator& rhs) const noexcept { return rhs.the_range_->Q_.empty(); }
+  };
 
   class iterator {
   public:
@@ -391,11 +398,12 @@ public:
     }
 
     bool operator==(const end_sentinel&) const noexcept { return the_range_->Q_.empty(); }
-    bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
+    //bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
     mutable shadow_value_type value_     = {};
     bfs_range_type*           the_range_ = nullptr;
+    friend end_sentinel;
   };
 
   auto begin() { return iterator(*this); }
@@ -450,7 +458,10 @@ public:
   edges_breadth_first_search_view& operator=(const edges_breadth_first_search_view&) = delete;
   edges_breadth_first_search_view& operator=(edges_breadth_first_search_view&&)      = default;
 
-  struct end_sentinel {};
+  class iterator;
+  struct end_sentinel {
+    bool operator==(const iterator& rhs) const noexcept { return rhs.the_range_->Q_.empty(); }
+  };
 
   class iterator {
   public:
@@ -509,6 +520,7 @@ public:
   private:
     mutable shadow_value_type value_     = {};
     bfs_range_type*           the_range_ = nullptr;
+    friend end_sentinel;
   };
 
   auto begin() { return iterator(*this); }
@@ -549,7 +561,10 @@ public:
   edges_breadth_first_search_view& operator=(const edges_breadth_first_search_view&) = delete;
   edges_breadth_first_search_view& operator=(edges_breadth_first_search_view&&)      = default;
 
-  struct end_sentinel {};
+  class iterator;
+  struct end_sentinel {
+    bool operator==(const iterator& rhs) const noexcept { return rhs.the_range_->Q_.empty(); }
+  };
 
   class iterator {
   public:
@@ -606,6 +621,7 @@ public:
   private:
     mutable shadow_value_type value_     = {};
     bfs_range_type*           the_range_ = nullptr;
+    friend end_sentinel;
   };
 
   auto begin() { return iterator(*this); }

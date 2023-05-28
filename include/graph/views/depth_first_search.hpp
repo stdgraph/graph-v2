@@ -227,7 +227,11 @@ public:
   vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&)      = default;
 
 public:
-  struct end_sentinel {};
+  class iterator;
+  struct end_sentinel {
+    constexpr bool operator==(const iterator& rhs) const noexcept { return rhs.the_range_->S_.empty(); }
+    //constexpr bool operator!=(const iterator& rhs) const noexcept { return !operator==(rhs); }
+  };
 
   class iterator {
   public:
@@ -278,11 +282,12 @@ public:
     }
 
     constexpr bool operator==(const end_sentinel&) const noexcept { return the_range_->S_.empty(); }
-    constexpr bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
+    //constexpr bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
     mutable shadow_value_type value_     = {};
     dfs_range_type*           the_range_ = nullptr;
+    friend end_sentinel;
   };
 
   auto begin() { return iterator(*this); }
@@ -324,7 +329,9 @@ public:
   vertices_depth_first_search_view& operator=(vertices_depth_first_search_view&&)      = default;
 
 public:
-  struct end_sentinel {};
+  struct end_sentinel {
+    bool operator==(const end_sentinel& rhs) const noexcept { return rhs.the_range_->S_.empty(); }
+  };
 
   class iterator {
   public:
@@ -374,20 +381,21 @@ public:
     }
 
     bool operator==(const end_sentinel&) const noexcept { return the_range_->S_.empty(); }
-    bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
+    //bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
     mutable shadow_value_type value_     = {};
     dfs_range_type*           the_range_ = nullptr;
+    friend end_sentinel;
   };
 
   auto begin() { return iterator(*this); }
   auto begin() const { return iterator(*this); }
   auto cbegin() const { return iterator(*this); }
 
-  auto end() { return end_sentinel(); }
-  auto end() const { return end_sentinel(); }
-  auto cend() const { return end_sentinel(); }
+  auto end() { return end_sentinel{}; }
+  auto end() const { return end_sentinel{}; }
+  auto cend() const { return end_sentinel{}; }
 };
 
 
@@ -430,7 +438,11 @@ public:
   edges_depth_first_search_view& operator=(const edges_depth_first_search_view&) = delete;
   edges_depth_first_search_view& operator=(edges_depth_first_search_view&&)      = default;
 
-  struct end_sentinel {};
+  class iterator;
+  struct end_sentinel {
+    constexpr bool operator==(const iterator& rhs) const noexcept { return rhs.the_range_->S_.empty(); }
+    //constexpr bool operator!=(const iterator& rhs) const noexcept { return !operator==(rhs); }
+  };
 
   class iterator {
   public:
@@ -483,11 +495,12 @@ public:
     }
 
     bool operator==(const end_sentinel&) const noexcept { return the_range_->S_.empty(); }
-    bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
+    //bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
     mutable shadow_value_type value_     = {};
     dfs_range_type*           the_range_ = nullptr;
+    friend end_sentinel;
   };
 
   auto begin() { return iterator(*this); }
@@ -524,7 +537,11 @@ public:
   edges_depth_first_search_view& operator=(const edges_depth_first_search_view&) = delete;
   edges_depth_first_search_view& operator=(edges_depth_first_search_view&&)      = default;
 
-  struct end_sentinel {};
+  class iterator;
+  struct end_sentinel {
+    bool operator==(const end_sentinel& rhs) const noexcept { return rhs.the_range_->S_.empty(); }
+    //bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
+  };
 
   class iterator {
   public:
@@ -575,11 +592,12 @@ public:
     }
 
     bool operator==(const end_sentinel&) const noexcept { return the_range_->S_.empty(); }
-    bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
+    //bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
     mutable shadow_value_type value_     = {};
     dfs_range_type*           the_range_ = nullptr;
+    friend end_sentinel;
   };
 
   auto begin() { return iterator(*this); }
@@ -599,12 +617,12 @@ TAG_INVOKE_DEF(vertices_depth_first_search); // vertices_depth_first_search(g,se
 
 template <class G, class A>
 concept _has_vtx_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-  { vertices_depth_first_search(g, seed, alloc) };
-};
+                                                { vertices_depth_first_search(g, seed, alloc) };
+                                              };
 template <class G, class VVF, class A>
 concept _has_vtx_dfs_vvf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const VVF& vvf, const A& alloc) {
-  { vertices_depth_first_search(g, seed, vvf, alloc) };
-};
+                                                    { vertices_depth_first_search(g, seed, vvf, alloc) };
+                                                  };
 
 // edges_depth_first_search CPO
 //  sourced_edges_depth_first_search
@@ -615,22 +633,22 @@ TAG_INVOKE_DEF(sourced_edges_depth_first_search); // sourced_edges_depth_first_s
 
 template <class G, class A>
 concept _has_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-  { edges_depth_first_search(g, seed, alloc) };
-};
+                                                { edges_depth_first_search(g, seed, alloc) };
+                                              };
 template <class G, class EVF, class A>
 concept _has_edg_dfs_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
-  { edges_depth_first_search(g, seed, evf, alloc) };
-};
+                                                    { edges_depth_first_search(g, seed, evf, alloc) };
+                                                  };
 
 template <class G, class A>
 concept _has_src_edg_dfs_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const A& alloc) {
-  { sourced_edges_depth_first_search(g, seed, alloc) };
-};
+                                                    { sourced_edges_depth_first_search(g, seed, alloc) };
+                                                  };
 template <class G, class EVF, class A>
 concept _has_src_edg_dfs_evf_adl =
       vertex_range<G> && requires(G&& g, vertex_id_t<G> seed, const EVF& evf, const A& alloc) {
-        { sourced_edges_depth_first_search(g, seed, evf, alloc) };
-      };
+                           { sourced_edges_depth_first_search(g, seed, evf, alloc) };
+                         };
 } // namespace std::graph::tag_invoke
 
 
