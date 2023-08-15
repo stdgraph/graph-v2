@@ -726,53 +726,64 @@ namespace edgelist {
     TAG_INVOKE_DEF(edges); // edges(e) -> [edge list vertices]
   }
 
-  template <class E>
-  auto edges(E&& el) -> decltype(tag_invoke::edges(el)) {
+  /*template <class EL>
+  auto edges(EL&& el) -> decltype(tag_invoke::edges(el)) {
     return tag_invoke::edges(el);
+  }*/
+
+  template <class EL>
+  auto edges(EL&& el) {
+    return el;
   }
 
-  template <class E>
-  using edgelist_range_t = decltype(std::graph::edgelist::edges(declval<E&&>()));
+  template <class EL>
+  using edgelist_range_t = decltype(edges(declval<EL&&>()));
 
-  template <class E>
-  using edgelist_iterator_t = ranges::iterator_t<edgelist_range_t<E&&>>;
+  template <class EL>
+  using edgelist_iterator_t = ranges::iterator_t<edgelist_range_t<EL&&>>;
+
+  template <class EL>
+  using edge_t = ranges::range_value_t<edgelist_range_t<EL>>; // edge value type
+
+  template <class EL>
+  using edge_reference_t = ranges::range_reference_t<edgelist_range_t<EL>>; // edge reference type
+  
+  namespace tag_invoke {
+    TAG_INVOKE_DEF(source_id);
+  }
+
+  template <class EL>
+  auto source_id(EL&& el, edge_reference_t<EL> uv) {
+    return tag_invoke::source_id(el, uv);
+  }
+
+  template <class EL>
+  using source_id_t = decltype(source_id(declval<EL&&>(), declval<edge_reference_t<EL>>()));
 
   namespace tag_invoke {
-    TAG_INVOKE_DEF(vertex_id_source);
+    TAG_INVOKE_DEF(target_id);
   }
 
-  template <class E>
-  auto vertex_id_source(E&& el, edgelist_iterator_t<E> e) {
-    return tag_invoke::vertex_id_source(el, e);
+  template <class EL>
+  auto target_id(EL&& el, edge_reference_t<EL> uv) {
+    return tag_invoke::target_id(el, uv);
   }
 
-  template <class E>
-  using vertex_source_id_t = decltype(vertex_id_source(declval<E&&>(), declval<edgelist_iterator_t<E>>()));
-
-  namespace tag_invoke {
-    TAG_INVOKE_DEF(vertex_id_target);
-  }
-
-  template <class E>
-  auto vertex_id_target(E&& el, edgelist_iterator_t<E> e) {
-    return tag_invoke::vertex_id_target(el, e);
-  }
-
-  template <class E>
-  using vertex_target_id_t = decltype(vertex_id_target(declval<E&&>(), declval<edgelist_iterator_t<E>>()));
+  template <class EL>
+  using target_id_t = decltype(target_id(declval<EL&&>(), declval<edge_reference_t<EL>>()));
 
 
   namespace tag_invoke {
     TAG_INVOKE_DEF(edge_value);
   }
 
-  template <class E>
-  auto edge_value(E&& el, edgelist_iterator_t<E> e) {
-    return tag_invoke::edge_value(el, e);
+  template <class EL>
+  auto edge_value(EL&& el, edge_reference_t<EL> uv) {
+    return tag_invoke::edge_value(el, uv);
   }
 
-  template <class E>
-  using edge_value_t = decltype(edge_value(declval<E&&>(), declval<edgelist_iterator_t<E>>()));
+  template <class EL>
+  using edge_value_t = decltype(edge_value(declval<EL&&>(), declval<edge_reference_t<EL>>()));
 } // namespace edgelist
 
 #  if 0
