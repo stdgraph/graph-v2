@@ -76,9 +76,8 @@ private:
     return el.storage_;
   }
 
-  friend constexpr VSourceId& tag_invoke(::std::graph::edgelist::tag_invoke::source_id_fn_t,
-                                         utility_edgelist&      el,
-                                         value_type& e) {
+  friend constexpr VSourceId&
+  tag_invoke(::std::graph::edgelist::tag_invoke::source_id_fn_t, utility_edgelist& el, value_type& e) {
     return std::get<0>(e);
   }
 

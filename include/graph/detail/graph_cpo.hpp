@@ -742,7 +742,7 @@ namespace edgelist {
 
   template <class EL>
   using edge_reference_t = ranges::range_reference_t<edgelist_range_t<EL>>; // edge reference type
-  
+
   namespace tag_invoke {
     TAG_INVOKE_DEF(source_id);
   }
