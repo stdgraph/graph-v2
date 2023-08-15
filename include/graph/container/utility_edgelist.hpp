@@ -17,7 +17,7 @@ public:
         , source_max_(list.source_max_)
         , target_max_(list.target_max_)
         , bipartite_(list.bipartite_)
-        , sorted_source_(list.sourced_source_)
+        , sorted_source_(list.sorted_source_)
         , sorted_target_(list.sorted_target_)
         , directed_(list.directed_) {}
 
@@ -76,15 +76,15 @@ private:
     return el.storage_;
   }
 
-  friend constexpr VSourceId& tag_invoke(::std::graph::edgelist::tag_invoke::vertex_id_source_fn_t,
+  friend constexpr VSourceId& tag_invoke(::std::graph::edgelist::tag_invoke::source_id_fn_t,
                                          utility_edgelist&      el,
-                                         storage_iterator_type& e) {
-    return std::get<0>(*e);
+                                         value_type& e) {
+    return std::get<0>(e);
   }
 
   friend constexpr EV&
-  tag_invoke(::std::graph::edgelist::tag_invoke::edge_value_fn_t, utility_edgelist& el, storage_iterator_type& e) {
-    return std::get<2>(*e);
+  tag_invoke(::std::graph::edgelist::tag_invoke::edge_value_fn_t, utility_edgelist& el, value_type& e) {
+    return std::get<2>(e);
   }
 
   storage_type storage_;

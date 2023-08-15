@@ -7,11 +7,11 @@
 
 namespace std::graph::edgelist {
 
-template <class E>
-concept edgelist_range = ranges::forward_range<edgelist_range_t<E>>;
+template <class EL>
+concept edgelist_range = ranges::forward_range<edgelist_range_t<EL>>;
 
-template <class E>
-concept edgelist = edgelist_range<E>;
+template <class EL>
+concept edgelist = edgelist_range<EL>;
 } // namespace std::graph::edgelist
 
 #endif

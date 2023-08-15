@@ -115,7 +115,7 @@ void kruskal(E&&       e,      // graph
              T&&       t,      // out: spanning tree edge list
              CompareOp compare // edge value comparitor
 ) {
-  using VId = edgelist::vertex_source_id_t<E>;
+  using VId = edgelist::source_id_t<E>;
 
   auto outer_compare = [&](auto&& i, auto&& j) { return compare(std::get<2>(i), std::get<2>(j)); };
   std::sort(e.begin(), e.end(), outer_compare);
