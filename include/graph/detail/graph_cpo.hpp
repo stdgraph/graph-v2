@@ -726,11 +726,6 @@ namespace edgelist {
     TAG_INVOKE_DEF(edges); // edges(e) -> [edge list vertices]
   }
 
-  /*template <class EL>
-  auto edges(EL&& el) -> decltype(tag_invoke::edges(el)) {
-    return tag_invoke::edges(el);
-  }*/
-
   template <class EL>
   auto edges(EL&& el) {
     return el;
