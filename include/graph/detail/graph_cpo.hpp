@@ -781,35 +781,165 @@ namespace edgelist {
   using edge_value_t = decltype(edge_value(declval<EL&&>(), declval<edge_reference_t<EL>>()));
 } // namespace edgelist
 
-#  if 0
+#  if 1
 // bipartite idea
-template <class EV     = tuple<int, double>,
-          class VV     = tuple<int, double>,
-          class GV     = void,
-          integral VId = uint32_t,
-          class Alloc  = allocator<uint32_t>>
-class csr_partite_graph;
+//template <class EV     = tuple<int, double>,
+//          class VV     = tuple<int, double>,
+//          class GV     = void,
+//          integral VId = uint32_t,
+//          class Alloc  = allocator<uint32_t>>
+//class csr_partite_graph;
+
+
+// partition_id(g,uid) -> ?   default = vertex_id_t<G>() if not overridden; must be overridden for bipartite or multipartite graphs
+// partition_id(g,u)          default = partition_id(g,vertex_id(u))
+//
+namespace tag_invoke {
+  TAG_INVOKE_DEF(partition_id);
+
+  template <class G>
+  concept _has_partition_id_uid_adl = requires(G&& g, vertex_id_t<G> uid) {
+    { partition_id(g, uid) };
+  };
+
+  template <class G>
+  concept _has_partition_id_uref_adl = requires(G&& g, vertex_reference_t<G> u) {
+    { partition_id(g, u) };
+  };
+} // namespace tag_invoke
+
+/**
+ * @brief Get's the parition_id of a vertex_id.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: 0; graph container must define when supported
+ * 
+ * This is a customization point function that may be overriden if graph G supports bi-partite
+ * or multi-partite graphs. If it doesn't then a value of 0 is returned.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uid A vertex id for a vertex in graph G.
+ * @return The partition id of a vertex. 0 if G doesn't support partitioning.
+*/
+template <class G>
+requires tag_invoke::_has_partition_id_uid_adl<G>
+auto partition_id(G&& g, vertex_id_t<G> uid) {
+  if constexpr (tag_invoke::_has_partition_id_uid_adl<G>)
+    return tag_invoke::partition_id(g, uid);
+  else if constexpr (is_integral_v<vertex_id_t<G>>) {
+    return vertex_id_t<G>();
+  } else
+    return size_t(0);
+}
+
+template <class G>
+using partition_id_t = decltype(partition(declval<G>(), declval<vertex_id_t<G>>()));
+
+
+/**
+ * @brief Get's the parition_id of a vertex.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: partition_id(g,vertex_id(g,u))
+ * 
+ * This is a customization point function that may be overriden if graph G supports bi-partite
+ * or multi-partite graphs. If it doesn't then a value of 0 is returned.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uid A vertex id for a vertex in graph G.
+ * @return The partition id of a vertex. 0 if G doesn't support partitioning.
+*/
+template <class G>
+requires tag_invoke::_has_partition_id_uref_adl<G>
+auto partition_id(G&& g, vertex_reference_t<G> u) {
+  if constexpr (tag_invoke::_has_partition_id_uref_adl<G>)
+    return tag_invoke::partition_id(g, u);
+  else
+    return partition_id(vertex_id(g, u));
+}
+
+
+// partition_size(g) -> ?   default = size_t(0)
+//
+namespace tag_invoke {
+  TAG_INVOKE_DEF(partition_size);
+
+  template <class G>
+  concept _has_partition_size_adl = requires(G&& g) {
+    { partition_size(g) };
+  };
+} // namespace tag_invoke
+
+/**
+ * @brief Get's the number of partitions in a graph.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: 0; graph container must override if it supports bi-partite
+ * or multipartite graphs.
+ * 
+ * This is a customization point function that may be overriden if graph G supports bi-partite
+ * or multi-partite graphs. If it doesn't then a value of 0 is returned.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @return The number of partitions in a graph. 0 if G doesn't support partitioning.
+*/
+template <class G>
+requires tag_invoke::_has_partition_size_adl<G>
+auto partition_size(G&& g) {
+  if constexpr (tag_invoke::_has_partition_size_adl<G>)
+    return tag_invoke::partition_size(g);
+  else if constexpr (is_integral_v<vertex_id_t<G>>)
+    return vertex_id_t<G>();
+  else
+    return size_t(0);
+}
+
+// vertices(g,pid) -> range of vertices; graph container must override if it supports bi-partite or 
+// multi-partite graph.
+//
+namespace tag_invoke {
+  //TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices] (already defined for vertices(g))
+
+  template <class G>
+  concept _has_vertices_pid_adl = requires(G&& g, partition_id_t<G> pid) {
+    { vertices(g, pid) };
+  };
+}
+
+/**
+ * @brief Get's the range of vertices for a partition in a graph.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: empty range of vertices; the type returned may not be the same
+ * as vertex_range_t<G>. The graph container must override if it supports bi-partite
+ * or multipartite graphs.
+ * 
+ * This is a customization point function that may be overriden if graph G supports bi-partite
+ * or multi-partite graphs. If it doesn't then an empty range is returned.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @return The number of partitions in a graph. 0 if G doesn't support partitioning.
+*/
+template <class G>
+requires tag_invoke::_has_vertices_pid_adl<G>
+auto vertices(G&& g, partition_id_t<G> pid) {
+  if constexpr (tag_invoke::_has_vertices_pid_adl<G>)
+    return tag_invoke::vertices(g, pid);
+  else
+    return subrange(end(vertices(g)), end(vertices(g)));
+}
 
 template<class G>
-using partition_id_t = size_t;
+using vertex_partition_range_t = decltype(vertices(declval<G>(), declval<partition_id_t<G>()));
 
-template <class G>
-partition_id_t<G> partition_id(G&& g, vertex_id_t<G> uid);
-
-template <class G>
-size_t partition_size(G&& g); // number of partitions in the graph
-
-template<class G>
-size_t partition_size(G&& g, partition_id_t<G> p); // number of vertices in the partition
-
-template <class G>
-vertex_range_t<G> vertices(G&& g, partition_id_t<G> p); // overloaded with vertices(g) (all)
-
-template <class G, size_t Partition=0>
-auto vertex_value(G&& g);
-
-template <class G, size_t Partition=0>
-auto edge_value(G&& g);
 
 #  endif
 
