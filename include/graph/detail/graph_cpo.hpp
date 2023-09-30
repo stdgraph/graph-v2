@@ -938,7 +938,7 @@ auto vertices(G&& g, partition_id_t<G> pid) {
 }
 
 template<class G>
-using vertex_partition_range_t = decltype(vertices(declval<G>(), declval<partition_id_t<G>()));
+using vertex_partition_range_t = decltype(vertices(declval<G>(), declval<partition_id_t<G>>()));
 
 
 #  endif
