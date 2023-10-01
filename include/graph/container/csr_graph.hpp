@@ -232,7 +232,7 @@ public:
   using value_type = void;
   using size_type  = size_t; //VId;
 
-public: // Properties
+public:                      // Properties
   [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
   [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
   [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
@@ -346,7 +346,7 @@ public:
   using value_type = void;
   using size_type  = size_t; //VId;
 
-public: // Properties
+public:                      // Properties
   [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
   [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
   [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
@@ -387,6 +387,10 @@ class csr_graph_base
   using row_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<row_type>;
   using row_index_vector   = vector<row_type, row_allocator_type>;
 
+  using partition_type           = VId; // index into row_indexes
+  using partition_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<partition_type>;
+  using partition_index_vector   = vector<partition_type, partition_allocator_type>;
+
   using col_type           = csr_col<VId>; // target_id
   using col_allocator_type = typename allocator_traits<Alloc>::template rebind_alloc<col_type>;
   using col_index_vector   = vector<col_type, col_allocator_type>;
@@ -399,6 +403,9 @@ public: // Types
   using vertex_value_type   = VV;
   using vertices_type       = ranges::subrange<ranges::iterator_t<row_index_vector>>;
   using const_vertices_type = ranges::subrange<ranges::iterator_t<const row_index_vector>>;
+
+  using partition_id_type   = vertex_id_type;
+  using partition_size_type = vertex_id_type;
 
   using edge_type        = col_type; // index into v_
   using edge_value_type  = EV;
@@ -421,7 +428,9 @@ public: // Construction/Destruction
   constexpr csr_graph_base& operator=(csr_graph_base&&)      = default;
 
   constexpr csr_graph_base(const Alloc& alloc)
-        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {}
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), part_index_(alloc) {
+    set_default_partition();
+  }
 
   /**
    * @brief Constructor that takes a edge range to create the CSR graph.
@@ -438,7 +447,7 @@ public: // Construction/Destruction
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
   constexpr csr_graph_base(const ERng& erng, EProj eprojection = {}, const Alloc& alloc = Alloc())
-        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), part_index_(alloc) {
 
     load_edges(erng, eprojection);
   }
@@ -467,7 +476,7 @@ public: // Construction/Destruction
                            EProj        eprojection = {}, // eproj(eval) -> {source_id,target_id [,value]}
                            VProj        vprojection = {}, // vproj(vval) -> {target_id [,value]}
                            const Alloc& alloc       = Alloc())
-        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), part_index_(alloc) {
 
     load(erng, vrng, eprojection, vprojection);
   }
@@ -480,12 +489,11 @@ public: // Construction/Destruction
    * @param alloc   Allocator to use for internal containers
   */
   constexpr csr_graph_base(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
-        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), part_index_(alloc) {
     load_edges(ilist, identity());
   }
 
-public:
-public: // Operations
+public:                            // Operations
   void reserve_vertices(size_type count) {
     row_index_.reserve(count + 1); // +1 for terminating row
     row_values_base::reserve(count);
@@ -522,6 +530,7 @@ public: // Operations
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr void load_vertices(const VRng& vrng, VProj vprojection, size_type vertex_count = 0) {
     row_values_base::load_row_values(vrng, vprojection, max(vertex_count, ranges::size(vrng)));
+    set_default_partition();
   }
 
   /**
@@ -541,6 +550,7 @@ public: // Operations
   //requires views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr void load_vertices(VRng& vrng, VProj vprojection = {}, size_type vertex_count = 0) {
     row_values_base::load_row_values(vrng, vprojection, max(vertex_count, ranges::size(vrng)));
+    set_default_partition();
   }
 
   /**
@@ -626,6 +636,8 @@ public: // Operations
     // getting a value for a row.
     if (row_values_base::size() > 1 && row_values_base::size() < vertex_count)
       row_values_base::resize(vertex_count);
+
+    set_default_partition();
   }
 
   // The only diff with this and ERng&& is v_.push_back vs. v_.emplace_back
@@ -679,6 +691,8 @@ public: // Operations
     // getting a value for a row.
     if (row_values_base::size() > 0 && row_values_base::size() < vertex_count)
       row_values_base::resize(vertex_count);
+
+    set_default_partition();
   }
 
   /**
@@ -717,6 +731,17 @@ protected:
     return last_id;
   }
 
+  void set_default_partition() {
+    if (size(part_index_) == 0) {
+      part_index_.push_back(0);
+      part_index_.push_back(static_cast<partition_id_type>(size(row_index_)));
+    } else if (size(part_index_) == 2) {
+      part_index_.back() = static_cast<partition_id_type>(size(row_index_));
+    } else {
+      assert(false); // Multiple partitions need different logic
+    }
+  }
+
 public: // Operations
   constexpr ranges::iterator_t<row_index_vector> find_vertex(vertex_id_type id) noexcept {
     return row_index_.begin() + id;
@@ -739,19 +764,19 @@ public: // Operators
 private:                       // Member variables
   row_index_vector row_index_; // starting index into col_index_ and v_; holds +1 extra terminating row
   col_index_vector col_index_; // col_index_[n] holds the column index (aka target)
-  //v_vector_type    v_;         // v_[n]         holds the edge value for col_index_[n]
-  //row_values_type  row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
+  partition_index_vector
+        part_index_; // row_index_[part_index_[p]] is the first row of partition p; holds +1 extra for terminating row (size(row_index_))
 
 private: // tag_invoke properties
   friend constexpr vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, csr_graph_base& g) {
     if (g.row_index_.empty())
-      return vertices_type(g.row_index_); // really empty
+      return vertices_type(g.row_index_);                                 // really empty
     else
       return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
   friend constexpr const_vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, const csr_graph_base& g) {
     if (g.row_index_.empty())
-      return const_vertices_type(g.row_index_); // really empty
+      return const_vertices_type(g.row_index_);                                 // really empty
     else
       return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
@@ -764,7 +789,7 @@ private: // tag_invoke properties
   friend constexpr edges_type tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size());    // in row_index_ bounds?
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
@@ -773,7 +798,7 @@ private: // tag_invoke properties
   tag_invoke(::std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     const vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size());    // in row_index_ bounds?
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     return const_edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
@@ -808,6 +833,13 @@ private: // tag_invoke properties
   tag_invoke(::std::graph::tag_invoke::target_fn_t, const graph_type& g, const edge_type& uv) noexcept {
     return g.row_index_[uv.index];
   }
+
+  // partitions
+  friend constexpr partition_id_type tag_invoke(::std::graph::tag_invoke::partition_count_fn_t,
+                                                const graph_type& g) noexcept {
+    return static_cast<partition_id_type>(size(g.part_index_) - 1);
+  }
+
 
   friend row_values_base;
   friend col_values_base;
