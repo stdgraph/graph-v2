@@ -8,6 +8,46 @@
 
 namespace std::graph {
 
+#  ifndef _MSC_VER
+// Taken from gcc11 definition of __decay_copy().
+// Very similar (identical?) to std::_Fake_copy_init<T> in msvc.
+struct _Decay_copy final {
+  template <typename _Tp>
+  constexpr decay_t<_Tp> operator()(_Tp&& __t) const noexcept(is_nothrow_convertible_v<_Tp, decay_t<_Tp>>) {
+    return std::forward<_Tp>(__t);
+  }
+} inline constexpr _Fake_copy_init{};
+
+template <class _Ty>
+concept _Has_class_or_enum_type =
+      __is_class(remove_reference_t<_Ty>) || __is_enum(remove_reference_t<_Ty>) || __is_union(remove_reference_t<_Ty>);
+
+template <class>
+// false value attached to a dependent name (for static_assert)
+inline constexpr bool _Always_false = false;
+
+template <class _Ty>
+inline constexpr bool _Is_nonbool_integral = is_integral_v<_Ty> && !is_same_v<remove_cv_t<_Ty>, bool>;
+
+template <class _Ty>
+inline constexpr bool _Integer_class = requires {
+  typename _Ty::_Signed_type;
+  typename _Ty::_Unsigned_type;
+};
+
+template <class _Ty>
+concept _Integer_like = _Is_nonbool_integral<remove_cv_t<_Ty>> || _Integer_class<_Ty>;
+
+template <class _Ty>
+concept _Signed_integer_like = _Integer_like<_Ty> && static_cast<_Ty>(-1) < static_cast<_Ty>(0);
+
+template <class _Ty>
+struct _Choice_t {
+  _Ty  _Strategy = _Ty{};
+  bool _No_throw = false;
+};
+#  endif
+
 // Tags are defined in tag_invoke namespace to avoid conflicts with function names
 // in std::graph, allowing customization for default behavior.
 //
@@ -863,14 +903,14 @@ auto partition_id(G&& g, vertex_reference_t<G> u) {
 }
 
 
-// partition_size(g) -> ?   default = size_t(0)
+// partition_count(g) -> ?   default = vertex_id_t<G>(1) when vertex_id_t<G> is integral, size_t(0) otherwise
 //
 namespace tag_invoke {
-  TAG_INVOKE_DEF(partition_size);
+  TAG_INVOKE_DEF(partition_count);
 
   template <class G>
-  concept _has_partition_size_adl = requires(G&& g) {
-    { partition_size(g) };
+  concept _has_partition_count_adl = requires(G&& g) {
+    { partition_count(g) };
   };
 } // namespace tag_invoke
 
@@ -890,17 +930,17 @@ namespace tag_invoke {
  * @return The number of partitions in a graph. 0 if G doesn't support partitioning.
 */
 template <class G>
-requires tag_invoke::_has_partition_size_adl<G>
-auto partition_size(G&& g) {
-  if constexpr (tag_invoke::_has_partition_size_adl<G>)
-    return tag_invoke::partition_size(g);
+requires tag_invoke::_has_partition_count_adl<G>
+auto partition_count(G&& g) {
+  if constexpr (tag_invoke::_has_partition_count_adl<G>)
+    return tag_invoke::partition_count(g);
   else if constexpr (is_integral_v<vertex_id_t<G>>)
-    return vertex_id_t<G>();
+    return vertex_id_t<G>(1);
   else
-    return size_t(0);
+    return size_t(1);
 }
 
-// vertices(g,pid) -> range of vertices; graph container must override if it supports bi-partite or 
+// vertices(g,pid) -> range of vertices; graph container must override if it supports bi-partite or
 // multi-partite graph.
 //
 namespace tag_invoke {
@@ -910,7 +950,7 @@ namespace tag_invoke {
   concept _has_vertices_pid_adl = requires(G&& g, partition_id_t<G> pid) {
     { vertices(g, pid) };
   };
-}
+} // namespace tag_invoke
 
 /**
  * @brief Get's the range of vertices for a partition in a graph.
@@ -934,11 +974,173 @@ auto vertices(G&& g, partition_id_t<G> pid) {
   if constexpr (tag_invoke::_has_vertices_pid_adl<G>)
     return tag_invoke::vertices(g, pid);
   else
-    return subrange(end(vertices(g)), end(vertices(g)));
+    return vertices(g);
 }
 
-template<class G>
-using vertex_partition_range_t = decltype(vertices(declval<G>(), declval<partition_id_t<G>>()));
+template <class G>
+using partition_vertex_range_t = decltype(vertices(declval<G>(), declval<partition_id_t<G>>()));
+
+
+template <class G>
+struct _partition_vertex_id {
+  partition_id_t<G> partition_id; //
+  vertex_id_t<G>    vertex_id;    // vertex id within the partition_id
+};
+
+template <class G>
+using partition_vertex_id_t = _partition_vertex_id<G>;
+
+
+//
+// partition_vertex_id(g,uid) -> partition_vertex_id_t<_G>
+//      default = partition_vertex_id(g,vertex_id(g,uid))
+//
+// partition_vertex_id(g,ui) -> partition_vertex_id_t<_G>
+//      default = partition_vertex_id(g,vertex_id(g,ui))
+//
+namespace _Partition_vertex_id {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void vertex_id() = delete;                   // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void vertex_id();
+#    endif                                     // ^^^ workaround ^^^
+
+  template <class _G>
+  concept _Has_UId_member = requires(_G&& __g, vertex_id_t<_G> uid) {
+    { _Fake_copy_init(__g.partition_vertex_id(uid)) };
+  };
+
+  template <class _G>
+  concept _Has_UId_ADL = _Has_class_or_enum_type<_G>                              //
+                         && requires(_G&& __g, vertex_id_t<_G> uid) {
+                              { _Fake_copy_init(partition_vertex_id(__g, uid)) }; // intentional ADL
+                            };
+
+  template <class _G>
+  concept _Has_UIter_member = requires(_G&& __g, vertex_iterator_t<_G> ui) {
+    { _Fake_copy_init(__g.partition_vertex_id(ui)) };
+  };
+
+  template <class _G>
+  concept _Has_UIter_ADL = _Has_class_or_enum_type<_G>                             //
+                           && requires(_G&& __g, vertex_iterator_t<_G> ui) {
+                                { _Fake_copy_init(partition_vertex_id(__g, ui)) }; // intentional ADL
+                              };
+
+  class _Cpo {
+  private:
+    enum class _StId { _None, _Member, _Non_member };
+    enum class _StIter { _None, _Member, _Non_member };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_StId> _ChooseId() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_UId_member<_G>) {
+        return {_StId::_Member,
+                noexcept(_Fake_copy_init(declval<_G>().partition_vertex_id(declval<vertex_id_t<_G>>())))};
+      } else if constexpr (_Has_UId_ADL<_G>) {
+        return {_StId::_Non_member, noexcept(_Fake_copy_init(partition_vertex_id(
+                                          declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_StId::_None};
+      }
+    }
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_StIter> _ChooseIter() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_UIter_member<_G>) {
+        return {_StIter::_Member,
+                noexcept(_Fake_copy_init(declval<_G>().partition_vertex_id(declval<vertex_iterator_t<_G>>())))};
+      } else if constexpr (_Has_UIter_ADL<_G>) {
+        return {_StIter::_Non_member, noexcept(_Fake_copy_init(partition_vertex_id(
+                                            declval<_G>(), declval<vertex_iterator_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_StIter::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_StId> _ChoiceId = _ChooseId<_G>();
+    template <class _G>
+    static constexpr _Choice_t<_StIter> _ChoiceIter = _ChooseIter<_G>();
+
+  public:
+    /**
+     * @brief Get's the partition_id and relative vertex_id given a vertex_id_t<G>.
+     *
+     * Complexity: O(1)
+     *
+     * Default implementation: a single partition is assumed and {0, uid} is returned for the
+     * partition_id and relative vertex_id respectfully.
+     *
+     * This is a customization point function that must be overriden if graph G supports bi-partite
+     * or multi-partite graphs. 
+     *
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uid The vertex_id.
+     * 
+     * @return partition_vertex_id_t<G> with the partition_id and relative vertex_id in the partition 
+     *         for the vertex_id passed.
+    */
+    template <class _G>
+    requires(_ChoiceId<_G&>._Strategy != _StId::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_id_t<_G> uid) const noexcept(_ChoiceId<_G&>._No_throw) {
+      constexpr _StId _Strat = _ChoiceId<_G&>._Strategy;
+
+      if constexpr (_Strat == _StId::_Member) {
+        return __g.partition_vertex_id(uid);
+      } else if constexpr (_Strat == _StId::_Non_member) {
+        return partition_vertex_id(__g, uid); // intentional ADL
+      } else {
+        return partition_vertex_id_t<_G>{0, uid};
+      }
+    }
+
+    /**
+     * @brief Get's the partition_id and relative vertex_id given a vertex_iterator_t<G>.
+     *
+     * Complexity: O(1)
+     *
+     * Default implementation: a single partition is assumed and {0, vertex_id(g,ui)} is returned 
+     * for the partition_id and relative vertex_id respectfully.
+     *
+     * This is a customization point function that must be overriden if graph G supports bi-partite
+     * or multi-partite graphs. 
+     *
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param ui The vertex_iterator.
+     * 
+     * @return partition_vertex_id_t<G> with the partition_id and relative vertex_id in the partition 
+     *         for the vertex_id passed.
+    */
+    template <class _G>
+    requires(_ChoiceIter<_G&>._Strategy != _StIter::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_iterator_t<_G> ui) const
+          noexcept(_ChoiceIter<_G&>._No_throw) {
+      constexpr _StIter _Strat = _ChoiceIter<_G&>._Strategy;
+
+      if constexpr (_Strat == _StIter::_Member) {
+        return __g.partition_vertex_id(ui);
+      } else if constexpr (_Strat == _StIter::_Non_member) {
+        return partition_vertex_id(__g, ui);     // intentional ADL
+      } else {
+        return (*this)(__g, vertex_id(__g, ui)); // use partition_vertex_id(g, vertex_id(g,ui))
+      }
+    }
+  };
+} // namespace _Partition_vertex_id
+
+inline namespace _Cpos {
+  inline constexpr _Partition_vertex_id::_Cpo partition_vertex_id;
+}
+
 
 
 #  endif
