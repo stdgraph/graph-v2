@@ -1227,6 +1227,76 @@ inline namespace _Cpos {
   inline constexpr _Find_partition_vertex::_Cpo find_partition_vertex;
 }
 
+
+template<class G>
+using partition_edge_range_t = vertex_edge_range_t<G>;
+
+
+//
+// edges(g,u)  -> vertex_edge_range_t<G>
+// edges(g,uid) -> vertex_edge_range_t<G>
+//      default = edges(g,*find_vertex(g,uid))
+//
+// vertex_edge_range_t<G>    = edges(g,u)
+// vertex_edge_iterator_t<G> = ranges::iterator_t<vertex_edge_range_t<G>>
+// edge_t                    = ranges::range_value_t<vertex_edge_range_t<G>>
+// edge_reference_t          = ranges::range_reference_t<vertex_edge_range_t<G>>
+//
+namespace tag_invoke {
+  //TAG_INVOKE_DEF(edges);
+
+  template <class G>
+  concept _has_edges_vtxref_part_adl = requires(G&& g, vertex_reference_t<G> u, partition_id_t<G> p) {
+    { edges(g, u, p) };
+  };
+
+  template <class G>
+  concept _has_edges_vtxid_part_adl = requires(G&& g, vertex_id_t<G> uid, partition_id_t<G> p) {
+    { edges(g, uid, p) };
+  };
+} // namespace tag_invoke
+
+/**
+ * @brief Get the outgoing edges of a vertex.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: n/a. This must be specialized for each graph type.
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param u Vertex reference.
+ * @return A range of the outgoing edges.
+*/
+template <class G>
+requires tag_invoke::_has_edges_vtxref_part_adl<G>
+auto edges(G&& g, vertex_reference_t<G> u, partition_id_t<G> p) -> decltype(tag_invoke::edges(g, u, p)) {
+  return tag_invoke::edges(g, u, p); // graph author must define
+}
+
+/**
+ * @brief Get the outgoing edges of a vertex id.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: edges(g, *find_vertex(g, uid))
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @param uid Vertex id.
+ * @return A range of the outgoing edges.
+*/
+template <class G>
+requires tag_invoke::_has_edges_vtxid_part_adl<G>
+auto edges(G&& g, vertex_id_t<G> uid, partition_id_t<G> p) -> decltype(tag_invoke::edges(g, uid, p)) {
+  if constexpr (tag_invoke::_has_edges_vtxid_part_adl<G>)
+    return tag_invoke::edges(g, uid, p);
+  else
+    return edges(g, *find_vertex(g, uid), p);
+}
+
+
+
 #  endif
 
 
