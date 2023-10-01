@@ -1228,7 +1228,7 @@ inline namespace _Cpos {
 }
 
 
-template<class G>
+template <class G>
 using partition_edge_range_t = vertex_edge_range_t<G>;
 
 
@@ -1261,7 +1261,7 @@ namespace tag_invoke {
  * 
  * Complexity: O(1)
  * 
- * Default implementation: n/a. This must be specialized for each graph type.
+ * Default implementation: edges(g,u)
  * 
  * @tparam G The graph type.
  * @param g A graph instance.
@@ -1271,7 +1271,10 @@ namespace tag_invoke {
 template <class G>
 requires tag_invoke::_has_edges_vtxref_part_adl<G>
 auto edges(G&& g, vertex_reference_t<G> u, partition_id_t<G> p) -> decltype(tag_invoke::edges(g, u, p)) {
-  return tag_invoke::edges(g, u, p); // graph author must define
+  if constexpr (tag_invoke::_has_edges_vtxref_part_adl<G>)
+    return tag_invoke::edges(g, u, p); // graph author must define
+  else
+    return edges(g, u);
 }
 
 /**
@@ -1279,7 +1282,7 @@ auto edges(G&& g, vertex_reference_t<G> u, partition_id_t<G> p) -> decltype(tag_
  * 
  * Complexity: O(1)
  * 
- * Default implementation: edges(g, *find_vertex(g, uid))
+ * Default implementation: edges(g, *find_vertex(g, uid), p)
  * 
  * @tparam G The graph type.
  * @param g A graph instance.
@@ -1296,6 +1299,176 @@ auto edges(G&& g, vertex_id_t<G> uid, partition_id_t<G> p) -> decltype(tag_invok
 }
 
 
+//
+// partition_target_id(g,puid) -> partition_vertex_id_t<_G>
+//      default = partition_vertex_id_t<G>{0, target_id(__g, uv)}
+//
+namespace _Partition_target_id {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void partition_target_id() = delete;         // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void partition_target_id();
+#    endif                                     // ^^^ workaround ^^^
+
+  template <class _G>
+  concept _Has_UVRef__member = requires(_G&& __g, edge_reference_t<_G> uv) {
+    { _Fake_copy_init(__g.partition_target_id(uv)) };
+  };
+
+  template <class _G>
+  concept _Has_UVRef__ADL = _Has_class_or_enum_type<_G>                             //
+                            && requires(_G&& __g, edge_reference_t<_G> uv) {
+                                 { _Fake_copy_init(partition_target_id(__g, uv)) }; // intentional ADL
+                               };
+
+  class _Cpo {
+  private:
+    enum class _StRef { _None, _Member, _Non_member };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_StRef> _ChooseRef() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_UVRef__member<_G>) {
+        return {_StRef::_Member,
+                noexcept(_Fake_copy_init(declval<_G>().partition_target_id(declval<edge_reference_t<_G>>())))};
+      } else if constexpr (_Has_UVRef__ADL<_G>) {
+        return {_StRef::_Non_member, noexcept(_Fake_copy_init(partition_target_id(
+                                          declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_StRef::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_StRef> _ChoiceId = _ChooseRef<_G>();
+
+  public:
+    /**
+     * @brief Find a vertex given a edge_reference_t<G>
+     *
+     * Complexity: O(1)
+     *
+     * Default implementation: a single partition is assumed find_vertex(g,uv) is used to find the
+     * vertex.
+     *
+     * This is a customization point function that must be overriden if graph G supports bi-partite
+     * or multi-partite graphs. 
+     *
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uv The partition_vertex_id to find.
+     * 
+     * @return a vertex_iterator_t<G> for the edge_reference_t<G> passed. If it doesn't
+     *         exist end(vertices(g)) will be returned.
+    */
+    template <class _G>
+    requires(_ChoiceId<_G&>._Strategy != _StRef::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+          noexcept(_ChoiceId<_G&>._No_throw) {
+      constexpr _StRef _Strat = _ChoiceId<_G&>._Strategy;
+
+      if constexpr (_Strat == _StRef::_Member) {
+        return __g.partition_target_id(uv);
+      } else if constexpr (_Strat == _StRef::_Non_member) {
+        return partition_target_id(__g, uv);                    // intentional ADL
+      } else {
+        return partition_vertex_id_t<_G>{0, target_id(__g, uv)}; // assume 1 partition with all vertices
+      }
+    }
+  };
+} // namespace _Partition_target_id
+
+inline namespace _Cpos {
+  inline constexpr _Partition_target_id::_Cpo partition_target_id;
+}
+
+
+//
+// partition_source_id(g,puid) -> partition_vertex_id_t<_G>
+//      default = partition_vertex_id_t<G>{0, source_id(__g, uv)}
+//
+namespace _Partition_source_id {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void partition_source_id() = delete;         // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void partition_source_id();
+#    endif                                     // ^^^ workaround ^^^
+
+  template <class _G>
+  concept _Has_UVRef__member = requires(_G&& __g, edge_reference_t<_G> uv) {
+    { _Fake_copy_init(__g.partition_source_id(uv)) };
+  };
+
+  template <class _G>
+  concept _Has_UVRef__ADL = _Has_class_or_enum_type<_G>                             //
+                            && requires(_G&& __g, edge_reference_t<_G> uv) {
+                                 { _Fake_copy_init(partition_source_id(__g, uv)) }; // intentional ADL
+                               };
+
+  class _Cpo {
+  private:
+    enum class _StRef { _None, _Member, _Non_member };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_StRef> _ChooseRef() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_UVRef__member<_G>) {
+        return {_StRef::_Member,
+                noexcept(_Fake_copy_init(declval<_G>().partition_source_id(declval<edge_reference_t<_G>>())))};
+      } else if constexpr (_Has_UVRef__ADL<_G>) {
+        return {_StRef::_Non_member, noexcept(_Fake_copy_init(partition_source_id(
+                                          declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_StRef::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_StRef> _ChoiceId = _ChooseRef<_G>();
+
+  public:
+    /**
+     * @brief Find a vertex given a edge_reference_t<G>
+     *
+     * Complexity: O(1)
+     *
+     * Default implementation: a single partition is assumed find_vertex(g,uv) is used to find the
+     * vertex.
+     *
+     * This is a customization point function that must be overriden if graph G supports bi-partite
+     * or multi-partite graphs. 
+     *
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uv The partition_vertex_id to find.
+     * 
+     * @return a vertex_iterator_t<G> for the edge_reference_t<G> passed. If it doesn't
+     *         exist end(vertices(g)) will be returned.
+    */
+    template <class _G>
+    requires(_ChoiceId<_G&>._Strategy != _StRef::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+          noexcept(_ChoiceId<_G&>._No_throw) {
+      constexpr _StRef _Strat = _ChoiceId<_G&>._Strategy;
+
+      if constexpr (_Strat == _StRef::_Member) {
+        return __g.partition_source_id(uv);
+      } else if constexpr (_Strat == _StRef::_Non_member) {
+        return partition_source_id(__g, uv);                     // intentional ADL
+      } else {
+        return partition_vertex_id_t<_G>{0, source_id(__g, uv)}; // assume 1 partition with all vertices
+      }
+    }
+  };
+} // namespace _Partition_source_id
+
+inline namespace _Cpos {
+  inline constexpr _Partition_source_id::_Cpo partition_source_id;
+}
 
 #  endif
 
