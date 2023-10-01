@@ -1000,9 +1000,9 @@ using partition_vertex_id_t = _partition_vertex_id<G>;
 //
 namespace _Partition_vertex_id {
 #    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void vertex_id() = delete;                   // Block unqualified name lookup
+  void partition_vertex_id() = delete;         // Block unqualified name lookup
 #    else                                      // ^^^ no workaround / workaround vvv
-  void vertex_id();
+  void partition_vertex_id();
 #    endif                                     // ^^^ workaround ^^^
 
   template <class _G>
@@ -1142,6 +1142,90 @@ inline namespace _Cpos {
 }
 
 
+//
+// find_partition_vertex(g,puid) -> vertex_t<_G>
+//      default = find_vertex(g, puid.vertex_id)
+//
+namespace _Find_partition_vertex {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void find_partition_vertex() = delete;       // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void find_partition_vertex();
+#    endif                                     // ^^^ workaround ^^^
+
+  template <class _G>
+  concept _Has_UId_member = requires(_G&& __g, partition_vertex_id_t<_G> puid) {
+    { _Fake_copy_init(__g.find_partition_vertex(puid)) };
+  };
+
+  template <class _G>
+  concept _Has_UId_ADL = _Has_class_or_enum_type<_G>                                 //
+                         && requires(_G&& __g, partition_vertex_id_t<_G> puid) {
+                              { _Fake_copy_init(find_partition_vertex(__g, puid)) }; // intentional ADL
+                            };
+
+  class _Cpo {
+  private:
+    enum class _StId { _None, _Member, _Non_member };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_StId> _ChooseId() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_UId_member<_G>) {
+        return {_StId::_Member,
+                noexcept(_Fake_copy_init(declval<_G>().find_partition_vertex(declval<partition_vertex_id_t<_G>>())))};
+      } else if constexpr (_Has_UId_ADL<_G>) {
+        return {_StId::_Non_member, noexcept(_Fake_copy_init(find_partition_vertex(
+                                          declval<_G>(), declval<partition_vertex_id_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_StId::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_StId> _ChoiceId = _ChooseId<_G>();
+
+  public:
+    /**
+     * @brief Find a vertex given a partition_vertex_id_t<G>
+     *
+     * Complexity: O(1)
+     *
+     * Default implementation: a single partition is assumed find_vertex(g,puid) is used to find the
+     * vertex.
+     *
+     * This is a customization point function that must be overriden if graph G supports bi-partite
+     * or multi-partite graphs. 
+     *
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param puid The partition_vertex_id to find.
+     * 
+     * @return a vertex_iterator_t<G> for the partition_vertex_id_t<G> passed. If it doesn't
+     *         exist end(vertices(g)) will be returned.
+    */
+    template <class _G>
+    requires(_ChoiceId<_G&>._Strategy != _StId::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, partition_vertex_id_t<_G> puid) const
+          noexcept(_ChoiceId<_G&>._No_throw) {
+      constexpr _StId _Strat = _ChoiceId<_G&>._Strategy;
+
+      if constexpr (_Strat == _StId::_Member) {
+        return __g.find_partition_vertex(puid);
+      } else if constexpr (_Strat == _StId::_Non_member) {
+        return find_partition_vertex(__g, puid); // intentional ADL
+      } else {
+        return find_vertex(__g, puid.vertex_id); // assume 1 partition with all vertices
+      }
+    }
+  };
+} // namespace _Find_partition_vertex
+
+inline namespace _Cpos {
+  inline constexpr _Find_partition_vertex::_Cpo find_partition_vertex;
+}
 
 #  endif
 
