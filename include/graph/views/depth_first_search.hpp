@@ -126,8 +126,8 @@ protected:
     // next level in search
     auto [u_id, uvi]    = S_.top();
     vertex_id_type v_id = real_target_id(*uvi, u_id);
-    edge_iterator vwi = ranges::end(edges(graph_, v_id));
 
+    edge_iterator vwi = ranges::end(edges(graph_, v_id));
     switch (cancel_) {
     case cancel_search::continue_search:
       // find first unvisited edge of v
