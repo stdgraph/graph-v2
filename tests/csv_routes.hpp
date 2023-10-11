@@ -6,7 +6,7 @@
 #  pragma warning(disable : 4458) // declaration of 'value' hides class member
 #  pragma warning(disable : 4244) // conversion from 'double' to 'unsigned __int64', possible loss of data
 #  pragma warning(                                                                                                     \
-              disable : 4996) // 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+        disable : 4996) // 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
 #else
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wsign-conversion"
