@@ -127,6 +127,7 @@ protected:
     auto [u_id, uvi]    = S_.top();
     vertex_id_type v_id = real_target_id(*uvi, u_id);
     edge_iterator vwi = ranges::end(edges(graph_, v_id));
+
     switch (cancel_) {
     case cancel_search::continue_search:
       // find first unvisited edge of v
@@ -159,7 +160,6 @@ protected:
     // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
     else {
       colors_[v_id] = black; // finished with v
-      auto [t1, t2] = S_.top();
       while (!S_.empty()) {
         auto [x_id, xyi] = S_.top();
         S_.pop();
