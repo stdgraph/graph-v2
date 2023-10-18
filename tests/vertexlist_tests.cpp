@@ -2,7 +2,7 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
-#include "graph/container/csr_graph.hpp"
+#include "graph/container/compressed_graph.hpp"
 #include <concepts>
 
 using std::ranges::forward_range;

@@ -2,7 +2,7 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/views/incidence.hpp"
-#include "graph/container/csr_graph.hpp"
+#include "graph/container/compressed_graph.hpp"
 
 using std::ranges::forward_range;
 using std::remove_reference_t;

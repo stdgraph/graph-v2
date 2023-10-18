@@ -3,7 +3,7 @@
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/neighbors.hpp"
-#include "graph/container/csr_graph.hpp"
+#include "graph/container/compressed_graph.hpp"
 #include <cassert>
 
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
