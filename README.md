@@ -95,8 +95,7 @@ is being considered, subject to the size of the proposal and other priorities.
 
 | Container                       | P1709 | Description                                                                     | 
 | :-------------------------------| :---- | :-------------------------------------------------------------------------------|
-| csr_graph                       | Yes   | Compresed Sparse Row graph. High performance, static structure.                 |
-| csr_partite_graph               | No    | Partitioned graph. Needs investigation.                                         |
+| compressed_graph                | Yes   | Compresed Sparse Row graph. High performance, static structure.                 |
 | dynamic_graph                   | No    | Easy to use different containers for vertices and edges.                        |
 
 
