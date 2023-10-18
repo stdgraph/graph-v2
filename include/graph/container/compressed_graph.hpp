@@ -412,10 +412,10 @@ public: // Types
   using size_type = ranges::range_size_t<row_index_vector>;
 
 public: // Construction/Destruction
-  constexpr compressed_graph_base()                      = default;
+  constexpr compressed_graph_base()                             = default;
   constexpr compressed_graph_base(const compressed_graph_base&) = default;
   constexpr compressed_graph_base(compressed_graph_base&&)      = default;
-  constexpr ~compressed_graph_base()                     = default;
+  constexpr ~compressed_graph_base()                            = default;
 
   constexpr compressed_graph_base& operator=(const compressed_graph_base&) = default;
   constexpr compressed_graph_base& operator=(compressed_graph_base&&)      = default;
@@ -463,10 +463,10 @@ public: // Construction/Destruction
   //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
   //      copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr compressed_graph_base(const ERng&  erng,
-                           const VRng&  vrng,
-                           EProj        eprojection = {}, // eproj(eval) -> {source_id,target_id [,value]}
-                           VProj        vprojection = {}, // vproj(vval) -> {target_id [,value]}
-                           const Alloc& alloc       = Alloc())
+                                  const VRng&  vrng,
+                                  EProj        eprojection = {}, // eproj(eval) -> {source_id,target_id [,value]}
+                                  VProj        vprojection = {}, // vproj(vval) -> {target_id [,value]}
+                                  const Alloc& alloc       = Alloc())
         : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
 
     load(erng, vrng, eprojection, vprojection);
@@ -749,7 +749,8 @@ private: // tag_invoke properties
     else
       return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
-  friend constexpr const_vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, const compressed_graph_base& g) {
+  friend constexpr const_vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t,
+                                                  const compressed_graph_base& g) {
     if (g.row_index_.empty())
       return const_vertices_type(g.row_index_); // really empty
     else
@@ -839,10 +840,10 @@ public: // Types
   using vertex_id_type = VId;
 
 public: // Construction/Destruction
-  constexpr compressed_graph()                 = default;
+  constexpr compressed_graph()                        = default;
   constexpr compressed_graph(const compressed_graph&) = default;
   constexpr compressed_graph(compressed_graph&&)      = default;
-  constexpr ~compressed_graph()                = default;
+  constexpr ~compressed_graph()                       = default;
 
   constexpr compressed_graph& operator=(const compressed_graph&) = default;
   constexpr compressed_graph& operator=(compressed_graph&&)      = default;
@@ -852,8 +853,10 @@ public: // Construction/Destruction
   // compressed_graph(gv&&, alloc)
 
   constexpr compressed_graph(const Alloc& alloc) : base_type(alloc) {}
-  constexpr compressed_graph(const graph_value_type& value, const Alloc& alloc = Alloc()) : base_type(alloc), value_(value) {}
-  constexpr compressed_graph(graph_value_type&& value, const Alloc& alloc = Alloc()) : base_type(alloc), value_(move(value)) {}
+  constexpr compressed_graph(const graph_value_type& value, const Alloc& alloc = Alloc())
+        : base_type(alloc), value_(value) {}
+  constexpr compressed_graph(graph_value_type&& value, const Alloc& alloc = Alloc())
+        : base_type(alloc), value_(move(value)) {}
 
   // compressed_graph(      erng, eprojection, alloc)
   // compressed_graph(gv&,  erng, eprojection, alloc)
@@ -866,12 +869,18 @@ public: // Construction/Destruction
 
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr compressed_graph(const graph_value_type& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+  constexpr compressed_graph(const graph_value_type& value,
+                             const ERng&             erng,
+                             EProj                   eprojection,
+                             const Alloc&            alloc = Alloc())
         : base_type(erng, eprojection, alloc), value_(value) {}
 
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr compressed_graph(graph_value_type&& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+  constexpr compressed_graph(graph_value_type&& value,
+                             const ERng&        erng,
+                             EProj              eprojection,
+                             const Alloc&       alloc = Alloc())
         : base_type(erng, eprojection, alloc), value_(move(value)) {}
 
   // compressed_graph(      erng, vrng, eprojection, vprojection, alloc)
@@ -882,32 +891,32 @@ public: // Construction/Destruction
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
            copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr compressed_graph(const ERng&  erng,
-                      const VRng&  vrng,
-                      EProj        eprojection = {},
-                      VProj        vprojection = {},
-                      const Alloc& alloc       = Alloc())
+                             const VRng&  vrng,
+                             EProj        eprojection = {},
+                             VProj        vprojection = {},
+                             const Alloc& alloc       = Alloc())
         : base_type(erng, vrng, eprojection, vprojection, alloc) {}
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
                  copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr compressed_graph(const graph_value_type& value,
-                      const ERng&             erng,
-                      const VRng&             vrng,
-                      EProj                   eprojection = {},
-                      VProj                   vprojection = {},
-                      const Alloc&            alloc       = Alloc())
+                             const ERng&             erng,
+                             const VRng&             vrng,
+                             EProj                   eprojection = {},
+                             VProj                   vprojection = {},
+                             const Alloc&            alloc       = Alloc())
         : base_type(erng, vrng, eprojection, vprojection, alloc), value_(value) {}
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
                  copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr compressed_graph(graph_value_type&& value,
-                      const ERng&        erng,
-                      const VRng&        vrng,
-                      EProj              eprojection = {},
-                      VProj              vprojection = {},
-                      const Alloc&       alloc       = Alloc())
+                             const ERng&        erng,
+                             const VRng&        vrng,
+                             EProj              eprojection = {},
+                             VProj              vprojection = {},
+                             const Alloc&       alloc       = Alloc())
         : base_type(erng, vrng, eprojection, vprojection, alloc), value_(move(value)) {}
 
 
@@ -937,7 +946,8 @@ private: // Member variables
  * @tparam Alloc Allocator type
 */
 template <class EV, class VV, integral VId, integral EIndex, class Alloc>
-class compressed_graph<EV, VV, void, VId, EIndex, Alloc> : public compressed_graph_base<EV, VV, void, VId, EIndex, Alloc> {
+class compressed_graph<EV, VV, void, VId, EIndex, Alloc>
+      : public compressed_graph_base<EV, VV, void, VId, EIndex, Alloc> {
 public: // Types
   using graph_type = compressed_graph<EV, VV, void, VId, EIndex, Alloc>;
   using base_type  = compressed_graph_base<EV, VV, void, VId, EIndex, Alloc>;
@@ -949,10 +959,10 @@ public: // Types
   using value_type       = void;
 
 public: // Construction/Destruction
-  constexpr compressed_graph()                 = default;
+  constexpr compressed_graph()                        = default;
   constexpr compressed_graph(const compressed_graph&) = default;
   constexpr compressed_graph(compressed_graph&&)      = default;
-  constexpr ~compressed_graph()                = default;
+  constexpr ~compressed_graph()                       = default;
 
   constexpr compressed_graph& operator=(const compressed_graph&) = default;
   constexpr compressed_graph& operator=(compressed_graph&&)      = default;
@@ -968,10 +978,10 @@ public: // Construction/Destruction
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
            copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
   constexpr compressed_graph(const ERng&  erng,
-                      const VRng&  vrng,
-                      EProj        eprojection = {},
-                      VProj        vprojection = {},
-                      const Alloc& alloc       = Alloc())
+                             const VRng&  vrng,
+                             EProj        eprojection = {},
+                             VProj        vprojection = {},
+                             const Alloc& alloc       = Alloc())
         : base_type(erng, vrng, eprojection, vprojection, alloc) {}
 
   // initializer list using edge_descriptor<VId,true,void,EV>
