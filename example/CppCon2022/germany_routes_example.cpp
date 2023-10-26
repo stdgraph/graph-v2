@@ -3,7 +3,7 @@
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/neighbors.hpp"
-#include "graph/container/csr_graph.hpp"
+#include "graph/container/compressed_graph.hpp"
 #include "graph/algorithm/dijkstra_clrs.hpp"
 #include "rr_adaptor.hpp"
 #include <iostream>

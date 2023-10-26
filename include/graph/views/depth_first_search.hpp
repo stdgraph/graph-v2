@@ -160,7 +160,6 @@ protected:
     // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
     else {
       colors_[v_id] = black; // finished with v
-      S_.pop();
       while (!S_.empty()) {
         auto [x_id, xyi] = S_.top();
         S_.pop();

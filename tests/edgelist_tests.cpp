@@ -2,7 +2,7 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/views/edgelist.hpp"
-#include "graph/container/csr_graph.hpp"
+#include "graph/container/compressed_graph.hpp"
 
 using std::ranges::forward_range;
 using std::remove_reference_t;
@@ -34,7 +34,7 @@ using std::graph::find_vertex_edge;
 
 using std::graph::views::edgelist;
 
-using routes_csr_graph_type = std::graph::container::csr_graph<double, std::string, std::string>;
+using routes_compressed_graph_type = std::graph::container::compressed_graph<double, std::string, std::string>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -47,14 +47,14 @@ auto find_frankfurt(G&& g) {
 }
 
 // Things to test
-//  csr_graph with VV=void (does it compile?)
-//  push_back and emplace_back work correctly when adding city names (applies to csr_graph & dynamic_graph)
+//  compressed_graph with VV=void (does it compile?)
+//  push_back and emplace_back work correctly when adding city names (applies to compressed_graph & dynamic_graph)
 
 TEST_CASE("edgelist test", "[csr][edgelist]") {
 
   init_console();
 
-  using G  = routes_csr_graph_type;
+  using G  = routes_compressed_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
   // name_order_policy::source_order_found gives best output with least overlap for germany routes
 

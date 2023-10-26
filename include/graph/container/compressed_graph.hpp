@@ -18,9 +18,9 @@
 // load_edges(erng, eproj) <- [uid, vid, eval]
 // load(erng, eproj, vrng, vproj): load_edges(erng,eproj), load_vertices(vrng,vproj)
 //
-// csr_graph(initializer_list<[uid,vid,eval]>) : load_edges(erng,eproj)
-// csr_graph(erng, eproj) : load_edges(erng,eproj)
-// csr_graph(erng, eproj, vrng, vproj): load(erng, eproj, vrng, vprog)
+// compressed_graph(initializer_list<[uid,vid,eval]>) : load_edges(erng,eproj)
+// compressed_graph(erng, eproj) : load_edges(erng,eproj)
+// compressed_graph(erng, eproj, vrng, vproj): load(erng, eproj, vrng, vprog)
 //
 // [uid,vval]     <-- copyable_vertex<VId,VV>
 // [uid,vid,eval] <-- copyable_edge<VId,EV>
@@ -66,7 +66,7 @@ template <class EV        = void,            // edge value type
           integral VId    = uint32_t,        // vertex id type
           integral EIndex = uint32_t,        // edge index type
           class Alloc     = allocator<uint32_t>> // for internal containers
-class csr_graph;
+class compressed_graph;
 
 /**
  * @ingroup graph_containers
@@ -121,7 +121,7 @@ class csr_row_values {
   using row_index_vector   = vector<row_type, row_allocator_type>;
 
 public:
-  using graph_type        = csr_graph<EV, VV, GV, VId, EIndex, Alloc>;
+  using graph_type        = compressed_graph<EV, VV, GV, VId, EIndex, Alloc>;
   using vertex_type       = row_type;
   using vertex_value_type = VV;
   using allocator_type    = typename allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
@@ -272,7 +272,7 @@ class csr_col_values {
   using col_index_vector   = vector<col_type, col_allocator_type>;
 
 public:
-  using graph_type      = csr_graph<EV, VV, GV, VId, EIndex, Alloc>;
+  using graph_type      = compressed_graph<EV, VV, GV, VId, EIndex, Alloc>;
   using edge_type       = col_type; // index into v_
   using edge_value_type = EV;
   using allocator_type  = typename allocator_traits<Alloc>::template rebind_alloc<edge_value_type>;
@@ -377,7 +377,7 @@ public: // Operations
  * @tparam Alloc   The allocator type.
 */
 template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
-class csr_graph_base
+class compressed_graph_base
       : public csr_row_values<EV, VV, GV, VId, EIndex, Alloc>
       , public csr_col_values<EV, VV, GV, VId, EIndex, Alloc> {
   using row_values_base = csr_row_values<EV, VV, GV, VId, EIndex, Alloc>;
@@ -396,7 +396,7 @@ class csr_graph_base
   using col_index_vector   = vector<col_type, col_allocator_type>;
 
 public: // Types
-  using graph_type = csr_graph_base<EV, VV, GV, VId, EIndex, Alloc>;
+  using graph_type = compressed_graph_base<EV, VV, GV, VId, EIndex, Alloc>;
 
   using vertex_id_type      = VId;
   using vertex_type         = row_type;
@@ -419,18 +419,18 @@ public: // Types
   using size_type = ranges::range_size_t<row_index_vector>;
 
 public: // Construction/Destruction
-  constexpr csr_graph_base()                      = default;
-  constexpr csr_graph_base(const csr_graph_base&) = default;
-  constexpr csr_graph_base(csr_graph_base&&)      = default;
-  constexpr ~csr_graph_base()                     = default;
+  constexpr compressed_graph_base()                      = default;
+  constexpr compressed_graph_base(const compressed_graph_base&) = default;
+  constexpr compressed_graph_base(compressed_graph_base&&)      = default;
+  constexpr ~compressed_graph_base()                     = default;
 
-  constexpr csr_graph_base& operator=(const csr_graph_base&) = default;
-  constexpr csr_graph_base& operator=(csr_graph_base&&)      = default;
+  constexpr compressed_graph_base& operator=(const compressed_graph_base&) = default;
+  constexpr compressed_graph_base& operator=(compressed_graph_base&&)      = default;
 
-  constexpr csr_graph_base(const Alloc& alloc)
-        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), part_index_(alloc) {
+  constexpr compressed_graph_base(const Alloc& alloc)
+       : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), part_index_(alloc) {
     set_default_partition();
-  }
+  } 
 
   /**
    * @brief Constructor that takes a edge range to create the CSR graph.
@@ -446,7 +446,7 @@ public: // Construction/Destruction
   */
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr csr_graph_base(const ERng& erng, EProj eprojection = {}, const Alloc& alloc = Alloc())
+  constexpr compressed_graph_base(const ERng& erng, EProj eprojection = {}, const Alloc& alloc = Alloc())
         : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), part_index_(alloc) {
 
     load_edges(erng, eprojection);
@@ -471,7 +471,7 @@ public: // Construction/Destruction
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
   //      copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr csr_graph_base(const ERng&  erng,
+  constexpr compressed_graph_base(const ERng&  erng,
                            const VRng&  vrng,
                            EProj        eprojection = {}, // eproj(eval) -> {source_id,target_id [,value]}
                            VProj        vprojection = {}, // vproj(vval) -> {target_id [,value]}
@@ -488,7 +488,7 @@ public: // Construction/Destruction
    * @param ilist   Initializer list of @c copyable_edge_t<VId,EV> -> [source_id, target_id, value]
    * @param alloc   Allocator to use for internal containers
   */
-  constexpr csr_graph_base(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
+  constexpr compressed_graph_base(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), part_index_(alloc) {
     load_edges(ilist, identity());
   }
@@ -613,7 +613,7 @@ public:                            // Operations
     // Add edges
     vertex_id_type last_uid = 0, max_vid = 0;
     for (auto&& edge_data : erng) {
-      auto&& edge = eprojection(edge_data); // csr_graph requires EV!=void
+      auto&& edge = eprojection(edge_data); // compressed_graph requires EV!=void
       assert(edge.source_id >= last_uid);   // ordered by uid? (requirement)
       row_index_.resize(static_cast<size_t>(edge.source_id) + 1,
                         vertex_type{static_cast<vertex_id_type>(static_cast<col_values_base&>(*this).size())});
@@ -668,7 +668,7 @@ public:                            // Operations
     // Add edges
     vertex_id_type last_uid = 0, max_vid = 0;
     for (auto&& edge_data : erng) {
-      auto&& edge = eprojection(edge_data); // csr_graph requires EV!=void
+      auto&& edge = eprojection(edge_data); // compressed_graph requires EV!=void
       assert(edge.source_id >= last_uid);   // ordered by uid? (requirement)
       row_index_.resize(static_cast<size_t>(edge.source_id) + 1,
                         vertex_type{static_cast<vertex_id_type>(static_cast<col_values_base&>(*this).size())});
@@ -782,7 +782,7 @@ private: // tag_invoke properties
   }
 
   friend vertex_id_type
-  tag_invoke(::std::graph::tag_invoke::vertex_id_fn_t, const csr_graph_base& g, const_iterator ui) {
+  tag_invoke(::std::graph::tag_invoke::vertex_id_fn_t, const compressed_graph_base& g, const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.row_index_.begin());
   }
 
@@ -858,10 +858,10 @@ private: // tag_invoke properties
  * @tparam Alloc Allocator type
 */
 template <class EV, class VV, class GV, integral VId, integral EIndex, class Alloc>
-class csr_graph : public csr_graph_base<EV, VV, GV, VId, EIndex, Alloc> {
+class compressed_graph : public compressed_graph_base<EV, VV, GV, VId, EIndex, Alloc> {
 public: // Types
-  using graph_type = csr_graph<EV, VV, GV, VId, EIndex, Alloc>;
-  using base_type  = csr_graph_base<EV, VV, GV, VId, EIndex, Alloc>;
+  using graph_type = compressed_graph<EV, VV, GV, VId, EIndex, Alloc>;
+  using base_type  = compressed_graph_base<EV, VV, GV, VId, EIndex, Alloc>;
 
   using edge_value_type   = EV;
   using vertex_value_type = VV;
@@ -871,49 +871,49 @@ public: // Types
   using vertex_id_type = VId;
 
 public: // Construction/Destruction
-  constexpr csr_graph()                 = default;
-  constexpr csr_graph(const csr_graph&) = default;
-  constexpr csr_graph(csr_graph&&)      = default;
-  constexpr ~csr_graph()                = default;
+  constexpr compressed_graph()                 = default;
+  constexpr compressed_graph(const compressed_graph&) = default;
+  constexpr compressed_graph(compressed_graph&&)      = default;
+  constexpr ~compressed_graph()                = default;
 
-  constexpr csr_graph& operator=(const csr_graph&) = default;
-  constexpr csr_graph& operator=(csr_graph&&)      = default;
+  constexpr compressed_graph& operator=(const compressed_graph&) = default;
+  constexpr compressed_graph& operator=(compressed_graph&&)      = default;
 
-  // csr_graph(      alloc)
-  // csr_graph(gv&,  alloc)
-  // csr_graph(gv&&, alloc)
+  // compressed_graph(      alloc)
+  // compressed_graph(gv&,  alloc)
+  // compressed_graph(gv&&, alloc)
 
-  constexpr csr_graph(const Alloc& alloc) : base_type(alloc) {}
-  constexpr csr_graph(const graph_value_type& value, const Alloc& alloc = Alloc()) : base_type(alloc), value_(value) {}
-  constexpr csr_graph(graph_value_type&& value, const Alloc& alloc = Alloc()) : base_type(alloc), value_(move(value)) {}
+  constexpr compressed_graph(const Alloc& alloc) : base_type(alloc) {}
+  constexpr compressed_graph(const graph_value_type& value, const Alloc& alloc = Alloc()) : base_type(alloc), value_(value) {}
+  constexpr compressed_graph(graph_value_type&& value, const Alloc& alloc = Alloc()) : base_type(alloc), value_(move(value)) {}
 
-  // csr_graph(      erng, eprojection, alloc)
-  // csr_graph(gv&,  erng, eprojection, alloc)
-  // csr_graph(gv&&, erng, eprojection, alloc)
+  // compressed_graph(      erng, eprojection, alloc)
+  // compressed_graph(gv&,  erng, eprojection, alloc)
+  // compressed_graph(gv&&, erng, eprojection, alloc)
 
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr csr_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+  constexpr compressed_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc) {}
 
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr csr_graph(const graph_value_type& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+  constexpr compressed_graph(const graph_value_type& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc), value_(value) {}
 
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr csr_graph(graph_value_type&& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+  constexpr compressed_graph(graph_value_type&& value, const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc), value_(move(value)) {}
 
-  // csr_graph(      erng, vrng, eprojection, vprojection, alloc)
-  // csr_graph(gv&,  erng, vrng, eprojection, vprojection, alloc)
-  // csr_graph(gv&&, erng, vrng, eprojection, vprojection, alloc)
+  // compressed_graph(      erng, vrng, eprojection, vprojection, alloc)
+  // compressed_graph(gv&,  erng, vrng, eprojection, vprojection, alloc)
+  // compressed_graph(gv&&, erng, vrng, eprojection, vprojection, alloc)
 
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
            copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr csr_graph(const ERng&  erng,
+  constexpr compressed_graph(const ERng&  erng,
                       const VRng&  vrng,
                       EProj        eprojection = {},
                       VProj        vprojection = {},
@@ -923,7 +923,7 @@ public: // Construction/Destruction
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
                  copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr csr_graph(const graph_value_type& value,
+  constexpr compressed_graph(const graph_value_type& value,
                       const ERng&             erng,
                       const VRng&             vrng,
                       EProj                   eprojection = {},
@@ -934,7 +934,7 @@ public: // Construction/Destruction
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
                  copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr csr_graph(graph_value_type&& value,
+  constexpr compressed_graph(graph_value_type&& value,
                       const ERng&        erng,
                       const VRng&        vrng,
                       EProj              eprojection = {},
@@ -943,7 +943,7 @@ public: // Construction/Destruction
         : base_type(erng, vrng, eprojection, vprojection, alloc), value_(move(value)) {}
 
 
-  constexpr csr_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
+  constexpr compressed_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
 private: // tag_invoke properties
@@ -969,10 +969,10 @@ private: // Member variables
  * @tparam Alloc Allocator type
 */
 template <class EV, class VV, integral VId, integral EIndex, class Alloc>
-class csr_graph<EV, VV, void, VId, EIndex, Alloc> : public csr_graph_base<EV, VV, void, VId, EIndex, Alloc> {
+class compressed_graph<EV, VV, void, VId, EIndex, Alloc> : public compressed_graph_base<EV, VV, void, VId, EIndex, Alloc> {
 public: // Types
-  using graph_type = csr_graph<EV, VV, void, VId, EIndex, Alloc>;
-  using base_type  = csr_graph_base<EV, VV, void, VId, EIndex, Alloc>;
+  using graph_type = compressed_graph<EV, VV, void, VId, EIndex, Alloc>;
+  using base_type  = compressed_graph_base<EV, VV, void, VId, EIndex, Alloc>;
 
   using vertex_id_type    = VId;
   using vertex_value_type = VV;
@@ -981,25 +981,25 @@ public: // Types
   using value_type       = void;
 
 public: // Construction/Destruction
-  constexpr csr_graph()                 = default;
-  constexpr csr_graph(const csr_graph&) = default;
-  constexpr csr_graph(csr_graph&&)      = default;
-  constexpr ~csr_graph()                = default;
+  constexpr compressed_graph()                 = default;
+  constexpr compressed_graph(const compressed_graph&) = default;
+  constexpr compressed_graph(compressed_graph&&)      = default;
+  constexpr ~compressed_graph()                = default;
 
-  constexpr csr_graph& operator=(const csr_graph&) = default;
-  constexpr csr_graph& operator=(csr_graph&&)      = default;
+  constexpr compressed_graph& operator=(const compressed_graph&) = default;
+  constexpr compressed_graph& operator=(compressed_graph&&)      = default;
 
   // edge-only construction
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr csr_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+  constexpr compressed_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc) {}
 
   // edge and vertex value construction
   template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
            copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr csr_graph(const ERng&  erng,
+  constexpr compressed_graph(const ERng&  erng,
                       const VRng&  vrng,
                       EProj        eprojection = {},
                       VProj        vprojection = {},
@@ -1007,7 +1007,7 @@ public: // Construction/Destruction
         : base_type(erng, vrng, eprojection, vprojection, alloc) {}
 
   // initializer list using edge_descriptor<VId,true,void,EV>
-  constexpr csr_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
+  constexpr compressed_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
 

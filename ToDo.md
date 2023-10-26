@@ -117,7 +117,7 @@
           - [x] implement
           - [ ] validate & add unit tests
 - Graph Containers (data structures)
-    - [x] csr_graph (for P1709)
+    - [x] compressed_graph (for P1709)
       - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
       - [x] Support VV=void
       - [x] Support EV=void
@@ -129,7 +129,6 @@
       - [ ] graph with map-based vertices (requires different algorithm impl)
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
     - [ ] constexpr graph based on std::array
-    - [ ] **csr_partite_graph<EV,VV,GV,VId,Alloc>** where EV & VV are tuples of the sample size, and each element defines the type used in the partition
     - [ ] undirected_adjacency_list<EV,VV,GV,VId,Alloc>
     - [x] directed_adjacency_vector (retired)
     - [ ] adaptor for range of ranges (e.g. vector\<list\<T\>\>) [see rr_adaptor in ./test]
@@ -191,7 +190,7 @@
       - [ ] \<depth_first_search\>
       - [ ] \<breadth_first_search\>
       - [ ] \<graph_algorithm\>
-      - [ ] \<csr_graph\>
+      - [ ] \<compressed_graph\>
 - Feedback
 - Code Review
   - [ ] graph concepts
@@ -247,7 +246,7 @@
       - [x] Load from CSV file
       - [x] Add \<bool sourced\> template parameter to include source_id
       - [x] use copyable_vector_t & copyable_edge_t for loaders, ctors and initializer 
-    - [x] csr_graph
+    - [x] compressed_graph
       - [x] Implement graph, vertex, edge
       - [x] Load from CSV file
       - [x] Validate with vofl_graph tests
@@ -291,7 +290,7 @@
         A: It is a requirement and is being used as part of P2300. We'll follow their lead.
 - [x] Can transform_view be used in place of the projections in the graph views? No
 - [x] How to support bipartite (or N-partite) graphs using different vertex value types?
-      A: Given a csr_graph, EV and VV can be tuples of the same length. 
+      A: Given a compressed_graph, EV and VV can be tuples of the same length. 
          The number of elements in the tuples determine the number of partitions.
          Values are stored seprately from structure and can be stored in a tuple of vectors.
          Additional vectors are kept for the starting index in the vertices & edges structures for each partition.

@@ -20,6 +20,7 @@
 #include <ranges>
 #include <concepts>
 #include <type_traits>
+#include <stdexcept>
 
 #include "detail/graph_cpo.hpp"
 
@@ -39,6 +40,7 @@
 // VR                       Vertex Range
 // VI        ui,vi          Vertex Iterator
 // VVF                      Vertex Value Function: vvf(u) -> value
+// VVP       vvp            Vertex Value Projection function vvp(x) --> vertex_descriptor<>
 //
 // E                        Edge type
 //           uv,vw          Edge reference
@@ -46,6 +48,7 @@
 // ER                       Edge Range
 // EI        uvi,vwi        Edge iterator
 // EVF       evf            Edge Value Function: evf(uv) -> value
+// EVP       evp            Edge Value Production function: evp(y) -> edge_descriptor<>
 //
 
 #ifndef GRAPH_HPP
@@ -307,6 +310,15 @@ inline constexpr bool is_ordered_edge_v = is_ordered_edge<G, E>::value;
 template <class G, class E>
 concept ordered_edge = is_ordered_edge_v<G, E>;
 
+
+//
+// graph_error
+//
+class graph_error : public runtime_error {
+public:
+  explicit graph_error(const string& what_arg) : runtime_error(what_arg) {}
+  explicit graph_error(const char* what_arg) : runtime_error(what_arg) {}
+};
 
 } // namespace std::graph
 
