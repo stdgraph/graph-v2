@@ -768,13 +768,13 @@ private:                       // Member variables
         part_index_; // row_index_[part_index_[p]] is the first row of partition p; holds +1 extra for terminating row (size(row_index_))
 
 private: // tag_invoke properties
-  friend constexpr vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, csr_graph_base& g) {
+  friend constexpr vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, compressed_graph_base& g) {
     if (g.row_index_.empty())
       return vertices_type(g.row_index_);                                 // really empty
     else
       return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
-  friend constexpr const_vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, const csr_graph_base& g) {
+  friend constexpr const_vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, const compressed_graph_base& g) {
     if (g.row_index_.empty())
       return const_vertices_type(g.row_index_);                                 // really empty
     else
