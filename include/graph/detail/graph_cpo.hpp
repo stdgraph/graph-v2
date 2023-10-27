@@ -1035,7 +1035,7 @@ namespace _Partition_vertex_id {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_StId> _ChooseId() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-      using _UnCV = remove_cvref_t<_G>;
+      //using _UnCV = remove_cvref_t<_G>;
 
       if constexpr (_Has_UId_member<_G>) {
         return {_StId::_Member,
@@ -1051,7 +1051,7 @@ namespace _Partition_vertex_id {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_StIter> _ChooseIter() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-      using _UnCV = remove_cvref_t<_G>;
+      //using _UnCV = remove_cvref_t<_G>;
 
       if constexpr (_Has_UIter_member<_G>) {
         return {_StIter::_Member,
@@ -1171,7 +1171,7 @@ namespace _Find_partition_vertex {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_StId> _ChooseId() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-      using _UnCV = remove_cvref_t<_G>;
+      //using _UnCV = remove_cvref_t<_G>;
 
       if constexpr (_Has_UId_member<_G>) {
         return {_StId::_Member,
@@ -1328,7 +1328,7 @@ namespace _Partition_target_id {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_StRef> _ChooseRef() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-      using _UnCV = remove_cvref_t<_G>;
+      //using _UnCV = remove_cvref_t<_G>;
 
       if constexpr (_Has_UVRef__member<_G>) {
         return {_StRef::_Member,
@@ -1414,7 +1414,7 @@ namespace _Partition_source_id {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_StRef> _ChooseRef() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-      using _UnCV = remove_cvref_t<_G>;
+      //using _UnCV = remove_cvref_t<_G>;
 
       if constexpr (_Has_UVRef__member<_G>) {
         return {_StRef::_Member,

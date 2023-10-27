@@ -72,7 +72,7 @@ void pagerank(
   std::vector<weight_type> iweights(size(vertices(g)));
 
   // Initialize the data, pagerank as 1/n_vertices.
-  std::ranges::fill(scores, 1.0f / size(vertices(g)));
+  std::ranges::fill(scores, 1.0 / double(size(vertices(g))));
 
   for (auto&& [uid, u] : views::vertexlist(g)) {
     // Calculate the degree of each vertex.
@@ -80,7 +80,7 @@ void pagerank(
     for (auto&& uv : edges(g, u)) {
       ++edge_cnt;
     }
-    degrees[uid] = edge_cnt;
+    degrees[uid] = static_cast<id_type>(edge_cnt);
 
     // Find the sum of outgoing weights.
     weight_type val = 0;
@@ -102,7 +102,7 @@ void pagerank(
       dsum += (iweights[uid] == 0) ? damping_factor * scores[uid] : 0;
     }
 
-    std::ranges::fill(scores, (1 - damping_factor + dsum) / size(vertices(g)));
+    std::ranges::fill(scores, (1 - damping_factor + dsum) / double(size(vertices(g))));
 
     double error = 0;
     for (auto&& [uid, vid, uv, val] : views::edgelist(g, weight_fn)) {
