@@ -9,7 +9,7 @@
     {
       "name": "linux-common",
       "hidden": true,
-      "generator": "Ninja",
+      "generator": "Ninja Multi-Config",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
@@ -121,8 +121,8 @@
     {
       "name": "macos-default",
       "displayName": "macOS Debug",
-      "description": "Target a remote macOS system with Ninja",
-      "generator": "Ninja",
+      "description": "Target a remote macOS system with Ninja Multi-Config",
+      "generator": "Ninja Multi-Config",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
@@ -145,7 +145,7 @@
     {
       "name": "windows-common",
       "hidden": true,
-      "generator": "Ninja",
+      "generator": "Ninja Multi-Config",
       "architecture": {
         "value": "x64",
         "strategy": "external"
