@@ -641,6 +641,42 @@ auto contains_edge(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
   }
 }
 
+
+//
+// num_vertices(g) -> integral
+//      default = size(vertices(g))
+//
+namespace tag_invoke {
+  TAG_INVOKE_DEF(num_vertices);
+
+  template <class G>
+  concept _has_num_vertices_adl = requires(G&& g, vertex_reference_t<G> u) {
+    { num_vertices(g) };
+  };
+} // namespace tag_invoke
+
+/**
+ * @brief The number of outgoing edges of a vertex.
+ * 
+ * Complexity: O(1)
+ * 
+ * Default implementation: size(vertices(g))
+ * 
+ * @tparam G The graph type.
+ * @param g A graph instance.
+ * @return The number of vertices in a graph.
+*/
+template <class G>
+requires tag_invoke::_has_num_vertices_adl<G>
+auto num_vertices(G&& g) {
+  if constexpr (tag_invoke::_has_num_vertices_adl<G>)
+    return tag_invoke::num_vertices(g);
+  else {
+    return ranges::size(vertices(g));
+  }
+}
+
+
 //
 // degree(g,u) -> integral
 //      default = size(edges(g,u)) if sized_range<vertex_edge_range_t<G>>
@@ -821,7 +857,6 @@ namespace edgelist {
   using edge_value_t = decltype(edge_value(declval<EL&&>(), declval<edge_reference_t<EL>>()));
 } // namespace edgelist
 
-#  if 1
 // bipartite idea
 //template <class EV     = tuple<int, double>,
 //          class VV     = tuple<int, double>,
@@ -1469,8 +1504,6 @@ namespace _Partition_source_id {
 inline namespace _Cpos {
   inline constexpr _Partition_source_id::_Cpo partition_source_id;
 }
-
-#  endif
 
 
 } // namespace std::graph
