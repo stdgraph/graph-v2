@@ -1034,11 +1034,11 @@ using partition_vertex_id_t = _partition_vertex_id<G>;
 //      default = partition_vertex_id(g,vertex_id(g,ui))
 //
 namespace _Partition_vertex_id {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void partition_vertex_id() = delete;         // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void partition_vertex_id() = delete;       // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void partition_vertex_id();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
   concept _Has_UId_member = requires(_G&& __g, vertex_id_t<_G> uid) {
@@ -1046,7 +1046,7 @@ namespace _Partition_vertex_id {
   };
 
   template <class _G>
-  concept _Has_UId_ADL = _Has_class_or_enum_type<_G>                              //
+  concept _Has_UId_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, vertex_id_t<_G> uid) {
                               { _Fake_copy_init(partition_vertex_id(__g, uid)) }; // intentional ADL
                             };
@@ -1057,7 +1057,7 @@ namespace _Partition_vertex_id {
   };
 
   template <class _G>
-  concept _Has_UIter_ADL = _Has_class_or_enum_type<_G>                             //
+  concept _Has_UIter_ADL = _Has_class_or_enum_type<_G> //
                            && requires(_G&& __g, vertex_iterator_t<_G> ui) {
                                 { _Fake_copy_init(partition_vertex_id(__g, ui)) }; // intentional ADL
                               };
@@ -1164,7 +1164,7 @@ namespace _Partition_vertex_id {
       if constexpr (_Strat == _StIter::_Member) {
         return __g.partition_vertex_id(ui);
       } else if constexpr (_Strat == _StIter::_Non_member) {
-        return partition_vertex_id(__g, ui);     // intentional ADL
+        return partition_vertex_id(__g, ui); // intentional ADL
       } else {
         return (*this)(__g, vertex_id(__g, ui)); // use partition_vertex_id(g, vertex_id(g,ui))
       }
@@ -1182,11 +1182,11 @@ inline namespace _Cpos {
 //      default = find_vertex(g, puid.vertex_id)
 //
 namespace _Find_partition_vertex {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void find_partition_vertex() = delete;       // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void find_partition_vertex() = delete;     // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void find_partition_vertex();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
   concept _Has_UId_member = requires(_G&& __g, partition_vertex_id_t<_G> puid) {
@@ -1194,7 +1194,7 @@ namespace _Find_partition_vertex {
   };
 
   template <class _G>
-  concept _Has_UId_ADL = _Has_class_or_enum_type<_G>                                 //
+  concept _Has_UId_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, partition_vertex_id_t<_G> puid) {
                               { _Fake_copy_init(find_partition_vertex(__g, puid)) }; // intentional ADL
                             };
@@ -1339,11 +1339,11 @@ auto edges(G&& g, vertex_id_t<G> uid, partition_id_t<G> p) -> decltype(tag_invok
 //      default = partition_vertex_id_t<G>{0, target_id(__g, uv)}
 //
 namespace _Partition_target_id {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void partition_target_id() = delete;         // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void partition_target_id() = delete;       // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void partition_target_id();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
   concept _Has_UVRef__member = requires(_G&& __g, edge_reference_t<_G> uv) {
@@ -1351,7 +1351,7 @@ namespace _Partition_target_id {
   };
 
   template <class _G>
-  concept _Has_UVRef__ADL = _Has_class_or_enum_type<_G>                             //
+  concept _Has_UVRef__ADL = _Has_class_or_enum_type<_G> //
                             && requires(_G&& __g, edge_reference_t<_G> uv) {
                                  { _Fake_copy_init(partition_target_id(__g, uv)) }; // intentional ADL
                                };
@@ -1370,7 +1370,7 @@ namespace _Partition_target_id {
                 noexcept(_Fake_copy_init(declval<_G>().partition_target_id(declval<edge_reference_t<_G>>())))};
       } else if constexpr (_Has_UVRef__ADL<_G>) {
         return {_StRef::_Non_member, noexcept(_Fake_copy_init(partition_target_id(
-                                          declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+                                           declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
       } else {
         return {_StRef::_None};
       }
@@ -1407,7 +1407,7 @@ namespace _Partition_target_id {
       if constexpr (_Strat == _StRef::_Member) {
         return __g.partition_target_id(uv);
       } else if constexpr (_Strat == _StRef::_Non_member) {
-        return partition_target_id(__g, uv);                    // intentional ADL
+        return partition_target_id(__g, uv); // intentional ADL
       } else {
         return partition_vertex_id_t<_G>{0, target_id(__g, uv)}; // assume 1 partition with all vertices
       }
@@ -1425,11 +1425,11 @@ inline namespace _Cpos {
 //      default = partition_vertex_id_t<G>{0, source_id(__g, uv)}
 //
 namespace _Partition_source_id {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void partition_source_id() = delete;         // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void partition_source_id() = delete;       // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void partition_source_id();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
   concept _Has_UVRef__member = requires(_G&& __g, edge_reference_t<_G> uv) {
@@ -1437,7 +1437,7 @@ namespace _Partition_source_id {
   };
 
   template <class _G>
-  concept _Has_UVRef__ADL = _Has_class_or_enum_type<_G>                             //
+  concept _Has_UVRef__ADL = _Has_class_or_enum_type<_G> //
                             && requires(_G&& __g, edge_reference_t<_G> uv) {
                                  { _Fake_copy_init(partition_source_id(__g, uv)) }; // intentional ADL
                                };
@@ -1456,7 +1456,7 @@ namespace _Partition_source_id {
                 noexcept(_Fake_copy_init(declval<_G>().partition_source_id(declval<edge_reference_t<_G>>())))};
       } else if constexpr (_Has_UVRef__ADL<_G>) {
         return {_StRef::_Non_member, noexcept(_Fake_copy_init(partition_source_id(
-                                          declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+                                           declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
       } else {
         return {_StRef::_None};
       }
@@ -1493,7 +1493,7 @@ namespace _Partition_source_id {
       if constexpr (_Strat == _StRef::_Member) {
         return __g.partition_source_id(uv);
       } else if constexpr (_Strat == _StRef::_Non_member) {
-        return partition_source_id(__g, uv);                     // intentional ADL
+        return partition_source_id(__g, uv); // intentional ADL
       } else {
         return partition_vertex_id_t<_G>{0, source_id(__g, uv)}; // assume 1 partition with all vertices
       }
