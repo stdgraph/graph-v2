@@ -678,39 +678,152 @@ auto num_vertices(G&& g) {
 
 
 //
-// degree(g,u) -> integral
-//      default = size(edges(g,u)) if sized_range<vertex_edge_range_t<G>>
+// degree(g,u  ) -> integral        default = size(edges(g,u))   if sized_range<vertex_edge_range_t<G>>
+// degree(g,uid) -> integral        default = size(edges(g,uid)) if sized_range<vertex_edge_range_t<G>>
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(degree);
+namespace _Degree {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void degree() = delete;                      // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void degree();
+#    endif                                     // ^^^ workaround ^^^
 
-  template <class G>
-  concept _has_degree_adl = requires(G&& g, vertex_reference_t<G> u) {
-    { degree(g, u) };
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u) {
+    { _Fake_copy_init(u.degree(__g)) };
   };
-} // namespace tag_invoke
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>               //
+                         && requires(_G&& __g, const vertex_reference_t<_G>& u) {
+                              { _Fake_copy_init(degree(__g, u)) }; // intentional ADL
+                            };
+  template <class _G, class _UnCV>
+  concept _Can_ref_eval = ranges::sized_range<vertex_edge_range_t<_G>> //
+                          && requires(_G&& __g, vertex_reference_t<_G> u) {
+                               { _Fake_copy_init(edges(__g, u)) };
+                             };
 
-/**
- * @brief The number of outgoing edges of a vertex.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: size(edges(g, u))
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param u A vertex instance.
- * @return The number of outgoing edges of vertex u.
-*/
-template <class G>
-requires tag_invoke::_has_degree_adl<G> || ranges::sized_range<vertex_edge_range_t<G>>
-auto degree(G&& g, vertex_reference_t<G> u) {
-  if constexpr (tag_invoke::_has_degree_adl<G>)
-    return tag_invoke::degree(g, u);
-  else if constexpr (ranges::sized_range<vertex_edge_range_t<G>>) {
-    return ranges::size(edges(g, u));
-  }
+  template <class _G, class _UnCV>
+  concept _Has_id_ADL = _Has_class_or_enum_type<_G>                 //
+                        && requires(_G&& __g, const vertex_id_t<_G>& uid) {
+                             { _Fake_copy_init(degree(__g, uid)) }; // intentional ADL
+                           };
+  template <class _G, class _UnCV>
+  concept _Can_id_eval = ranges::sized_range<vertex_edge_range_t<_G>> //
+                         && requires(_G&& __g, vertex_id_t<_G> uid) {
+                              { _Fake_copy_init(edges(__g, uid)) };
+                            };
+
+  class _Cpo {
+  private:
+    enum class _St_id { _None, _Non_member, _Auto_eval };
+    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_id_ADL<_G, _UnCV>) {
+        return {_St_id::_Non_member,
+                noexcept(_Fake_copy_init(degree(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_id_eval<_G, _UnCV>) {
+        return {_St_id::_Auto_eval, noexcept(_Fake_copy_init(ranges::size(
+                                          edges(declval<_G>(), declval<vertex_id_t<_G>>()))))}; // default impl
+      } else {
+        return {_St_id::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_id> _Choice_id = _Choose_id<_G>();
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().degree(declval<_G>())))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member,
+                noexcept(_Fake_copy_init(degree(declval<_G>(), declval<vertex_reference_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_ref_eval<_G, _UnCV>) {
+        return {_St_ref::_Auto_eval,
+                noexcept(_Fake_copy_init(ranges::size(edges(declval<_G>(), declval<vertex_reference_t<_G>>()))))};
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: size(edges(g, u))
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param u A vertex instance.
+     * @return The number of outgoing edges of vertex u.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_id = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_id == _St_ref::_Member) {
+        return u.degree(__g);
+      } else if constexpr (_Strat_id == _St_ref::_Non_member) {
+        return degree(__g, u);              // intentional ADL
+      } else if constexpr (_Strat_id == _St_ref::_Auto_eval) {
+        return ranges::size(edges(__g, u)); // default impl
+      } else {
+        static_assert(_Always_false<_G>,
+                      "degree(g,u) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+
+    /**
+     * @brief Get the outgoing degree of a vertex id.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: degree(g, *find_vertex(g, uid))
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uid Vertex id.
+     * @return A range of the outgoing degree.
+    */
+    template <class _G>
+    requires(_Choice_id<_G&>._Strategy != _St_id::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid) const
+          noexcept(_Choice_id<_G&>._No_throw) {
+      constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
+
+      if constexpr (_Strat_id == _St_id::_Non_member) {
+        return degree(__g, uid);              // intentional ADL
+      } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
+        return ranges::size(edges(__g, uid)); // default impl
+      } else {
+        static_assert(_Always_false<_G>,
+                      "degree(g,uid) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+  };
+} // namespace _Degree
+
+inline namespace _Cpos {
+  inline constexpr _Degree::_Cpo degree;
 }
+
 
 //
 // vertex_value(g,u) -> <<user-defined type>>

@@ -3,7 +3,8 @@
 #include "graph/graph_utility.hpp"
 
 //
-// vertexlist(g) -> vertex_descriptor<VId,V,VV> -> {id, vertex& [,value]}
+// vertexlist(g)       -> vertex_descriptor<VId,V,VV> -> {id, vertex& [,value]}
+// basic_vertexlist(g) -> vertex_descriptor<VId> -> {id}
 //
 // given:    vvf = [&g](vertex_reference_t<G> u) -> decl_type(vertex_value(g)) { return vertex_value(g,u);}
 //           (trailing return type is required if defined inline as vertexlist parameter)
@@ -18,6 +19,10 @@
 //
 //         : for(auto&& [uid, u]      : vertexlist(g, vr))
 //         : for(auto&& [uid, u, val] : vertexlist(g, vr, vvf)
+//
+// examples: for(auto&& [uid]      : basic_vertexlist(g))
+//         : for(auto&& [uid]      : basic_vertexlist(g, first, last))
+//         : for(auto&& [uid]      : basic_vertexlist(g, vr))
 //
 namespace std::graph {
 

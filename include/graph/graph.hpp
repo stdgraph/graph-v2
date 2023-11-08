@@ -163,17 +163,29 @@ inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
  * @ingroup graph_concepts
  * @brief Concept for an adjacency list graph.
  * 
- * An adjacency list requires that the vertices range is a forward range, it has a targeted edge,
- * and functions edges(g,u) and edges(g,uid) are defined.
+ * An index_adjacency list requires that the vertices range is a forward range, it has a targeted edge,
+ * and functionedges(g,uid) are defined.
+ * 
+ * @tparam G The graph type.
+*/
+template<class G>
+concept index_adjacency_list = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_id_t<G> uid) {
+  { edges(g, uid) } -> ranges::forward_range;
+};
+
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph.
+ * 
+ * An adjacency list extends index_adjacency_list to include function edges(g,u) for vertex reference u.
  * 
  * @tparam G The graph type.
 */
 template <class G>
-concept adjacency_list =
-      vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_reference_t<G> u, vertex_id_t<G> uid) {
-        { edges(g, u) } -> ranges::forward_range;
-        { edges(g, uid) } -> ranges::forward_range;
-      };
+concept adjacency_list = index_adjacency_list<G> && requires(G&& g, vertex_reference_t<G> u) {
+  { edges(g, u) } -> ranges::forward_range;
+};
+
 // !is_same_v<vertex_range_t<G>, vertex_edge_range_t<G>>
 //      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
 
