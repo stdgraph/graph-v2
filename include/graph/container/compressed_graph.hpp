@@ -797,14 +797,8 @@ private: // tag_invoke properties
 
 
   // target_id(g,uv), target(g,uv)
-#if 1
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.index; }
-#else
-  friend constexpr vertex_id_type
-  tag_invoke(::std::graph::tag_invoke::target_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return uv.index;
-  }
-#endif
+
   friend constexpr vertex_type&
   tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
     return g.row_index_[uv.index];

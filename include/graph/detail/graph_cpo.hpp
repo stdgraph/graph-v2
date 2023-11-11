@@ -479,7 +479,6 @@ using edge_reference_t = ranges::range_reference_t<vertex_edge_range_t<G>>;
 //
 // Graph data structure must define
 //
-#  if 1
 namespace _Target_id {
 #    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void target_id() = delete;                   // Block unqualified name lookup
@@ -554,28 +553,6 @@ namespace _Target_id {
 inline namespace _Cpos {
   inline constexpr _Target_id::_Cpo target_id;
 }
-#  else
-namespace tag_invoke {
-  TAG_INVOKE_DEF(target_id);
-}
-
-/**
- * @brief Get the target vertex id of an edge.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: n/a. This must be specialized for each graph type.
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uv An edge reference.
- * @return The target vertex id.
-*/
-template <class G>
-auto target_id(G&& g, edge_reference_t<const G> uv) -> decltype(tag_invoke::target_id(g, uv)) {
-  return tag_invoke::target_id(g, uv);
-}
-#  endif
 
 //
 // target(g,uv) -> vertex_reference_t<G>

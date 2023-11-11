@@ -233,14 +233,8 @@ private:
 
 private:
   // target_id(g,uv), target(g,uv)
-#if 1
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.target_id_; }
-#else
-  friend constexpr vertex_id_type
-  tag_invoke(::std::graph::tag_invoke::target_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return uv.target_id_;
-  }
-#endif
+
   friend constexpr vertex_type&
   tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
     return begin(vertices(g))[uv.target_id_];
