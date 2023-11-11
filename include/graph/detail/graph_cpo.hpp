@@ -165,6 +165,7 @@ using vertex_t = ranges::range_value_t<vertex_range_t<G>>;
 template <class G>
 using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
 
+
 //
 // vertex_id(g,ui) -> vertex_id_t<G>
 //      default = ui - begin(vertices(g)), if random_access_iterator<ui>
@@ -230,36 +231,85 @@ using vertex_id_t = decltype(vertex_id(declval<G&&>(), declval<vertex_iterator_t
 //
 // default = begin(vertices(g)) + uid, if random_access_range<vertex_range_t<G>>
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(find_vertex);
+namespace _Find_vertex {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void find_vertex() = delete;             // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void find_vertex();
+#    endif                                     // ^^^ workaround ^^^
 
-  template <class G>
-  concept _has_find_vertex_adl = requires(G&& g, vertex_id_t<G> uid) {
-    { find_vertex(g, uid) };
+  template <class _G, class _UnCV>
+  concept _Has_member = requires(_G&& __g, const vertex_id_t<_G>& uid) {
+                          { _Fake_copy_init(__g.find_vertex(uid)) };
+                        };
+
+  template <class _G, class _UnCV>
+  concept _Has_ADL = _Has_class_or_enum_type<_G> //
+                     && requires(_G&& __g, const vertex_id_t<_G>& uid) {
+                          { _Fake_copy_init(find_vertex(__g, uid)) }; // intentional ADL
+                        };
+
+  class _Cpo {
+  private:
+    enum class _St { _None, _Member, _Non_member };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St> _Choose() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_member<_G, _UnCV>) {
+        return {_St::_Member, noexcept(_Fake_copy_init(declval<_G>().find_vertex(declval<vertex_id_t<_G>>())))};
+      } else if constexpr (_Has_ADL<_G, _UnCV>) {
+        return {_St::_Non_member,
+                noexcept(_Fake_copy_init(find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_St::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St> _Choice = _Choose<_G>();
+
+  public:
+    /**
+     * @brief Find a vertex given a vertex id.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: begin(vertices(g)) + uid, if random_access_range<vertex_range_t<G>>
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uid Vertex id.
+     * @return An iterator to the vertex if the vertex exists, or end(vertices(g)) if it doesn't exist.
+    */
+    template <class _G>
+    [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid) const
+          noexcept(_Choice<_G&>._No_throw) {
+      constexpr _St _Strat = _Choice<_G&>._Strategy;
+
+      if constexpr (_Strat == _St::_Member) {
+        return __g.find_vertex(uid);
+      } else if constexpr (_Strat == _St::_Non_member) {
+        return find_vertex(__g, uid); // intentional ADL
+      } else if constexpr (random_access_iterator<vertex_iterator_t<_G>>) {
+        auto uid_diff = static_cast<ranges::range_difference_t<vertex_range_t<_G>>>(uid);
+        if (uid_diff < ssize(vertices(__g)))
+          return begin(vertices(__g)) + uid_diff;
+        else
+          return end(vertices(__g));
+      } else {
+        static_assert(_Always_false<_G>,
+                      "find_vertex(g,uid) has not been defined and the default implemenation cannot be evaluated");
+      }
+    }
   };
-} // namespace tag_invoke
+} // namespace _Find_vertex
 
-/**
- * @brief Find a vertex given a vertex id.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: begin(vertices(g)) + uid, if random_access_range<vertex_range_t<G>>
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uid Vertex id.
- * @return An iterator to the vertex if the vertex exists, or end(vertices(g)) if it doesn't exist.
-*/
-template <class G>
-requires tag_invoke::_has_find_vertex_adl<G> || ranges::random_access_range<vertex_range_t<G>>
-auto find_vertex(G&& g, vertex_id_t<G> uid) {
-  if constexpr (tag_invoke::_has_find_vertex_adl<G>)
-    return tag_invoke::find_vertex(g, uid);
-  else if constexpr (ranges::random_access_range<vertex_range_t<G>>)
-    return begin(vertices(g)) + static_cast<ranges::range_difference_t<vertex_range_t<G>>>(uid);
+inline namespace _Cpos {
+  inline constexpr _Find_vertex::_Cpo find_vertex;
 }
-
 
 // partition_id(g,uid) -> ?   default = vertex_id_t<G>() if not overridden; must be overridden for bipartite or multipartite graphs
 // partition_id(g,u)          default = partition_id(g,vertex_id(u))
