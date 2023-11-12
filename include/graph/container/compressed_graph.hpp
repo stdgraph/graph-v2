@@ -922,10 +922,10 @@ public: // Construction/Destruction
         : base_type(ilist, alloc) {}
 
 private: // tag_invoke properties
-  friend constexpr value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, graph_type& g) {
+  friend constexpr value_type& graph_value(graph_type& g) {
     return g.value_;
   }
-  friend constexpr const value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, const graph_type& g) {
+  friend constexpr const value_type& graph_value(const graph_type& g) {
     return g.value_;
   }
 
