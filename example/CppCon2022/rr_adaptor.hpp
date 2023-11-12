@@ -157,13 +157,11 @@ private: // tag_invoke definitions
     return get<0>(to_tuple(uv));
   }
 
-  friend constexpr vertex_value_type&
-  tag_invoke(std::graph::tag_invoke::vertex_value_fn_t, graph_type& g, vertex_type& u) {
+  friend constexpr vertex_value_type& vertex_value(graph_type& g, vertex_type& u) {
     size_t uidx = static_cast<size_t>(&u - g.vertices_.data());
     return g.vertex_values_[uidx];
   }
-  friend constexpr const vertex_value_type&
-  tag_invoke(std::graph::tag_invoke::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
+  friend constexpr const vertex_value_type& vertex_value(const graph_type& g, const vertex_type& u) {
     size_t uidx = static_cast<size_t>(&u - g.vertices_.data());
     return g.vertex_values_[uidx];
   }
@@ -393,11 +391,11 @@ private:
   }
 
   friend constexpr vertex_value_type&
-  tag_invoke(std::graph::tag_invoke::vertex_value_fn_t, graph_type& g, vertex_type& u) {
+  vertex_value(graph_type& g, vertex_type& u) {
     return get<1>(to_tuple(u));
   }
   friend constexpr const vertex_value_type&
-  tag_invoke(std::graph::tag_invoke::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
+  vertex_value(const graph_type& g, const vertex_type& u) {
     return get<1>(to_tuple(u));
   }
 

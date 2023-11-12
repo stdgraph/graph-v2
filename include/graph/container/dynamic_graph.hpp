@@ -768,13 +768,8 @@ private:
   value_type value_ = value_type();
 
 private: // tag_invoke properties
-  friend constexpr value_type& tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, graph_type& g, vertex_type& u) {
-    return u.value_;
-  }
-  friend constexpr const value_type&
-  tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
-    return u.value_;
-  }
+  friend constexpr value_type&       vertex_value(graph_type& g, vertex_type& u) { return u.value_; }
+  friend constexpr const value_type& vertex_value(const graph_type& g, const vertex_type& u) { return u.value_; }
 };
 
 
@@ -1634,12 +1629,8 @@ private:
   value_type value_; ///< Graph value
 
 private:             // tag_invoke properties
-  friend constexpr value_type& graph_value(graph_type& g) {
-    return g.value_;
-  }
-  friend constexpr const value_type& graph_value(const graph_type& g) {
-    return g.value_;
-  }
+  friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
+  friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 };
 
 /**

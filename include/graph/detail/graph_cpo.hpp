@@ -1156,26 +1156,80 @@ inline namespace _Cpos {
 //
 // vertex_value_t<G> = decltype(vertex_value(g,u))
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(vertex_value); // vertex_value(g,u) -> ?
+namespace _Vertex_value {
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void vertex_value() = delete;              // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
+  void vertex_value();
+#  endif                                     // ^^^ workaround ^^^
+
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u) {
+    { _Fake_copy_init(u.vertex_value(__g)) };
+  };
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                     //
+                         && requires(_G&& __g, vertex_reference_t<_G> u) {
+                              { _Fake_copy_init(vertex_value(__g, u)) }; // intentional ADL
+                            };
+
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Member, _Non_member };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().vertex_value(
+                                        declval<graph_reference_t<_G>>())))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(vertex_value(
+                                            declval<_G>(), declval<vertex_reference_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: size(edges(g, u))
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param u A vertex instance.
+     * @return The number of outgoing edges of vertex u.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto&& operator()(_G&& __g, vertex_reference_t<_G> u) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return u.vertex_value(__g);
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return vertex_value(__g, u); // intentional ADL
+      } else {
+        static_assert(_Always_false<_G>, "vertex_value(g,u) must be defined for the graph");
+      }
+    }
+  };
+} // namespace _Vertex_value
+
+inline namespace _Cpos {
+  inline constexpr _Vertex_value::_Cpo vertex_value;
 }
 
-/**
- * @brief The user-defined value for a vertex, if it exists.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: n/a. This must be specialized for the vertex type of each graph type, if available.
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param u A vertex instance.
- * @return The value associated with vertex u.
-*/
-template <class G>
-auto vertex_value(G&& g, vertex_reference_t<G> u) -> decltype(tag_invoke::vertex_value(g, u)) {
-  return tag_invoke::vertex_value(g, u);
-}
 template <class G>
 using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_reference_t<G>>()));
 
@@ -1266,8 +1320,8 @@ namespace _Graph_value {
      * @return The number of outgoing edges of vertex u.
     */
     template <class _G>
-    //requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) {
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto&& operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
@@ -1275,8 +1329,7 @@ namespace _Graph_value {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return graph_value(__g); // intentional ADL
       } else {
-        static_assert(_Always_false<_G>,
-                      "graph_value(g,u) is not defined and the default implementation cannot be evaluated");
+        static_assert(_Always_false<_G>, "graph_value(g) must be defined for the graph");
       }
     }
   };
