@@ -296,7 +296,7 @@ private:
 private:
   // source_id(g,uv), source(g)
   friend constexpr vertex_id_type
-  tag_invoke(::std::graph::tag_invoke::source_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+  source_id(const graph_type& g, const edge_type& uv) noexcept {
     return uv.source_id_;
   }
   friend constexpr vertex_type&

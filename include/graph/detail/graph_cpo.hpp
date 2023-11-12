@@ -599,28 +599,78 @@ auto&& target(G&& g, edge_reference_t<G> uv) {
 //
 // source_id(g,uv) -> vertex_id_t<G> (optional; only when a source_id exists on an edge)
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(source_id);
-}
+namespace _EL_Source_id {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void source_id() = delete;                   // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void source_id();
+#    endif                                     // ^^^ workaround ^^^
 
-/**
- * @brief Get the source vertex id of an edge.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: n/a. This must be specialized for each graph type, if available.
- * 
- * Not all graphs support a source id on an edge. The existance of @c source_id(g,uv) function 
- * for a graph type G determines if it is considered a "sourced" edge or not.
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uv An edge reference.
- * @return The source vertex id.
-*/
-template <class G>
-auto source_id(G&& g, edge_reference_t<G> uv) -> decltype(tag_invoke::source_id(g, uv)) {
-  return tag_invoke::source_id(g, uv);
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
+    { _Fake_copy_init(uv.source_id(__g)) };
+  };
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                   //
+                         && requires(_G&& __g, const edge_reference_t<_G>& uv) {
+                              { _Fake_copy_init(source_id(__g, uv)) }; // intentional ADL
+                            };
+
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().source_id(declval<_G>())))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {
+              _St_ref::_Non_member,
+              noexcept(_Fake_copy_init(source_id(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: size(edges(g, uv))
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uv A vertex instance.
+     * @return The number of outgoing edges of vertex uv.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return uv.source_id(__g);
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return source_id(__g, uv); // intentional ADL
+      } else {
+        static_assert(_Always_false<_G>, "source_id(g,uv) or g.source_id(uv) is not defined");
+      }
+    }
+  };
+} // namespace _Source_id
+
+inline namespace _Cpos {
+  inline constexpr _EL_Source_id::_Cpo source_id;
 }
 
 //
@@ -1239,11 +1289,11 @@ using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_refe
 // edge_value_t<G> = decltype(edge_value(g,uv))
 //
 namespace _Edge_value {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void edge_value() = delete;                  // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void edge_value() = delete;                // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void edge_value();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
@@ -1416,13 +1466,78 @@ namespace edgelist {
   template <class EL>
   using edge_reference_t = ranges::range_reference_t<edgelist_range_t<EL>>; // edge reference type
 
-  namespace tag_invoke {
-    TAG_INVOKE_DEF(source_id);
-  }
+  namespace _Source_id {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+    void source_id() = delete;                 // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+    void source_id();
+#    endif                                     // ^^^ workaround ^^^
 
-  template <class EL>
-  auto source_id(EL&& el, edge_reference_t<EL> uv) {
-    return tag_invoke::source_id(el, uv);
+    template <class _G, class _UnCV>
+    concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
+      { _Fake_copy_init(uv.source_id(__g)) };
+    };
+    template <class _G, class _UnCV>
+    concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                   //
+                           && requires(_G&& __g, const edge_reference_t<_G>& uv) {
+                                { _Fake_copy_init(source_id(__g, uv)) }; // intentional ADL
+                              };
+
+    class _Cpo {
+    private:
+      enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        using _UnCV = remove_cvref_t<_G>;
+
+        if constexpr (_Has_ref_member<_G, _UnCV>) {
+          return {_St_ref::_Member,
+                  noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().source_id(declval<_G>())))};
+        } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+          return {_St_ref::_Non_member, noexcept(_Fake_copy_init(source_id(
+                                              declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+        } else {
+          return {_St_ref::_None};
+        }
+      }
+
+      template <class _G>
+      static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+    public:
+      /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: size(edges(g, uv))
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uv A vertex instance.
+     * @return The number of outgoing edges of vertex uv.
+    */
+      template <class _G>
+      requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+            noexcept(_Choice_ref<_G&>._No_throw) {
+        constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+        if constexpr (_Strat_ref == _St_ref::_Member) {
+          return uv.source_id(__g);
+        } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+          return source_id(__g, uv); // intentional ADL
+        } else {
+          static_assert(_Always_false<_G>, "source_id(g,uv) or g.source_id(uv) is not defined");
+        }
+      }
+    };
+  } // namespace _Source_id
+
+  inline namespace _Cpos {
+    inline constexpr _Source_id::_Cpo source_id;
   }
 
   template <class EL>
