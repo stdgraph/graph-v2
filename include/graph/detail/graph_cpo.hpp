@@ -1238,25 +1238,79 @@ using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_refe
 //
 // edge_value_t<G> = decltype(edge_value(g,uv))
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(edge_value);
-}
+namespace _Edge_value {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void edge_value() = delete;                  // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void edge_value();
+#    endif                                     // ^^^ workaround ^^^
 
-/**
- * @brief The user-defined value for a edge, if it exists.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: n/a. This must be specialized for the edge type of each graph type, if available.
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uv A edge instance.
- * @return The value associated with edge uv.
-*/
-template <class G>
-auto edge_value(G&& g, edge_reference_t<G> uv) -> decltype(tag_invoke::edge_value(g, uv)) {
-  return tag_invoke::edge_value(g, uv);
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
+    { _Fake_copy_init(uv.edge_value(__g)) };
+  };
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                    //
+                         && requires(_G&& __g, edge_reference_t<_G> uv) {
+                              { _Fake_copy_init(edge_value(__g, uv)) }; // intentional ADL
+                            };
+
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Member, _Non_member };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(
+                                        declval<edge_reference_t<_G>>().edge_value(declval<graph_reference_t<_G>>())))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {
+              _St_ref::_Non_member,
+              noexcept(_Fake_copy_init(edge_value(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: size(edges(g, uv))
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uv A vertex instance.
+     * @return The number of outgoing edges of vertex uv.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto&& operator()(_G&& __g, edge_reference_t<_G> uv) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return uv.edge_value(__g);
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return edge_value(__g, uv); // intentional ADL
+      } else {
+        static_assert(_Always_false<_G>, "edge_value(g,uv) must be defined for the graph");
+      }
+    }
+  };
+} // namespace _Edge_value
+
+inline namespace _Cpos {
+  inline constexpr _Edge_value::_Cpo edge_value;
 }
 
 // edge value types

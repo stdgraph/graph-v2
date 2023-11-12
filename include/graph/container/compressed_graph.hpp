@@ -318,14 +318,12 @@ public:
 
 private:
   // edge_value(g,uv)
-  friend constexpr edge_value_type&
-  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, graph_type& g, edge_type& uv) {
+  friend constexpr edge_value_type& edge_value(graph_type& g, edge_type& uv) {
     auto            uv_idx   = g.index_of(uv);
     csr_col_values& col_vals = g;
     return col_vals.v_[uv_idx];
   }
-  friend constexpr const edge_value_type&
-  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, const graph_type& g, const edge_type& uv) {
+  friend constexpr const edge_value_type& edge_value(const graph_type& g, const edge_type& uv) {
     auto                  uv_idx   = g.index_of(uv);
     const csr_col_values& col_vals = g;
     return col_vals.v_[uv_idx];

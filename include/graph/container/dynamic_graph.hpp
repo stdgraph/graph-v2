@@ -383,14 +383,8 @@ private:
   value_type value_ = value_type();
 
 private: // tag_invoke properties
-  friend constexpr value_type&
-  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, graph_type& g, edge_type& uv) noexcept {
-    return uv.value_;
-  }
-  friend constexpr const value_type&
-  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return uv.value_;
-  }
+  friend constexpr value_type&       edge_value(graph_type& g, edge_type& uv) noexcept { return uv.value_; }
+  friend constexpr const value_type& edge_value(const graph_type& g, const edge_type& uv) noexcept { return uv.value_; }
 };
 
 /**

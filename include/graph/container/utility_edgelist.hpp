@@ -81,10 +81,7 @@ private:
     return std::get<0>(e);
   }
 
-  friend constexpr EV&
-  tag_invoke(::std::graph::edgelist::tag_invoke::edge_value_fn_t, utility_edgelist& el, value_type& e) {
-    return std::get<2>(e);
-  }
+  friend constexpr EV& edge_value(utility_edgelist& el, value_type& e) { return std::get<2>(e); }
 
   storage_type storage_;
   VSourceId    source_max_;
