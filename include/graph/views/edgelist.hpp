@@ -7,11 +7,11 @@
 //
 // edgelist(g,uid)     -> edge_descriptor<VId,true,E,void> -> {source_id, target_id, edge&}
 // edgelist(g,uid,evf) -> edge_descriptor<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
-// 
+//
 // basic_edgelist(g) -> edge_descriptor<VId,true,void,void> -> {source_id, target_id}
 //
 // basic_edgelist(g,uid) -> edge_descriptor<VId,true,void,void> -> {source_id, target_id}
-// 
+//
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(uv); }
 //
 //           vertex_id<G> first_id = ..., last_id = ...;
@@ -23,7 +23,7 @@
 //           for([uid, vid, uv, value] : edgelist(g,first_id,last_id,evf))
 //
 //           for([uid, vid]        : basic_edgelist(g))
-// 
+//
 //           for([uid, vid]        : basic_edgelist(g,uid))
 //
 namespace std::graph::views {

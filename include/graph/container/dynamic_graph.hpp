@@ -1231,7 +1231,7 @@ public: // Properties
   constexpr typename vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
   constexpr const typename vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
 
-public:                                      // Operations
+public: // Operations
   void reserve_vertices(size_type count) {
     if constexpr (reservable<vertices_type>) // reserve if we can; otherwise ignored
       vertices_.reserve(count);
@@ -1633,7 +1633,7 @@ public:
 private:
   value_type value_; ///< Graph value
 
-private:             // tag_invoke properties
+private: // tag_invoke properties
   friend constexpr value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, graph_type& g) {
     return g.value_;
   }

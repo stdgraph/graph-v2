@@ -5,7 +5,7 @@
 //
 // incidence(g,uid)     -> edge_descriptor<VId,false,E,EV> -> {target_id, edge&}
 // incidence(g,uid,evf) -> edge_descriptor<VId,false,E,EV> -> {target_id, edge&, value}
-// 
+//
 // basic_incidence(g,uid,evf) -> edge_descriptor<VId,false,void,void> -> {target_id}
 //
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g,uv) };
