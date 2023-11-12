@@ -153,8 +153,7 @@ private: // tag_invoke definitions
     return g.vertices_[uid];
   }
 
-  friend constexpr vertex_id_type
-  tag_invoke(std::graph::tag_invoke::target_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+  friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept {
     return get<0>(to_tuple(uv));
   }
 
@@ -389,8 +388,7 @@ private:
     return get<0>(to_tuple(g.vertices_[uid]));
   }
 
-  friend constexpr vertex_id_type
-  tag_invoke(std::graph::tag_invoke::target_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+  friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept {
     return get<0>(to_tuple(uv));
   }
 

@@ -3,15 +3,22 @@
 #include "graph/graph_utility.hpp"
 
 //
-// neighbors(g,u) -> neighbor_descriptor<VId,false,E,EV> -> {target_id, vertex& [,value]}
+// neighbors(g,uid)       -> neighbor_descriptor<VId,false,E,VV>    -> {target_id, vertex&}
+// neighbors(g,uid,vvf)   -> neighbor_descriptor<VId,false,E,VV>    -> {target_id, vertex&, value]}
+// 
+// basic_neighbors(g,uid) -> neighbor_descriptor<VId,false,void,EV> -> {target_id}
 //
 // given:    auto vvf = [&g](vertex_reference_t<G> v) { return vertex_value(g,v); }
 //
 // examples: for([vid, v]             : neighbors(g,uid))
 //           for([vid, v, value]      : neighbors(g,uid,vvf))
+// 
+//           for([vid]      : basic_neighbors(g,uid))
 //
-// Since u is passed to incidence(), there's no need to include Sourced versions of
+// Since uid is passed to neighbors(), there's no need to include Sourced versions of
 // incidence().
+// basic_neighbors(g,uid) is the same as basic_incidence(g,uid). It is retained for 
+// symmatry and to avoid confusion.
 //
 namespace std::graph {
 

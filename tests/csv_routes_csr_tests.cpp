@@ -26,6 +26,7 @@ using std::graph::edge_value_t;
 
 using std::graph::graph_value;
 using std::graph::vertices;
+using std::graph::num_vertices;
 using std::graph::edges;
 using std::graph::vertex_id;
 using std::graph::vertex_value;
@@ -35,6 +36,8 @@ using std::graph::edge_value;
 using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
+
+using std::graph::partition_id;
 
 
 using routes_compressed_graph_type = std::graph::container::compressed_graph<double, std::string, std::string>;
@@ -130,6 +133,9 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
     using id_type = uint32_t;
     auto&& d      = graph_value(g);
 
+    auto n = num_vertices(g);
+    REQUIRE(n == 10);
+
     auto uit = std::ranges::begin(vertices(g)) + 2;
     auto id  = vertex_id(g, uit);
     REQUIRE(id == 2);
@@ -139,6 +145,13 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
     REQUIRE("Karlsruhe" == uval);
     auto deg = degree(g, *uit);
     REQUIRE(1 == deg);
+    deg = degree(g, id);
+    REQUIRE(1 == deg);
+
+    auto pid = partition_id(g, id);
+    REQUIRE(pid == 0);
+    //auto np = num_vertices(g, pid);
+    //REQUIRE(np == 10);
 
     auto&& uu = edges(g, *uit);
     REQUIRE(1 == std::ranges::size(uu));
@@ -167,6 +180,8 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
     REQUIRE(std::is_same_v<const std::string&, decltype(uval)>);
     REQUIRE("Karlsruhe" == uval);
     auto deg = degree(g2, *uit);
+    REQUIRE(1 == deg);
+    deg = degree(g2, id);
     REQUIRE(1 == deg);
 
     auto&& uu = edges(g2, *uit);
@@ -226,7 +241,7 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     cout << "\n" << test_name << "\n----------------------------------------" << endl << routes_graph(g) << endl;
     int x = 0; // results are identifcal with csv_routes_dov_tests
 
-    //Germany Routes using compressed_graph
+               //Germany Routes using compressed_graph
     //----------------------------------------
     //[0 Frankfürt]
     //  --> [1 Mannheim] 85km

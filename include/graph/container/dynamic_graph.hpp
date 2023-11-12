@@ -214,7 +214,7 @@ public:
   using edge_type      = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
 
 public:
-  constexpr dynamic_edge_target(vertex_id_type target_id) : target_id_(target_id) {}
+  constexpr dynamic_edge_target(vertex_id_type targ_id) : target_id_(targ_id) {}
 
   constexpr dynamic_edge_target()                           = default;
   constexpr dynamic_edge_target(const dynamic_edge_target&) = default;
@@ -233,10 +233,8 @@ private:
 
 private:
   // target_id(g,uv), target(g,uv)
-  friend constexpr vertex_id_type
-  tag_invoke(::std::graph::tag_invoke::target_id_fn_t, const graph_type& g, const edge_type& uv) noexcept {
-    return uv.target_id_;
-  }
+  friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.target_id_; }
+
   friend constexpr vertex_type&
   tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
     return begin(vertices(g))[uv.target_id_];
@@ -572,11 +570,11 @@ public:
   using edge_type      = dynamic_edge<EV, VV, GV, VId, false, Traits>;
 
 public:
-  constexpr dynamic_edge(vertex_id_type target_id) : base_target_type(target_id) {}
-  constexpr dynamic_edge(vertex_id_type target_id, const value_type& val)
-        : base_target_type(target_id), base_value_type(val) {}
-  constexpr dynamic_edge(vertex_id_type target_id, value_type&& val)
-        : base_target_type(target_id), base_value_type(std::move(val)) {}
+  constexpr dynamic_edge(vertex_id_type targ_id) : base_target_type(targ_id) {}
+  constexpr dynamic_edge(vertex_id_type targ_id, const value_type& val)
+        : base_target_type(targ_id), base_value_type(val) {}
+  constexpr dynamic_edge(vertex_id_type targ_id, value_type&& val)
+        : base_target_type(targ_id), base_value_type(std::move(val)) {}
 
   constexpr dynamic_edge()                    = default;
   constexpr dynamic_edge(const dynamic_edge&) = default;
@@ -1233,7 +1231,7 @@ public: // Properties
   constexpr typename vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
   constexpr const typename vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
 
-public: // Operations
+public:                                      // Operations
   void reserve_vertices(size_type count) {
     if constexpr (reservable<vertices_type>) // reserve if we can; otherwise ignored
       vertices_.reserve(count);
@@ -1635,7 +1633,7 @@ public:
 private:
   value_type value_; ///< Graph value
 
-private: // tag_invoke properties
+private:             // tag_invoke properties
   friend constexpr value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, graph_type& g) {
     return g.value_;
   }
