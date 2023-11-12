@@ -600,11 +600,11 @@ auto&& target(G&& g, edge_reference_t<G> uv) {
 // source_id(g,uv) -> vertex_id_t<G> (optional; only when a source_id exists on an edge)
 //
 namespace _EL_Source_id {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void source_id() = delete;                   // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void source_id() = delete;                 // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void source_id();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
@@ -667,7 +667,7 @@ namespace _EL_Source_id {
       }
     }
   };
-} // namespace _Source_id
+} // namespace _EL_Source_id
 
 inline namespace _Cpos {
   inline constexpr _EL_Source_id::_Cpo source_id;
@@ -773,64 +773,157 @@ using edge_id_t = decltype(edge_id(declval<G&&>(),
 // find_vertex_edge(g,uid,vid) -> vertex_edge_iterator<G>
 //      default = find_vertex_edge(g,*find_vertex(g,uid),vid)
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(find_vertex_edge);
+namespace _Find_vertex_edge {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void find_vertex_edge() = delete;            // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void find_vertex_edge();
+#    endif                                     // ^^^ workaround ^^^
 
-  template <class G>
-  concept _has_find_vertex_edge_adl = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
-    { find_vertex_edge(g, u, vid) };
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u, const vertex_id_t<_G>& vid) {
+    { _Fake_copy_init(u.find_vertex_edge(__g, vid)) };
   };
-  template <class G>
-  concept _has_find_vertex_id_edge_adl =
-        requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
-          { find_vertex_edge(g, uid, vid) };
-        };
-} // namespace tag_invoke
 
-/**
- * @brief Find an edge of a vertex.
- * 
- * Complexity: O(E), where |E| is the number of outgoing edges of vertex u
- * 
- * Default implementation: find_if(edges(g, u), [&g, &vid](auto&& uv) { return target_id(g, uv) == vid; })
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param u A vertex instance.
- * @param vid A target vertex id.
- * @return An edge iterator of an outgoing edge of u with a target id of vid. end(edges(g,u)) will
- *         be returned if an edge doesn't exist.
-*/
-template <class G>
-auto find_vertex_edge(G&& g, vertex_reference_t<G> u, vertex_id_t<G> vid) {
-  if constexpr (tag_invoke::_has_find_vertex_edge_adl<G>)
-    return tag_invoke::find_vertex_edge(g, u, vid);
-  else
-    return ranges::find_if(edges(g, u), [&g, &vid](auto&& uv) { return target_id(g, uv) == vid; });
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                              //
+                         && requires(_G&& __g, vertex_reference_t<_G> u, const vertex_id_t<_G>& vid) {
+                              { _Fake_copy_init(find_vertex_edge(__g, u, vid)) }; // intentional ADL
+                            };
+
+  template <class _G, class _UnCV>
+  concept _Can_ref_eval = requires(_G&& __g, vertex_reference_t<_G> u) {
+    { _Fake_copy_init(edges(__g, u)) };
+  };
+
+  template <class _G, class _UnCV>
+  concept _Has_id_ADL = _Has_class_or_enum_type<_G>                                //
+                        && requires(_G&& __g, vertex_id_t<_G> uid, const vertex_id_t<_G>& vid) {
+                             { _Fake_copy_init(find_vertex_edge(__g, uid, vid)) }; // intentional ADL
+                           };
+
+  template <class _G, class _UnCV>
+  concept _Can_id_eval = requires(_G&& __g, vertex_id_t<_G> uid) {
+    { _Fake_copy_init(edges(__g, uid)) };
+  };
+
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+    enum class _St_id { _None, _Non_member, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV      = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().find_vertex_edge(
+                                        declval<_G>(), declval<vertex_id_t<_G>>())))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member,
+                noexcept(_Fake_copy_init(find_vertex_edge(declval<_G>(), declval<vertex_reference_t<_G>>(),
+                                                          declval<vertex_id_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_ref_eval<_G, _UnCV>) {
+        using fnc_find_t = decltype([](edge_reference_t<_G>) -> bool { return true; });
+        return {_St_ref::_Auto_eval,
+                noexcept(_Fake_copy_init(ranges::find_if(edges(declval<_G>(), declval<vertex_reference_t<_G>>()),
+                                                         declval<fnc_find_t>())))}; // intentional ADL
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV      = remove_cvref_t<_G>;
+
+      if constexpr (_Has_id_ADL<_G, _UnCV>) {
+        return {_St_id::_Non_member,
+                noexcept(_Fake_copy_init(find_vertex_edge(declval<_G>(), declval<vertex_id_t<_G>>(),
+                                                          declval<vertex_id_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_id_eval<_G, _UnCV>) {
+        using fnc_find_t = decltype([](edge_reference_t<_G>) -> bool { return true; });
+        return {_St_id::_Auto_eval,
+                noexcept(_Fake_copy_init(ranges::find_if(edges(declval<_G>(), declval<vertex_id_t<_G>>()),
+                                                         declval<fnc_find_t>())))}; // intentional ADL
+      } else {
+        return {_St_id::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_id> _Choice_id = _Choose_id<_G>();
+
+  public:
+    /**
+     * @brief Find an edge given a source vertex reference and target vertex id.
+     * 
+     * Complexity: O(e), where e is the number of outgoing edges of vertex u
+     * 
+     * Default implementation: find_if(edges(g, u), [&g, &vid](auto&& uv) { return target_id(g, uv) == vid; })
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param u   Source vertex
+     * @param vid Target vertex id.
+     * @return An iterator to the edge if it exists, or end(edges(g,u)) if it doesn't exist.
+    */
+    template <class _G>
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u, const vertex_id_t<_G>& vid) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat == _St_ref::_Member) {
+        return u.find_vertex_edge(__g, vid);
+      } else if constexpr (_Strat == _St_ref::_Non_member) {
+        return find_vertex_edge(__g, u, vid); // intentional ADL
+      } else if constexpr (_Strat == _St_ref::_Auto_eval) {
+        return ranges::find_if(edges(__g, u), [&__g, &vid](auto&& uv) { return target_id(__g, uv) == vid; });
+      } else {
+        static_assert(_Always_false<_G>,
+                      "find_vertex_edge(g,uid) has not been defined and the default implemenation cannot be evaluated");
+      }
+    }
+
+    /**
+     * @brief Find an edge given a source and target vertex ids.
+     * 
+     * Complexity: O(e), where e is the number of outgoing edges of vertex uid
+     * 
+     * Default implementation: find_if(edges(g, uid), [&g, &vid](auto&& uv) { return target_id(g, uv) == vid; })
+     * 
+     * @tparam G The graph type.
+     * @param g   A graph instance.
+     * @param u   Source vertex
+     * @param vid Target vertex id.
+     * @return An iterator to the edge if it exists, or end(edges(g,u)) if it doesn't exist.
+    */
+    template <class _G>
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_id_t<_G> uid, const vertex_id_t<_G>& vid) const
+          noexcept(_Choice_id<_G&>._No_throw) {
+      constexpr _St_id _Strat = _Choice_id<_G&>._Strategy;
+
+      if constexpr (_Strat == _St_id::_Non_member) {
+        return find_vertex_edge(__g, uid, uid); // intentional ADL
+      } else if constexpr (_Strat == _St_id::_Auto_eval) {
+        return ranges::find_if(edges(__g, uid), [&__g, &vid](auto&& uv) { return target_id(__g, uv) == vid; });
+      } else {
+        static_assert(_Always_false<_G>,
+                      "find_vertex_edge(g,uid) has not been defined and the default implemenation cannot be evaluated");
+      }
+    }
+  };
+} // namespace _Find_vertex_edge
+
+inline namespace _Cpos {
+  inline constexpr _Find_vertex_edge::_Cpo find_vertex_edge;
 }
 
-/**
- * @brief Find an edge in the graph.
- * 
- * Complexity: O(E), where |E| is the number of outgoing edges of vertex u
- * 
- * Default implementation: find_vertex_edge(g, *(begin(vertices(g)) + uid), vid)
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uid The vertex source id of the edge.
- * @param vid The vertex target id of the edge.
- * @return An edge iterator of an outgoing edge of u with a target id of vid. end(edges(g,uid)) will
- *         be returned if an edge doesn't exist.
-*/
-template <class G>
-requires tag_invoke::_has_find_vertex_id_edge_adl<G> || ranges::random_access_range<vertex_range_t<G>>
-auto find_vertex_edge(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-  if constexpr (tag_invoke::_has_find_vertex_id_edge_adl<G>)
-    return tag_invoke::find_vertex_edge(g, uid, vid);
-  else if constexpr (ranges::random_access_range<vertex_range_t<G>>)
-    find_vertex_edge(g, *(begin(vertices(g)) + uid), vid);
-}
 
 //
 // contains_edge(g,uid,vid) -> bool
@@ -1467,11 +1560,11 @@ namespace edgelist {
   using edge_reference_t = ranges::range_reference_t<edgelist_range_t<EL>>; // edge reference type
 
   namespace _Source_id {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-    void source_id() = delete;                 // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+    void source_id() = delete;               // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
     void source_id();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
     template <class _G, class _UnCV>
     concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {

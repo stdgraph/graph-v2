@@ -295,10 +295,7 @@ private:
 
 private:
   // source_id(g,uv), source(g)
-  friend constexpr vertex_id_type
-  source_id(const graph_type& g, const edge_type& uv) noexcept {
-    return uv.source_id_;
-  }
+  friend constexpr vertex_id_type source_id(const graph_type& g, const edge_type& uv) noexcept { return uv.source_id_; }
   friend constexpr vertex_type&
   tag_invoke(::std::graph::tag_invoke::source_fn_t, graph_type& g, edge_type& uv) noexcept {
     return begin(vertices(g))[uv.source_id_];
@@ -694,13 +691,11 @@ private: // tag_invoke properties
   }
 
   friend constexpr typename edges_type::iterator
-  tag_invoke(::std::graph::tag_invoke::find_vertex_edge_fn_t, graph_type& g, vertex_id_type uid, vertex_id_type vid) {
+  find_vertex_edge(graph_type& g, vertex_id_type uid, vertex_id_type vid) {
     return ranges::find(g[uid].edges_, [&g, &vid](const edge_type& uv) -> bool { return target_id(g, uv) == vid; });
   }
-  friend constexpr typename edges_type::const_iterator tag_invoke(::std::graph::tag_invoke::find_vertex_edge_fn_t,
-                                                                  const graph_type& g,
-                                                                  vertex_id_type    uid,
-                                                                  vertex_id_type    vid) {
+  friend constexpr typename edges_type::const_iterator
+  find_vertex_edge(const graph_type& g, vertex_id_type uid, vertex_id_type vid) {
     return ranges::find(g[uid].edges_, [&g, &vid](const edge_type& uv) -> bool { return target_id(g, uv) == vid; });
   }
 };
