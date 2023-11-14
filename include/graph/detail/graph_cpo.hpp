@@ -729,11 +729,11 @@ template <class _G>
 using edge_id_t = edge_descriptor<vertex_id_t<_G>, true, void, void>; // {source_id, target_id}
 
 namespace _Edge_id {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void edge_id() = delete;                     // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void edge_id() = delete;                   // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void edge_id();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
@@ -980,42 +980,99 @@ inline namespace _Cpos {
 //      default = uid < size(vertices(g)) && vid < size(vertices(g)), if adjacency_matrix<G>
 //              = find_vertex_edge(g,uid) != ranges::end(edges(g,uid));
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(contains_edge);
+namespace _Contains_edge {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void contains_edge() = delete;               // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void contains_edge();
+#    endif                                     // ^^^ workaround ^^^
 
-  template <class G>
-  concept _has_contains_edge_adl = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-    { contains_edge(g, uid, vid) };
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                             //
+                         && requires(_G&& __g, const vertex_id_t<_G>& uid, const vertex_id_t<_G>& vid) {
+                              { _Fake_copy_init(contains_edge(__g, uid, vid)) }; // intentional ADL
+                            };
+
+  template <class _G, class _UnCV>
+  concept _Can_matrix_eval = _Has_class_or_enum_type<_G> && is_adjacency_matrix_v<_G> //
+                             && ranges::sized_range<vertex_range_t<_G>>;
+
+  template <class _G, class _UnCV>
+  concept _Can_id_eval = _Has_class_or_enum_type<_G> //
+                         && requires(_G&& __g, vertex_reference_t<_G> u, vertex_id_t<_G> uid, vertex_id_t<_G> vid) {
+                              { _Fake_copy_init(find_vertex(__g, uid)) };
+                              { _Fake_copy_init(edges(__g, u)) };
+                              { _Fake_copy_init(find_vertex_edge(__g, u, vid)) };
+                            };
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Non_member, _Matrix_eval, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member,
+                noexcept(_Fake_copy_init(contains_edge(declval<_G>(), declval<vertex_id_t<_G>>(),
+                                                       declval<vertex_id_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_matrix_eval<_G, _UnCV>) {
+        return {_St_ref::_Matrix_eval,
+                noexcept(_Fake_copy_init(declval<vertex_id_t<_G>>() < ranges::size(vertices(declval<_G>()))))};
+      } else if constexpr (_Can_id_eval<_G, _UnCV>) {
+        return {_St_ref::_Auto_eval,
+                noexcept(_Fake_copy_init(find_vertex_edge(declval<_G>(), declval<vertex_reference_t<_G>>(), declval<vertex_id_t<_G>>()) !=
+                         declval<vertex_iterator_t<_G>>()))};
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief Does an edge exist in the graph?
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: 
+     *      uid < ranges::size(vertices(__g)) && vid < ranges::size(vertices(__g)), if is_adjacency_matrix_v<_G>
+     *      find_vertex_edge(g, uid) != ranges::end(edges(g, uid)), otherwise
+     * 
+     * @tparam G The graph type.
+     * @param g  A graph instance.
+     * @param uv An edge reference.
+     * @return An edge_descriptor with the source_id and target_id.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_id_t<_G>& uid, vertex_id_t<_G>& vid) const
+          noexcept(_Choice_ref<_G&>._No_throw) -> bool {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return contains_edge(__g, uid, vid); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_ref::_Matrix_eval) {
+        return uid < ranges::size(vertices(__g)) && vid < ranges::size(vertices(__g));
+      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+        auto ui = find_vertex(__g, uid);
+        return find_vertex_edge(__g, *ui, vid) != ranges::end(edges(__g, *ui));
+      } else {
+        static_assert(_Always_false<_G>,
+                      "contains_edge(g,uv) is not defined, or find_vertex_(g,uid) and source_id(g,uv) are not defined");
+      }
+    }
   };
-} // namespace tag_invoke
+} // namespace _Contains_edge
 
-/**
- * @brief Does an edge exist in the graph?
- * 
- * Complexity: O(E), where |E| is the number of outgoing edges of vertex u
- * 
- * Default implementation: find_vertex_edge(g, *ui) != end(edges(g, *ui));
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uid The vertex source id of the edge.
- * @param vid The vertex target id of the edge.
- * @return true if the edge exists, or false otherwise.
-*/
-template <class G>
-auto contains_edge(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-  if constexpr (tag_invoke::_has_contains_edge_adl<G>)
-    return tag_invoke::contains_edge(g, uid, vid);
-  else if constexpr (is_adjacency_matrix_v<G>) {
-    return uid < ranges::size(vertices(g)) && vid < ranges::size(vertices(g));
-  } else {
-    auto ui = find_vertex(g, uid);
-    return find_vertex_edge(g, *ui) != ranges::end(edges(g, *ui));
-  }
+inline namespace _Cpos {
+  inline constexpr _Contains_edge::_Cpo contains_edge;
 }
 
 
-#  if 1
 //
 // num_vertices(g,)    -> integral        default = size(vertices(g))
 // num_vertices(g,pid) -> integral        default = size(vertices(g,pid))
@@ -1160,41 +1217,6 @@ namespace _NumVertices {
 inline namespace _Cpos {
   inline constexpr _NumVertices::_Cpo num_vertices;
 }
-#  else
-//
-// num_vertices(g) -> integral
-//      default = size(vertices(g))
-//
-namespace tag_invoke {
-  TAG_INVOKE_DEF(num_vertices);
-
-  template <class G>
-  concept _has_num_vertices_adl = requires(G&& g, vertex_reference_t<G> u) {
-    { num_vertices(g) };
-  };
-} // namespace tag_invoke
-
-/**
- * @brief The number of outgoing edges of a vertex.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: size(vertices(g))
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @return The number of vertices in a graph.
-*/
-template <class G>
-requires tag_invoke::_has_num_vertices_adl<G>
-auto num_vertices(G&& g) {
-  if constexpr (tag_invoke::_has_num_vertices_adl<G>)
-    return tag_invoke::num_vertices(g);
-  else {
-    return ranges::size(vertices(g));
-  }
-}
-#  endif
 
 //
 // degree(g,u  ) -> integral        default = size(edges(g,u))   if sized_range<vertex_edge_range_t<G>>
