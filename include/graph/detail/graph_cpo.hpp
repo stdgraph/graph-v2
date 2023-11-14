@@ -774,11 +774,11 @@ using edge_id_t = decltype(edge_id(declval<G&&>(),
 //      default = find_vertex_edge(g,*find_vertex(g,uid),vid)
 //
 namespace _Find_vertex_edge {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void find_vertex_edge() = delete;            // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void find_vertex_edge() = delete;          // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void find_vertex_edge();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u, const vertex_id_t<_G>& vid) {
@@ -815,7 +815,7 @@ namespace _Find_vertex_edge {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-      using _UnCV      = remove_cvref_t<_G>;
+      using _UnCV = remove_cvref_t<_G>;
 
       if constexpr (_Has_ref_member<_G, _UnCV>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().find_vertex_edge(
@@ -840,7 +840,7 @@ namespace _Find_vertex_edge {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-      using _UnCV      = remove_cvref_t<_G>;
+      using _UnCV = remove_cvref_t<_G>;
 
       if constexpr (_Has_id_ADL<_G, _UnCV>) {
         return {_St_id::_Non_member,
@@ -1382,18 +1382,18 @@ using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_refe
 // edge_value_t<G> = decltype(edge_value(g,uv))
 //
 namespace _Edge_value {
-#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void edge_value() = delete;                // Block unqualified name lookup
-#  else                                      // ^^^ no workaround / workaround vvv
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void edge_value() = delete;                  // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
   void edge_value();
-#  endif                                     // ^^^ workaround ^^^
+#    endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
     { _Fake_copy_init(uv.edge_value(__g)) };
   };
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                    //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                   //
                          && requires(_G&& __g, edge_reference_t<_G> uv) {
                               { _Fake_copy_init(edge_value(__g, uv)) }; // intentional ADL
                             };
@@ -1455,6 +1455,7 @@ namespace _Edge_value {
 inline namespace _Cpos {
   inline constexpr _Edge_value::_Cpo edge_value;
 }
+
 
 // edge value types
 template <class G>
