@@ -720,50 +720,100 @@ auto&& source(G&& g, edge_reference_t<G> uv) {
 }
 
 //
-// edge_id(g,uv) -> pair<vertex_id_t<G>,vertex_id_t<G>>
-//      default = pair(source_id(g,uv),target_id(g,uv))
+// edge_id(g,uv) -> edge_id_t<G>
+//      default = edge_id_t<G>(source_id(g,uv),target_id(g,uv))
 //
-// edge_id_t<G> = decltype(edge_id(g,uv))
+// edge_id_t<G> = edge_descriptor<vertex_id_t<_G>, true, void, void>
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(edge_id);
+template <class _G>
+using edge_id_t = edge_descriptor<vertex_id_t<_G>, true, void, void>; // {source_id, target_id}
 
-  template <class G, class ER>
-  concept _has_edge_id_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-    { edge_id(g, uv) };
+namespace _Edge_id {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void edge_id() = delete;                     // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void edge_id();
+#    endif                                     // ^^^ workaround ^^^
+
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
+    { uv.edge_id(__g) } -> convertible_to<edge_id_t<_G>>;
   };
-} // namespace tag_invoke
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                                                  //
+                         && requires(_G&& __g, const edge_reference_t<_G>& uv) {
+                              { _Fake_copy_init(edge_id(__g, uv)) } -> convertible_to<edge_id_t<_G>>; // intentional ADL
+                            };
 
-template <class G, class ER>
-concept _can_eval_edge_id = requires(G&& g, ranges::range_reference_t<ER> uv) {
-  { target_id(g, uv) };
-  { source_id(g, uv) };
-};
+  template <class _G, class _UnCV>
+  concept _Can_id_eval = _Has_class_or_enum_type<_G> //
+                         && requires(_G&& __g, edge_reference_t<_G> uv) {
+                              { _Fake_copy_init(edge_id_t<_G>{source_id(__g, uv), target_id(__g, uv)}) };
+                            };
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
 
-/**
- * @brief Get the edge id of an edge.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: pair(source_id(g, uv), target_id(g, uv))
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uv An edge reference.
- * @return The edge id as a pair of vertex id's.
-*/
-template <class G>
-requires tag_invoke::_has_edge_id_adl<G, vertex_edge_range_t<G>> || _can_eval_edge_id<G, vertex_edge_range_t<G>>
-auto edge_id(G&& g, edge_reference_t<G> uv) {
-  if constexpr (tag_invoke::_has_edge_id_adl<G, vertex_edge_range_t<G>>)
-    return tag_invoke::edge_id(g, uv);
-  else if constexpr (_can_eval_edge_id<G, vertex_edge_range_t<G>>)
-    return pair(source_id(g, uv), target_id(g, uv));
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().edge_id(declval<_G>())))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member,
+                noexcept(_Fake_copy_init(edge_id(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_id_eval<_G, _UnCV>) {
+        return {_St_ref::_Auto_eval,
+                noexcept(_Fake_copy_init(edge_id_t<_G>{source_id(declval<_G>(), declval<edge_reference_t<_G>>()),
+                                                       target_id(declval<_G>(), declval<edge_reference_t<_G>>())}))};
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief The id of an edge, made from its source_id and target_id.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: 
+     *      edge_descriptor<vertex_id_t<G>,true>{source_id(g,uv), target_id(g,uv)}
+     *      given that source_id(g,uv) is defined.
+     * 
+     * @tparam G The graph type.
+     * @param g  A graph instance.
+     * @param uv An edge reference.
+     * @return An edge_descriptor with the source_id and target_id.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return uv.edge_id(__g);
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return edge_id(__g, uv); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+        return edge_id_t<_G>{source_id(__g, uv), target_id(__g, uv)};
+      } else {
+        static_assert(_Always_false<_G>,
+                      "edge_id(g,uv) is not defined, or target_id(g,uv) and source_id(g,uv) are not defined");
+      }
+    }
+  };
+} // namespace _Edge_id
+
+inline namespace _Cpos {
+  inline constexpr _Edge_id::_Cpo edge_id;
 }
-
-template <class G>
-using edge_id_t = decltype(edge_id(declval<G&&>(),
-                                   declval<edge_reference_t<G>>())); // e.g. pair<vertex_id_t<G>,vertex_id_t<G>>
 
 
 //
@@ -1382,18 +1432,18 @@ using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_refe
 // edge_value_t<G> = decltype(edge_value(g,uv))
 //
 namespace _Edge_value {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void edge_value() = delete;                  // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void edge_value() = delete;                // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void edge_value();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
     { _Fake_copy_init(uv.edge_value(__g)) };
   };
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                   //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                    //
                          && requires(_G&& __g, edge_reference_t<_G> uv) {
                               { _Fake_copy_init(edge_value(__g, uv)) }; // intentional ADL
                             };
