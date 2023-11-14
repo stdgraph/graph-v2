@@ -560,40 +560,83 @@ inline namespace _Cpos {
 //      for random_access_range<vertices(g)> and integral<target_id(g,uv))
 //      uv can be from edges(g,u) or vertices(g,u)
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(target);
+namespace _Target {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void target() = delete;                      // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void target();
+#    endif                                     // ^^^ workaround ^^^
 
-  template <class G, class ER>
-  concept _has_target_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-    { target(g, uv) };
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                //
+                         && requires(_G&& __g, const edge_reference_t<_G>& uv) {
+                              { _Fake_copy_init(target(__g, uv)) }; // intentional ADL
+                            };
+  template <class _G, class _UnCV>
+  concept _Can_ref_eval = ranges::random_access_range<vertex_range_t<_G>> //
+                          && requires(_G&& __g, edge_reference_t<_G> uv) {
+                               { _Fake_copy_init(target_id(__g, uv)) } -> integral;
+                             };
+
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Non_member, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member,
+                noexcept(_Fake_copy_init(target(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_ref_eval<_G, _UnCV>) {
+        return {
+              _St_ref::_Auto_eval,
+              noexcept(_Fake_copy_init(begin(vertices(declval<_G>())) +
+                                       target_id(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: size(edges(g, uv))
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uv A vertex instance.
+     * @return The number of outgoing edges of vertex uv.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto&& operator()(_G&& __g, edge_reference_t<_G> uv) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return target(__g, uv); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+        return *(begin(vertices(__g)) + target_id(__g, uv));
+      } else {
+        static_assert(_Always_false<_G>, "target(g,uv) or g.target(uv) is not defined");
+      }
+    }
   };
-} // namespace tag_invoke
-template <class G, class ER>
-concept _can_eval_target =
-      ranges::random_access_range<vertex_range_t<G>> && requires(G&& g, ranges::range_reference_t<ER> uv) {
-        { target_id(g, uv) } -> integral;
-      };
+} // namespace _Target
 
-/**
- * @brief Get the target vertex of an edge.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: *(begin(vertices(g)) + target_id(g, uv))
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uv An edge reference.
- * @return The target vertex reference.
-*/
-template <class G>
-requires tag_invoke::_has_target_adl<G, vertex_edge_range_t<G>> || _can_eval_target<G, vertex_edge_range_t<G>>
-auto&& target(G&& g, edge_reference_t<G> uv) {
-  if constexpr (tag_invoke::_has_target_adl<G, vertex_edge_range_t<G>>)
-    return tag_invoke::target(g, uv);
-  else if constexpr (_can_eval_target<G, vertex_edge_range_t<G>>)
-    return *(begin(vertices(g)) + target_id(g, uv));
+inline namespace _Cpos {
+  inline constexpr _Target::_Cpo target;
 }
+
 
 //
 //
@@ -981,11 +1024,11 @@ inline namespace _Cpos {
 //              = find_vertex_edge(g,uid) != ranges::end(edges(g,uid));
 //
 namespace _Contains_edge {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void contains_edge() = delete;               // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void contains_edge() = delete;             // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void contains_edge();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                             //
@@ -1022,8 +1065,9 @@ namespace _Contains_edge {
                 noexcept(_Fake_copy_init(declval<vertex_id_t<_G>>() < ranges::size(vertices(declval<_G>()))))};
       } else if constexpr (_Can_id_eval<_G, _UnCV>) {
         return {_St_ref::_Auto_eval,
-                noexcept(_Fake_copy_init(find_vertex_edge(declval<_G>(), declval<vertex_reference_t<_G>>(), declval<vertex_id_t<_G>>()) !=
-                         declval<vertex_iterator_t<_G>>()))};
+                noexcept(_Fake_copy_init(
+                      find_vertex_edge(declval<_G>(), declval<vertex_reference_t<_G>>(), declval<vertex_id_t<_G>>()) !=
+                      declval<vertex_iterator_t<_G>>()))};
       } else {
         return {_St_ref::_None};
       }
@@ -1078,11 +1122,11 @@ inline namespace _Cpos {
 // num_vertices(g,pid) -> integral        default = size(vertices(g,pid))
 //
 namespace _NumVertices {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void num_vertices() = delete;                // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void num_vertices() = delete;              // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void num_vertices();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_member = requires(_G&& __g) {

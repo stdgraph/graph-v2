@@ -796,11 +796,11 @@ private: // tag_invoke properties
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.index; }
 
   friend constexpr vertex_type&
-  tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
+  target(graph_type& g, edge_type& uv) noexcept {
     return g.row_index_[uv.index];
   }
   friend constexpr const vertex_type&
-  tag_invoke(::std::graph::tag_invoke::target_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+  target(const graph_type& g, const edge_type& uv) noexcept {
     return g.row_index_[uv.index];
   }
 

@@ -235,12 +235,10 @@ private:
   // target_id(g,uv), target(g,uv)
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.target_id_; }
 
-  friend constexpr vertex_type&
-  tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
+  friend constexpr vertex_type& target(graph_type& g, edge_type& uv) noexcept {
     return begin(vertices(g))[uv.target_id_];
   }
-  friend constexpr const vertex_type&
-  tag_invoke(::std::graph::tag_invoke::target_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+  friend constexpr const vertex_type& target(const graph_type& g, const edge_type& uv) noexcept {
     return begin(vertices(g))[uv.target_id_];
   }
 };
