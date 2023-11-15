@@ -3,8 +3,10 @@
 // (included from graph.hpp)
 #include "tag_invoke.hpp"
 
-#ifndef GRAPH_INVOKE_HPP
-#  define GRAPH_INVOKE_HPP
+#ifndef GRAPH_CPO_HPP
+#  define GRAPH_CPO_HPP
+
+#  define EDGES_CPO 1
 
 namespace std::graph {
 
@@ -509,7 +511,6 @@ inline namespace _Cpos {
   inline constexpr _Partition_id::_Cpo partition_id;
 }
 
-
 template <class G>
 using partition_id_t = decltype(partition_id(declval<G>(), declval<vertex_reference_t<G>>()));
 
@@ -524,6 +525,147 @@ using partition_id_t = decltype(partition_id(declval<G>(), declval<vertex_refere
 // edge_t                    = ranges::range_value_t<vertex_edge_range_t<G>>
 // edge_reference_t          = ranges::range_reference_t<vertex_edge_range_t<G>>
 //
+#  if EDGES_CPO
+namespace _Edges {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void edges() = delete;                       // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void edges();
+#    endif                                     // ^^^ workaround ^^^
+
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u) {
+    { _Fake_copy_init(u.edges(__g)) };
+  };
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>              //
+                         && requires(_G&& __g, const vertex_reference_t<_G>& u) {
+                              { _Fake_copy_init(edges(__g, u)) }; // intentional ADL
+                            };
+  template <class _G, class _UnCV>
+  concept _Can_ref_eval = _Has_class_or_enum_type<_G> && ranges::forward_range<vertex_t<_G>>;
+
+  template <class _G, class _UnCV>
+  concept _Has_id_ADL = _Has_class_or_enum_type<_G>                //
+                        && requires(_G&& __g, const vertex_id_t<_G>& uid) {
+                             { _Fake_copy_init(edges(__g, uid)) }; // intentional ADL
+                           };
+  template <class _G, class _UnCV>
+  concept _Can_id_eval = _Has_class_or_enum_type<_G> && ranges::forward_range<vertex_t<_G>> //
+                         && requires(_G&& __g, vertex_id_t<_G> uid) {
+                              { _Fake_copy_init(find_vertex(__g, uid)) };
+                            };
+
+  class _Cpo {
+  private:
+    enum class _St_id { _None, _Non_member, _Auto_eval };
+    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_id_ADL<_G, _UnCV>) {
+        return {_St_id::_Non_member,
+                noexcept(_Fake_copy_init(edges(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_id_eval<_G, _UnCV>) {
+        return {_St_id::_Auto_eval,
+                noexcept(_Fake_copy_init(*find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))}; // default impl
+      } else {
+        return {_St_id::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_id> _Choice_id = _Choose_id<_G>();
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().edges(declval<_G>())))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member,
+                noexcept(_Fake_copy_init(edges(declval<_G>(), declval<vertex_reference_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_ref_eval<_G, _UnCV>) {
+        return {_St_ref::_Auto_eval,
+                noexcept(_Fake_copy_init(*find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))};
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: size(edges(g, u))
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param u A vertex instance.
+     * @return The number of outgoing edges of vertex u.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto&& operator()(_G&& __g, vertex_reference_t<_G> u) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return u.edges(__g);
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return edges(__g, u); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+        return u;             // default impl
+      } else {
+        static_assert(_Always_false<_G>,
+                      "edges(g,u) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+
+    /**
+     * @brief Get the outgoing edges of a vertex id.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: edges(g, *find_vertex(g, uid))
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uid Vertex id.
+     * @return A range of the outgoing edges.
+    */
+    template <class _G>
+    requires(_Choice_id<_G&>._Strategy != _St_id::_None)
+    [[nodiscard]] constexpr auto&& operator()(_G&& __g, const vertex_id_t<_G>& uid) const
+          noexcept(_Choice_id<_G&>._No_throw) {
+      constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
+
+      if constexpr (_Strat_id == _St_id::_Non_member) {
+        return edges(__g, uid);        // intentional ADL
+      } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
+        return *find_vertex(__g, uid); // default impl
+      } else {
+        static_assert(_Always_false<_G>,
+                      "edges(g,uid) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+  };
+} // namespace _Edges
+
+inline namespace _Cpos {
+  inline constexpr _Edges::_Cpo edges;
+}
+#  else
 namespace tag_invoke {
   TAG_INVOKE_DEF(edges);
 
@@ -575,6 +717,7 @@ auto edges(G&& g, vertex_id_t<G> uid) -> decltype(tag_invoke::edges(g, uid)) {
   else
     return edges(g, *find_vertex(g, uid));
 }
+#  endif
 
 /**
  * @brief The outgoing edge range type of a vertex for graph G.
@@ -1471,7 +1614,7 @@ namespace _Degree {
                            };
   template <class _G, class _UnCV>
   concept _Can_id_eval = ranges::sized_range<vertex_edge_range_t<_G>> //
-                         && requires(_G&& __g, vertex_id_t<_G> uid) {
+                         && requires(_G&& __g, vertex_id_t<_G>& uid) {
                               { _Fake_copy_init(edges(__g, uid)) };
                             };
 
@@ -1831,6 +1974,69 @@ inline namespace _Cpos {
 
 
 namespace edgelist {
+#  if EDGES_CPO
+  namespace _Edges {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+    void edges() = delete;                     // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+    void edges();
+#    endif                                     // ^^^ workaround ^^^
+
+    template <class EL, class _UnCV>
+    concept _Has_ref_ADL = _Has_class_or_enum_type<EL>          //
+                           && ranges::forward_range<EL> && requires(EL&& el) {
+                                { _Fake_copy_init(edges(el)) }; // intentional ADL
+                              };
+
+    class _Cpo {
+    private:
+      enum class _St_ref { _None, _Non_member };
+
+      template <class EL>
+      [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+        using _UnCV = remove_cvref_t<EL>;
+
+        if constexpr (_Has_ref_ADL<EL, _UnCV>) {
+          return {_St_ref::_Non_member, noexcept(_Fake_copy_init(edges(declval<EL>())))}; // intentional ADL
+        } else {
+          return {_St_ref::_None};
+        }
+      }
+
+      template <class EL>
+      static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<EL>();
+
+    public:
+      /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: none
+     * 
+     * @tparam G The graph type.
+     * @param EL An edgelist instance.
+     * @return The edgelist passed.
+    */
+      template <class EL>
+      requires(_Choice_ref<EL&>._Strategy != _St_ref::_None)
+      [[nodiscard]] constexpr auto&& operator()(EL&& el) const noexcept(_Choice_ref<EL&>._No_throw) {
+        constexpr _St_ref _Strat_ref = _Choice_ref<EL&>._Strategy;
+
+        if constexpr (_Strat_ref == _St_ref::_Non_member) {
+          return el; // intentional ADL
+        } else {
+          static_assert(_Always_false<EL>,
+                        "edges(el) is not defined and the default implementation cannot be evaluated");
+        }
+      }
+    };
+  } // namespace _Edges
+
+  inline namespace _Cpos {
+    inline constexpr _Edges::_Cpo edges;
+  }
+#  else
   namespace tag_invoke {
     TAG_INVOKE_DEF(edges); // edges(e) -> [edge list vertices]
   }
@@ -1839,6 +2045,7 @@ namespace edgelist {
   auto edges(EL&& el) {
     return el;
   }
+#  endif
 
   template <class EL>
   using edgelist_range_t = decltype(edges(declval<EL&&>()));
@@ -2342,8 +2549,9 @@ using partition_edge_range_t = vertex_edge_range_t<G>;
 // edge_t                    = ranges::range_value_t<vertex_edge_range_t<G>>
 // edge_reference_t          = ranges::range_reference_t<vertex_edge_range_t<G>>
 //
+#  if 0
 namespace tag_invoke {
-  //TAG_INVOKE_DEF(edges);
+  TAG_INVOKE_DEF(edges);
 
   template <class G>
   concept _has_edges_vtxref_part_adl = requires(G&& g, vertex_reference_t<G> u, partition_id_t<G> p) {
@@ -2397,7 +2605,7 @@ auto edges(G&& g, vertex_id_t<G> uid, partition_id_t<G> p) -> decltype(tag_invok
   else
     return edges(g, *find_vertex(g, uid), p);
 }
-
+#  endif
 
 //
 // partition_target_id(g,puid) -> partition_vertex_id_t<_G>
@@ -2573,4 +2781,4 @@ inline namespace _Cpos {
 
 } // namespace std::graph
 
-#endif //GRAPH_INVOKE_HPP
+#endif //GRAPH_CPO_HPP
