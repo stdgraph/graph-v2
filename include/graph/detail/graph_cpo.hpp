@@ -368,11 +368,11 @@ inline namespace _Cpos {
 // partition_id(g,u)          default = partition_id(g,vertex_id(u))
 //
 namespace _Partition_id {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void partition_id() = delete;                // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void partition_id() = delete;              // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void partition_id();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u) {
@@ -384,7 +384,7 @@ namespace _Partition_id {
                               { _Fake_copy_init(partition_id(__g, u)) }; // intentional ADL
                             };
   template <class _G, class _UnCV>
-  concept _Can_ref_eval = _Has_class_or_enum_type<_G> //
+  concept _Can_ref_eval = _Has_class_or_enum_type<_G> && integral<vertex_id_t<_G>> //
                           && requires(_G&& __g, vertex_id_t<_G> uid) {
                                { _Fake_copy_init(vertex_id_t<_G>{0}) };
                              };
@@ -395,8 +395,8 @@ namespace _Partition_id {
                              { _Fake_copy_init(partition_id(__g, uid)) }; // intentional ADL
                            };
   template <class _G, class _UnCV>
-  concept _Can_id_eval = _Has_class_or_enum_type<_G> //
-                         && requires(_G&& __g, vertex_id_t<_G> uid) {
+  concept _Can_id_eval = _Has_class_or_enum_type<_G> && integral<vertex_id_t<_G>> //
+                         && requires(_G&& __g) {
                               { _Fake_copy_init(vertex_id_t<_G>{0}) };
                             };
 
@@ -446,16 +446,16 @@ namespace _Partition_id {
 
   public:
     /**
-     * @brief The number of outgoing edges of a vertex.
+     * @brief The partition id of a vertex
      * 
      * Complexity: O(1)
      * 
-     * Default implementation: vertex_id_t<_G>(0)
+     * Default implementation: vertex_id_t<_G>(0) if vertex_id_t<_G> is integral
      * 
      * @tparam G The graph type.
      * @param g A graph instance.
      * @param u A vertex instance.
-     * @return The number of outgoing edges of vertex u.
+     * @return The partition id of u.
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
@@ -468,7 +468,7 @@ namespace _Partition_id {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return partition_id(__g, u); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return vertex_id_t<_G>(0); // default impl
+        return vertex_id_t<_G>{0};   // default impl
       } else {
         static_assert(_Always_false<_G>,
                       "partition_id(g,u) is not defined and the default implementation cannot be evaluated");
@@ -480,12 +480,12 @@ namespace _Partition_id {
      * 
      * Complexity: O(1)
      * 
-     * Default implementation: vertex_id_t<_G>(0)
+     * Default implementation: vertex_id_t<_G>(0) if vertex_id_t<_G> is integral
      * 
      * @tparam G The graph type.
      * @param g A graph instance.
      * @param uid Vertex id.
-     * @return A range of the outgoing partition_id.
+     * @return The partition id of uid.
     */
     template <class _G>
     requires(_Choice_id<_G&>._Strategy != _St_id::_None)
@@ -496,7 +496,7 @@ namespace _Partition_id {
       if constexpr (_Strat_id == _St_id::_Non_member) {
         return partition_id(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
-        return vertex_id_t<_G>(0);     // default impl
+        return vertex_id_t<_G>{0};     // default impl
       } else {
         static_assert(_Always_false<_G>,
                       "partition_id(g,uid) is not defined and the default implementation cannot be evaluated");
@@ -1958,40 +1958,87 @@ namespace edgelist {
 
 // partition_count(g) -> ?   default = vertex_id_t<G>(1) when vertex_id_t<G> is integral, size_t(0) otherwise
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(partition_count);
+namespace _Partition_count {
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void partition_count() = delete;           // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
+  void partition_count();
+#  endif                                     // ^^^ workaround ^^^
 
-  template <class G>
-  concept _has_partition_count_adl = requires(G&& g) {
-    { partition_count(g) };
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u) {
+    { _Fake_copy_init(__g.partition_count()) };
   };
-} // namespace tag_invoke
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                     //
+                         && requires(_G&& __g) {
+                              { _Fake_copy_init(partition_count(__g)) }; // intentional ADL
+                            };
+  template <class _G, class _UnCV>
+  concept _Can_ref_eval = integral<vertex_id_t<_G>> //
+                          && requires(_G&& __g) {
+                               { _Fake_copy_init(vertex_id_t<_G>(1)) };
+                             };
 
-/**
- * @brief Get's the number of partitions in a graph.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: 0; graph container must override if it supports bi-partite
- * or multipartite graphs.
- * 
- * This is a customization point function that may be overriden if graph G supports bi-partite
- * or multi-partite graphs. If it doesn't then a value of 0 is returned.
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @return The number of partitions in a graph. 0 if G doesn't support partitioning.
-*/
-template <class G>
-requires tag_invoke::_has_partition_count_adl<G>
-auto partition_count(G&& g) {
-  if constexpr (tag_invoke::_has_partition_count_adl<G>)
-    return tag_invoke::partition_count(g);
-  else if constexpr (is_integral_v<vertex_id_t<G>>)
-    return vertex_id_t<G>(1);
-  else
-    return size_t(1);
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().partition_count()))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(partition_count(
+                                            declval<_G>(), declval<vertex_reference_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_ref_eval<_G, _UnCV>) {
+        return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(vertex_id_t<_G>(1)))};
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief The number of partitions in a graph.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: vertex_id_t<_G>(0)
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @return The number of partitions in the graph.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return __g.partition_count();
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return partition_count(__g); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+        return vertex_id_t<_G>(1);   // default impl
+      } else {
+        static_assert(_Always_false<_G>,
+                      "partition_count(g) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+  };
+} // namespace _Partition_count
+
+inline namespace _Cpos {
+  inline constexpr _Partition_count::_Cpo partition_count;
 }
+
 
 // vertices(g,pid) -> range of vertices; graph container must override if it supports bi-partite or
 // multi-partite graph.
