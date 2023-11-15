@@ -171,18 +171,18 @@ using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
 //      default = ui - begin(vertices(g)), if random_access_iterator<ui>
 //
 namespace _Vertex_id {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void vertex_id() = delete;                   // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void vertex_id() = delete;                 // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void vertex_id();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_member = requires(_G&& __g, vertex_iterator_t<_G> ui) {
     { _Fake_copy_init(ui->vertex_id(__g)) };
   };
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                   //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, const vertex_iterator_t<_G> ui) {
                               { _Fake_copy_init(vertex_id(__g, ui)) }; // intentional ADL
                             };
@@ -199,7 +199,8 @@ namespace _Vertex_id {
       using _UnCV = remove_cvref_t<_G>;
 
       if constexpr (_Has_ref_member<_G, _UnCV>) {
-        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>()->vertex_id(declval<_G>())))};
+        return {_St_ref::_Member,
+                noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>()->vertex_id(declval<_G>())))};
       } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
         return {
               _St_ref::_Non_member,
@@ -620,7 +621,7 @@ namespace _Target {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                               { _Fake_copy_init(target(__g, uv)) }; // intentional ADL
                             };
@@ -707,7 +708,7 @@ namespace _EL_Source_id {
     { _Fake_copy_init(uv.source_id(__g)) };
   };
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                   //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                               { _Fake_copy_init(source_id(__g, uv)) }; // intentional ADL
                             };
@@ -784,7 +785,7 @@ namespace _Source {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                               { _Fake_copy_init(source(__g, uv)) }; // intentional ADL
                             };
@@ -880,7 +881,7 @@ namespace _Edge_id {
     { uv.edge_id(__g) } -> convertible_to<edge_id_t<_G>>;
   };
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                                                  //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                               { _Fake_copy_init(edge_id(__g, uv)) } -> convertible_to<edge_id_t<_G>>; // intentional ADL
                             };
@@ -976,7 +977,7 @@ namespace _Find_vertex_edge {
   };
 
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                              //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, vertex_reference_t<_G> u, const vertex_id_t<_G>& vid) {
                               { _Fake_copy_init(find_vertex_edge(__g, u, vid)) }; // intentional ADL
                             };
@@ -987,7 +988,7 @@ namespace _Find_vertex_edge {
   };
 
   template <class _G, class _UnCV>
-  concept _Has_id_ADL = _Has_class_or_enum_type<_G>                                //
+  concept _Has_id_ADL = _Has_class_or_enum_type<_G> //
                         && requires(_G&& __g, vertex_id_t<_G> uid, const vertex_id_t<_G>& vid) {
                              { _Fake_copy_init(find_vertex_edge(__g, uid, vid)) }; // intentional ADL
                            };
@@ -1128,7 +1129,7 @@ namespace _Contains_edge {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                             //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, const vertex_id_t<_G>& uid, const vertex_id_t<_G>& vid) {
                               { _Fake_copy_init(contains_edge(__g, uid, vid)) }; // intentional ADL
                             };
@@ -1524,7 +1525,7 @@ namespace _Vertex_value {
     { _Fake_copy_init(u.vertex_value(__g)) };
   };
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                     //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, vertex_reference_t<_G> u) {
                               { _Fake_copy_init(vertex_value(__g, u)) }; // intentional ADL
                             };
@@ -1606,7 +1607,7 @@ namespace _Edge_value {
     { _Fake_copy_init(uv.edge_value(__g)) };
   };
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                    //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, edge_reference_t<_G> uv) {
                               { _Fake_copy_init(edge_value(__g, uv)) }; // intentional ADL
                             };
@@ -1691,7 +1692,7 @@ namespace _Graph_value {
     { _Fake_copy_init(__g.graph_value()) };
   };
   template <class _G, class _UnCV>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                 //
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(graph_value(__g)) }; // intentional ADL
                             };
@@ -1785,7 +1786,7 @@ namespace edgelist {
       { _Fake_copy_init(uv.source_id(__g)) };
     };
     template <class _G, class _UnCV>
-    concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                   //
+    concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                            && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                                 { _Fake_copy_init(source_id(__g, uv)) }; // intentional ADL
                               };

@@ -1612,7 +1612,7 @@ public:
 private:
   value_type value_; ///< Graph value
 
-private:             // tag_invoke properties
+private: // tag_invoke properties
   friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
   friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 };

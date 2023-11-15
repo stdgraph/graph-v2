@@ -191,4 +191,4 @@ inline constexpr bool is_sourced_v<edge_descriptor<VId, true, V, VV>> = true;
 template <class VId, class V, class VV>
 inline constexpr bool is_sourced_v<neighbor_descriptor<VId, true, V, VV>> = true;
 
-}
+} // namespace std::graph
