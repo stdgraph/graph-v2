@@ -22,6 +22,7 @@
 #include <type_traits>
 #include <stdexcept>
 
+#include "graph_descriptors.hpp"
 #include "detail/graph_cpo.hpp"
 
 

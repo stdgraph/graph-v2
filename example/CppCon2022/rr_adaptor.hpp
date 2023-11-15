@@ -130,8 +130,7 @@ private: // tag_invoke definitions
     return g.vertices_;
   }
 
-  friend vertex_id_type
-  tag_invoke(std::graph::tag_invoke::vertex_id_fn_t, const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
+  friend vertex_id_type vertex_id(const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
     return static_cast<vertex_id_type>(ui -
                                        std::ranges::begin(g.vertices_)); // overriden to assure correct type returned
   }
@@ -157,24 +156,21 @@ private: // tag_invoke definitions
     return get<0>(to_tuple(uv));
   }
 
-  friend constexpr vertex_value_type&
-  tag_invoke(std::graph::tag_invoke::vertex_value_fn_t, graph_type& g, vertex_type& u) {
+  friend constexpr vertex_value_type& vertex_value(graph_type& g, vertex_type& u) {
     size_t uidx = static_cast<size_t>(&u - g.vertices_.data());
     return g.vertex_values_[uidx];
   }
-  friend constexpr const vertex_value_type&
-  tag_invoke(std::graph::tag_invoke::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
+  friend constexpr const vertex_value_type& vertex_value(const graph_type& g, const vertex_type& u) {
     size_t uidx = static_cast<size_t>(&u - g.vertices_.data());
     return g.vertex_values_[uidx];
   }
 
   // edge_value(g,uv)
-  friend constexpr edge_value_type& tag_invoke(std::graph::tag_invoke::edge_value_fn_t, graph_type& g, edge_type& uv) {
+  friend constexpr edge_value_type& edge_value(graph_type& g, edge_type& uv) {
     auto t = to_tuple(uv);
     return get<1>(t);
   }
-  friend constexpr const edge_value_type&
-  tag_invoke(std::graph::tag_invoke::edge_value_fn_t, const graph_type& g, const edge_type& uv) {
+  friend constexpr const edge_value_type& edge_value(const graph_type& g, const edge_type& uv) {
     auto t = to_tuple(uv);
     return get<1>(t);
   }
@@ -365,8 +361,7 @@ private:
     return g.vertices_;
   }
 
-  friend vertex_id_type
-  tag_invoke(std::graph::tag_invoke::vertex_id_fn_t, const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
+  friend vertex_id_type vertex_id(const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
     return static_cast<vertex_id_type>(ui -
                                        std::ranges::begin(g.vertices_)); // overriden to assure correct type returned
   }
@@ -392,21 +387,16 @@ private:
     return get<0>(to_tuple(uv));
   }
 
-  friend constexpr vertex_value_type&
-  tag_invoke(std::graph::tag_invoke::vertex_value_fn_t, graph_type& g, vertex_type& u) {
-    return get<1>(to_tuple(u));
-  }
-  friend constexpr const vertex_value_type&
-  tag_invoke(std::graph::tag_invoke::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
+  friend constexpr vertex_value_type&       vertex_value(graph_type& g, vertex_type& u) { return get<1>(to_tuple(u)); }
+  friend constexpr const vertex_value_type& vertex_value(const graph_type& g, const vertex_type& u) {
     return get<1>(to_tuple(u));
   }
 
   // edge_value(g,uv)
-  friend constexpr edge_value_type& tag_invoke(std::graph::tag_invoke::edge_value_fn_t, graph_type& g, edge_type& uv) {
+  friend constexpr edge_value_type& edge_value(graph_type& g, edge_type& uv) { //
     return get<1>(to_tuple(uv));
   }
-  friend constexpr const edge_value_type&
-  tag_invoke(std::graph::tag_invoke::edge_value_fn_t, const graph_type& g, const edge_type& uv) {
+  friend constexpr const edge_value_type& edge_value(const graph_type& g, const edge_type& uv) {
     return get<1>(to_tuple(uv));
   }
 

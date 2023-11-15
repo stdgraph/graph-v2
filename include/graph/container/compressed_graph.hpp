@@ -204,15 +204,13 @@ public:
   constexpr const_reference operator[](size_type pos) const { return v_[pos]; }
 
 private:
-  friend constexpr vertex_value_type&
-  tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, graph_type& g, vertex_type& u) {
+  friend constexpr vertex_value_type& vertex_value(graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
     auto            uidx     = g.index_of(u);
     csr_row_values& row_vals = g;
     return row_vals.v_[uidx];
   }
-  friend constexpr const vertex_value_type&
-  tag_invoke(::std::graph::tag_invoke::vertex_value_fn_t, const graph_type& g, const vertex_type& u) {
+  friend constexpr const vertex_value_type& vertex_value(const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
     auto                  uidx     = g.index_of(u);
     const csr_row_values& row_vals = g;
@@ -320,14 +318,12 @@ public:
 
 private:
   // edge_value(g,uv)
-  friend constexpr edge_value_type&
-  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, graph_type& g, edge_type& uv) {
+  friend constexpr edge_value_type& edge_value(graph_type& g, edge_type& uv) {
     auto            uv_idx   = g.index_of(uv);
     csr_col_values& col_vals = g;
     return col_vals.v_[uv_idx];
   }
-  friend constexpr const edge_value_type&
-  tag_invoke(::std::graph::tag_invoke::edge_value_fn_t, const graph_type& g, const edge_type& uv) {
+  friend constexpr const edge_value_type& edge_value(const graph_type& g, const edge_type& uv) {
     auto                  uv_idx   = g.index_of(uv);
     const csr_col_values& col_vals = g;
     return col_vals.v_[uv_idx];
@@ -757,8 +753,7 @@ private: // tag_invoke properties
       return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
 
-  friend vertex_id_type
-  tag_invoke(::std::graph::tag_invoke::vertex_id_fn_t, const compressed_graph_base& g, const_iterator ui) {
+  friend vertex_id_type vertex_id(const compressed_graph_base& g, const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.row_index_.begin());
   }
 
@@ -799,12 +794,8 @@ private: // tag_invoke properties
   // target_id(g,uv), target(g,uv)
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.index; }
 
-  friend constexpr vertex_type&
-  tag_invoke(::std::graph::tag_invoke::target_fn_t, graph_type& g, edge_type& uv) noexcept {
-    return g.row_index_[uv.index];
-  }
-  friend constexpr const vertex_type&
-  tag_invoke(::std::graph::tag_invoke::target_fn_t, const graph_type& g, const edge_type& uv) noexcept {
+  friend constexpr vertex_type&       target(graph_type& g, edge_type& uv) noexcept { return g.row_index_[uv.index]; }
+  friend constexpr const vertex_type& target(const graph_type& g, const edge_type& uv) noexcept {
     return g.row_index_[uv.index];
   }
 
@@ -922,12 +913,8 @@ public: // Construction/Destruction
         : base_type(ilist, alloc) {}
 
 private: // tag_invoke properties
-  friend constexpr value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, graph_type& g) {
-    return g.value_;
-  }
-  friend constexpr const value_type& tag_invoke(::std::graph::tag_invoke::graph_value_fn_t, const graph_type& g) {
-    return g.value_;
-  }
+  friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
+  friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 
 private: // Member variables
   graph_value_type value_ = graph_value_type();
