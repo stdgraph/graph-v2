@@ -739,6 +739,20 @@ private:                       // Member variables
   //row_values_type  row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
 
 private: // tag_invoke properties
+#if VERTICES_CPO
+  friend constexpr vertices_type vertices(compressed_graph_base& g) {
+    if (g.row_index_.empty())
+      return vertices_type(g.row_index_);                                 // really empty
+    else
+      return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
+  }
+  friend constexpr const_vertices_type vertices(const compressed_graph_base& g) {
+    if (g.row_index_.empty())
+      return const_vertices_type(g.row_index_);                                 // really empty
+    else
+      return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
+  }
+#else
   friend constexpr vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, compressed_graph_base& g) {
     if (g.row_index_.empty())
       return vertices_type(g.row_index_);                                 // really empty
@@ -752,6 +766,7 @@ private: // tag_invoke properties
     else
       return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
+#endif
 
   friend vertex_id_type vertex_id(const compressed_graph_base& g, const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.row_index_.begin());

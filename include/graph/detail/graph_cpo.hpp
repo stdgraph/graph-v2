@@ -6,7 +6,8 @@
 #ifndef GRAPH_CPO_HPP
 #  define GRAPH_CPO_HPP
 
-#  define EDGES_CPO 1
+#  define VERTICES_CPO 1 // warnings need to be tracked down
+#  define EDGES_CPO 1    // warnings need to be tracked down
 
 namespace std::graph {
 
@@ -117,6 +118,81 @@ concept adjacency_matrix = is_adjacency_matrix_v<G>;
 // vertex_t<G>           = ranges::range_value_t<vertex_range_t<G>>
 // vertex_reference_t<G> = ranges::range_reference_t<vertex_range_t<G>>
 //
+#  if VERTICES_CPO
+namespace _Vertices {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void vertices() = delete;                    // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void vertices();
+#    endif                                     // ^^^ workaround ^^^
+
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = _Has_class_or_enum_type<_G> && //
+                            requires(_G&& __g) {
+                              { _Fake_copy_init(__g.vertices()) };
+                            };
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>              //
+                         && requires(_G&& __g) {
+                              { _Fake_copy_init(vertices(__g)) }; // intentional ADL
+                            };
+
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Member, _Non_member };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().vertices()))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(vertices(declval<_G>())))}; // intentional ADL
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief Returns the vertices range for a graph G.
+     * 
+     * Default implementation: n/a.
+     * 
+     * Complexity: O(1)
+     * 
+     * This is a customization point function that is required to be overridden for each
+     * graph type.
+     * 
+     * @tparam G The graph type
+     * @param g A graph instance
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return __g.vertices();
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        //static_assert(is_reference_v<decltype(vertices(__g))>);
+        return vertices(__g); // intentional ADL
+      } else {
+        static_assert(_Always_false<_G>, "vertices(g) is not defined");
+      }
+    }
+  };
+} // namespace _Vertices
+
+inline namespace _Cpos {
+  inline constexpr _Vertices::_Cpo vertices;
+}
+#  else
 namespace tag_invoke {
   TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices]
 }
@@ -138,6 +214,7 @@ template <class G>
 auto vertices(G&& g) -> decltype(tag_invoke::vertices(g)) {
   return tag_invoke::vertices(g);
 }
+#  endif
 
 /**
  * @brief The vertex range type for a graph G.
@@ -151,7 +228,7 @@ using vertex_range_t = decltype(std::graph::vertices(declval<G&&>()));
  * @tparam G The graph type.
  */
 template <class G>
-using vertex_iterator_t = ranges::iterator_t<vertex_range_t<G&&>>;
+using vertex_iterator_t = ranges::iterator_t<vertex_range_t<G>>;
 
 /**
  * @brief The vertex type for a graph G.
@@ -616,8 +693,8 @@ namespace _Edges {
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto&& operator()(_G&& __g, vertex_reference_t<_G> u) const
-          noexcept(_Choice_ref<_G&>._No_throw) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const
+          noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
@@ -646,8 +723,8 @@ namespace _Edges {
     */
     template <class _G>
     requires(_Choice_id<_G&>._Strategy != _St_id::_None)
-    [[nodiscard]] constexpr auto&& operator()(_G&& __g, const vertex_id_t<_G>& uid) const
-          noexcept(_Choice_id<_G&>._No_throw) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid) const
+          noexcept(_Choice_id<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
 
       if constexpr (_Strat_id == _St_id::_Non_member) {
@@ -1789,8 +1866,8 @@ namespace _Vertex_value {
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto&& operator()(_G&& __g, vertex_reference_t<_G> u) const
-          noexcept(_Choice_ref<_G&>._No_throw) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const
+          noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
@@ -1872,8 +1949,8 @@ namespace _Edge_value {
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto&& operator()(_G&& __g, edge_reference_t<_G> uv) const
-          noexcept(_Choice_ref<_G&>._No_throw) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+          noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
@@ -1954,7 +2031,7 @@ namespace _Graph_value {
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto&& operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
@@ -2275,6 +2352,7 @@ namespace tag_invoke {
  * @param g A graph instance.
  * @return The number of partitions in a graph. 0 if G doesn't support partitioning.
 */
+#  if 0
 template <class G>
 requires tag_invoke::_has_vertices_pid_adl<G>
 auto vertices(G&& g, partition_id_t<G> pid) {
@@ -2286,7 +2364,7 @@ auto vertices(G&& g, partition_id_t<G> pid) {
 
 template <class G>
 using partition_vertex_range_t = decltype(vertices(declval<G>(), declval<partition_id_t<G>>()));
-
+#  endif
 
 template <class G>
 struct _partition_vertex_id {

@@ -1238,6 +1238,10 @@ private: // Member Variables
   vertices_type vertices_;
 
 private: // tag_invoke properties
+#if VERTICES_CPO
+  friend constexpr vertices_type&       vertices(dynamic_graph_base& g) { return g.vertices_; }
+  friend constexpr const vertices_type& vertices(const dynamic_graph_base& g) { return g.vertices_; }
+#else
   friend constexpr vertices_type& tag_invoke(::std::graph::tag_invoke::vertices_fn_t, dynamic_graph_base& g) {
     return g.vertices_;
   }
@@ -1245,6 +1249,7 @@ private: // tag_invoke properties
                                                    const dynamic_graph_base& g) {
     return g.vertices_;
   }
+#endif
 
   friend vertex_id_type vertex_id(const dynamic_graph_base& g, typename vertices_type::const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
