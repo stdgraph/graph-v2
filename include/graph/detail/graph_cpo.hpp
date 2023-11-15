@@ -170,47 +170,99 @@ using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
 // vertex_id(g,ui) -> vertex_id_t<G>
 //      default = ui - begin(vertices(g)), if random_access_iterator<ui>
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(vertex_id);
+namespace _Vertex_id {
+#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void vertex_id() = delete;                   // Block unqualified name lookup
+#    else                                      // ^^^ no workaround / workaround vvv
+  void vertex_id();
+#    endif                                     // ^^^ workaround ^^^
 
-  template <class G>
-  concept _has_vertex_id_adl = requires(G&& g, vertex_iterator_t<G> ui) {
-    { vertex_id(g, ui) };
+  template <class _G, class _UnCV>
+  concept _Has_ref_member = requires(_G&& __g, vertex_iterator_t<_G> ui) {
+    { _Fake_copy_init(ui->vertex_id(__g)) };
   };
-} // namespace tag_invoke
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                   //
+                         && requires(_G&& __g, const vertex_iterator_t<_G> ui) {
+                              { _Fake_copy_init(vertex_id(__g, ui)) }; // intentional ADL
+                            };
+  template <class _G, class _UnCV>
+  concept _Can_ref_eval = ranges::random_access_range<vertex_range_t<_G>>;
 
-/**
- * @brief Get's the id of a vertex.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: ui - begin(g)
- * 
- * This is a customization point function that may be overriden for a graph type.
- * The main reason to do so is to change the return type to be something different
- * than range_difference_t<vertex_range_t<G>>. For 64-bit systems, that's typically
- * int64_t. The return type is used to define the type vertex_id_t<G> which is used
- * for vertex id in other functions.
- * 
- * Why does this function take a vertex iterator instead of a vertex reference?
- * The vertex id is often calculated rather than stored. Given an iterator, the id is easily
- * calculated by id = (ui - begin(vertices(g))). If a vertex reference v is passed instead
- * it is also easily calculated for vertices stored in contiguous memory like std::vector.
- * However, if it's a random access container like a deque, then the reference won't work
- * and an iterator is the only option.
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param ui A vertex iterator for a vertext in graph G.
- * @return The vertex id of a vertex.
-*/
-template <class G>
-requires tag_invoke::_has_vertex_id_adl<G> || random_access_iterator<vertex_iterator_t<G>>
-auto vertex_id(G&& g, vertex_iterator_t<G> ui) {
-  if constexpr (tag_invoke::_has_vertex_id_adl<G>)
-    return tag_invoke::vertex_id(g, ui);
-  else if constexpr (random_access_iterator<vertex_iterator_t<G>>)
-    return ui - ranges::begin(vertices(g));
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_member<_G, _UnCV>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>()->vertex_id(declval<_G>())))};
+      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {
+              _St_ref::_Non_member,
+              noexcept(_Fake_copy_init(vertex_id(declval<_G>(), declval<vertex_iterator_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_ref_eval<_G, _UnCV>) {
+        return {_St_ref::_Auto_eval,
+                noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>() -
+                                         ranges::begin(vertices(declval<_G>()))))}; // intentional ADL
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief Get's the id of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: ui - begin(g)
+     * 
+     * This is a customization point function that may be overriden for a graph type.
+     * The main reason to do so is to change the return type to be something different
+     * than range_difference_t<vertex_range_t<G>>. For 64-bit systems, that's typically
+     * int64_t. The return type is used to define the type vertex_id_t<G> which is used
+     * for vertex id in other functions.
+     * 
+     * Why does this function take a vertex iterator instead of a vertex reference?
+     * The vertex id is often calculated rather than stored. Given an iterator, the id is easily
+     * calculated by id = (ui - begin(vertices(g))). If a vertex reference v is passed instead
+     * it is also easily calculated for vertices stored in contiguous memory like std::vector.
+     * However, if it's a random access container like a deque, then the reference won't work
+     * and an iterator is the only option.
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param ui A vertex iterator for a vertext in graph G.
+     * @return The vertex id of a vertex.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_iterator_t<_G> ui) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return ui->vertex_id(__g);
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return vertex_id(__g, ui); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+        return ui - ranges::begin(vertices(__g));
+      } else {
+        static_assert(_Always_false<_G>, "vertices(g) is not defined or is not random-access");
+      }
+    }
+  };
+} // namespace _Vertex_id
+
+inline namespace _Cpos {
+  inline constexpr _Vertex_id::_Cpo vertex_id;
 }
 
 /**

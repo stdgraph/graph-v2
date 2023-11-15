@@ -130,8 +130,7 @@ private: // tag_invoke definitions
     return g.vertices_;
   }
 
-  friend vertex_id_type
-  tag_invoke(std::graph::tag_invoke::vertex_id_fn_t, const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
+  friend vertex_id_type vertex_id(const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
     return static_cast<vertex_id_type>(ui -
                                        std::ranges::begin(g.vertices_)); // overriden to assure correct type returned
   }
@@ -362,8 +361,7 @@ private:
     return g.vertices_;
   }
 
-  friend vertex_id_type
-  tag_invoke(std::graph::tag_invoke::vertex_id_fn_t, const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
+  friend vertex_id_type vertex_id(const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
     return static_cast<vertex_id_type>(ui -
                                        std::ranges::begin(g.vertices_)); // overriden to assure correct type returned
   }

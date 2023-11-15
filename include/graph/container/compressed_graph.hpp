@@ -753,8 +753,7 @@ private: // tag_invoke properties
       return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
 
-  friend vertex_id_type
-  tag_invoke(::std::graph::tag_invoke::vertex_id_fn_t, const compressed_graph_base& g, const_iterator ui) {
+  friend vertex_id_type vertex_id(const compressed_graph_base& g, const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.row_index_.begin());
   }
 
@@ -795,12 +794,8 @@ private: // tag_invoke properties
   // target_id(g,uv), target(g,uv)
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.index; }
 
-  friend constexpr vertex_type&
-  target(graph_type& g, edge_type& uv) noexcept {
-    return g.row_index_[uv.index];
-  }
-  friend constexpr const vertex_type&
-  target(const graph_type& g, const edge_type& uv) noexcept {
+  friend constexpr vertex_type&       target(graph_type& g, edge_type& uv) noexcept { return g.row_index_[uv.index]; }
+  friend constexpr const vertex_type& target(const graph_type& g, const edge_type& uv) noexcept {
     return g.row_index_[uv.index];
   }
 

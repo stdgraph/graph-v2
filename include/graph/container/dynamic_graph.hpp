@@ -295,12 +295,10 @@ private:
   // source_id(g,uv), source(g)
   friend constexpr vertex_id_type source_id(const graph_type& g, const edge_type& uv) noexcept { return uv.source_id_; }
 
-  friend constexpr vertex_type&
-  source(graph_type& g, edge_type& uv) noexcept {
+  friend constexpr vertex_type& source(graph_type& g, edge_type& uv) noexcept {
     return begin(vertices(g))[uv.source_id_];
   }
-  friend constexpr const vertex_type&
-  source_fn(const graph_type& g, const edge_type& uv) noexcept {
+  friend constexpr const vertex_type& source_fn(const graph_type& g, const edge_type& uv) noexcept {
     return begin(vertices(g))[uv.source_id_];
   }
 };
@@ -1243,9 +1241,7 @@ private: // tag_invoke properties
     return g.vertices_;
   }
 
-  friend vertex_id_type tag_invoke(::std::graph::tag_invoke::vertex_id_fn_t,
-                                   const dynamic_graph_base&              g,
-                                   typename vertices_type::const_iterator ui) {
+  friend vertex_id_type vertex_id(const dynamic_graph_base& g, typename vertices_type::const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
   }
 
