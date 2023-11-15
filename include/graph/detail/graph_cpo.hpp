@@ -561,11 +561,11 @@ inline namespace _Cpos {
 //      uv can be from edges(g,u) or vertices(g,u)
 //
 namespace _Target {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void target() = delete;                      // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void target() = delete;                    // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
   void target();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
   concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                //
@@ -575,6 +575,7 @@ namespace _Target {
   template <class _G, class _UnCV>
   concept _Can_ref_eval = ranges::random_access_range<vertex_range_t<_G>> //
                           && requires(_G&& __g, edge_reference_t<_G> uv) {
+                               { _Fake_copy_init(vertices(__g)) };
                                { _Fake_copy_init(target_id(__g, uv)) } -> integral;
                              };
 
@@ -723,44 +724,88 @@ inline namespace _Cpos {
 //      for random_access_range<vertices(g)> and integral<source_id(g,uv))
 //      uv can be from edges(g,u) or vertices(g,u)
 //
-namespace tag_invoke {
-  TAG_INVOKE_DEF(source);
+namespace _Source {
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void source() = delete;                    // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
+  void source();
+#  endif                                     // ^^^ workaround ^^^
 
-  template <class G, class ER>
-  concept _has_source_adl = requires(G&& g, ranges::range_reference_t<ER> uv) {
-    { source(g, uv) };
+  template <class _G, class _UnCV>
+  concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                //
+                         && requires(_G&& __g, const edge_reference_t<_G>& uv) {
+                              { _Fake_copy_init(source(__g, uv)) }; // intentional ADL
+                            };
+  template <class _G, class _UnCV>
+  concept _Can_ref_eval = ranges::random_access_range<vertex_range_t<_G>> //
+                          && requires(_G&& __g, edge_reference_t<_G> uv) {
+                               { _Fake_copy_init(source_id(__g, uv)) } -> integral;
+                             };
+
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Non_member, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+        return {_St_ref::_Non_member,
+                noexcept(_Fake_copy_init(source(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_ref_eval<_G, _UnCV>) {
+        return {
+              _St_ref::_Auto_eval,
+              noexcept(_Fake_copy_init(begin(vertices(declval<_G>())) +
+                                       source_id(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+  public:
+    /**
+     * @brief Get the source vertex of an edge.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: *(begin(vertices(g)) + source_id(g, uv)), 
+     #         if @source_id(g,uv) is defined for G and random_access_range<vertex_range_t<G>>
+     * 
+     * Not all graphs support a source on an edge. The existance of @c source_id(g,uv) function 
+     * for a graph type G determines if it is considered a "sourced" edge or not. If it is, 
+     * @c source(g,uv) will also exist.
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uv An edge reference.
+     * @return The source vertex reference.
+    */
+    template <class _G>
+    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto&& operator()(_G&& __g, edge_reference_t<_G> uv) const
+          noexcept(_Choice_ref<_G&>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return source(__g, uv); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+        return *(begin(vertices(__g)) + source_id(__g, uv));
+      } else {
+        static_assert(_Always_false<_G>, "source(g,uv) or g.source(uv) is not defined");
+      }
+    }
   };
-} // namespace tag_invoke
+} // namespace _Source
 
-template <class G, class ER>
-concept _can_eval_source_id = ranges::random_access_range<ER> && requires(G&& g, ranges::range_reference_t<ER> uv) {
-  { source_id(g, uv) } -> integral;
-};
-
-/**
- * @brief Get the source vertex of an edge.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: *(begin(vertices(g)) + source_id(g, uv)), if @source_id(g,uv) is defined for G
- * 
- * Not all graphs support a source on an edge. The existance of @c source_id(g,uv) function 
- * for a graph type G determines if it is considered a "sourced" edge or not. If it is, 
- * @c source(g,uv) will also exist.
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uv An edge reference.
- * @return The source vertex reference.
-*/
-template <class G>
-requires tag_invoke::_has_source_adl<G, vertex_edge_range_t<G>> || _can_eval_source_id<G, vertex_edge_range_t<G>>
-auto&& source(G&& g, edge_reference_t<G> uv) {
-  if constexpr (tag_invoke::_has_source_adl<G, vertex_edge_range_t<G>>)
-    return tag_invoke::source(g, uv);
-  else if constexpr (_can_eval_source_id<G, vertex_edge_range_t<G>>)
-    return *(begin(vertices(g)) + source_id(g, uv));
+inline namespace _Cpos {
+  inline constexpr _Source::_Cpo source;
 }
+
 
 //
 // edge_id(g,uv) -> edge_id_t<G>
