@@ -75,30 +75,39 @@ protected:
   using shadow_value_type =
         edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
+  union internal_value {
+    value_type        value_;
+    shadow_value_type shadow_;
+
+    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+    internal_value() : shadow_{} {}
+    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+  };
+
 public:
   constexpr reference operator*() const {
     if constexpr (unordered_edge<G, edge_type>) {
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
-        value_.source_id = source_id(g_, *iter_);
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = source_id(g_, *iter_);
+        value_.shadow_.target_id = target_id(g_, *iter_);
       } else {
-        value_.source_id = target_id(g_, *iter_);
-        value_.target_id = source_id(g_, *iter_);
+        value_.shadow_.source_id = target_id(g_, *iter_);
+        value_.shadow_.target_id = source_id(g_, *iter_);
       }
     } else if constexpr (Sourced) {
       if constexpr (sourced_adjacency_list<G>) {
-        value_.source_id = source_id(g_, *iter_);
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = source_id(g_, *iter_);
+        value_.shadow_.target_id = target_id(g_, *iter_);
       } else {
-        value_.source_id = this->source_vertex_id();
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = this->source_vertex_id();
+        value_.shadow_.target_id = target_id(g_, *iter_);
       }
     } else {
-      value_.target_id = target_id(g_, *iter_);
+      value_.shadow_.target_id = target_id(g_, *iter_);
     }
-    value_.edge  = &*iter_;
-    value_.value = invoke(*value_fn_, *iter_);
-    return reinterpret_cast<reference>(value_);
+    value_.shadow_.edge  = &*iter_;
+    value_.shadow_.value = invoke(*value_fn_, *iter_);
+    return value_.value_;
   }
 
   constexpr incidence_iterator& operator++() {
@@ -115,7 +124,8 @@ public:
   //constexpr bool operator==(const incidence_iterator& rhs) const { return iter_ == rhs; }
 
 private: // member variables
-  mutable shadow_value_type        value_ = {};
+  //mutable shadow_value_type        value_ = {};
+  mutable internal_value           value_;
   _detail::ref_to_ptr<graph_type&> g_;
   edge_iterator                    iter_;
   const EVF*                       value_fn_ = nullptr;
@@ -156,6 +166,15 @@ protected:
   using shadow_edge_type  = remove_reference_t<edge_reference_type>;
   using shadow_value_type = edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, edge_value_type>;
 
+  union internal_value {
+    value_type        value_;
+    shadow_value_type shadow_;
+
+    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+    internal_value() : shadow_{} {}
+    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+  };
+
 public:
   incidence_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter)
         : base_type(vertex_id(g, ui)), g_(g), iter_(iter) {}
@@ -174,25 +193,25 @@ public:
     if constexpr (unordered_edge<G, edge_type>) {
       static_assert(sourced_adjacency_list<G>);
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
-        value_.source_id = source_id(g_.*iter_);
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = source_id(g_.*iter_);
+        value_.shadow_.target_id = target_id(g_, *iter_);
       } else {
-        value_.source_id = target_id(g_.*iter_);
-        value_.target_id = source_id(g_, *iter_);
+        value_.shadow_.source_id = target_id(g_.*iter_);
+        value_.shadow_.target_id = source_id(g_, *iter_);
       }
     } else if constexpr (Sourced) {
       if constexpr (sourced_adjacency_list<G>) {
-        value_.source_id = source_id(g_, *iter_);
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = source_id(g_, *iter_);
+        value_.shadow_.target_id = target_id(g_, *iter_);
       } else {
-        value_.source_id = this->source_vertex_id();
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = this->source_vertex_id();
+        value_.target_id         = target_id(g_, *iter_);
       }
     } else {
-      value_.target_id = target_id(g_, *iter_);
+      value_.shadow_.target_id = target_id(g_, *iter_);
     }
-    value_.edge = &*iter_;
-    return reinterpret_cast<reference>(value_);
+    value_.shadow_.edge = &*iter_;
+    return value_.value_;
   }
 
   constexpr incidence_iterator& operator++() {
@@ -209,7 +228,7 @@ public:
   //constexpr bool operator==(const incidence_iterator& rhs) const { return iter_ == rhs; }
 
 private: // member variables
-  mutable shadow_value_type        value_ = {};
+  mutable internal_value           value_;
   _detail::ref_to_ptr<graph_type&> g_;
   edge_iterator                    iter_;
 

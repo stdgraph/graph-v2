@@ -104,7 +104,6 @@ public:
   constexpr bool operator==(const vertexlist_iterator& rhs) const { return iter_ == rhs.iter_; }
 
 protected:
-  //mutable shadow_value_type value_ = {};
   mutable internal_value value_;
   vertex_iterator_type   iter_     = vertex_iterator_type();
   const VVF*             value_fn_ = nullptr;
