@@ -66,6 +66,7 @@ protected:
     internal_value(vertex_id_type start_at) : shadow_{} { shadow_.id = start_at; }
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
+    ~internal_value() {}
     internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
   };
 
@@ -147,6 +148,7 @@ protected:
     internal_value(vertex_id_type start_at) : shadow_{start_at, nullptr} {}
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
+    ~internal_value() {}
     internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
   };
 

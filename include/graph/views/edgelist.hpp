@@ -136,6 +136,7 @@ protected:
 
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
+    ~internal_value() {}
     internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
   };
 
@@ -218,6 +219,7 @@ protected:
 
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
+    ~internal_value() {}
     internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
   };
 
