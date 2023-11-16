@@ -119,7 +119,8 @@ public:
       value_.shadow_.target_id = target_id(g_, *iter_);
       value_.shadow_.target    = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
     }
-    value_.shadow_.value = invoke(*value_fn_, *value_.shadow_.target); // 'value' undeclared identifier (.value not in struct?)
+    value_.shadow_.value =
+          invoke(*value_fn_, *value_.shadow_.target); // 'value' undeclared identifier (.value not in struct?)
     return value_.value_;
   }
 
