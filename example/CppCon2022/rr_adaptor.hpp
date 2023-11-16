@@ -6,6 +6,8 @@
 // https://www.reddit.com/r/cpp/comments/4yp7fv/c17_structured_bindings_convert_struct_to_a_tuple/
 // https://gist.github.com/utilForever/1a058050b8af3ef46b58bcfa01d5375d
 
+#define EDGES_CPO 1
+
 template <class T, class... TArgs>
 decltype(void(T{std::declval<TArgs>()...}), std::true_type{}) test_is_braces_constructible(int);
 
@@ -39,9 +41,41 @@ auto to_tuple(T&& object) noexcept {
     return std::make_tuple();
   }
 }
-
 template <class T>
 using to_tuple_t = decltype(to_tuple(std::declval<T>()));
+
+
+template <class T>
+constexpr auto& to_tuple_value(T&& object, const int param) noexcept {
+  using type = std::decay_t<T>;
+  if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [p1, p2, p3, p4] = object;
+    switch (param) {
+    case 0: return p1;
+    case 1: return p2;
+    case 2: return p3;
+    case 3: return p4;
+    }
+  } else if constexpr (is_braces_constructible<type, any_type, any_type, any_type>{}) {
+    auto&& [p1, p2, p3] = object;
+    switch (param) {
+    case 0: return p1;
+    case 1: return p2;
+    case 2: return p3;
+    }
+  } else if constexpr (is_braces_constructible<type, any_type, any_type>{}) {
+    auto&& [p1, p2] = object;
+    switch (param) {
+    case 0: return p1;
+    case 1: return p2;
+    }
+  } else if constexpr (is_braces_constructible<type, any_type>{}) {
+    auto&& [p1] = object;
+    return p1;
+  } else {
+    return std::make_tuple();
+  }
+}
 
 //template <class C>
 //concept has_push_back = requires(C& container, std::ranges::range_reference_t<C> val) {
@@ -123,18 +157,30 @@ private:
   }
 
 private: // tag_invoke definitions
+#if VERTICES_CPO
+  friend constexpr vertices_range&       vertices(graph_type& g) { return g.vertices_; }
+  friend constexpr const vertices_range& vertices(const graph_type& g) { return g.vertices_; }
+#else
   friend constexpr vertices_range& tag_invoke(std::graph::tag_invoke::vertices_fn_t, graph_type& g) {
     return g.vertices_;
   }
   friend constexpr const vertices_range& tag_invoke(std::graph::tag_invoke::vertices_fn_t, const graph_type& g) {
     return g.vertices_;
   }
+#endif
 
   friend vertex_id_type vertex_id(const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
     return static_cast<vertex_id_type>(ui -
                                        std::ranges::begin(g.vertices_)); // overriden to assure correct type returned
   }
 
+#if EDGES_CPO
+  friend constexpr edges_range&       edges(graph_type& g, vertex_type& u) { return u; }
+  friend constexpr const edges_range& edges(const graph_type& g, const vertex_type& u) { return u; }
+
+  friend constexpr edges_range&       edges(graph_type& g, const vertex_id_type uid) { return g.vertices_[uid]; }
+  friend constexpr const edges_range& edges(const graph_type& g, const vertex_id_type uid) { return g.vertices_[uid]; }
+#else
   friend constexpr edges_range& tag_invoke(std::graph::tag_invoke::edges_fn_t, graph_type& g, vertex_type& u) {
     return u;
   }
@@ -151,6 +197,7 @@ private: // tag_invoke definitions
   tag_invoke(std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_id_type uid) {
     return g.vertices_[uid];
   }
+#endif
 
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept {
     return get<0>(to_tuple(uv));
@@ -166,11 +213,11 @@ private: // tag_invoke definitions
   }
 
   // edge_value(g,uv)
-  friend constexpr edge_value_type& edge_value(graph_type& g, edge_type& uv) {
+  friend constexpr edge_value_type edge_value(graph_type& g, edge_type& uv) {
     auto t = to_tuple(uv);
     return get<1>(t);
   }
-  friend constexpr const edge_value_type& edge_value(const graph_type& g, const edge_type& uv) {
+  friend constexpr const edge_value_type edge_value(const graph_type& g, const edge_type& uv) {
     auto t = to_tuple(uv);
     return get<1>(t);
   }
@@ -354,18 +401,34 @@ private:
   }
 
 private:
+#if VERTICES_CPO
+  friend constexpr vertices_range&       vertices(graph_type& g) { return g.vertices_; }
+  friend constexpr const vertices_range& vertices(const graph_type& g) { return g.vertices_; }
+#else
   friend constexpr vertices_range& tag_invoke(std::graph::tag_invoke::vertices_fn_t, graph_type& g) {
     return g.vertices_;
   }
   friend constexpr const vertices_range& tag_invoke(std::graph::tag_invoke::vertices_fn_t, const graph_type& g) {
     return g.vertices_;
   }
+#endif
 
   friend vertex_id_type vertex_id(const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
     return static_cast<vertex_id_type>(ui -
                                        std::ranges::begin(g.vertices_)); // overriden to assure correct type returned
   }
 
+#if EDGES_CPO
+  friend constexpr edges_range&       edges(graph_type& g, vertex_type& u) { return get<0>(to_tuple(u)); }
+  friend constexpr const edges_range& edges(const graph_type& g, const vertex_type& u) { return get<0>(to_tuple(u)); }
+
+  friend constexpr edges_range& edges(graph_type& g, const vertex_id_type uid) {
+    return get<0>(to_tuple(g.vertices_[uid]));
+  }
+  friend constexpr const edges_range& edges(const graph_type& g, const vertex_id_type uid) {
+    return get<0>(to_tuple(g.vertices_[uid]));
+  }
+#else
   friend constexpr edges_range& tag_invoke(std::graph::tag_invoke::edges_fn_t, graph_type& g, vertex_type& u) {
     return get<0>(to_tuple(u));
   }
@@ -382,6 +445,7 @@ private:
   tag_invoke(std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_id_type uid) {
     return get<0>(to_tuple(g.vertices_[uid]));
   }
+#endif
 
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept {
     return get<0>(to_tuple(uv));

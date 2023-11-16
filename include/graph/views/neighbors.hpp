@@ -80,6 +80,16 @@ protected:
   using shadow_value_type =
         neighbor_descriptor<vertex_id_type, Sourced, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
+  union internal_value {
+    value_type        value_;
+    shadow_value_type shadow_;
+
+    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+    internal_value() : shadow_{} {}
+    ~internal_value() {}
+    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+  };
+
 public:
   constexpr reference operator*() const {
     // const in this functions signature causes target() to always return a const value, which isn't always what we want
@@ -88,29 +98,29 @@ public:
     if constexpr (unordered_edge<G, edge_type>) {
       static_assert(sourced_adjacency_list<G>);
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
-        value_.source_id = source_id(g_.*iter_);
-        value_.target_id = target_id(g_, *iter_);
-        value_.target    = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+        value_.shadow_.source_id = source_id(g_.*iter_);
+        value_.shadow_.target_id = target_id(g_, *iter_);
+        value_.shadow_.target    = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
       } else {
-        value_.source_id = target_id(g_.*iter_);
-        value_.target_id = source_id(g_, *iter_);
-        value_.target    = const_cast<shadow_vertex_type*>(&source(g_, *iter_));
+        value_.shadow_.source_id = target_id(g_.*iter_);
+        value_.shadow_.target_id = source_id(g_, *iter_);
+        value_.shadow_.target    = const_cast<shadow_vertex_type*>(&source(g_, *iter_));
       }
     } else if constexpr (Sourced) {
       if constexpr (sourced_adjacency_list<G>) {
-        value_.source_id = source_id(g_, *iter_);
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = source_id(g_, *iter_);
+        value_.shadow_.target_id = target_id(g_, *iter_);
       } else {
-        value_.source_id = this->source_vertex_id();
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = this->source_vertex_id();
+        value_.shadow_.target_id = target_id(g_, *iter_);
       }
-      value_.target = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+      value_.shadow_.target = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
     } else {
-      value_.target_id = target_id(g_, *iter_);
-      value_.target    = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+      value_.shadow_.target_id = target_id(g_, *iter_);
+      value_.shadow_.target    = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
     }
-    value_.value = invoke(*value_fn_, *value_.target); // 'value' undeclared identifier (.value not in struct?)
-    return reinterpret_cast<reference>(value_);
+    value_.shadow_.value = invoke(*value_fn_, *value_.shadow_.target); // 'value' undeclared identifier (.value not in struct?)
+    return value_.value_;
   }
 
   constexpr neighbor_iterator& operator++() {
@@ -127,7 +137,7 @@ public:
   //constexpr bool operator==(const neighbor_iterator& rhs) const { return iter_ == rhs; }
 
 private: // member variables
-  mutable shadow_value_type        value_ = {};
+  mutable internal_value           value_;
   _detail::ref_to_ptr<graph_type&> g_;
   edge_iterator                    iter_;
   const VVF*                       value_fn_ = nullptr;
@@ -168,6 +178,16 @@ protected:
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type  = neighbor_descriptor<vertex_id_type, Sourced, shadow_vertex_type*, vertex_value_type>;
 
+  union internal_value {
+    value_type        value_;
+    shadow_value_type shadow_;
+
+    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+    internal_value() : shadow_{} {}
+    ~internal_value() {}
+    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+  };
+
 public:
   neighbor_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter)
         : base_type(vertex_id(g, ui)), g_(g), iter_(iter) {}
@@ -189,28 +209,28 @@ public:
     if constexpr (unordered_edge<G, edge_type>) {
       static_assert(sourced_adjacency_list<G>);
       if (target_id(g_, *iter_) != this->source_vertex_id()) {
-        value_.source_id = source_id(g_.*iter_);
-        value_.target_id = target_id(g_, *iter_);
-        value_.target    = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+        value_.shadow_.source_id = source_id(g_.*iter_);
+        value_.shadow_.target_id = target_id(g_, *iter_);
+        value_.shadow_.target    = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
       } else {
-        value_.source_id = target_id(g_.*iter_);
-        value_.target_id = source_id(g_, *iter_);
-        value_.target    = const_cast<shadow_vertex_type*>(&source(g_, *iter_));
+        value_.shadow_.source_id = target_id(g_.*iter_);
+        value_.shadow_.target_id = source_id(g_, *iter_);
+        value_.shadow_.target    = const_cast<shadow_vertex_type*>(&source(g_, *iter_));
       }
     } else if constexpr (Sourced) {
       if constexpr (sourced_adjacency_list<G>) {
-        value_.source_id = source_id(g_, *iter_);
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = source_id(g_, *iter_);
+        value_.shadow_.target_id = target_id(g_, *iter_);
       } else {
-        value_.source_id = this->source_vertex_id();
-        value_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = this->source_vertex_id();
+        value_.shadow_.target_id = target_id(g_, *iter_);
       }
-      value_.target = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+      value_.shadow_.target = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
     } else {
-      value_.target_id = target_id(g_, *iter_);
-      value_.target    = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
+      value_.shadow_.target_id = target_id(g_, *iter_);
+      value_.shadow_.target    = const_cast<shadow_vertex_type*>(&target(g_, *iter_));
     }
-    return reinterpret_cast<reference>(value_);
+    return value_.value_;
   }
 
   constexpr neighbor_iterator& operator++() {
@@ -227,7 +247,7 @@ public:
   //constexpr bool operator==(const neighbor_iterator& rhs) const { return iter_ == rhs; }
 
 private: // member variables
-  mutable shadow_value_type        value_ = {};
+  mutable internal_value           value_;
   _detail::ref_to_ptr<graph_type&> g_;
   edge_iterator                    iter_;
 

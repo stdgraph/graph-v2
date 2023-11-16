@@ -679,6 +679,10 @@ private:
   edges_type edges_;
 
 private: // tag_invoke properties
+#if EDGES_CPO
+  friend constexpr edges_type&       edges(graph_type& g, vertex_type& u) { return u.edges_; }
+  friend constexpr const edges_type& edges(const graph_type& g, const vertex_type& u) { return u.edges_; }
+#else
   friend constexpr edges_type& tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, vertex_type& u) {
     return u.edges_;
   }
@@ -686,6 +690,7 @@ private: // tag_invoke properties
   tag_invoke(::std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_type& u) {
     return u.edges_;
   }
+#endif
 
   friend constexpr typename edges_type::iterator
   find_vertex_edge(graph_type& g, vertex_id_type uid, vertex_id_type vid) {
@@ -1212,7 +1217,7 @@ public: // Properties
   constexpr typename vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
   constexpr const typename vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
 
-public: // Operations
+public:                                      // Operations
   void reserve_vertices(size_type count) {
     if constexpr (reservable<vertices_type>) // reserve if we can; otherwise ignored
       vertices_.reserve(count);
@@ -1233,6 +1238,10 @@ private: // Member Variables
   vertices_type vertices_;
 
 private: // tag_invoke properties
+#if VERTICES_CPO
+  friend constexpr vertices_type&       vertices(dynamic_graph_base& g) { return g.vertices_; }
+  friend constexpr const vertices_type& vertices(const dynamic_graph_base& g) { return g.vertices_; }
+#else
   friend constexpr vertices_type& tag_invoke(::std::graph::tag_invoke::vertices_fn_t, dynamic_graph_base& g) {
     return g.vertices_;
   }
@@ -1240,11 +1249,20 @@ private: // tag_invoke properties
                                                    const dynamic_graph_base& g) {
     return g.vertices_;
   }
+#endif
 
   friend vertex_id_type vertex_id(const dynamic_graph_base& g, typename vertices_type::const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
   }
 
+#if EDGES_CPO
+  friend constexpr edges_type& edges(graph_type& g, const vertex_id_type uid) { //
+    return g.vertices_[uid].edges();
+  }
+  friend constexpr const edges_type& edges(const graph_type& g, const vertex_id_type uid) {
+    return g.vertices_[uid].edges();
+  }
+#else
   friend constexpr edges_type&
   tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, const vertex_id_type uid) {
     return g.vertices_[uid].edges();
@@ -1253,6 +1271,7 @@ private: // tag_invoke properties
   tag_invoke(::std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_id_type uid) {
     return g.vertices_[uid].edges();
   }
+#endif
 };
 
 /**
@@ -1612,7 +1631,7 @@ public:
 private:
   value_type value_; ///< Graph value
 
-private: // tag_invoke properties
+private:             // tag_invoke properties
   friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
   friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 };
