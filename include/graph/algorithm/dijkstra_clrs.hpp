@@ -76,7 +76,8 @@ void dijkstra_clrs(
       vertex_id_t<G> seed,        // starting vertex_id
       Distance&      distance,    // out: distance[uid] of uid from seed
       Predecessor&   predecessor, // out: predecessor[uid] of uid in path
-      WF&& weight = [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }) // default weight(uv) -> 1
+      WF&&           weight =
+            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }) // default weight(uv) -> 1
 {
   using id_type     = vertex_id_t<G>;
   using weight_type = invoke_result_t<WF, edge_reference_t<G>>;
