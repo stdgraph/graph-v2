@@ -47,8 +47,8 @@ size_t triangle_count(G&& g) {
       }
       std::graph::incidence_iterator<G> j(g, vid);
 
-      auto                              je = ranges::end(edges(g, vid));
-      auto                              i2 = i;
+      auto je = ranges::end(edges(g, vid));
+      auto i2 = i;
 
       // Alternatively use std::set_intersection(i2, ie, j, je, counter) but this is slower
       while (i2 != ie && j != je) {
