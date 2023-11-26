@@ -203,6 +203,9 @@ template <class G>
 concept sourced_adjacency_list =
       adjacency_list<G> && sourced_edge<G, edge_t<G>> && requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
 
+template<class EL>
+concept edgelist_range = ranges::forward_range<EL> && negation<index_adjacency_list<EL>>;
+
 //
 // property concepts
 //
