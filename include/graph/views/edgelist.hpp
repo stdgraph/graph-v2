@@ -26,13 +26,28 @@
 //
 //           for([uid, vid]        : basic_edgelist(g,uid))
 //
-namespace std::graph::views {
 
+namespace std::graph {
+template <class G, class EVF>
+concept edge_value_function = adjacency_list<G> && invocable<EVF, edge_reference_t<G>>;
+
+//template <class G, class EVF>
+//concept edge_proj_function = adjacency_list<G> && invocable<EVF, edge_reference_t<G>>;
+} // namespace std::graph
+
+
+namespace std::graph::views {
 
 template <adjacency_list G, class EVF = void>
 class edgelist_iterator;
 
+template <edgelist_range ELR, class Proj = identity>
+class edgelist_range_iterator;
 
+/**
+ * @brief Common functionality for edgelist_iterator<G>
+ * @tparam G Graph
+*/
 template <adjacency_list G>
 class edgelist_iterator_base {
   using vertex_iterator = vertex_iterator_t<G>;
@@ -280,87 +295,306 @@ private: // member variables
 template <class G, class EVF>
 using edgelist_view = ranges::subrange<edgelist_iterator<G, EVF>, vertex_iterator_t<G>>;
 
-namespace tag_invoke {
-  // ranges
-  TAG_INVOKE_DEF(edgelist); // edgelist(g)                 -> edges[uid,vid,uv]
-                            // edgelist(g,fn)              -> edges[uid,vid,uv,value]
-                            // edgelist(g,uid,vid)       -> edges[uid,vid,uv]
-                            // edgelist(g,uid,vid,fn)    -> edges[uid,vid,uv,value]
 
-  template <class G>
-  concept _has_edgelist_g_adl = adjacency_list<G> && requires(G&& g) {
-    { edgelist(g) };
-  };
-  template <class G>
-  concept _has_edgelist_g_uid_adl = adjacency_list<G> && requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-    { edgelist(g, uid, vid) };
-  };
-  template <class G, class EVF>
-  concept _has_edgelist_g_evf_adl = adjacency_list<G> && requires(G&& g, const EVF& evf) {
-    { edgelist(g, evf) };
-  };
-  template <class G, class EVF>
-  concept _has_edgelist_g_uid_evf_adl =
-        adjacency_list<G> && requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, const EVF& evf) {
-          { edgelist(g, uid, vid, evf) };
-        };
+// edgelist(g)               -> edges[uid,vid,uv]
+// edgelist(g,fn)            -> edges[uid,vid,uv,value]
+// edgelist(g,uid,vid)       -> edges[uid,vid,uv]
+// edgelist(g,uid,vid,fn)    -> edges[uid,vid,uv,value]
+namespace _Edgelist {
+#if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void edgelist() = delete;                // Block unqualified name lookup
+#else                                      // ^^^ no workaround / workaround vvv
+  void edgelist();
+#endif                                     // ^^^ workaround ^^^
 
-} // namespace tag_invoke
+  template <class _G, class _UnCV>
+  concept _Has_adjlist_all_ADL = _Has_class_or_enum_type<_G>              //
+                                 && adjacency_list<_G>                    //
+                                 && requires(_G&& __g) {
+                                      { _Fake_copy_init(edgelist(__g)) }; // intentional ADL
+                                    };
+  template <class _G, class _UnCV>
+  concept _Can_adjlist_all_eval = _Has_class_or_enum_type<_G> //
+                                  && adjacency_list<_G>       //
+                                  && requires(_G&& __g, vertex_reference_t<_G> u) {
+                                       { _Fake_copy_init(vertices(__g)) };
+                                       { _Fake_copy_init(edges(__g, u)) };
+                                     };
 
-//
-// edgelist(g)
-// edgelist(g,uid,vid)
-//
-template <adjacency_list G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edgelist(G&& g) {
-  if constexpr (tag_invoke::_has_edgelist_g_adl<G>) {
-    return tag_invoke::edgelist(g);
-  } else {
-    using iterator_type = edgelist_iterator<G, void>;
-    return edgelist_view<G, void>(iterator_type(g), ranges::end(vertices(g)));
-  }
+  template <class _G, class _UnCV, class EVF>
+  concept _Has_adjlist_all_evf_ADL = _Has_class_or_enum_type<_G>                   //
+                                     && adjacency_list<_G>                         //
+                                     && invocable<EVF, edge_reference_t<_G>>       //
+                                     && requires(_G&& __g, EVF evf) {
+                                          { _Fake_copy_init(edgelist(__g, evf)) }; // intentional ADL
+                                        };
+  template <class _G, class _UnCV, class EVF>
+  concept _Can_adjlist_all_evf_eval = _Has_class_or_enum_type<_G>             //
+                                      && adjacency_list<_G>                   //
+                                      && invocable<EVF, edge_reference_t<_G>> //
+                                      && requires(_G&& __g, vertex_reference_t<_G> u) {
+                                           { _Fake_copy_init(vertices(__g)) };
+                                           { _Fake_copy_init(edges(__g, u)) };
+                                         };
+
+
+  template <class _G, class _UnCV>
+  concept _Has_adjlist_idrng_ADL = _Has_class_or_enum_type<_G>                        //
+                                   && adjacency_list<_G>                              //
+                                   && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid) {
+                                        { _Fake_copy_init(edgelist(__g, uid, vid)) }; // intentional ADL
+                                      };
+  template <class _G, class _UnCV>
+  concept _Can_adjlist_idrng_eval = _Has_class_or_enum_type<_G> //
+                                    && adjacency_list<_G>       //
+                                    && requires(_G&& __g, vertex_id_t<_G> uid) {
+                                         { _Fake_copy_init(vertices(__g)) };
+                                         { _Fake_copy_init(edges(__g, uid)) };
+                                       };
+
+  template <class _G, class _UnCV, class EVF>
+  concept _Has_adjlist_idrng_evf_ADL = _Has_class_or_enum_type<_G>                             //
+                                       && adjacency_list<_G>                                   //
+                                       && invocable<EVF, edge_reference_t<_G>>                 //
+                                       && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid, EVF evf) {
+                                            { _Fake_copy_init(edgelist(__g, uid, vid, evf)) }; // intentional ADL
+                                          };
+  template <class _G, class _UnCV, class EVF>
+  concept _Can_adjlist_idrng_evf_eval = _Has_class_or_enum_type<_G>             //
+                                        && adjacency_list<_G>                   //
+                                        && invocable<EVF, edge_reference_t<_G>> //
+                                        && requires(_G&& __g, vertex_id_t<_G> uid, EVF evf) {
+                                             { _Fake_copy_init(vertices(__g)) };
+                                             { _Fake_copy_init(edges(__g, uid)) };
+                                           };
+
+
+  template <class ELR, class _UnCV, class Proj>
+  concept _Has_edgelist_all_proj_ADL = ranges::forward_range<ELR> //
+                                       && invocable<Proj, ranges::range_value_t<ELR>>;
+  template <class ELR, class _UnCV, class Proj>
+  concept _Can_edgelist_all_proj_eval = ranges::forward_range<ELR> //
+                                        && invocable<Proj, ranges::range_value_t<ELR>>;
+
+  class _Cpo {
+  private:
+    enum class _St_adjlist_all { _None, _Non_member, _Auto_eval };
+    enum class _St_adjlist_idrng { _None, _Non_member, _Auto_eval };
+    enum class _St_edgelist_idrng { _None, _Non_member, _Auto_eval };
+
+    // edgelist(g)
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_adjlist_all> _Choose_all() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_adjlist_all_ADL<_G, _UnCV>) {
+        return {_St_adjlist_all::_Non_member, noexcept(_Fake_copy_init(edgelist(declval<_G>())))}; // intentional ADL
+      } else if constexpr (_Can_adjlist_all_eval<_G, _UnCV>) {
+        return {_St_adjlist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
+      } else {
+        return {_St_adjlist_all::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_adjlist_all> _Choice_all = _Choose_all<_G>();
+
+    // edgelist(g,evf)
+    template <class _G, class EVF>
+    [[nodiscard]] static consteval _Choice_t<_St_adjlist_all> _Choose_all_evf() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_adjlist_all_evf_ADL<_G, _UnCV, EVF>) {
+        return {_St_adjlist_all::_Non_member,
+                noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<EVF>())))}; // intentional ADL
+      } else if constexpr (_Can_adjlist_all_evf_eval<_G, _UnCV, EVF>) {
+        return {_St_adjlist_all::_Auto_eval, noexcept(true)};                        // default impl (revisit)
+      } else {
+        return {_St_adjlist_all::_None};
+      }
+    }
+
+    template <class _G, class EVF>
+    static constexpr _Choice_t<_St_adjlist_all> _Choice_all_evf = _Choose_all_evf<_G, EVF>();
+
+
+    // edgelist(g,uid,vid)
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_adjlist_idrng> _Choose_idrng() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_adjlist_idrng_ADL<_G, _UnCV>) {
+        return {_St_adjlist_idrng::_Non_member,
+                noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(),
+                                                  declval<vertex_id_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_adjlist_idrng_eval<_G, _UnCV>) {
+        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)};                   // default impl (revisit)
+      } else {
+        return {_St_adjlist_idrng::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_adjlist_idrng> _Choice_idrng = _Choose_idrng<_G>();
+
+    // edgelist(g,uid,vid,evf)
+    template <class _G, class EVF>
+    [[nodiscard]] static consteval _Choice_t<_St_adjlist_idrng> _Choose_idrng_evf() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      using _UnCV = remove_cvref_t<_G>;
+
+      if constexpr (_Has_adjlist_idrng_evf_ADL<_G, _UnCV, EVF>) {
+        return {_St_adjlist_idrng::_Non_member,
+                noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(), declval<vertex_id_t<_G>>(),
+                                                  declval<EVF>())))}; // intentional ADL
+      } else if constexpr (_Can_adjlist_idrng_evf_eval<_G, _UnCV, EVF>) {
+        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)};       // default impl (revisit)
+      } else {
+        return {_St_adjlist_idrng::_None};
+      }
+    }
+
+    template <class _G, class EVF>
+    static constexpr _Choice_t<_St_adjlist_idrng> _Choice_idrng_evf = _Choose_idrng_evf<_G, EVF>();
+
+
+  public:
+    // edgelist(g)
+    /**
+     * @brief Get the edgelist of all edges in a graph.
+     * 
+     * Complexity: O(E)
+     * 
+     * Default implementation: 
+     *  using iterator_type = edgelist_iterator<G, void>;
+     *  edgelist_view<G, void>(iterator_type(g), ranges::end(vertices(g)));
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @return A range of edges in graph g where the range value_type is 
+     *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+    */
+    template <class _G>
+    requires(_Choice_all<_G&>._Strategy != _St_adjlist_all::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_all<_G&>._No_throw) {
+      constexpr _St_adjlist_all _Strat_ref = _Choice_all<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_adjlist_all::_Non_member) {
+        return edgelist(__g); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
+        using iterator_type = edgelist_iterator<_G, void>;
+        return edgelist_view<_G, void>(iterator_type(__g), ranges::end(vertices(__g))); // default impl
+      } else {
+        static_assert(_Always_false<_G>,
+                      "edgelist(g) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+
+    // edgelist(g,evf)
+    /**
+     * @brief Get the edgelist of all edges in a graph, with edge values.
+     * 
+     * Complexity: O(E)
+     * 
+     * Default implementation: 
+     *  using iterator_type = edgelist_iterator<G, void>;
+     *  edgelist_view<G, void>(iterator_type(g), ranges::end(vertices(g)));
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @return A range of edges in graph g where the range value_type is 
+     *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+    */
+    template <class _G, class EVF>
+    //requires(_Choice_all_evf<_G&, EVF>._Strategy != _St_adjlist_all::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, const EVF& evf) const
+          noexcept(_Choice_all_evf<_G&, EVF>._No_throw) {
+      constexpr _St_adjlist_all _Strat_ref = _Choice_all_evf<_G&, EVF>._Strategy;
+
+      static_assert(invocable<EVF, edge_reference_t<_G>>, "EVF is not invocable");
+
+      if constexpr (_Strat_ref == _St_adjlist_all::_Non_member) {
+        return edgelist(__g); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
+        using iterator_type = edgelist_iterator<_G, EVF>;
+        return edgelist_view<_G, EVF>(iterator_type(__g, evf), ranges::end(vertices(__g)));
+      } else {
+        static_assert(_Always_false<_G>,
+                      "edgelist(g,evf) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+
+    // edgelist(__g,uid,vid)
+    /**
+     * @brief Get the edgelist of all edges in a graph.
+     * 
+     * Complexity: O(E)
+     * 
+     * Default implementation: 
+     *  using iterator_type = edgelist_iterator<G, void>;
+     *  edgelist_view<G, void>(iterator_type(__g), ranges::end(vertices(__g)));
+     * 
+     * @tparam G The graph type.
+     * @param __g A graph instance.
+     * @return A range of edges in graph __g where the range value_type is 
+     *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+    */
+    template <class _G>
+    requires(_Choice_idrng<_G&>._Strategy != _St_adjlist_idrng::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_id_t<_G> first, vertex_id_t<_G> last) const
+          noexcept(_Choice_idrng<_G&>._No_throw) {
+      constexpr _St_adjlist_idrng _Strat_ref = _Choice_idrng<_G&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_adjlist_idrng::_Non_member) {
+        return edgelist(__g); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_adjlist_idrng::_Auto_eval) {
+        using iterator_type = edgelist_iterator<_G, void>;
+        return edgelist_view<_G, void>(iterator_type(__g, find_vertex(__g, first)), find_vertex(__g, last));
+      } else {
+        static_assert(_Always_false<_G>,
+                      "edgelist(g,uid,vid) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+
+    // edgelist(g,uid,vid,evf)
+    /**
+     * @brief Get the edgelist of all edges in a graph, with edge values.
+     * 
+     * Complexity: O(E)
+     * 
+     * Default implementation: 
+     *  using iterator_type = edgelist_iterator<_G, void>;
+     *  edgelist_view<_G, void>(iterator_type(g), ranges::end(vertices(g)));
+     * 
+     * @tparam _G The graph type.
+     * @param g A graph instance.
+     * @return A range of edges in graph g where the range value_type is 
+     *         edge_descriptor<vertex_id_t<_G>,false,vertex_reference_t<_G>,void>
+    */
+    template <class _G, class EVF>
+    requires(_Choice_idrng_evf<_G&, EVF>._Strategy != _St_adjlist_idrng::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_id_t<_G> first, vertex_id_t<_G> last, const EVF& evf) const
+          noexcept(_Choice_idrng<_G&>._No_throw) {
+      constexpr _St_adjlist_idrng _Strat_ref = _Choice_idrng_evf<_G&, EVF>._Strategy;
+
+      if constexpr (_Strat_ref == _St_adjlist_idrng::_Non_member) {
+        return edgelist(__g); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_adjlist_idrng::_Auto_eval) {
+        using iterator_type = edgelist_iterator<_G, EVF>;
+        return edgelist_view<_G, void>(iterator_type(__g, evf), ranges::end(vertices(__g))); // default impl
+      } else {
+        static_assert(_Always_false<_G>,
+                      "edgelist(g,uid,vid,evf) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+  }; // class _Cpo
+} // namespace _Edgelist
+
+inline namespace _Cpos {
+  inline constexpr _Edgelist::_Cpo edgelist;
 }
-
-template <adjacency_list G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last) {
-  assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));
-  if constexpr (tag_invoke::_has_edgelist_g_uid_adl<G>)
-    return tag_invoke::edgelist(g, first, last);
-  else {
-    using iterator_type = edgelist_iterator<G, void>;
-    return edgelist_view<G, void>(iterator_type(g, find_vertex(g, first)), find_vertex(g, last));
-  }
-}
-
-
-//
-// edgelist(g,u,evf)
-// edgelist(g,uid,evf)
-//
-template <adjacency_list G, class EVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edgelist(G&& g, const EVF& evf) {
-  if constexpr (tag_invoke::_has_edgelist_g_evf_adl<G, EVF>) {
-    return tag_invoke::edgelist(g, evf);
-  } else {
-    using iterator_type = edgelist_iterator<G, EVF>;
-    return edgelist_view<G, EVF>(iterator_type(g, evf), ranges::end(vertices(g)));
-  }
-}
-
-template <adjacency_list G, class EVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto edgelist(G&& g, vertex_id_t<G> first, vertex_id_t<G> last, const EVF& evf) {
-  assert(first <= last && static_cast<size_t>(last) <= ranges::size(vertices(g)));
-  if constexpr (tag_invoke::_has_edgelist_g_uid_evf_adl<G, EVF>)
-    return tag_invoke::edgelist(g, first, last, evf);
-  else {
-    using iterator_type = edgelist_iterator<G, EVF>;
-    return edgelist_view<G, void>(iterator_type(g, find_vertex(g, first)), find_vertex(g, last), evf);
-  }
-}
-
 
 } // namespace std::graph::views
