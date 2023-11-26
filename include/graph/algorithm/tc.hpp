@@ -1,7 +1,7 @@
 /**
  * @file tc.hpp
  * 
- * @brief Minimum spanning tree using Kruskal's and Prim's algorithms.
+ * @brief Triangle counting.
  * 
  * @copyright Copyright (c) 2022
  * 
@@ -15,8 +15,8 @@
 
 #include "graph/graph.hpp"
 
-#ifndef GRAPH_MST_HPP
-#  define GRAPH_MST_HPP
+#ifndef GRAPH_TC_HPP
+#  define GRAPH_TC_HPP
 
 namespace std::graph {
 
@@ -46,6 +46,7 @@ size_t triangle_count(G&& g) {
         continue;
       }
       std::graph::incidence_iterator<G> j(g, vid);
+
       auto                              je = ranges::end(edges(g, vid));
       auto                              i2 = i;
 
@@ -70,4 +71,4 @@ size_t triangle_count(G&& g) {
 }
 } // namespace std::graph
 
-#endif //GRAPH_MST_HPP
+#endif //GRAPH_TC_HPP
