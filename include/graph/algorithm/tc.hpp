@@ -35,20 +35,20 @@ requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<
 size_t triangle_count(G&& g) {
   size_t N(size(vertices(g)));
   size_t triangles(0);
-  
+
   for (vertex_id_t<G> uid = 0; uid < N; ++uid) {
     std::graph::incidence_iterator<G> i(g, uid);
-    auto ie = ranges::end(edges(g, uid));
+    auto                              ie = ranges::end(edges(g, uid));
     while (i != ie) {
       auto&& [vid, uv] = *i;
-      if(vid < uid) {
+      if (vid < uid) {
         ++i;
         continue;
       }
       std::graph::incidence_iterator<G> j(g, vid);
-      auto je = ranges::end(edges(g, vid));
-      auto i2 = i;
-      
+      auto                              je = ranges::end(edges(g, vid));
+      auto                              i2 = i;
+
       // Alternatively use std::set_intersection(i2, ie, j, je, counter) but this is slower
       while (i2 != ie && j != je) {
         auto&& [wid1, uw] = *i2;
