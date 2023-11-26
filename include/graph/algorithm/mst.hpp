@@ -120,7 +120,7 @@ void kruskal(E&&       e,      // graph
   auto outer_compare = [&](auto&& i, auto&& j) { return compare(std::get<2>(i), std::get<2>(j)); };
   std::sort(e.begin(), e.end(), outer_compare);
 
-  VId                                 N = e.max_vid() + 1;
+  VId                                 N = static_cast<VId>(e.max_vid() + 1);
   std::vector<std::pair<VId, size_t>> subsets(N);
   for (VId uid = 0; uid < N; ++uid) {
     subsets[uid].first  = uid;

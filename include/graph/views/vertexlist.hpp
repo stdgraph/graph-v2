@@ -59,11 +59,20 @@ protected:
   using shadow_value_type =
         vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
+  union internal_value {
+    value_type        value_;
+    shadow_value_type shadow_;
+
+    internal_value(vertex_id_type start_at) : shadow_{} { shadow_.id = start_at; }
+    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+    internal_value() : shadow_{} {}
+    ~internal_value() {}
+    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+  };
+
 public:
   vertexlist_iterator(graph_type& g, const VVF& value_fn, vertex_iterator_type iter, vertex_id_type start_at = 0)
-        : iter_(iter), value_fn_(&value_fn) {
-    value_.id = start_at;
-  }
+        : value_{start_at}, iter_(iter), value_fn_(&value_fn) {}
 
   constexpr vertexlist_iterator()                           = default;
   constexpr vertexlist_iterator(const vertexlist_iterator&) = default;
@@ -75,15 +84,15 @@ public:
 
 public:
   constexpr reference operator*() const {
-    value_.vertex = &*iter_;
+    value_.shadow_.vertex = &*iter_;
     if constexpr (!is_void_v<vertex_value_type>)
-      value_.value = invoke(*this->value_fn_, *iter_);
-    return reinterpret_cast<reference>(value_);
+      value_.shadow_.value = invoke(*this->value_fn_, *iter_);
+    return value_.value_;
   }
 
   constexpr vertexlist_iterator& operator++() {
     ++iter_;
-    ++value_.id;
+    ++value_.shadow_.id;
     // leave value_.vertex as-is to avoid dereferencing iter_ when it's at end()
     return *this;
   }
@@ -96,9 +105,9 @@ public:
   constexpr bool operator==(const vertexlist_iterator& rhs) const { return iter_ == rhs.iter_; }
 
 protected:
-  mutable shadow_value_type value_ = {};
-  vertex_iterator_type      iter_;
-  const VVF*                value_fn_ = nullptr;
+  mutable internal_value value_;
+  vertex_iterator_type   iter_     = vertex_iterator_type();
+  const VVF*             value_fn_ = nullptr;
 
   friend bool operator==(const vertex_iterator_type& lhs, const vertexlist_iterator& rhs) { return lhs == rhs.iter_; }
 };
@@ -132,10 +141,20 @@ protected:
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type  = vertex_descriptor<vertex_id_type, shadow_vertex_type*, void>;
 
+  union internal_value {
+    value_type        value_;
+    shadow_value_type shadow_;
+
+    internal_value(vertex_id_type start_at) : shadow_{start_at, nullptr} {}
+    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+    internal_value() : shadow_{} {}
+    ~internal_value() {}
+    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+  };
+
 public:
   vertexlist_iterator(graph_type& g) : iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
-  vertexlist_iterator(vertex_iterator_type iter, vertex_id_type start_at = 0)
-        : value_{start_at, nullptr}, iter_(iter) {}
+  vertexlist_iterator(vertex_iterator_type iter, vertex_id_type start_at = 0) : value_{start_at}, iter_(iter) {}
 
   constexpr vertexlist_iterator()                           = default;
   constexpr vertexlist_iterator(const vertexlist_iterator&) = default;
@@ -147,15 +166,15 @@ public:
 
 public:
   constexpr reference operator*() const {
-    value_.vertex = &*iter_;
+    value_.shadow_.vertex = &*iter_;
     if constexpr (!is_void_v<vertex_value_type>)
-      value_.value = this->value_fn_(*iter_);
-    return reinterpret_cast<reference>(value_);
+      value_.shadow_.value = this->value_fn_(*iter_);
+    return value_.value_;
   }
 
   constexpr vertexlist_iterator& operator++() {
     ++iter_;
-    ++value_.id;
+    ++value_.shadow_.id;
     // leave value_.vertex as-is to avoid dereferencing iter_ to get value_.vertex when it's at end()
     return *this;
   }
@@ -168,8 +187,8 @@ public:
   constexpr bool operator==(const vertexlist_iterator& rhs) const { return iter_ == rhs.iter_; }
 
 protected:
-  mutable shadow_value_type value_ = {};
-  vertex_iterator_type      iter_;
+  mutable internal_value value_;
+  vertex_iterator_type   iter_ = vertex_iterator_type();
 
   friend bool operator==(const vertex_iterator_type& lhs, const vertexlist_iterator& rhs) { return lhs == rhs.iter_; }
 };

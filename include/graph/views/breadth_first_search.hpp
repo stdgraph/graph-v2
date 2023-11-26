@@ -260,6 +260,17 @@ public:
     using shadow_value_type =
           vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
+    union internal_value {
+      value_type        value_;
+      shadow_value_type shadow_;
+
+      internal_value(vertex_id_type start_at) : shadow_{start_at, nullptr} {}
+      internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+      internal_value() : shadow_{} {}
+      ~internal_value() {}
+      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    };
+
   public:
     iterator(const bfs_range_type& range) : the_range_(&const_cast<bfs_range_type&>(range)) {}
     iterator()                = default;
@@ -286,16 +297,16 @@ public:
       auto&&         uvi  = the_range_->uv_;
       vertex_id_type v_id = the_range_->real_target_id(*uvi, u_id);
       auto&          v    = *find_vertex(g, v_id);
-      value_              = {v_id, &v, invoke(*the_range_->value_fn_, v)};
-      return reinterpret_cast<reference>(value_);
+      value_.shadow_      = {v_id, &v, invoke(*the_range_->value_fn_, v)};
+      return value_.value_;
     }
 
     constexpr bool operator==(const end_sentinel&) const noexcept { return the_range_->Q_.empty(); }
     constexpr bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
-    mutable shadow_value_type value_     = {};
-    bfs_range_type*           the_range_ = nullptr;
+    mutable internal_value value_;
+    bfs_range_type*        the_range_ = nullptr;
     friend end_sentinel;
   };
 
@@ -367,6 +378,17 @@ public:
     using shadow_vertex_type = remove_reference_t<vertex_reference>;
     using shadow_value_type  = vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, void>;
 
+    union internal_value {
+      value_type        value_;
+      shadow_value_type shadow_;
+
+      internal_value(vertex_id_type start_at) : shadow_{start_at, nullptr} {}
+      internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+      internal_value() : shadow_{} {}
+      ~internal_value() {}
+      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    };
+
   public:
     iterator(const bfs_range_type& range) : the_range_(&const_cast<bfs_range_type&>(range)) {}
     iterator()                = default;
@@ -393,16 +415,16 @@ public:
       auto&&         uvi  = the_range_->uv_;
       vertex_id_type v_id = the_range_->real_target_id(*uvi, u_id);
       auto&          v    = *find_vertex(g, v_id);
-      value_              = {v_id, &v};
-      return reinterpret_cast<reference>(value_);
+      value_.shadow_      = {v_id, &v};
+      return value_.value_;
     }
 
     bool operator==(const end_sentinel&) const noexcept { return the_range_->Q_.empty(); }
     //bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
-    mutable shadow_value_type value_     = {};
-    bfs_range_type*           the_range_ = nullptr;
+    mutable internal_value value_;
+    bfs_range_type*        the_range_ = nullptr;
     friend end_sentinel;
   };
 
@@ -482,6 +504,17 @@ public:
     using shadow_value_type =
           edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
+    union internal_value {
+      value_type        value_;
+      shadow_value_type shadow_;
+
+      internal_value(vertex_id_type start_at) : shadow_{start_at, nullptr} {}
+      internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+      internal_value() : shadow_{} {}
+      ~internal_value() {}
+      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    };
+
   public:
     iterator(const bfs_range_type& range) : the_range_(&const_cast<bfs_range_type&>(range)) {}
     iterator()                = default;
@@ -506,20 +539,20 @@ public:
       auto&& u_id = the_range_->Q_.front();
       auto&& uvi  = the_range_->uv_;
       if constexpr (Sourced) {
-        value_.source_id = u_id;
+        value_.shadow_.source_id = u_id;
       }
-      value_.target_id = the_range_->real_target_id(*uvi, u_id);
-      value_.edge      = &*uvi;
-      value_.value     = invoke(*the_range_->value_fn_, *uvi);
-      return reinterpret_cast<reference>(value_);
+      value_.shadow_.target_id = the_range_->real_target_id(*uvi, u_id);
+      value_.shadow_.edge      = &*uvi;
+      value_.shadow_.value     = invoke(*the_range_->value_fn_, *uvi);
+      return value_.value_;
     }
 
     bool operator==(const end_sentinel&) const noexcept { return the_range_->Q_.empty(); }
     bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
-    mutable shadow_value_type value_     = {};
-    bfs_range_type*           the_range_ = nullptr;
+    mutable internal_value value_;
+    bfs_range_type*        the_range_ = nullptr;
     friend end_sentinel;
   };
 
@@ -584,6 +617,17 @@ public:
     using shadow_edge_type  = remove_reference_t<edge_reference_type>;
     using shadow_value_type = edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, void>;
 
+    union internal_value {
+      value_type        value_;
+      shadow_value_type shadow_;
+
+      internal_value(vertex_id_type start_at) : shadow_{start_at, nullptr} {}
+      internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+      internal_value() : shadow_{} {}
+      ~internal_value() {}
+      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    };
+
   public:
     iterator(const bfs_range_type& range) : the_range_(&const_cast<bfs_range_type&>(range)) {}
     iterator()                = default;
@@ -608,19 +652,19 @@ public:
       auto&& u_id = the_range_->Q_.front();
       auto&& uvi  = the_range_->uv_;
       if constexpr (Sourced) {
-        value_.source_id = u_id;
+        value_.shadow_.source_id = u_id;
       }
-      value_.target_id = the_range_->real_target_id(*uvi, u_id);
-      value_.edge      = &*uvi;
-      return reinterpret_cast<reference>(value_);
+      value_.shadow_.target_id = the_range_->real_target_id(*uvi, u_id);
+      value_.shadow_.edge      = &*uvi;
+      return value_.value_;
     }
 
     bool operator==(const end_sentinel&) const noexcept { return the_range_->Q_.empty(); }
     bool operator!=(const end_sentinel& rhs) const noexcept { return !operator==(rhs); }
 
   private:
-    mutable shadow_value_type value_     = {};
-    bfs_range_type*           the_range_ = nullptr;
+    mutable internal_value value_;
+    bfs_range_type*        the_range_ = nullptr;
     friend end_sentinel;
   };
 

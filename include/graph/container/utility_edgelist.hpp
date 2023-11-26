@@ -72,19 +72,17 @@ public:
   bool is_directed() { return directed_; }
 
 private:
+#if EDGES_CPO
+  friend constexpr storage_type& edges(utility_edgelist& el) { return el.storage_; }
+#else
   friend constexpr storage_type& tag_invoke(::std::graph::edgelist::tag_invoke::edges_fn_t, utility_edgelist& el) {
     return el.storage_;
   }
+#endif
 
-  friend constexpr VSourceId&
-  tag_invoke(::std::graph::edgelist::tag_invoke::source_id_fn_t, utility_edgelist& el, value_type& e) {
-    return std::get<0>(e);
-  }
+  friend constexpr VSourceId& source_id(utility_edgelist& el, value_type& e) { return std::get<0>(e); }
 
-  friend constexpr EV&
-  tag_invoke(::std::graph::edgelist::tag_invoke::edge_value_fn_t, utility_edgelist& el, value_type& e) {
-    return std::get<2>(e);
-  }
+  friend constexpr EV& edge_value(utility_edgelist& el, value_type& e) { return std::get<2>(e); }
 
   storage_type storage_;
   VSourceId    source_max_;

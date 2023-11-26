@@ -53,8 +53,8 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
 
   init_console();
 
-  using G  = routes_compressed_graph_type;
-  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
+  using G = routes_compressed_graph_type;
+  auto g  = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
   // name_order_policy::source_order_found gives best output with least overlap for germany routes
 
   const auto frankfurt    = find_frankfurt(g);

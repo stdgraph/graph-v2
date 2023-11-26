@@ -172,7 +172,7 @@ template <typename G>
 std::optional<std::graph::vertex_iterator_t<G>> find_city(G&& g, std::string_view city_name) {
 #if 1
   auto it = std::ranges::find_if(std::graph::vertices(g),
-                                 [&g, &city_name](auto& u) { return std::graph::vertex_value<G>(g, u) == city_name; });
+                                 [&g, &city_name](auto& u) { return std::graph::vertex_value(g, u) == city_name; });
   if (it != end(std::graph::vertices(g)))
     return std::optional<std::graph::vertex_iterator_t<G>>(it);
   return std::optional<std::graph::vertex_iterator_t<G>>();
@@ -191,7 +191,7 @@ template <typename G>
 std::graph::vertex_id_t<G> find_city_id(G&& g, std::string_view city_name) {
 #if 1
   auto it = std::ranges::find_if(std::graph::vertices(g),
-                                 [&g, &city_name](auto& u) { return std::graph::vertex_value<G>(g, u) == city_name; });
+                                 [&g, &city_name](auto& u) { return std::graph::vertex_value(g, u) == city_name; });
 #else
   auto vertex_to_name = [&g](std::graph::vertex_reference_t<G> u) { return std::graph::vertex_value<G>(g, u); };
   auto it = std::ranges::lower_bound(std::graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);

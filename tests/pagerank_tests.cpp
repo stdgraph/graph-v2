@@ -43,7 +43,7 @@ TEST_CASE("PageRank", "[pagerank]") {
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
 
   std::vector<double> page_rank(size(vertices(g)));
-  std::graph::pagerank(g, page_rank, double(0.85), double(1e-4), 10);
+  std::graph::pagerank(g, page_rank, 0.85, 1e-4, 10);
 
   std::vector<double> answer = {0.051086017487729, 0.065561667371485, 0.106818581147795, 0.141889899564636,
                                 0.065561667371485, 0.078952299317762, 0.065561667371485, 0.078952299317762,

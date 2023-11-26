@@ -22,6 +22,7 @@
 #include <type_traits>
 #include <stdexcept>
 
+#include "graph_descriptors.hpp"
 #include "detail/graph_cpo.hpp"
 
 
@@ -169,7 +170,7 @@ inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
  * @tparam G The graph type.
 */
 template <class G>
-concept index_adjacency_list = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_id_t<G> uid) {
+concept index_adjacency_list = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_id_t<G>& uid) {
   { edges(g, uid) } -> ranges::forward_range;
 };
 
