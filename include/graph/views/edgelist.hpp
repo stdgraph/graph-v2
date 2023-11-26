@@ -8,10 +8,17 @@
 // edgelist(g,uid)     -> edge_descriptor<VId,true,E,void> -> {source_id, target_id, edge&}
 // edgelist(g,uid,evf) -> edge_descriptor<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
 //
+// edgelist(elr,proj)  -> edge_descriptor<VId,true,E,void>  -> {source_id, target_id, edge&},        where VId is defined by proj and E is range_value_t<ELR>&
+// edgelist(elr,proj)  -> edge_descriptor<VId,true,E,Value> -> {source_id, target_id, edge&, Value}, where VId and Value defined by proj and E is range_value_t<ELR>&
+// Note: proj(range_value_t<ELR>&) is a projection and determines whether to return a value member or not
+//
 // basic_edgelist(g) -> edge_descriptor<VId,true,void,void> -> {source_id, target_id}
 //
 // basic_edgelist(g,uid) -> edge_descriptor<VId,true,void,void> -> {source_id, target_id}
 //
+// basic_edgelist(elr,proj)  -> edge_descriptor<VId,true,void,void>  -> {source_id, target_id},      where VId is defined by proj
+// Note: proj(range_value_t<ELR>&) is a projection and determines whether to return a value member or not
+// 
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(uv); }
 //
 //           vertex_id<G> first_id = ..., last_id = ...;
@@ -27,22 +34,15 @@
 //           for([uid, vid]        : basic_edgelist(g,uid))
 //
 
-namespace std::graph {
-template <class G, class EVF>
-concept edge_value_function = adjacency_list<G> && invocable<EVF, edge_reference_t<G>>;
-
-//template <class G, class EVF>
-//concept edge_proj_function = adjacency_list<G> && invocable<EVF, edge_reference_t<G>>;
-} // namespace std::graph
-
-
 namespace std::graph::views {
 
 template <adjacency_list G, class EVF = void>
 class edgelist_iterator;
 
+#ifdef ENABLE_EDGELIST_RANGE
 template <edgelist_range ELR, class Proj = identity>
 class edgelist_range_iterator;
+#endif
 
 /**
  * @brief Common functionality for edgelist_iterator<G>
@@ -300,6 +300,9 @@ using edgelist_view = ranges::subrange<edgelist_iterator<G, EVF>, vertex_iterato
 // edgelist(g,fn)            -> edges[uid,vid,uv,value]
 // edgelist(g,uid,vid)       -> edges[uid,vid,uv]
 // edgelist(g,uid,vid,fn)    -> edges[uid,vid,uv,value]
+// 
+// edgelist(elr,proj)        -> edges[uid,vid,uv]         ; proj determines whether value is included or not
+// edgelist(elr,proj)        -> edges[uid,vid,uv,value]
 namespace _Edgelist {
 #if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void edgelist() = delete;                // Block unqualified name lookup
@@ -368,19 +371,20 @@ namespace _Edgelist {
                                              { _Fake_copy_init(edges(__g, uid)) };
                                            };
 
-
+#ifdef ENABLE_EDGELIST_RANGE
   template <class ELR, class _UnCV, class Proj>
-  concept _Has_edgelist_all_proj_ADL = ranges::forward_range<ELR> //
+  concept _Has_edgelist_all_proj_ADL = edgelist_range<ELR> //
                                        && invocable<Proj, ranges::range_value_t<ELR>>;
   template <class ELR, class _UnCV, class Proj>
-  concept _Can_edgelist_all_proj_eval = ranges::forward_range<ELR> //
+  concept _Can_edgelist_all_proj_eval = edgelist_range<ELR> //
                                         && invocable<Proj, ranges::range_value_t<ELR>>;
+#endif
 
   class _Cpo {
   private:
     enum class _St_adjlist_all { _None, _Non_member, _Auto_eval };
     enum class _St_adjlist_idrng { _None, _Non_member, _Auto_eval };
-    enum class _St_edgelist_idrng { _None, _Non_member, _Auto_eval };
+    enum class _St_edgelist_all { _None, _Non_member, _Auto_eval };
 
     // edgelist(g)
     template <class _G>
@@ -460,6 +464,26 @@ namespace _Edgelist {
     template <class _G, class EVF>
     static constexpr _Choice_t<_St_adjlist_idrng> _Choice_idrng_evf = _Choose_idrng_evf<_G, EVF>();
 
+#ifdef ENABLE_EDGELIST_RANGE
+    // edgelist(elr,proj)
+    template <class ELR, class Proj>
+    [[nodiscard]] static consteval _Choice_t<_St_edgelist_all> _Choose_elr_proj() noexcept {
+      static_assert(is_lvalue_reference_v<ELR>);
+      using _UnCV = remove_cvref_t<ELR>;
+
+      if constexpr (_Has_edgelist_all_proj_ADL<ELR, _UnCV, Proj>) {
+        return {_St_edgelist_all::_Non_member,
+                noexcept(_Fake_copy_init(edgelist(declval<ELR>(), declval<Proj>())))}; // intentional ADL
+      } else if constexpr (_Can_edgelist_all_proj_eval<ELR, _UnCV, Proj>) {
+        return {_St_edgelist_all::_Auto_eval, noexcept(true)};                         // default impl (revisit)
+      } else {
+        return {_St_edgelist_all::_None};
+      }
+    }
+
+    template <class ELR, class Proj>
+    static constexpr _Choice_t<_St_edgelist_all> _Choice_elr_proj = _Choose_elr_proj<ELR, Proj>();
+#endif
 
   public:
     // edgelist(g)
@@ -509,12 +533,10 @@ namespace _Edgelist {
      *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
     */
     template <class _G, class EVF>
-    //requires(_Choice_all_evf<_G&, EVF>._Strategy != _St_adjlist_all::_None)
+    requires(_Choice_all_evf<_G&, EVF>._Strategy != _St_adjlist_all::_None)
     [[nodiscard]] constexpr auto operator()(_G&& __g, const EVF& evf) const
           noexcept(_Choice_all_evf<_G&, EVF>._No_throw) {
       constexpr _St_adjlist_all _Strat_ref = _Choice_all_evf<_G&, EVF>._Strategy;
-
-      static_assert(invocable<EVF, edge_reference_t<_G>>, "EVF is not invocable");
 
       if constexpr (_Strat_ref == _St_adjlist_all::_Non_member) {
         return edgelist(__g); // intentional ADL
@@ -590,6 +612,50 @@ namespace _Edgelist {
                       "edgelist(g,uid,vid,evf) is not defined and the default implementation cannot be evaluated");
       }
     }
+
+
+#ifdef ENABLE_EDGELIST_RANGE
+    // edgelist(elr,proj)
+    /**
+     * @brief Create an edgelist from an arbitrary range using a projection.
+     * 
+     * The projection must return a value of one of the following types:
+     *      edge_descriptor<Id, true, range_value_t<ELR>&, void>
+     *      edge_descriptor<Id, true, range_value_t<ELR>&, Value>
+     * where Id is an integral type defined by proj, and Value is also a type defined by proj.
+     * 
+     * Complexity: O(n)
+     * 
+     * Default implementation: 
+     *  ???
+     * 
+     * @tparam ELR The Edge List Range type. This can be any forward_range.
+     * @tparam Proj The projection function type that converts a range_value_t<ELR> to an edge_descriptor.
+     * @param elr The Edge List Range instance.
+     * @param proj The projection instance that converts a range_value_t<ELR> to an edge_descriptor. If
+     *             the range_value_t<ELR> is already a valid edge_descriptor then identity can be used.
+     * @return A range of edge_descriptors projected from elr. The value member type can be void or non-void.
+     *         If it is void, the value member will not exist in the returned edge_descriptor.
+    */
+    template <class ELR, class Proj>
+    requires(_Choice_elr_proj<ELR&, Proj>._Strategy != _St_adjlist_all::_None)
+    [[nodiscard]] constexpr auto operator()(ELR&& elr, const Proj& proj = identity()) const
+          noexcept(_Choice_elr_proj<ELR&, Proj>._No_throw) {
+      constexpr _St_adjlist_all _Strat_ref = _Choice_elr_proj<ELR&, Proj>._Strategy;
+
+      if constexpr (_Strat_ref == _St_adjlist_all::_Non_member) {
+        return edgelist(elr); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
+        //using iterator_type = edgelist_iterator<ELR, Proj>;
+        //return edgelist_view<ELR, Proj>(iterator_type(elr, proj), ranges::end(vertices(elr)));
+        return 1; // bogus; must implement
+      } else {
+        static_assert(_Always_false<ELR>,
+                      "edgelist(elr,proj) is not defined and the default implementation cannot be evaluated");
+      }
+    }
+#endif //ENABLE_EDGELIST_RANGE
+
   }; // class _Cpo
 } // namespace _Edgelist
 

@@ -17,6 +17,8 @@
  * @ingroup general_concepts
  */
 
+#define ENABLE_EDGELIST_RANGE
+
 #include <ranges>
 #include <concepts>
 #include <type_traits>
@@ -41,7 +43,6 @@
 // VR                       Vertex Range
 // VI        ui,vi          Vertex Iterator
 // VVF                      Vertex Value Function: vvf(u) -> value
-// VVP       vvp            Vertex Value Projection function vvp(x) --> vertex_descriptor<>
 //
 // E                        Edge type
 //           uv,vw          Edge reference
@@ -49,8 +50,9 @@
 // ER                       Edge Range
 // EI        uvi,vwi        Edge iterator
 // EVF       evf            Edge Value Function: evf(uv) -> value
-// EVP       evp            Edge Value Production function: evp(y) -> edge_descriptor<>
 //
+// ELR       elr            Edge List Range; an arbitrary range where its values can be projected to be an edge_descriptor.
+// Proj      proj           Projection function: proj(y) -> edge_descriptor<...>, where y is the value type of an ELR
 
 #ifndef GRAPH_HPP
 #  define GRAPH_HPP
@@ -204,10 +206,12 @@ concept sourced_adjacency_list =
       adjacency_list<G> && sourced_edge<G, edge_t<G>> && requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
 
 
-template<class EL>
-concept basic_edgelist_range = ranges::forward_range<EL> && negation_v<index_adjacency_list<EL>>;
-template <class EL>
-concept edgelist_range = ranges::forward_range<EL> && negation_v<adjacency_list<EL>>;
+#  ifdef ENABLE_EDGELIST_RANGE
+template <class ELR>
+concept basic_edgelist_range = ranges::forward_range<ELR> && negation_v<index_adjacency_list<ELR>>;
+template <class ELR>
+concept edgelist_range = ranges::forward_range<ELR> && negation_v<adjacency_list<ELR>>;
+#  endif
 
 //
 // property concepts
