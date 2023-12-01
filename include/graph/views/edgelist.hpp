@@ -412,8 +412,8 @@ namespace _Edgelist {
 #endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
-  concept _Has_adjlist_all_ADL = _Has_class_or_enum_type<_G>              //
-                                 && adjacency_list<_G>                    //
+  concept _Has_adjlist_all_ADL = _Has_class_or_enum_type<_G> //
+                                 && adjacency_list<_G>       //
                                  && requires(_G&& __g) {
                                       { _Fake_copy_init(edgelist(__g)) }; // intentional ADL
                                     };
@@ -426,9 +426,9 @@ namespace _Edgelist {
                                      };
 
   template <class _G, class _UnCV, class EVF>
-  concept _Has_adjlist_all_evf_ADL = _Has_class_or_enum_type<_G>                   //
-                                     && adjacency_list<_G>                         //
-                                     && invocable<EVF, edge_reference_t<_G>>       //
+  concept _Has_adjlist_all_evf_ADL = _Has_class_or_enum_type<_G>             //
+                                     && adjacency_list<_G>                   //
+                                     && invocable<EVF, edge_reference_t<_G>> //
                                      && requires(_G&& __g, EVF evf) {
                                           { _Fake_copy_init(edgelist(__g, evf)) }; // intentional ADL
                                         };
@@ -443,8 +443,8 @@ namespace _Edgelist {
 
 
   template <class _G, class _UnCV>
-  concept _Has_adjlist_idrng_ADL = _Has_class_or_enum_type<_G>                        //
-                                   && adjacency_list<_G>                              //
+  concept _Has_adjlist_idrng_ADL = _Has_class_or_enum_type<_G> //
+                                   && adjacency_list<_G>       //
                                    && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid) {
                                         { _Fake_copy_init(edgelist(__g, uid, vid)) }; // intentional ADL
                                       };
@@ -457,9 +457,9 @@ namespace _Edgelist {
                                        };
 
   template <class _G, class _UnCV, class EVF>
-  concept _Has_adjlist_idrng_evf_ADL = _Has_class_or_enum_type<_G>                             //
-                                       && adjacency_list<_G>                                   //
-                                       && invocable<EVF, edge_reference_t<_G>>                 //
+  concept _Has_adjlist_idrng_evf_ADL = _Has_class_or_enum_type<_G>             //
+                                       && adjacency_list<_G>                   //
+                                       && invocable<EVF, edge_reference_t<_G>> //
                                        && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid, EVF evf) {
                                             { _Fake_copy_init(edgelist(__g, uid, vid, evf)) }; // intentional ADL
                                           };
@@ -515,7 +515,7 @@ namespace _Edgelist {
         return {_St_adjlist_all::_Non_member,
                 noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<EVF>())))}; // intentional ADL
       } else if constexpr (_Can_adjlist_all_evf_eval<_G, _UnCV, EVF>) {
-        return {_St_adjlist_all::_Auto_eval, noexcept(true)};                        // default impl (revisit)
+        return {_St_adjlist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
       } else {
         return {_St_adjlist_all::_None};
       }
@@ -536,7 +536,7 @@ namespace _Edgelist {
                 noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                   declval<vertex_id_t<_G>>())))}; // intentional ADL
       } else if constexpr (_Can_adjlist_idrng_eval<_G, _UnCV>) {
-        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)};                   // default impl (revisit)
+        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)}; // default impl (revisit)
       } else {
         return {_St_adjlist_idrng::_None};
       }
@@ -556,7 +556,7 @@ namespace _Edgelist {
                 noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(), declval<vertex_id_t<_G>>(),
                                                   declval<EVF>())))}; // intentional ADL
       } else if constexpr (_Can_adjlist_idrng_evf_eval<_G, _UnCV, EVF>) {
-        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)};       // default impl (revisit)
+        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)}; // default impl (revisit)
       } else {
         return {_St_adjlist_idrng::_None};
       }
@@ -576,7 +576,7 @@ namespace _Edgelist {
         return {_St_edgelist_all::_Non_member,
                 noexcept(_Fake_copy_init(edgelist(declval<ELR>(), declval<Proj>())))}; // intentional ADL
       } else if constexpr (_Can_edgelist_all_proj_eval<ELR, _UnCV, Proj>) {
-        return {_St_edgelist_all::_Auto_eval, noexcept(true)};                         // default impl (revisit)
+        return {_St_edgelist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
       } else {
         return {_St_edgelist_all::_None};
       }
@@ -757,7 +757,7 @@ namespace _Edgelist {
     }
 #endif //ENABLE_EDGELIST_RANGE
 
-  };   // class _Cpo
+  }; // class _Cpo
 } // namespace _Edgelist
 
 inline namespace _Cpos {
