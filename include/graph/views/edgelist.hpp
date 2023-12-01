@@ -18,7 +18,7 @@
 //
 // basic_edgelist(elr,proj)  -> edge_descriptor<VId,true,void,void>  -> {source_id, target_id},      where VId is defined by proj
 // Note: proj(range_value_t<ELR>&) is a projection and determines whether to return a value member or not
-// 
+//
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(uv); }
 //
 //           vertex_id<G> first_id = ..., last_id = ...;
@@ -292,6 +292,107 @@ private: // member variables
 };
 
 
+/**
+ * @brief Iterator for a range with values that can be projected to a edge_descriptor.
+ *
+ * @tparam ELR    Graph type
+ * @tparam Proj  Edge Value Function type
+*/
+#if 0
+template <edgelist_range ELR, class Proj>
+class edgelist_range_iterator {
+public:
+  using edge_range          = ELR;
+  using edge_iterator       = ranges::iterator_t<edge_range>;
+  using edge_type           = ranges::range_value_t<edge_range>;
+  using edge_reference_type = ranges::range_reference_t<edge_range>;
+  using edge_value_type     = invoke_result_t<Proj, edge_reference_type>;
+
+  using iterator_category = forward_iterator_tag;
+  using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
+  using difference_type   = ranges::range_difference_t<edge_range>;
+  using pointer           = value_type*;
+  using const_pointer     = const value_type*;
+  using reference         = value_type&;
+  using const_reference   = const value_type&;
+  using rvalue_reference  = value_type&&;
+
+public:
+  edgelist_range_iterator(graph_type& g, vertex_iterator ui, const Proj& proj_fn)
+        : base_type(), g_(g), ui_(ui), uvi_(), proj_fn_(&proj_fn) {}
+  edgelist_range_iterator(graph_type& g, const Proj& proj_fn)
+        : edgelist_range_iterator(g, ranges::begin(vertices(g)), proj_fn) {
+    this->find_non_empty_vertex(g_, ui_, uvi_);
+  }
+
+  constexpr edgelist_range_iterator()                               = default;
+  constexpr edgelist_range_iterator(const edgelist_range_iterator&) = default;
+  constexpr edgelist_range_iterator(edgelist_range_iterator&&)      = default;
+  constexpr ~edgelist_range_iterator()                              = default;
+
+  constexpr edgelist_range_iterator& operator=(const edgelist_range_iterator&) = default;
+  constexpr edgelist_range_iterator& operator=(edgelist_range_iterator&&)      = default;
+
+protected:
+  // avoid difficulty in undefined vertex reference value in value_type
+  // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
+  using shadow_edge_type = remove_reference_t<edge_reference_type>;
+  using shadow_value_type =
+        edge_descriptor<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+
+  union internal_value {
+    value_type        value_;
+    shadow_value_type shadow_;
+
+    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
+    internal_value() : shadow_{} {}
+    ~internal_value() {}
+    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+  };
+
+public:
+  constexpr reference operator*() const {
+    if constexpr (unordered_edge<ELR, edge_type>) {
+      if (target_id(g_, *uvi_) != vertex_id(g_, ui_)) {
+        value_.shadow_.source_id = source_id(g_, *uvi_);
+        value_.shadow_.target_id = target_id(g_, *uvi_);
+      } else {
+        value_.shadow_.source_id = target_id(g_, *uvi_);
+        value_.shadow_.target_id = source_id(g_, *uvi_);
+      }
+      value_.shadow_.edge  = &*uvi_;
+      value_.shadow_.value = invoke(*proj_fn_, *uvi_);
+    } else {
+      value_.shadow_ = {vertex_id(g_, ui_), target_id(g_, *uvi_), &*uvi_, invoke(*proj_fn_, *uvi_)};
+    }
+    return value_.value_;
+  }
+
+  constexpr edgelist_range_iterator& operator++() {
+    this->find_next_edge(g_, ui_, uvi_);
+    return *this;
+  }
+  constexpr edgelist_range_iterator operator++(int) const {
+    edgelist_range_iterator tmp(*this);
+    ++*this;
+    return tmp;
+  }
+
+  constexpr bool operator==(const edgelist_range_iterator& rhs) const { return uvi_ == rhs.uvi_; }
+  //constexpr bool operator==(const edgelist_range_iterator& rhs) const { return uvi_ == rhs; }
+
+private: // member variables
+  mutable internal_value           value_;
+  _detail::ref_to_ptr<graph_type&> g_;
+  vertex_iterator                  ui_;
+  edge_iterator                    uvi_;
+  const Proj*                      proj_fn_ = nullptr;
+
+  friend bool operator==(const vertex_iterator& lhs, const edgelist_range_iterator& rhs) { return lhs == rhs.ui_; }
+};
+#endif
+
+
 template <class G, class EVF>
 using edgelist_view = ranges::subrange<edgelist_iterator<G, EVF>, vertex_iterator_t<G>>;
 
@@ -300,7 +401,7 @@ using edgelist_view = ranges::subrange<edgelist_iterator<G, EVF>, vertex_iterato
 // edgelist(g,fn)            -> edges[uid,vid,uv,value]
 // edgelist(g,uid,vid)       -> edges[uid,vid,uv]
 // edgelist(g,uid,vid,fn)    -> edges[uid,vid,uv,value]
-// 
+//
 // edgelist(elr,proj)        -> edges[uid,vid,uv]         ; proj determines whether value is included or not
 // edgelist(elr,proj)        -> edges[uid,vid,uv,value]
 namespace _Edgelist {
@@ -656,7 +757,7 @@ namespace _Edgelist {
     }
 #endif //ENABLE_EDGELIST_RANGE
 
-  }; // class _Cpo
+  };   // class _Cpo
 } // namespace _Edgelist
 
 inline namespace _Cpos {
