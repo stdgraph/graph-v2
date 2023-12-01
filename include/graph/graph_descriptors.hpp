@@ -41,6 +41,11 @@ using copyable_vertex_t = vertex_descriptor<VId, void, VV>; // {id, value}
 //
 template <class VId, bool Sourced, class E, class EV>
 struct edge_descriptor {
+  using source_id_type = VId;
+  using target_id_type = VId;
+  using edge_type      = E;
+  using value_type     = EV;
+
   VId source_id;
   VId target_id;
   E   edge;
@@ -49,17 +54,32 @@ struct edge_descriptor {
 
 template <class VId, class E>
 struct edge_descriptor<VId, true, E, void> {
+  using source_id_type = VId;
+  using target_id_type = VId;
+  using edge_type      = E;
+  using value_type     = void;
+
   VId source_id;
   VId target_id;
   E   edge;
 };
 template <class VId>
 struct edge_descriptor<VId, true, void, void> {
+  using source_id_type = VId;
+  using target_id_type = VId;
+  using edge_type      = void;
+  using value_type     = void;
+
   VId source_id;
   VId target_id;
 };
 template <class VId, class EV>
 struct edge_descriptor<VId, true, void, EV> {
+  using source_id_type = VId;
+  using target_id_type = VId;
+  using edge_type      = void;
+  using value_type     = EV;
+
   VId source_id;
   VId target_id;
   EV  value;
@@ -67,23 +87,43 @@ struct edge_descriptor<VId, true, void, EV> {
 
 template <class VId, class E, class EV>
 struct edge_descriptor<VId, false, E, EV> {
+  using source_id_type = void;
+  using target_id_type = VId;
+  using edge_type      = void;
+  using value_type     = EV;
+
   VId target_id;
   E   edge;
   EV  value;
 };
 template <class VId, class E>
 struct edge_descriptor<VId, false, E, void> {
+  using source_id_type = void;
+  using target_id_type = VId;
+  using edge_type      = E;
+  using value_type     = void;
+
   VId target_id;
   E   edge;
 };
 
 template <class VId, class EV>
 struct edge_descriptor<VId, false, void, EV> {
+  using source_id_type = void;
+  using target_id_type = VId;
+  using edge_type      = void;
+  using value_type     = EV;
+
   VId target_id;
   EV  value;
 };
 template <class VId>
 struct edge_descriptor<VId, false, void, void> {
+  using source_id_type = void;
+  using target_id_type = VId;
+  using edge_type      = void;
+  using value_type     = void;
+
   VId target_id;
 };
 
