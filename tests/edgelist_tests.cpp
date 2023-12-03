@@ -68,8 +68,8 @@ TEST_CASE("edgelist test", "[csr][edgelist]") {
     REQUIRE(frankfurt);
     vertex_t<G>& u = **frankfurt;
 
-    std::graph::views::edgelist_iterator<G> i0; // default construction
-    std::graph::views::edgelist_iterator<G> i1(g);
+    std::graph::edgelist_iterator<G> i0; // default construction
+    std::graph::edgelist_iterator<G> i1(g);
     static_assert(std::forward_iterator<decltype(i1)>, "edgelist_iterator must be a forward_iterator");
     static_assert(std::is_move_assignable_v<decltype(i0)>, "edgelist_iterator must be move_assignable");
     static_assert(std::is_copy_assignable_v<decltype(i0)>, "edgelist_iterator must be copy_assignable");
@@ -88,7 +88,7 @@ TEST_CASE("edgelist test", "[csr][edgelist]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::edgelist_iterator<G> i2(g);
+    std::graph::edgelist_iterator<G> i2(g);
     {
       auto&& [uid, vid, uv] = *i2;
       static_assert(is_const_v<decltype(vid)>, "vertex id must be const");
@@ -106,7 +106,7 @@ TEST_CASE("edgelist test", "[csr][edgelist]") {
     }
 
     static_assert(std::input_or_output_iterator<decltype(i1)>);
-    using _It = std::graph::views::edgelist_iterator<G>;
+    using _It = std::graph::edgelist_iterator<G>;
     using _Se = std::graph::vertex_iterator_t<G>;
     bool yy   = std::sentinel_for<_Se, _It>;
     bool xx   = std::sized_sentinel_for<_Se, _It>;
@@ -117,7 +117,7 @@ TEST_CASE("edgelist test", "[csr][edgelist]") {
     auto evf  = [&g](edge_t<G>& uv) -> double& { return edge_value(g, uv); };
     using EVF = decltype(evf);
 
-    std::graph::views::edgelist_iterator<G, EVF> i3(g, evf);
+    std::graph::edgelist_iterator<G, EVF> i3(g, evf);
     {
       // The following asserts are used to isolate problem with failing input_or_output_iterator concept for edgelist_iterator
       static_assert(std::movable<decltype(i3)>, "edgelist_iterator<G,EVF> is NOT movable");
@@ -139,7 +139,7 @@ TEST_CASE("edgelist test", "[csr][edgelist]") {
       REQUIRE(km == 217.0);
     }
 
-    //std::graph::views::edgelist_iterator<const G> j0;
+    //std::graph::edgelist_iterator<const G> j0;
     //j0 = i0;
     //i0 == j0;
   }
@@ -151,8 +151,8 @@ TEST_CASE("edgelist test", "[csr][edgelist]") {
 
     vertex_reference_t<G2> u = **frankfurt;
 
-    //std::graph::views::edgelist_iterator<G2> i0; // default construction
-    std::graph::views::edgelist_iterator<G2> i1(g2);
+    //std::graph::edgelist_iterator<G2> i0; // default construction
+    std::graph::edgelist_iterator<G2> i1(g2);
     static_assert(std::forward_iterator<decltype(i1)>, "edgelist_iterator must be a forward_iterator");
     {
       auto&& [uid, vid, uv] = *i1;
@@ -172,7 +172,7 @@ TEST_CASE("edgelist test", "[csr][edgelist]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::views::edgelist_iterator<G2> i2(g2);
+    std::graph::edgelist_iterator<G2> i2(g2);
     {
       auto&& [uid, vid, uv] = *i2;
       static_assert(is_const_v<decltype(vid)>, "id must be const");
@@ -188,7 +188,7 @@ TEST_CASE("edgelist test", "[csr][edgelist]") {
 
     auto evf  = [&g2](edge_reference_t<G2> uv) -> const double& { return edge_value(g2, uv); };
     using EVF = decltype(evf);
-    std::graph::views::edgelist_iterator<G2, EVF> i3(g2, evf);
+    std::graph::edgelist_iterator<G2, EVF> i3(g2, evf);
     {
       auto&& [uid, vid, uv, km] = *i3;
       REQUIRE(vid == 1);
