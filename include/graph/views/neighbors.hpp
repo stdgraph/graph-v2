@@ -258,50 +258,158 @@ private: // member variables
 
 template <adjacency_list G, bool Sourced, class VVF>
 using neighbors_view = ranges::subrange<neighbor_iterator<G, Sourced, VVF>, vertex_edge_iterator_t<G>>;
+
+
+namespace views {
+
+  //
+  // neighbors(g,uid)            -> edges[vid,v]
+  // neighbors(g,uid,fn)         -> edges[vid,v,value]
+  //
+  namespace _Neighbors {
+#if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+    void neighbors() = delete;             // Block unqualified name lookup
+#else                                      // ^^^ no workaround / workaround vvv
+    void neighbors();
+#endif                                     // ^^^ workaround ^^^
+
+    template <class _G, class _UnCV>
+    concept _Has_id_ADL = adjacency_list<_G> && requires(_G&& __g, const vertex_id_t<_G>& uid) {
+      { _Fake_copy_init(neighbors(__g, uid)) }; // intentional ADL
+    };
+    template <class _G, class _UnCV>
+    concept _Can_id_eval = adjacency_list<_G> && requires(_G&& __g, vertex_id_t<_G>& uid) {
+      { _Fake_copy_init(edges(__g, uid)) };
+    };
+
+    template <class _G, class _UnCV, class VVF>
+    concept _Has_id_vvf_ADL = adjacency_list<_G> && requires(_G&& __g, const vertex_id_t<_G>& uid, const VVF& vvf) {
+      { _Fake_copy_init(neighbors(__g, uid, vvf)) }; // intentional ADL
+    };
+    template <class _G, class _UnCV, class VVF>
+    concept _Can_id_vvf_eval =
+          adjacency_list<_G> && requires(_G&& __g, vertex_id_t<_G>& uid, const VVF& vvf, vertex_reference_t<_G> u) {
+            { _Fake_copy_init(edges(__g, uid)) };
+            { _Fake_copy_init(vvf(u)) };
+          };
+
+    class _Cpo {
+    private:
+      enum class _St_id { _None, _Non_member, _Auto_eval };
+      //enum class _St_id_fn { _None, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        using _UnCV = remove_cvref_t<_G>;
+
+        if constexpr (_Has_id_ADL<_G, _UnCV>) {
+          return {_St_id::_Non_member,
+                  noexcept(_Fake_copy_init(neighbors(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
+        } else if constexpr (_Can_id_eval<_G, _UnCV>) {
+          return {_St_id::_Auto_eval,
+                  noexcept(_Fake_copy_init(neighbors_view<_G, false, void>(
+                        neighbor_iterator<_G, false, void>(declval<_G>(), declval<vertex_id_t<_G>>()),
+                        ranges::end(edges(declval<_G>(), declval<vertex_id_t<_G>>())))))};
+        } else {
+          return {_St_id::_None};
+        }
+      }
+
+      template <class _G>
+      static constexpr _Choice_t<_St_id> _Choice_id = _Choose_id<_G>();
+
+      template <class _G, class VVF>
+      [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id_vvf() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        using _UnCV = remove_cvref_t<_G>;
+
+        if constexpr (_Has_id_vvf_ADL<_G, _UnCV, VVF>) {
+          return {_St_id::_Non_member, noexcept(_Fake_copy_init(neighbors(declval<_G>(), declval<vertex_id_t<_G>>(),
+                                                                          declval<VVF>())))}; // intentional ADL
+        } else if constexpr (_Can_id_vvf_eval<_G, _UnCV, VVF>) {
+          return {_St_id::_Auto_eval,
+                  noexcept(_Fake_copy_init(neighbors_view<_G, false, VVF>(
+                        neighbor_iterator<_G, false, VVF>(declval<_G>(), declval<vertex_id_t<_G>>(), declval<VVF>()),
+                        ranges::end(edges(declval<_G>(), declval<vertex_id_t<_G>>())))))};
+        } else {
+          return {_St_id::_None};
+        }
+      }
+
+      template <class _G, class VVF>
+      static constexpr _Choice_t<_St_id> _Choice_id_vvf = _Choose_id_vvf<_G, VVF>();
+
+    public:
+      /**
+       * @brief Get the outgoing neighbors edges of a vertex id.
+       * 
+       * Complexity: O(n)
+       * 
+       * Default implementation: 
+       *      neighbors_view<_G, false, void>(neighbor_iterator<_G, false, void>(__g, uid),
+       *                                      ranges::end(edges(__g, uid)));
+       * 
+       * @tparam G The graph type.
+       * @param g A graph instance.
+       * @param uid Vertex id.
+       * @return A range of the outgoing neighbors edges.
+      */
+      template <class _G>
+      requires(_Choice_id<_G&>._Strategy != _St_id::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid) const
+            noexcept(_Choice_id<_G&>._No_throw) {
+        constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
+
+        if constexpr (_Strat_id == _St_id::_Non_member) {
+          return neighbors(__g, uid); // intentional ADL
+        } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
+          // default impl
+          return neighbors_view<_G, false, void>(neighbor_iterator<_G, false, void>(__g, uid),
+                                                 ranges::end(edges(__g, uid)));
+        } else {
+          static_assert(_Always_false<_G>,
+                        "neighbors(g,uid) is not defined and the default implementation cannot be evaluated");
+        }
+      }
+
+      /**
+       * @brief Get the outgoing neighbors edges of a vertex id and include an edge value in the result.
+       * 
+       * Complexity: O(n)
+       * 
+       * Default implementation: 
+       *      neighbors_view<_G, false, void>(neighbor_iterator<_G, false, void>(__g, uid),
+       *                                      ranges::end(edges(__g, uid)));
+       * 
+       * @tparam G The graph type.
+       * @param g A graph instance.
+       * @param uid Vertex id.
+       * @return A range of the outgoing neighbors edges.
+      */
+      template <class _G, class VVF>
+      requires(_Choice_id_vvf<_G&, VVF>._Strategy != _St_id::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid, const VVF& vvf) const
+            noexcept(_Choice_id_vvf<_G&, VVF>._No_throw) {
+        constexpr _St_id _Strat_id = _Choice_id_vvf<_G&, VVF>._Strategy;
+
+        if constexpr (_Strat_id == _St_id::_Non_member) {
+          return neighbors(__g, uid); // intentional ADL
+        } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
+          // default impl
+          return neighbors_view<_G, false, VVF>(neighbor_iterator<_G, false, VVF>(__g, uid, vvf),
+                                                ranges::end(edges(__g, uid)));
+        } else {
+          static_assert(_Always_false<_G>,
+                        "neighbors(g,uid,vvf) is not defined and the default implementation cannot be evaluated");
+        }
+      }
+    };
+  } // namespace _Neighbors
+
+  inline namespace _Cpos {
+    inline constexpr _Neighbors::_Cpo neighbors;
+  }
+
+} // namespace views
 } // namespace std::graph
-
-namespace std::graph::tag_invoke {
-// ranges
-TAG_INVOKE_DEF(neighbors); // neighbors(g,uid)            -> edges[vid,uv]
-                           // neighbors(g,uid,fn)         -> edges[vid,uv,value]
-
-template <class G>
-concept _has_neighbors_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-  { neighbors(g, uid) };
-};
-template <class G, class VVF>
-concept _has_neighbors_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-  { neighbors(g, uid, vvf) };
-};
-} // namespace std::graph::tag_invoke
-
-namespace std::graph::views {
-//
-// neighbors(g,uid)
-//
-template <adjacency_list G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto neighbors(G&& g, vertex_id_t<G> uid) {
-  if constexpr (std::graph::tag_invoke::_has_neighbors_g_uid_adl<G>)
-    return std::graph::tag_invoke::neighbors(g, uid);
-  else {
-    using iterator_type = neighbor_iterator<G, false, void>;
-    return neighbors_view<G, false, void>(iterator_type(g, uid), ranges::end(edges(g, uid)));
-  }
-}
-
-
-//
-// neighbors(g,uid,vvf)
-//
-template <adjacency_list G, class VVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto neighbors(G&& g, vertex_id_t<G> uid, const VVF& vvf) {
-  if constexpr (std::graph::tag_invoke::_has_neighbors_g_uid_evf_adl<G, VVF>)
-    return std::graph::tag_invoke::neighbors(g, uid, vvf);
-  else {
-    using iterator_type = neighbor_iterator<G, false, VVF>;
-    return neighbors_view<G, false, VVF>(iterator_type(g, uid, vvf), ranges::end(edges(g, uid)));
-  }
-}
-} // namespace std::graph::views
