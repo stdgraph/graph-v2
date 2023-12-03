@@ -40,8 +40,11 @@ template <adjacency_list G, class EVF = void>
 class edgelist_iterator;
 
 #ifdef ENABLE_EDGELIST_RANGE
-template <edgelist_range ELR, class Proj = identity>
-class edgelist_range_iterator;
+//template <edgelist_range ELR, class Proj = identity>
+//requires requires(ranges::iterator_t<ELR> i, Proj&& proj) {
+//  { proj(*i) };
+//}
+//class edgelist_range_iterator;
 #endif
 
 /**
@@ -298,32 +301,36 @@ private: // member variables
  * @tparam ELR    Graph type
  * @tparam Proj  Edge Value Function type
 */
-#if 0
+#if 1
 template <edgelist_range ELR, class Proj>
+//requires requires(ranges::iterator_t<ELR> i, Proj&& proj) {
+//  { proj(*i)->target_id };
+//}
 class edgelist_range_iterator {
 public:
   using edge_range          = ELR;
   using edge_iterator       = ranges::iterator_t<edge_range>;
   using edge_type           = ranges::range_value_t<edge_range>;
   using edge_reference_type = ranges::range_reference_t<edge_range>;
-  using edge_value_type     = invoke_result_t<Proj, edge_reference_type>;
+  using value_type          = invoke_result_t<Proj, edge_reference_type>;
+
+  using vertex_id_type =
+        typename value_type::target_id_type; // If this generates an error then value_type is not an edge_descriptor
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
-  using difference_type   = ranges::range_difference_t<edge_range>;
-  using pointer           = value_type*;
-  using const_pointer     = const value_type*;
-  using reference         = value_type&;
-  using const_reference   = const value_type&;
-  using rvalue_reference  = value_type&&;
+
+  using difference_type  = ranges::range_difference_t<edge_range>;
+  using pointer          = value_type*;
+  using const_pointer    = const value_type*;
+  using reference        = value_type&;
+  using const_reference  = const value_type&;
+  using rvalue_reference = value_type&&;
 
 public:
-  edgelist_range_iterator(graph_type& g, vertex_iterator ui, const Proj& proj_fn)
-        : base_type(), g_(g), ui_(ui), uvi_(), proj_fn_(&proj_fn) {}
-  edgelist_range_iterator(graph_type& g, const Proj& proj_fn)
-        : edgelist_range_iterator(g, ranges::begin(vertices(g)), proj_fn) {
-    this->find_non_empty_vertex(g_, ui_, uvi_);
-  }
+  edgelist_range_iterator(edge_range& elr, edge_iterator uvi, Proj&& proj_fn) //
+        : uvi_(uvi), proj_fn_(proj_fn) {}
+  edgelist_range_iterator(edge_range& elr, Proj&& proj_fn)
+        : edgelist_range_iterator(elr, ranges::begin(vertices(elr)), forward<Proj>(proj_fn)) {}
 
   constexpr edgelist_range_iterator()                               = default;
   constexpr edgelist_range_iterator(const edgelist_range_iterator&) = default;
@@ -333,43 +340,14 @@ public:
   constexpr edgelist_range_iterator& operator=(const edgelist_range_iterator&) = default;
   constexpr edgelist_range_iterator& operator=(edgelist_range_iterator&&)      = default;
 
-protected:
-  // avoid difficulty in undefined vertex reference value in value_type
-  // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
-  using shadow_edge_type = remove_reference_t<edge_reference_type>;
-  using shadow_value_type =
-        edge_descriptor<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
-
-  union internal_value {
-    value_type        value_;
-    shadow_value_type shadow_;
-
-    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
-    internal_value() : shadow_{} {}
-    ~internal_value() {}
-    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
-  };
-
 public:
   constexpr reference operator*() const {
-    if constexpr (unordered_edge<ELR, edge_type>) {
-      if (target_id(g_, *uvi_) != vertex_id(g_, ui_)) {
-        value_.shadow_.source_id = source_id(g_, *uvi_);
-        value_.shadow_.target_id = target_id(g_, *uvi_);
-      } else {
-        value_.shadow_.source_id = target_id(g_, *uvi_);
-        value_.shadow_.target_id = source_id(g_, *uvi_);
-      }
-      value_.shadow_.edge  = &*uvi_;
-      value_.shadow_.value = invoke(*proj_fn_, *uvi_);
-    } else {
-      value_.shadow_ = {vertex_id(g_, ui_), target_id(g_, *uvi_), &*uvi_, invoke(*proj_fn_, *uvi_)};
-    }
-    return value_.value_;
+    new (&value_) value_type(invoke(*proj_fn_, *uvi_));
+    return value_;
   }
 
   constexpr edgelist_range_iterator& operator++() {
-    this->find_next_edge(g_, ui_, uvi_);
+    ++uvi_;
     return *this;
   }
   constexpr edgelist_range_iterator operator++(int) const {
@@ -379,22 +357,20 @@ public:
   }
 
   constexpr bool operator==(const edgelist_range_iterator& rhs) const { return uvi_ == rhs.uvi_; }
-  //constexpr bool operator==(const edgelist_range_iterator& rhs) const { return uvi_ == rhs; }
 
 private: // member variables
-  mutable internal_value           value_;
-  _detail::ref_to_ptr<graph_type&> g_;
-  vertex_iterator                  ui_;
-  edge_iterator                    uvi_;
-  const Proj*                      proj_fn_ = nullptr;
-
-  friend bool operator==(const vertex_iterator& lhs, const edgelist_range_iterator& rhs) { return lhs == rhs.ui_; }
+  mutable value_type value_;
+  edge_iterator      uvi_;
+  Proj&&             proj_fn_;
 };
 #endif
 
 
-template <class G, class EVF>
+template <adjacency_list G, class EVF>
 using edgelist_view = ranges::subrange<edgelist_iterator<G, EVF>, vertex_iterator_t<G>>;
+
+//template <edgelist_range ELR, class Proj>
+//using edgelist_view = ranges::subrange<edgelist_iterator<ELR, Proj>, vertex_iterator_t<ELR>>;
 
 
 // edgelist(g)               -> edges[uid,vid,uv]
@@ -412,8 +388,8 @@ namespace _Edgelist {
 #endif                                     // ^^^ workaround ^^^
 
   template <class _G, class _UnCV>
-  concept _Has_adjlist_all_ADL = _Has_class_or_enum_type<_G> //
-                                 && adjacency_list<_G>       //
+  concept _Has_adjlist_all_ADL = _Has_class_or_enum_type<_G>              //
+                                 && adjacency_list<_G>                    //
                                  && requires(_G&& __g) {
                                       { _Fake_copy_init(edgelist(__g)) }; // intentional ADL
                                     };
@@ -426,9 +402,9 @@ namespace _Edgelist {
                                      };
 
   template <class _G, class _UnCV, class EVF>
-  concept _Has_adjlist_all_evf_ADL = _Has_class_or_enum_type<_G>             //
-                                     && adjacency_list<_G>                   //
-                                     && invocable<EVF, edge_reference_t<_G>> //
+  concept _Has_adjlist_all_evf_ADL = _Has_class_or_enum_type<_G>                   //
+                                     && adjacency_list<_G>                         //
+                                     && invocable<EVF, edge_reference_t<_G>>       //
                                      && requires(_G&& __g, EVF evf) {
                                           { _Fake_copy_init(edgelist(__g, evf)) }; // intentional ADL
                                         };
@@ -443,8 +419,8 @@ namespace _Edgelist {
 
 
   template <class _G, class _UnCV>
-  concept _Has_adjlist_idrng_ADL = _Has_class_or_enum_type<_G> //
-                                   && adjacency_list<_G>       //
+  concept _Has_adjlist_idrng_ADL = _Has_class_or_enum_type<_G>                        //
+                                   && adjacency_list<_G>                              //
                                    && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid) {
                                         { _Fake_copy_init(edgelist(__g, uid, vid)) }; // intentional ADL
                                       };
@@ -457,9 +433,9 @@ namespace _Edgelist {
                                        };
 
   template <class _G, class _UnCV, class EVF>
-  concept _Has_adjlist_idrng_evf_ADL = _Has_class_or_enum_type<_G>             //
-                                       && adjacency_list<_G>                   //
-                                       && invocable<EVF, edge_reference_t<_G>> //
+  concept _Has_adjlist_idrng_evf_ADL = _Has_class_or_enum_type<_G>                             //
+                                       && adjacency_list<_G>                                   //
+                                       && invocable<EVF, edge_reference_t<_G>>                 //
                                        && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid, EVF evf) {
                                             { _Fake_copy_init(edgelist(__g, uid, vid, evf)) }; // intentional ADL
                                           };
@@ -515,7 +491,7 @@ namespace _Edgelist {
         return {_St_adjlist_all::_Non_member,
                 noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<EVF>())))}; // intentional ADL
       } else if constexpr (_Can_adjlist_all_evf_eval<_G, _UnCV, EVF>) {
-        return {_St_adjlist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
+        return {_St_adjlist_all::_Auto_eval, noexcept(true)};                        // default impl (revisit)
       } else {
         return {_St_adjlist_all::_None};
       }
@@ -536,7 +512,7 @@ namespace _Edgelist {
                 noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                   declval<vertex_id_t<_G>>())))}; // intentional ADL
       } else if constexpr (_Can_adjlist_idrng_eval<_G, _UnCV>) {
-        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)}; // default impl (revisit)
+        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)};                   // default impl (revisit)
       } else {
         return {_St_adjlist_idrng::_None};
       }
@@ -556,7 +532,7 @@ namespace _Edgelist {
                 noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(), declval<vertex_id_t<_G>>(),
                                                   declval<EVF>())))}; // intentional ADL
       } else if constexpr (_Can_adjlist_idrng_evf_eval<_G, _UnCV, EVF>) {
-        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)}; // default impl (revisit)
+        return {_St_adjlist_idrng::_Auto_eval, noexcept(true)};       // default impl (revisit)
       } else {
         return {_St_adjlist_idrng::_None};
       }
@@ -576,7 +552,7 @@ namespace _Edgelist {
         return {_St_edgelist_all::_Non_member,
                 noexcept(_Fake_copy_init(edgelist(declval<ELR>(), declval<Proj>())))}; // intentional ADL
       } else if constexpr (_Can_edgelist_all_proj_eval<ELR, _UnCV, Proj>) {
-        return {_St_edgelist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
+        return {_St_edgelist_all::_Auto_eval, noexcept(true)};                         // default impl (revisit)
       } else {
         return {_St_edgelist_all::_None};
       }
@@ -757,7 +733,7 @@ namespace _Edgelist {
     }
 #endif //ENABLE_EDGELIST_RANGE
 
-  }; // class _Cpo
+  };   // class _Cpo
 } // namespace _Edgelist
 
 inline namespace _Cpos {
