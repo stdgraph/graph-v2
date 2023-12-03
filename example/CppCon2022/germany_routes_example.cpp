@@ -104,7 +104,7 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
   cout << "Traverse the vertices & outgoing edges" << endl;
   for (auto&& [uid, u] : vertexlist(g)) {        // [id,vertex&]
     cout << city_id(g, uid) << endl;             // city name [id]
-    for (auto&& [vid, uv] : incidence(g, uid)) { // [target_id,edge&]
+    for (auto&& [vid, uv] : std::graph::views::incidence(g, uid)) { // [target_id,edge&]
       cout << "   --> " << city_id(g, vid) << endl;
       // "--> "target city" [target_id]
     }

@@ -239,48 +239,155 @@ private: // member variables
 
 template <class G, bool Sourced, class EVF>
 using incidence_view = ranges::subrange<incidence_iterator<G, Sourced, EVF>, vertex_edge_iterator_t<G>>;
+
+namespace views {
+  //
+  // incidence(g,uid)            -> edges[vid,v]
+  // incidence(g,uid,fn)         -> edges[vid,v,value]
+  //
+  namespace _Incidence {
+#if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+    void incidence() = delete;             // Block unqualified name lookup
+#else                                      // ^^^ no workaround / workaround vvv
+    void incidence();
+#endif                                     // ^^^ workaround ^^^
+
+    template <class _G, class _UnCV>
+    concept _Has_id_ADL = adjacency_list<_G> && requires(_G&& __g, const vertex_id_t<_G>& uid) {
+      { _Fake_copy_init(incidence(__g, uid)) }; // intentional ADL
+    };
+    template <class _G, class _UnCV>
+    concept _Can_id_eval = adjacency_list<_G> && requires(_G&& __g, vertex_id_t<_G>& uid) {
+      { _Fake_copy_init(edges(__g, uid)) };
+    };
+
+    template <class _G, class _UnCV, class EVF>
+    concept _Has_id_evf_ADL = adjacency_list<_G> && requires(_G&& __g, const vertex_id_t<_G>& uid, const EVF& evf) {
+      { _Fake_copy_init(incidence(__g, uid, evf)) }; // intentional ADL
+    };
+    template <class _G, class _UnCV, class EVF>
+    concept _Can_id_evf_eval =
+          adjacency_list<_G> && requires(_G&& __g, vertex_id_t<_G>& uid, const EVF& evf, edge_reference_t<_G> uv) {
+            { _Fake_copy_init(edges(__g, uid)) };
+            { _Fake_copy_init(evf(uv)) };
+          };
+
+    class _Cpo {
+    private:
+      enum class _St_id { _None, _Non_member, _Auto_eval };
+      //enum class _St_id_fn { _None, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        using _UnCV = remove_cvref_t<_G>;
+
+        if constexpr (_Has_id_ADL<_G, _UnCV>) {
+          return {_St_id::_Non_member,
+                  noexcept(_Fake_copy_init(incidence(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
+        } else if constexpr (_Can_id_eval<_G, _UnCV>) {
+          return {_St_id::_Auto_eval,
+                  noexcept(_Fake_copy_init(incidence_view<_G, false, void>(
+                        incidence_iterator<_G, false, void>(declval<_G>(), declval<vertex_id_t<_G>>()),
+                        ranges::end(edges(declval<_G>(), declval<vertex_id_t<_G>>())))))};
+        } else {
+          return {_St_id::_None};
+        }
+      }
+
+      template <class _G>
+      static constexpr _Choice_t<_St_id> _Choice_id = _Choose_id<_G>();
+
+      template <class _G, class EVF>
+      [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id_evf() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        using _UnCV = remove_cvref_t<_G>;
+
+        if constexpr (_Has_id_evf_ADL<_G, _UnCV, EVF>) {
+          return {_St_id::_Non_member, noexcept(_Fake_copy_init(incidence(declval<_G>(), declval<vertex_id_t<_G>>(),
+                                                                          declval<EVF>())))}; // intentional ADL
+        } else if constexpr (_Can_id_evf_eval<_G, _UnCV, EVF>) {
+          return {_St_id::_Auto_eval,
+                  noexcept(_Fake_copy_init(incidence_view<_G, false, EVF>(
+                        incidence_iterator<_G, false, EVF>(declval<_G>(), declval<vertex_id_t<_G>>(), declval<EVF>()),
+                        ranges::end(edges(declval<_G>(), declval<vertex_id_t<_G>>())))))};
+        } else {
+          return {_St_id::_None};
+        }
+      }
+
+      template <class _G, class EVF>
+      static constexpr _Choice_t<_St_id> _Choice_id_evf = _Choose_id_evf<_G, EVF>();
+
+    public:
+      /**
+     * @brief Get the outgoing incidence edges of a vertex id.
+     * 
+     * Complexity: O(n)
+     * 
+     * Default implementation: 
+     *      incidence_view<_G, false, void>(incidence_iterator<_G, false, void>(__g, uid),
+     *                                      ranges::end(edges(__g, uid)));
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uid Vertex id.
+     * @return A range of the outgoing incidence edges.
+    */
+      template <class _G>
+      requires(_Choice_id<_G&>._Strategy != _St_id::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid) const
+            noexcept(_Choice_id<_G&>._No_throw) {
+        constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
+
+        if constexpr (_Strat_id == _St_id::_Non_member) {
+          return incidence(__g, uid); // intentional ADL
+        } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
+          // default impl
+          return incidence_view<_G, false, void>(incidence_iterator<_G, false, void>(__g, uid),
+                                                 ranges::end(edges(__g, uid)));
+        } else {
+          static_assert(_Always_false<_G>,
+                        "incidence(g,uid) is not defined and the default implementation cannot be evaluated");
+        }
+      }
+
+      /**
+     * @brief Get the outgoing incidence edges of a vertex id and include an edge value in the result.
+     * 
+     * Complexity: O(n)
+     * 
+     * Default implementation: 
+     *      incidence_view<_G, false, void>(incidence_iterator<_G, false, void>(__g, uid),
+     *                                      ranges::end(edges(__g, uid)));
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uid Vertex id.
+     * @return A range of the outgoing incidence edges.
+    */
+      template <class _G, class EVF>
+      //requires(_Choice_id_evf<_G&,EVF>._Strategy != _St_id::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid, const EVF& evf) const
+            noexcept(_Choice_id_evf<_G&, EVF>._No_throw) {
+        constexpr _St_id _Strat_id = _Choice_id_evf<_G&, EVF>._Strategy;
+
+        if constexpr (_Strat_id == _St_id::_Non_member) {
+          return incidence(__g, uid); // intentional ADL
+        } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
+          // default impl
+          return incidence_view<_G, false, EVF>(incidence_iterator<_G, false, EVF>(__g, uid, evf),
+                                                ranges::end(edges(__g, uid)));
+        } else {
+          static_assert(_Always_false<_G>,
+                        "incidence(g,uid,evf) is not defined and the default implementation cannot be evaluated");
+        }
+      }
+    };
+  } // namespace _Incidence
+
+  inline namespace _Cpos {
+    inline constexpr _Incidence::_Cpo incidence;
+  }
+} // namespace views
 } // namespace std::graph
-
-namespace std::graph::tag_invoke {
-// ranges
-TAG_INVOKE_DEF(incidence); // incidence(g,uid)            -> edges[vid,v]
-                           // incidence(g,uid,fn)         -> edges[vid,v,value]
-
-template <class G>
-concept _has_incidence_g_uid_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid) {
-  { incidence(g, uid) };
-};
-template <class G, class EVF>
-concept _has_incidence_g_uid_evf_adl = vertex_range<G> && requires(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-  { incidence(g, uid, evf) };
-};
-} // namespace std::graph::tag_invoke
-
-namespace std::graph::views {
-//
-// incidence(g,uid)
-//
-template <adjacency_list G>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto incidence(G&& g, vertex_id_t<G> uid) {
-  if constexpr (std::graph::tag_invoke::_has_incidence_g_uid_adl<G>)
-    return std::graph::tag_invoke::incidence(g, uid);
-  else
-    return incidence_view<G, false, void>(incidence_iterator<G, false, void>(g, uid), ranges::end(edges(g, uid)));
-}
-
-
-//
-// incidence(g,uid,evf)
-//
-template <adjacency_list G, class EVF>
-requires ranges::forward_range<vertex_range_t<G>>
-constexpr auto incidence(G&& g, vertex_id_t<G> uid, const EVF& evf) {
-  if constexpr (std::graph::tag_invoke::_has_incidence_g_uid_evf_adl<G, EVF>)
-    return std::graph::tag_invoke::incidence(g, uid, evf);
-  else
-    return incidence_view<G, false, EVF>(incidence_iterator<G, false, EVF>(g, uid, evf), ranges::end(edges(g, uid)));
-}
-
-
-} // namespace std::graph::views
