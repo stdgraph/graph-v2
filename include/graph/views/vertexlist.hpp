@@ -209,50 +209,37 @@ namespace views {
 
     // all
     template <class _G, class _UnCV>
-    concept _Has_all_ADL = adjacency_list<_G> && requires(_G&& __g) {
+    concept _Has_all_ADL = vertex_range<_G> && requires(_G&& __g) {
       { _Fake_copy_init(vertexlist(__g)) }; // intentional ADL
     };
     template <class _G, class _UnCV>
-    concept _Can_all_eval = adjacency_list<_G> && requires(_G&& __g, vertex_reference_t<_G> u) {
-      { _Fake_copy_init(vertices(__g)) };
-    };
+    concept _Can_all_eval = vertex_range<_G>;
 
     template <class _G, class _UnCV, class VVF>
-    concept _Has_all_vvf_ADL = adjacency_list<_G> && requires(_G&& __g, const VVF& vvf, vertex_reference_t<_G> u) {
-      { _Fake_copy_init(vertexlist(__g, vvf)) }; // intentional ADL
-      { _Fake_copy_init(vvf(u)) };
-    };
+    concept _Has_all_vvf_ADL =
+          vertex_range<_G> && invocable<VVF, vertex_reference_t<_G>> && requires(_G&& __g, const VVF& vvf) {
+            { _Fake_copy_init(vertexlist(__g, vvf)) }; // intentional ADL
+          };
+
     template <class _G, class _UnCV, class VVF>
-    concept _Can_all_vvf_eval = adjacency_list<_G> && requires(_G&& __g, const VVF& vvf, vertex_reference_t<_G> u) {
-      { _Fake_copy_init(vertices(__g)) };
-      { _Fake_copy_init(vvf(u)) };
-    };
+    concept _Can_all_vvf_eval = vertex_range<_G> && invocable<VVF, vertex_reference_t<_G>>;
 
     // rng
     template <class _G, class _UnCV, class Rng>
-    concept _Has_rng_ADL = adjacency_list<_G> && ranges::forward_range<Rng> && requires(_G&& __g, Rng&& vr) {
+    concept _Has_rng_ADL = vertex_range<_G> && ranges::forward_range<Rng> && requires(_G&& __g, Rng&& vr) {
       { _Fake_copy_init(vertexlist(__g, vr)) }; // intentional ADL
     };
     template <class _G, class _UnCV, class Rng>
-    concept _Can_rng_eval = adjacency_list<_G> &&
-                            convertible_to<ranges::iterator_t<Rng>,
-                                           vertex_iterator_t<_G>> && //
-                            requires(_G&& __g) {
-                              { _Fake_copy_init(vertices(__g)) };
-                            };
+    concept _Can_rng_eval = vertex_range<_G> && convertible_to<ranges::iterator_t<Rng>, vertex_iterator_t<_G>>;
 
     template <class _G, class _UnCV, class Rng, class VVF>
-    concept _Has_rng_vvf_ADL =
-          ranges::forward_range<Rng> && requires(_G&& __g, vertex_range_t<_G>&& vr, const VVF& vvf) {
-            { _Fake_copy_init(vertexlist(__g, vr, vvf)) }; // intentional ADL
-          };
+    concept _Has_rng_vvf_ADL = ranges::forward_range<Rng> && invocable<VVF, vertex_reference_t<_G>> &&
+                               requires(_G&& __g, vertex_range_t<_G>&& vr, const VVF& vvf) {
+                                 { _Fake_copy_init(vertexlist(__g, vr, vvf)) }; // intentional ADL
+                               };
     template <class _G, class _UnCV, class Rng, class VVF>
-    concept _Can_rng_vvf_eval = adjacency_list<_G> &&
-                                convertible_to<ranges::iterator_t<Rng>,
-                                               vertex_iterator_t<_G>> && //
-                                requires(_G&& __g, const VVF& vvf, vertex_reference_t<_G> u) {
-                                  { _Fake_copy_init(vvf(u)) };
-                                };
+    concept _Can_rng_vvf_eval = vertex_range<_G> && convertible_to<ranges::iterator_t<Rng>, vertex_iterator_t<_G>> &&
+                                invocable<VVF, vertex_reference_t<_G>>;
 
     class _Cpo {
     private:

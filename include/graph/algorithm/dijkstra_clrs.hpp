@@ -17,7 +17,7 @@ concept edge_weight_function = // e.g. weight(uv)
 
 template <class G, class WF, class Distance, class Compare, class Combine>
 concept basic_edge_weight_function2 = // e.g. weight(uv)
-      is_arithmetic_v<range_value_t<Distance>> &&
+      is_arithmetic_v<ranges::range_value_t<Distance>> &&
       strict_weak_order<Compare, ranges::range_value_t<Distance>, ranges::range_value_t<Distance>> &&
       assignable_from<ranges::range_reference_t<Distance>, invoke_result_t<Combine, invoke_result_t<WF, edge_t<G>>>>;
 
