@@ -367,7 +367,7 @@ namespace views {
      * @return A range of the outgoing incidence edges.
     */
       template <class _G, class EVF>
-      requires(_Choice_id_evf<_G&,EVF>._Strategy != _St_id::_None)
+      requires(_Choice_id_evf<_G&, EVF>._Strategy != _St_id::_None)
       [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid, const EVF& evf) const
             noexcept(_Choice_id_evf<_G&, EVF>._No_throw) {
         constexpr _St_id _Strat_id = _Choice_id_evf<_G&, EVF>._Strategy;
