@@ -104,11 +104,13 @@ inline constexpr bool is_undirected_edge_v = false;
  * @tparam G The graph type.
  */
 template <class G>
-concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized_range<vertex_range_t<G>> &&
-                       requires(G&& g, vertex_iterator_t<G> ui) {
-                         { vertices(g) } -> ranges::forward_range;
-                         vertex_id(g, ui);
-                       };
+concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized_range<vertex_range_t<G>> && //
+                       requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
+
+template <class G>
+concept index_vertex_range = ranges::random_access_range<vertex_range_t<G>> && ranges::sized_range<vertex_range_t<G>> &&
+                             integral<vertex_id_t<G>> && //
+                             requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
 
 /**
  * @ingroup graph_concepts
@@ -172,20 +174,31 @@ inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
  * @tparam G The graph type.
 */
 template <class G>
-concept index_adjacency_list = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_id_t<G>& uid) {
+concept basic_adjacency_list = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_id_t<G>& uid) {
   { edges(g, uid) } -> ranges::forward_range;
 };
+
+template <class G>
+concept basic_index_adjacency_list =
+      index_vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_id_t<G>& uid) {
+        { edges(g, uid) } -> ranges::forward_range;
+      };
 
 /**
  * @ingroup graph_concepts
  * @brief Concept for an adjacency list graph.
  * 
- * An adjacency list extends index_adjacency_list to include function edges(g,u) for vertex reference u.
+ * An adjacency list extends basic_adjacency_list to include function edges(g,u) for vertex reference u.
  * 
  * @tparam G The graph type.
 */
 template <class G>
-concept adjacency_list = index_adjacency_list<G> && requires(G&& g, vertex_reference_t<G> u) {
+concept adjacency_list = basic_adjacency_list<G> && requires(G&& g, vertex_reference_t<G> u) {
+  { edges(g, u) } -> ranges::forward_range;
+};
+
+template <class G>
+concept index_adjacency_list = basic_index_adjacency_list<G> && requires(G&& g, vertex_reference_t<G> u) {
   { edges(g, u) } -> ranges::forward_range;
 };
 
@@ -208,7 +221,7 @@ concept sourced_adjacency_list =
 
 #  ifdef ENABLE_EDGELIST_RANGE
 template <class ELR>
-concept basic_edgelist_range = ranges::forward_range<ELR> && negation_v<index_adjacency_list<ELR>>;
+concept basic_edgelist_range = ranges::forward_range<ELR> && negation_v<basic_adjacency_list<ELR>>;
 template <class ELR>
 concept edgelist_range = ranges::forward_range<ELR> && negation_v<adjacency_list<ELR>>;
 #  endif
