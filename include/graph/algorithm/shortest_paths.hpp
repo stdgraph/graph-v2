@@ -135,7 +135,7 @@ template <adjacency_list              G,
 requires ranges::random_access_range<vertex_range_t<G>> &&        //
          integral<vertex_id_t<G>> &&                              //
          is_arithmetic_v<ranges::range_value_t<DistanceRange>> && //
-         //convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
+         //convertible_to<vertex_id_t<G>, ranges::range_value_t<PredecessorRange>> && //
          edge_weight_function<G, EVF>
 constexpr void dijkstra_shortest_paths(
       G&&               g,

@@ -14,14 +14,10 @@
 // examples: for(auto&& [uid, u]      : vertexlist(g))
 //         : for(auto&& [uid, u, val] : vertexlist(g,vvf)
 //
-//         : for(auto&& [uid, u]      : vertexlist(g, first, last))
-//         : for(auto&& [uid, u, val] : vertexlist(g, first, last, vvf)
-//
 //         : for(auto&& [uid, u]      : vertexlist(g, vr))
 //         : for(auto&& [uid, u, val] : vertexlist(g, vr, vvf)
 //
 // examples: for(auto&& [uid]      : basic_vertexlist(g))
-//         : for(auto&& [uid]      : basic_vertexlist(g, first, last))
 //         : for(auto&& [uid]      : basic_vertexlist(g, vr))
 //
 namespace std::graph {
@@ -196,132 +192,251 @@ protected:
 
 template <adjacency_list G, class VVF = void>
 using vertexlist_view = ranges::subrange<vertexlist_iterator<G, VVF>, vertex_iterator_t<G>>;
+
+
+namespace views {
+  // vertexlist(g)       -> vertices[uid,u]
+  // vertexlist(g,fn)    -> vertices[uid,u,value]
+  // vertexlist(g,vr)    -> vertices[uid,u]
+  // vertexlist(g,vr,fn) -> vertices[uid,u,value]
+
+  namespace _Vertexlist {
+#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__) // TRANSITION, VSO-1681199
+    void vertexlist() = delete;                                 // Block unqualified name lookup
+#else                                                           // ^^^ no workaround / workaround vvv
+    void vertexlist();
+#endif                                                          // ^^^ workaround ^^^
+
+    // all
+    template <class _G, class _UnCV>
+    concept _Has_all_ADL = vertex_range<_G> && requires(_G&& __g) {
+      { _Fake_copy_init(vertexlist(__g)) }; // intentional ADL
+    };
+    template <class _G, class _UnCV>
+    concept _Can_all_eval = vertex_range<_G>;
+
+    template <class _G, class _UnCV, class VVF>
+    concept _Has_all_vvf_ADL =
+          vertex_range<_G> && invocable<VVF, vertex_reference_t<_G>> && requires(_G&& __g, const VVF& vvf) {
+            { _Fake_copy_init(vertexlist(__g, vvf)) }; // intentional ADL
+          };
+
+    template <class _G, class _UnCV, class VVF>
+    concept _Can_all_vvf_eval = vertex_range<_G> && invocable<VVF, vertex_reference_t<_G>>;
+
+    // rng
+    template <class _G, class _UnCV, class Rng>
+    concept _Has_rng_ADL = vertex_range<_G> && ranges::forward_range<Rng> && requires(_G&& __g, Rng&& vr) {
+      { _Fake_copy_init(vertexlist(__g, vr)) }; // intentional ADL
+    };
+    template <class _G, class _UnCV, class Rng>
+    concept _Can_rng_eval = vertex_range<_G> && convertible_to<ranges::iterator_t<Rng>, vertex_iterator_t<_G>>;
+
+    template <class _G, class _UnCV, class Rng, class VVF>
+    concept _Has_rng_vvf_ADL = ranges::forward_range<Rng> && invocable<VVF, vertex_reference_t<_G>> &&
+                               requires(_G&& __g, vertex_range_t<_G>&& vr, const VVF& vvf) {
+                                 { _Fake_copy_init(vertexlist(__g, vr, vvf)) }; // intentional ADL
+                               };
+    template <class _G, class _UnCV, class Rng, class VVF>
+    concept _Can_rng_vvf_eval = vertex_range<_G> && convertible_to<ranges::iterator_t<Rng>, vertex_iterator_t<_G>> &&
+                                invocable<VVF, vertex_reference_t<_G>>;
+
+    class _Cpo {
+    private:
+      enum class _St_all { _None, _Non_member, _Auto_eval };
+      enum class _St_rng { _None, _Non_member, _Auto_eval };
+
+      // all
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_all> _Choose_all() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        using _UnCV = remove_cvref_t<_G>;
+
+        if constexpr (_Has_all_ADL<_G, _UnCV>) {
+          return {_St_all::_Non_member, noexcept(_Fake_copy_init(vertexlist(declval<_G>())))}; // intentional ADL
+        } else if constexpr (_Can_all_eval<_G, _UnCV>) {
+          using view_type = vertexlist_view<_G>;
+          return {_St_all::_Auto_eval, noexcept(_Fake_copy_init(view_type(vertices(declval<_G>()))))};
+        } else {
+          return {_St_all::_None};
+        }
+      }
+
+      template <class _G>
+      static constexpr _Choice_t<_St_all> _Choice_all = _Choose_all<_G>();
+
+      template <class _G, class VVF>
+      [[nodiscard]] static consteval _Choice_t<_St_all> _Choose_vvf_all() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        using _UnCV = remove_cvref_t<_G>;
+
+        if constexpr (_Has_all_vvf_ADL<_G, _UnCV, VVF>) {
+          return {_St_all::_Non_member,
+                  noexcept(_Fake_copy_init(vertexlist(declval<_G>(), declval<VVF>())))}; // intentional ADL
+        } else if constexpr (_Can_all_vvf_eval<_G, _UnCV, VVF>) {
+          using view_type     = vertexlist_view<_G, VVF>;
+          using iterator_type = vertexlist_iterator<_G, VVF>;
+          return {_St_all::_Auto_eval,
+                  noexcept(_Fake_copy_init(view_type(declval<iterator_type>(), declval<vertex_iterator_t<_G>>())))};
+        } else {
+          return {_St_all::_None};
+        }
+      }
+
+      template <class _G, class VVF>
+      static constexpr _Choice_t<_St_all> _Choice_vvf_all = _Choose_vvf_all<_G, VVF>();
+
+      // rng
+      template <class _G, class Rng>
+      [[nodiscard]] static consteval _Choice_t<_St_rng> _Choose_rng() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        using _UnCV = remove_cvref_t<_G>;
+
+        if constexpr (_Has_rng_ADL<_G, _UnCV, Rng>) {
+          return {_St_rng::_Non_member,
+                  noexcept(_Fake_copy_init(vertexlist(declval<_G>(), declval<Rng>())))}; // intentional ADL
+        } else if constexpr (_Can_rng_eval<_G, _UnCV, Rng>) {
+          using view_type     = vertexlist_view<_G>;
+          using iterator_type = vertexlist_iterator<_G>;
+          return {_St_rng::_Auto_eval,
+                  noexcept(_Fake_copy_init(view_type(declval<iterator_type>(), declval<vertex_iterator_t<_G>>())))};
+
+        } else {
+          return {_St_rng::_None};
+        }
+      }
+
+      template <class _G, class Rng>
+      static constexpr _Choice_t<_St_rng> _Choice_rng = _Choose_rng<_G, Rng>();
+
+      template <class _G, class Rng, class VVF>
+      [[nodiscard]] static consteval _Choice_t<_St_rng> _Choose_vvf_rng() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        using _UnCV = remove_cvref_t<_G>;
+
+        if constexpr (_Has_rng_vvf_ADL<_G, _UnCV, Rng, VVF>) {
+          return {_St_rng::_Non_member, noexcept(_Fake_copy_init(vertexlist(declval<_G>(), declval<Rng>(),
+                                                                            declval<VVF>())))}; // intentional ADL
+        } else if constexpr (_Can_rng_vvf_eval<_G, _UnCV, Rng, VVF>) {
+          using view_type     = vertexlist_view<_G, VVF>;
+          using iterator_type = vertexlist_iterator<_G, VVF>;
+          return {_St_rng::_Auto_eval,
+                  noexcept(_Fake_copy_init(view_type(declval<iterator_type>(), declval<vertex_iterator_t<_G>>())))};
+        } else {
+          return {_St_rng::_None};
+        }
+      }
+
+      template <class _G, class Rng, class VVF>
+      static constexpr _Choice_t<_St_rng> _Choice_vvf_rng = _Choose_vvf_rng<_G, Rng, VVF>();
+
+    public:
+      /**
+       * @brief The number of outgoing edges of a vertex.
+       * 
+       * Complexity: O(1)
+       * 
+       * Default implementation: size(edges(g, u))
+       * 
+       * @tparam G The graph type.
+       * @param g A graph instance.
+       * @param u A vertex instance.
+       * @return The number of outgoing edges of vertex u.
+      */
+      template <class _G>
+      requires(_Choice_all<_G&>._Strategy != _St_all::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_all<_G&>._No_throw) {
+        constexpr _St_all _Strat_all = _Choice_all<_G&>._Strategy;
+
+        if constexpr (_Strat_all == _St_all::_Non_member) {
+          return vertexlist(__g); // intentional ADL
+        } else if constexpr (_Strat_all == _St_all::_Auto_eval) {
+          return vertexlist_view<_G>(vertices(std::forward<_G>(__g)));
+        } else {
+          static_assert(_Always_false<_G>,
+                        "vertexlist(g) is not defined and the default implementation cannot be evaluated");
+        }
+      }
+
+      template <class _G, class VVF>
+      requires(_Choice_vvf_all<_G&, VVF>._Strategy != _St_all::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, const VVF& vvf) const
+            noexcept(_Choice_vvf_all<_G&, VVF>._No_throw) {
+        constexpr _St_all _Strat_all = _Choice_vvf_all<_G&, VVF>._Strategy;
+
+        if constexpr (_Strat_all == _St_all::_Non_member) {
+          return vertexlist(__g, vvf); // intentional ADL
+        } else if constexpr (_Strat_all == _St_all::_Auto_eval) {
+          using view_type     = vertexlist_view<_G, VVF>;
+          using iterator_type = vertexlist_iterator<_G, VVF>;
+          auto first          = begin(vertices(forward<_G>(__g)));
+          auto last           = end(vertices(forward<_G>(__g)));
+          return view_type(iterator_type(forward<_G>(__g), vvf, first), last);
+        } else {
+          static_assert(_Always_false<_G>,
+                        "vertexlist(g,vvf) is not defined and the default implementation cannot be evaluated");
+        }
+      }
+
+      /**
+       * @brief The number of outgoing edges of a vertex.
+       * 
+       * Complexity: O(1)
+       * 
+       * Default implementation: size(edges(g, u))
+       * 
+       * @tparam G The graph type.
+       * @param g A graph instance.
+       * @param u A vertex instance.
+       * @return The number of outgoing edges of vertex u.
+      */
+      template <class _G, class Rng>
+      requires(_Choice_rng<_G&, Rng>._Strategy != _St_rng::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, Rng&& vr) const noexcept(_Choice_rng<_G&, Rng>._No_throw) {
+        constexpr _St_rng _Strat_rng = _Choice_rng<_G&, Rng>._Strategy;
+
+        if constexpr (_Strat_rng == _St_rng::_Non_member) {
+          return vertexlist(forward<_G>(__g), forward<Rng>(vr)); // intentional ADL
+        } else if constexpr (_Strat_rng == _St_rng::_Auto_eval) {
+          using view_type     = vertexlist_view<_G>;
+          using iterator_type = vertexlist_iterator<_G>;
+          auto first          = ranges::begin(vr);
+          auto last           = ranges::end(vr);
+          auto first_id       = static_cast<vertex_id_t<_G>>(first - begin(vertices(__g)));
+          return view_type(iterator_type(first, first_id), last);
+        } else {
+          static_assert(_Always_false<_G>,
+                        "vertexlist(g,vr) is not defined and the default implementation cannot be evaluated");
+        }
+      }
+
+      template <class _G, class Rng, class VVF>
+      requires(_Choice_vvf_rng<_G&, Rng, VVF>._Strategy != _St_rng::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, Rng&& vr, const VVF& vvf) const
+            noexcept(_Choice_vvf_rng<_G&, Rng, VVF>._No_throw) {
+        constexpr _St_rng _Strat_rng = _Choice_vvf_rng<_G&, Rng, VVF>._Strategy;
+
+        if constexpr (_Strat_rng == _St_rng::_Non_member) {
+          return vertexlist(forward<_G>(__g), forward<Rng>(vr), vvf); // intentional ADL
+        } else if constexpr (_Strat_rng == _St_rng::_Auto_eval) {
+          using view_type     = vertexlist_view<_G, VVF>;
+          using iterator_type = vertexlist_iterator<_G, VVF>;
+          auto first          = ranges::begin(vr);
+          auto last           = ranges::end(vr);
+          auto first_id       = static_cast<vertex_id_t<_G>>(first - begin(vertices(__g)));
+          return view_type(iterator_type(forward<_G>(__g), vvf, first, first_id), last);
+        } else {
+          static_assert(_Always_false<_G>,
+                        "vertexlist(g,vr,vvf) is not defined and the default implementation cannot be evaluated");
+        }
+      }
+    };
+  } // namespace _Vertexlist
+
+  inline namespace _Cpos {
+    inline constexpr _Vertexlist::_Cpo vertexlist;
+  }
+
+} // namespace views
+
 } // namespace std::graph
-
-namespace std::graph::tag_invoke {
-// ranges
-TAG_INVOKE_DEF(vertexlist); // vertexlist(g)               -> vertices[uid,u]
-                            // vertexlist(g,fn)            -> vertices[uid,u,value]
-                            // vertexlist(g,first,last)    -> vertices[uid,u]
-                            // vertexlist(g,first,last,fn) -> vertices[uid,u,value]
-
-template <class G>
-concept _has_vertexlist_g_adl = vertex_range<G> && requires(G&& g) {
-  { vertexlist(g) };
-};
-
-template <class G, class VVF>
-concept _has_vertexlist_g_fn_adl =
-      vertex_range<G> && invocable<VVF, vertex_reference_t<G>> && requires(G&& g, const VVF& fn) {
-        { vertexlist(g, fn) };
-      };
-
-template <class G>
-concept _has_vertexlist_i_i_adl = vertex_range<G> && requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi) {
-  { vertexlist(g, ui, vi) };
-};
-
-template <class G, class VVF>
-concept _has_vertexlist_i_i_fn_adl = vertex_range<G> && invocable<VVF, vertex_reference_t<G>> &&
-                                     requires(G&& g, vertex_iterator_t<G> ui, vertex_iterator_t<G> vi, const VVF& fn) {
-                                       { vertexlist(g, ui, vi, fn) };
-                                     };
-
-template <class G, class VR>
-concept _has_vertexlist_vrng_adl =
-      vertex_range<G> && ranges::random_access_range<VR> && requires(G&& g, vertex_range_t<G>& vr) {
-        { vertexlist(g, vr) };
-      };
-
-template <class G, class VR, class VVF>
-concept _has_vertexlist_vrng_fn_adl =
-      vertex_range<G> && ranges::random_access_range<VR> && convertible_to<ranges::range_value_t<VR>, vertex_t<G>> &&
-      invocable<VVF, vertex_reference_t<G>> && requires(G&& g, VR&& vr, const VVF& fn) {
-        { vertexlist(g, vr, fn) };
-      };
-
-
-} // namespace std::graph::tag_invoke
-
-namespace std::graph::views {
-//
-// vertexlist(g [,proj])
-//
-template <adjacency_list G>
-constexpr auto vertexlist(G&& g) {
-  if constexpr (std::graph::tag_invoke::_has_vertexlist_g_adl<G>)
-    return std::graph::tag_invoke::vertexlist(forward<G>(g));
-  else
-    return vertexlist_view<G>(vertices(std::forward<G>(g)));
-}
-
-template <adjacency_list G, class VVF>
-requires invocable<VVF, vertex_reference_t<G>>
-constexpr auto vertexlist(G&& g, const VVF& value_fn) {
-  using iterator_type = vertexlist_iterator<G, VVF>;
-  if constexpr (std::graph::tag_invoke::_has_vertexlist_g_fn_adl<G, VVF>)
-    return std::graph::tag_invoke::vertexlist(forward<G>(g), value_fn);
-  else
-    return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, begin(vertices(forward<G>(g)))),
-                                   end(vertices(forward<G>(g))));
-}
-
-//
-// vertexlist(g, first, last [,proj])
-//
-template <adjacency_list G>
-requires ranges::random_access_range<vertex_range_t<G>>
-constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last) {
-  using iterator_type = vertexlist_iterator<G>;
-  if constexpr (std::graph::tag_invoke::_has_vertexlist_i_i_adl<G>)
-    return std::graph::tag_invoke::vertexlist(forward<G>(g), first, last);
-  else
-    return vertexlist_view<G>(iterator_type(first, static_cast<vertex_id_t<G>>(first - begin(vertices(g)))), last);
-}
-
-template <adjacency_list G, class VVF>
-requires ranges::random_access_range<vertex_range_t<G>> && invocable<VVF, vertex_reference_t<G>>
-constexpr auto vertexlist(G&& g, vertex_iterator_t<G> first, vertex_iterator_t<G> last, const VVF& value_fn) {
-  using iterator_type = vertexlist_iterator<G, VVF>;
-  if constexpr (std::graph::tag_invoke::_has_vertexlist_i_i_fn_adl<G, VVF>)
-    return std::graph::tag_invoke::vertexlist(forward<G>(g), first, last, value_fn);
-  else {
-    auto first_id = static_cast<vertex_id_t<G>>(first - begin(vertices(g)));
-    return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, first), last, first_id);
-  }
-}
-
-//
-// vertexlist(g, ur, [,proj])
-//
-template <adjacency_list G, ranges::random_access_range VR>
-requires ranges::random_access_range<vertex_range_t<G>>
-constexpr auto vertexlist(G&& g, VR&& vr) {
-  using iterator_type = vertexlist_iterator<G>;
-  if constexpr (std::graph::tag_invoke::_has_vertexlist_vrng_adl<G, VR>)
-    return std::graph::tag_invoke::vertexlist(forward<G>(g), forward<VR>(vr));
-  else {
-    auto first    = ranges::begin(vr);
-    auto last     = ranges::end(vr);
-    auto first_id = static_cast<vertex_id_t<G>>(first - begin(vertices(g)));
-    return vertexlist_view<G>(iterator_type(first, first_id), last);
-  }
-}
-
-template <adjacency_list G, ranges::random_access_range VR, class VVF>
-requires invocable<VVF, vertex_reference_t<G>> &&
-         convertible_to<ranges::iterator_t<VR>, vertex_iterator_t<G>> // allow for ranges::subrange of vertices
-constexpr auto vertexlist(G&& g, VR&& vr, const VVF& value_fn) {
-  using iterator_type = vertexlist_iterator<G, VVF>;
-  if constexpr (std::graph::tag_invoke::_has_vertexlist_vrng_fn_adl<G, VR, VVF>)
-    return std::graph::tag_invoke::vertexlist(forward(g), forward(vr), value_fn);
-  else {
-    auto first    = ranges::begin(vr);
-    auto last     = ranges::end(vr);
-    auto first_id = static_cast<vertex_id_t<G>>(first - begin(vertices(g)));
-    return vertexlist_view<G, VVF>(iterator_type(forward<G>(g), value_fn, first, first_id), last);
-  }
-}
-
-
-} // namespace std::graph::views

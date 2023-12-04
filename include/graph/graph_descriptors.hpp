@@ -8,23 +8,39 @@ namespace std::graph {
 //
 template <class VId, class V, class VV>
 struct vertex_descriptor {
-  VId id;
-  V   vertex;
-  VV  value;
+  using id_type     = VId; // e.g. vertex_id_t<G>
+  using vertex_type = V;   // e.g. vertex_reference_t<G>
+  using value_type  = VV;  // e.g. vertex_value_t<G>
+
+  id_type     id;
+  vertex_type vertex;
+  value_type  value;
 };
 template <class VId, class V>
 struct vertex_descriptor<VId, V, void> {
-  VId id;
-  V   vertex;
+  using id_type     = VId;
+  using vertex_type = V;
+  using value_type  = void;
+
+  id_type     id;
+  vertex_type vertex;
 };
 template <class VId, class VV>
 struct vertex_descriptor<VId, void, VV> {
-  VId id;
-  VV  value;
+  using id_type     = VId;
+  using vertex_type = void;
+  using value_type  = VV;
+
+  id_type    id;
+  value_type value;
 };
 template <class VId>
 struct vertex_descriptor<VId, void, void> {
-  VId id;
+  using id_type     = VId;
+  using vertex_type = void;
+  using value_type  = void;
+
+  id_type id;
 };
 
 template <class VId, class VV>
@@ -41,15 +57,15 @@ using copyable_vertex_t = vertex_descriptor<VId, void, VV>; // {id, value}
 //
 template <class VId, bool Sourced, class E, class EV>
 struct edge_descriptor {
-  using source_id_type = VId;
-  using target_id_type = VId;
-  using edge_type      = E;
-  using value_type     = EV;
+  using source_id_type = VId; // e.g. vertex_id_t<G> when Sourced==true, or void
+  using target_id_type = VId; // e.g. vertex_id_t<G>
+  using edge_type      = E;   // e.g. edge_reference_t<G> or void
+  using value_type     = EV;  // e.g. edge_value_t<G> or void
 
-  VId source_id;
-  VId target_id;
-  E   edge;
-  EV  value;
+  source_id_type source_id;
+  target_id_type target_id;
+  edge_type      edge;
+  value_type     value;
 };
 
 template <class VId, class E>
@@ -59,9 +75,9 @@ struct edge_descriptor<VId, true, E, void> {
   using edge_type      = E;
   using value_type     = void;
 
-  VId source_id;
-  VId target_id;
-  E   edge;
+  source_id_type source_id;
+  target_id_type target_id;
+  edge_type      edge;
 };
 template <class VId>
 struct edge_descriptor<VId, true, void, void> {
@@ -70,8 +86,8 @@ struct edge_descriptor<VId, true, void, void> {
   using edge_type      = void;
   using value_type     = void;
 
-  VId source_id;
-  VId target_id;
+  source_id_type source_id;
+  target_id_type target_id;
 };
 template <class VId, class EV>
 struct edge_descriptor<VId, true, void, EV> {
@@ -80,21 +96,21 @@ struct edge_descriptor<VId, true, void, EV> {
   using edge_type      = void;
   using value_type     = EV;
 
-  VId source_id;
-  VId target_id;
-  EV  value;
+  source_id_type source_id;
+  target_id_type target_id;
+  value_type     value;
 };
 
 template <class VId, class E, class EV>
 struct edge_descriptor<VId, false, E, EV> {
   using source_id_type = void;
   using target_id_type = VId;
-  using edge_type      = void;
+  using edge_type      = E;
   using value_type     = EV;
 
-  VId target_id;
-  E   edge;
-  EV  value;
+  target_id_type target_id;
+  edge_type      edge;
+  value_type     value;
 };
 template <class VId, class E>
 struct edge_descriptor<VId, false, E, void> {
@@ -103,8 +119,8 @@ struct edge_descriptor<VId, false, E, void> {
   using edge_type      = E;
   using value_type     = void;
 
-  VId target_id;
-  E   edge;
+  target_id_type target_id;
+  edge_type      edge;
 };
 
 template <class VId, class EV>
@@ -114,8 +130,8 @@ struct edge_descriptor<VId, false, void, EV> {
   using edge_type      = void;
   using value_type     = EV;
 
-  VId target_id;
-  EV  value;
+  target_id_type target_id;
+  value_type     value;
 };
 template <class VId>
 struct edge_descriptor<VId, false, void, void> {
@@ -124,7 +140,7 @@ struct edge_descriptor<VId, false, void, void> {
   using edge_type      = void;
   using value_type     = void;
 
-  VId target_id;
+  target_id_type target_id;
 };
 
 //
@@ -162,54 +178,94 @@ using copyable_edge_t = edge_descriptor<VId, true, void, EV>; // {source_id, tar
 //
 template <class VId, bool Sourced, class V, class VV>
 struct neighbor_descriptor {
-  VId source_id;
-  VId target_id;
-  V   target;
-  VV  value;
+  using source_id_type = VId; // e.g. vertex_id_t<G> when Sourced==true, or void
+  using target_id_type = VId; // e.g. vertex_id_t<G>
+  using vertex_type    = V;   // e.g. vertex_reference_t<G> or void
+  using value_type     = VV;  // e.g. vertex_value_t<G> or void
+
+  source_id_type source_id;
+  target_id_type target_id;
+  vertex_type    target;
+  value_type     value;
 };
 
 template <class VId, class V, class VV>
 struct neighbor_descriptor<VId, false, V, VV> {
-  VId target_id;
-  V   target;
-  VV  value;
+  using source_id_type = void;
+  using target_id_type = VId;
+  using vertex_type    = V;
+  using value_type     = VV;
+
+  target_id_type target_id;
+  vertex_type    target;
+  value_type     value;
 };
 
 template <class VId, class V>
 struct neighbor_descriptor<VId, false, V, void> {
-  VId target_id;
-  V   target;
+  using source_id_type = void;
+  using target_id_type = VId;
+  using vertex_type    = V;
+  using value_type     = void;
+
+  target_id_type target_id;
+  vertex_type    target;
 };
 
 template <class VId, class VV>
 struct neighbor_descriptor<VId, false, void, VV> {
-  VId target_id;
-  VV  value;
+  using source_id_type = void;
+  using target_id_type = VId;
+  using vertex_type    = void;
+  using value_type     = VV;
+
+  target_id_type target_id;
+  value_type     value;
 };
 
 template <class VId>
 struct neighbor_descriptor<VId, false, void, void> {
-  VId target_id;
+  using source_id_type = void;
+  using target_id_type = VId;
+  using vertex_type    = void;
+  using value_type     = void;
+
+  target_id_type target_id;
 };
 
 template <class VId, class V>
 struct neighbor_descriptor<VId, true, V, void> {
-  VId source_id;
-  VId target_id;
-  V   target;
+  using source_id_type = VId;
+  using target_id_type = VId;
+  using vertex_type    = V;
+  using value_type     = void;
+
+  source_id_type source_id;
+  target_id_type target_id;
+  vertex_type    target;
 };
 
 template <class VId, class VV>
 struct neighbor_descriptor<VId, true, void, VV> {
-  VId source_id;
-  VId target_id;
-  VV  value;
+  using source_id_type = VId;
+  using target_id_type = VId;
+  using vertex_type    = void;
+  using value_type     = VV;
+
+  source_id_type source_id;
+  target_id_type target_id;
+  value_type     value;
 };
 
 template <class VId>
 struct neighbor_descriptor<VId, true, void, void> {
-  VId source_id;
-  VId target_id;
+  using source_id_type = VId;
+  using target_id_type = VId;
+  using vertex_type    = void;
+  using value_type     = void;
+
+  source_id_type source_id;
+  target_id_type target_id;
 };
 
 //

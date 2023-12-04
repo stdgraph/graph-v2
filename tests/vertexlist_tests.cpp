@@ -194,12 +194,6 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
     REQUIRE(cnt == size(vertices(g)));
 
     cnt = 0;
-    for (auto&& [uid, u] : std::graph::views::vertexlist(g, begin(vertices(g)), end(vertices(g)))) {
-      ++cnt;
-    }
-    REQUIRE(cnt == size(vertices(g)));
-
-    cnt = 0;
     for (auto&& [uid, u] : std::graph::views::vertexlist(g, vertices(g))) {
       ++cnt;
     }
@@ -213,12 +207,6 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
     static_assert(forward_range<view_t>, "vertexlist(g) is not a forward_range");
     size_t cnt = 0;
     for (auto&& [uid, u] : std::graph::views::vertexlist(g2)) {
-      ++cnt;
-    }
-    REQUIRE(cnt == size(vertices(g)));
-
-    cnt = 0;
-    for (auto&& [uid, u] : std::graph::views::vertexlist(g2, begin(vertices(g2)), end(vertices(g2)))) {
       ++cnt;
     }
     REQUIRE(cnt == size(vertices(g)));
