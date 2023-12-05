@@ -257,20 +257,15 @@ namespace views {
       { _Fake_copy_init(incidence(__g, uid)) }; // intentional ADL
     };
     template <class _G, class _UnCV>
-    concept _Can_id_eval = adjacency_list<_G> && requires(_G&& __g, vertex_id_t<_G>& uid) {
-      { _Fake_copy_init(edges(__g, uid)) };
-    };
+    concept _Can_id_eval = adjacency_list<_G>;
 
     template <class _G, class _UnCV, class EVF>
-    concept _Has_id_evf_ADL = adjacency_list<_G> && requires(_G&& __g, const vertex_id_t<_G>& uid, const EVF& evf) {
-      { _Fake_copy_init(incidence(__g, uid, evf)) }; // intentional ADL
-    };
+    concept _Has_id_evf_ADL = adjacency_list<_G> && invocable<EVF, edge_reference_t<_G>> &&
+                              requires(_G&& __g, const vertex_id_t<_G>& uid, const EVF& evf) {
+                                { _Fake_copy_init(incidence(__g, uid, evf)) }; // intentional ADL
+                              };
     template <class _G, class _UnCV, class EVF>
-    concept _Can_id_evf_eval =
-          adjacency_list<_G> && requires(_G&& __g, vertex_id_t<_G>& uid, const EVF& evf, edge_reference_t<_G> uv) {
-            { _Fake_copy_init(edges(__g, uid)) };
-            { _Fake_copy_init(evf(uv)) };
-          };
+    concept _Can_id_evf_eval = adjacency_list<_G> && invocable<EVF, edge_reference_t<_G>>;
 
     class _Cpo {
     private:
