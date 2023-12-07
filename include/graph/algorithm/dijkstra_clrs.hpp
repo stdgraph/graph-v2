@@ -50,7 +50,7 @@ public:
   null_range_type(std::initializer_list<T> init, const Allocator& alloc = Allocator()) {}
 };
 
-inline static null_range_type null_range;
+inline static null_range_type null_predecessors;
 
 
 template <class... Ts>

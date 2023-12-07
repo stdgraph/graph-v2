@@ -104,13 +104,16 @@ inline constexpr bool is_undirected_edge_v = false;
  * @tparam G The graph type.
  */
 template <class G>
-concept vertex_range = ranges::forward_range<vertex_range_t<G>> && ranges::sized_range<vertex_range_t<G>> && //
-                       requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
+concept _common_vertex_range = ranges::sized_range<vertex_range_t<G>> && //
+                               requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
 
 template <class G>
-concept index_vertex_range = ranges::random_access_range<vertex_range_t<G>> && ranges::sized_range<vertex_range_t<G>> &&
-                             integral<vertex_id_t<G>> && //
-                             requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
+concept vertex_range = _common_vertex_range<G> && ranges::forward_range<vertex_range_t<G>>;
+
+template <class G>
+concept index_vertex_range = _common_vertex_range<G> && //
+                             ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>;
+
 
 /**
  * @ingroup graph_concepts
@@ -201,6 +204,11 @@ template <class G>
 concept index_adjacency_list = basic_index_adjacency_list<G> && requires(G&& g, vertex_reference_t<G> u) {
   { edges(g, u) } -> ranges::forward_range;
 };
+
+//template <class G>
+//concept index_adjacency_list = adjacency_list<G> && //
+//                               ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>;
+
 
 // !is_same_v<vertex_range_t<G>, vertex_edge_range_t<G>>
 //      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
