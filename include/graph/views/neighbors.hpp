@@ -283,15 +283,12 @@ namespace views {
     };
 
     template <class _G, class _UnCV, class VVF>
-    concept _Has_id_vvf_ADL = adjacency_list<_G> && requires(_G&& __g, const vertex_id_t<_G>& uid, const VVF& vvf) {
-      { _Fake_copy_init(neighbors(__g, uid, vvf)) }; // intentional ADL
-    };
+    concept _Has_id_vvf_ADL = adjacency_list<_G> && invocable<VVF, vertex_reference_t<_G>> &&
+                              requires(_G&& __g, const vertex_id_t<_G>& uid, const VVF& vvf) {
+                                { _Fake_copy_init(neighbors(__g, uid, vvf)) }; // intentional ADL
+                              };
     template <class _G, class _UnCV, class VVF>
-    concept _Can_id_vvf_eval =
-          adjacency_list<_G> && requires(_G&& __g, vertex_id_t<_G>& uid, const VVF& vvf, vertex_reference_t<_G> u) {
-            { _Fake_copy_init(edges(__g, uid)) };
-            { _Fake_copy_init(vvf(u)) };
-          };
+    concept _Can_id_vvf_eval = adjacency_list<_G> && invocable<VVF, vertex_reference_t<_G>>;
 
     class _Cpo {
     private:
