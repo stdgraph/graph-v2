@@ -188,7 +188,7 @@ namespace _Vertices {
         //static_assert(is_reference_v<decltype(vertices(__g))>);
         return vertices(__g); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return __g; // intentional ADL
+        return std::forward<_G>(__g); // intentional ADL
       } else {
         static_assert(_Always_false<_G>, "vertices(g) is not defined");
       }
