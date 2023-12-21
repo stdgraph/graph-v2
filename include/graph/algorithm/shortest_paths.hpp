@@ -16,6 +16,7 @@
 #include <queue>
 #include <vector>
 #include <ranges>
+#include <fmt/format.h>
 #include "graph/graph.hpp"
 
 #ifndef GRAPH_SHORTEST_PATHS_HPP
@@ -165,8 +166,9 @@ void dijkstra_shortest_paths(
   using weight_type = invoke_result_t<WF, edge_reference_t<G>>;
 
   size_t N(num_vertices(g));
-  if (source < N || source >= 0)
-    throw out_of_range("source is outside the vertices range");
+  if (source < 0 || source >= N) {
+    throw out_of_range(fmt::format("source {} is outside the vertices range [{},{})", source, 0, N));
+  }
 
   //std::ranges::fill(distances, numeric_limits<weight_type>::max());
   distances[source] = 0;
@@ -275,9 +277,10 @@ void dijkstra_shortest_paths(
   using id_type     = vertex_id_t<G>;
   using weight_type = invoke_result_t<WF, edge_reference_t<G>>;
 
-  size_t N(num_vertices(g));
-  if (source < N || source >= 0)
-    throw out_of_range("source is outside the vertices range");
+  const size_t N(num_vertices(g));
+  if (source < 0 || source >= N) {
+    throw out_of_range(fmt::format("source {} is outside the vertices range [{},{})", source, 0, N));
+  }
 
   //std::ranges::fill(distances, numeric_limits<weight_type>::max());
   distances[source] = 0;
