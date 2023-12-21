@@ -34,7 +34,7 @@ using std::graph::vertex_id_t;
 using namespace std::graph::views;
 
 #if 0
-#if 0
+#  if 0
 template <class G1a>
 auto check1(G1a&& g) {
   static_assert(!is_const_v<G1a>);
@@ -81,7 +81,7 @@ void check_test() {
     check3(g3);
   }
 }
-#endif
+#  endif
 
 namespace mygraph {
 using vertex_id_type = int;
@@ -112,7 +112,7 @@ vertex_id_t<const mygraph::Graph> target_id(const mygraph::Graph&               
   return get<0>(uv);
 }
 
-#if 1
+#  if 1
 TEST_CASE("const vertex-vertex-tuple types", "[compressed][bfs][example][bacon]") {
   using G     = const mygraph::Graph;
   using _UnCV = std::remove_cvref_t<G>;
@@ -155,7 +155,7 @@ TEST_CASE("const vertex-vertex-tuple types", "[compressed][bfs][example][bacon]"
     }
   }
 }
-#endif
+#  endif
 
 TEST_CASE("non-const vertex-vertex-tuple types", "[compressed][bfs][example][bacon]") {
   using G     = mygraph::Graph;

@@ -555,7 +555,8 @@ TEST_CASE("Dijkstra's General Shortest Paths", "[csv][vofl][shortest][paths][dij
   init_shortest_paths(distance, predecessors);
   auto weight = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
-  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, std::less<Distance>(), std::plus<Distance>(), weight);
+  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, std::less<Distance>(), std::plus<Distance>(),
+                          weight);
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("Dijkstra's Shortest Paths output") {
