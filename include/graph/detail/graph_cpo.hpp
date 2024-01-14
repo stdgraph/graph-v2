@@ -343,7 +343,7 @@ namespace _Vertex_id {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return vertex_id(__g, ui); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return ui - ranges::begin(vertices(__g));
+        return static_cast<size_t>(ui - ranges::begin(vertices(__g)));
       } else {
         static_assert(_Always_false<_G>, "vertices(g) is not defined or is not random-access");
       }

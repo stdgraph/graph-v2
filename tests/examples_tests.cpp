@@ -216,7 +216,7 @@ TEST_CASE("Kevin Bacon example", "[compressed][bfs][example][bacon]") {
 class simple_graph {
   // Types
 public:
-  using vertex_id_type    = int;
+  using vertex_id_type    = size_t;
   using edge_type         = vertex_id_type;
   using vertex_type       = vector<edge_type>;
   using vertex_range_type = vector<vertex_type>;
@@ -244,6 +244,9 @@ public:
 private:
   vertex_range_type vertices_;
 };
+//int vertex_id(const simple_graph& g, std::graph::vertex_iterator_t<const simple_graph> uvi) noexcept {
+//  return static_cast<int>(uvi - std::ranges::begin(std::graph::vertices(g)));
+//}
 vertex_id_t<const simple_graph> target_id(const simple_graph& g, edge_reference_t<const simple_graph> uv) noexcept {
   return uv;
 }
@@ -257,7 +260,7 @@ TEST_CASE("wrapped vertex-vertex-int types", "[simple][bfs][example][bacon]") {
                                      {7, 0},    {6, 1, 10},        {4, 9},     {4, 8},  {7, 1},        {2, 3},
                                      {1, 4}};
 
-  std::vector<int> bacon_number(size(actors));
+  std::vector<size_t> bacon_number(size(actors));
 
   using G  = simple_graph;
   G& g = costar_adjacency_list;
