@@ -1103,7 +1103,6 @@ namespace views {
     inline constexpr _Sourced_Edges_DFS::_Cpo sourced_edges_depth_first_search;
   }
 
-
 } // namespace views
 } // namespace std::graph
 

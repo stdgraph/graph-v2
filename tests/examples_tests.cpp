@@ -262,8 +262,8 @@ TEST_CASE("wrapped vertex-vertex-int types", "[simple][bfs][example][bacon]") {
 
   std::vector<size_t> bacon_number(size(actors));
 
-  using G  = simple_graph;
-  G& g = costar_adjacency_list;
+  using G = simple_graph;
+  G& g    = costar_adjacency_list;
 
   for (auto&& u : std::graph::vertices(costar_adjacency_list)) {
     for (auto&& uv : std::graph::edges(costar_adjacency_list, u)) {
