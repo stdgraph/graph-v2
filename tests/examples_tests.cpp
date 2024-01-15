@@ -6,6 +6,8 @@
 #include <iostream>
 #include "graph/graph.hpp"
 #include "graph/views/breadth_first_search.hpp"
+#include "graph/views/vertexlist.hpp"
+#include "graph/views/incidence.hpp"
 #include "graph/container/compressed_graph.hpp"
 
 using std::vector;
@@ -209,3 +211,78 @@ TEST_CASE("Kevin Bacon example", "[compressed][bfs][example][bacon]") {
   }
 }
 #endif //0
+
+
+class simple_graph {
+  // Types
+public:
+  using vertex_id_type    = size_t;
+  using edge_type         = vertex_id_type;
+  using vertex_type       = vector<edge_type>;
+  using vertex_range_type = vector<vertex_type>;
+
+  using vertex_iterator_type       = std::ranges::iterator_t<vertex_range_type>;
+  using const_vertex_iterator_type = std::ranges::iterator_t<const vertex_range_type>;
+
+
+  // Construction/Destruction/Assignment
+public:
+  simple_graph(std::initializer_list<vertex_type> init) : vertices_(init) {}
+
+  // Range
+public:
+  auto size() const { return vertices_.size(); }
+
+  auto begin() { return vertices_.begin(); }
+  auto end() { return vertices_.end(); }
+
+  auto begin() const { return vertices_.begin(); }
+  auto end() const { return vertices_.end(); }
+
+public:
+  // Member Variables
+private:
+  vertex_range_type vertices_;
+};
+//int vertex_id(const simple_graph& g, std::graph::vertex_iterator_t<const simple_graph> uvi) noexcept {
+//  return static_cast<int>(uvi - std::ranges::begin(std::graph::vertices(g)));
+//}
+vertex_id_t<const simple_graph> target_id(const simple_graph& g, edge_reference_t<const simple_graph> uv) noexcept {
+  return uv;
+}
+
+TEST_CASE("wrapped vertex-vertex-int types", "[simple][bfs][example][bacon]") {
+  vector<string> actors{"Tom Cruise",        "Kevin Bacon",    "Hugo Weaving",  "Carrie-Anne Moss", "Natalie Portman",
+                        "Jack Nicholson",    "Kelly McGillis", "Harrison Ford", "Sebastian Stan",   "Mila Kunis",
+                        "Michelle Pfeiffer", "Keanu Reeves",   "Julia Roberts"};
+
+  simple_graph costar_adjacency_list{{1, 5, 6}, {7, 10, 0, 5, 12}, {4, 3, 11}, {2, 11}, {8, 9, 2, 12}, {0, 1},
+                                     {7, 0},    {6, 1, 10},        {4, 9},     {4, 8},  {7, 1},        {2, 3},
+                                     {1, 4}};
+
+  std::vector<size_t> bacon_number(size(actors));
+
+  using G  = simple_graph;
+  G& g = costar_adjacency_list;
+
+  for (auto&& u : std::graph::vertices(costar_adjacency_list)) {
+    for (auto&& uv : std::graph::edges(costar_adjacency_list, u)) {
+      auto vid = std::graph::target_id(costar_adjacency_list, uv);
+      static_assert(std::integral<decltype(vid)>);
+    }
+  }
+
+  for (auto&& [uid, u] : std::graph::views::vertexlist(costar_adjacency_list)) {
+    for (auto&& [vid, uv] : std::graph::views::incidence(costar_adjacency_list, uid)) {
+    }
+  }
+
+  //// 1 -> Kevin Bacon
+  //for (auto&& [uid, vid, u] : std::graph::views::sourced_edges_breadth_first_search(costar_adjacency_list, 1)) {
+  //  bacon_number[vid] = bacon_number[uid] + 1;
+  //}
+
+  //for (int i = 0; i < size(actors); ++i) {
+  //  std::cout << actors[i] << " has Bacon number " << bacon_number[i] << std::endl;
+  //}
+}

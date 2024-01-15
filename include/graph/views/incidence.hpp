@@ -34,7 +34,7 @@ class incidence_iterator : source_vertex<G, ((Sourced && !sourced_adjacency_list
 public:
   using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
 
-  using graph_type      = G;
+  using graph_type      = remove_reference_t<G>;
   using vertex_type     = vertex_t<graph_type>;
   using vertex_id_type  = vertex_id_t<graph_type>;
   using vertex_iterator = vertex_iterator_t<graph_type>;
@@ -56,9 +56,9 @@ public:
 
 public:
   incidence_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter, const EVF& value_fn)
-        : base_type(vertex_id(g, ui)), g_(g), iter_(iter), value_fn_(&value_fn) {}
+        : base_type(vertex_id(g, ui)), g_(&g), iter_(iter), value_fn_(&value_fn) {}
   incidence_iterator(graph_type& g, vertex_id_type uid, const EVF& value_fn)
-        : base_type(uid), g_(g), iter_(ranges::begin(edges(g, uid))), value_fn_(&value_fn) {}
+        : base_type(uid), g_(&g), iter_(ranges::begin(edges(g, uid))), value_fn_(&value_fn) {}
 
   constexpr incidence_iterator()                          = default;
   constexpr incidence_iterator(const incidence_iterator&) = default;
@@ -88,23 +88,23 @@ protected:
 public:
   constexpr reference operator*() const {
     if constexpr (unordered_edge<G, edge_type>) {
-      if (target_id(g_, *iter_) != this->source_vertex_id()) {
-        value_.shadow_.source_id = source_id(g_, *iter_);
-        value_.shadow_.target_id = target_id(g_, *iter_);
+      if (target_id(*g_, *iter_) != this->source_vertex_id()) {
+        value_.shadow_.source_id = source_id(*g_, *iter_);
+        value_.shadow_.target_id = target_id(*g_, *iter_);
       } else {
-        value_.shadow_.source_id = target_id(g_, *iter_);
-        value_.shadow_.target_id = source_id(g_, *iter_);
+        value_.shadow_.source_id = target_id(*g_, *iter_);
+        value_.shadow_.target_id = source_id(*g_, *iter_);
       }
     } else if constexpr (Sourced) {
       if constexpr (sourced_adjacency_list<G>) {
-        value_.shadow_.source_id = source_id(g_, *iter_);
-        value_.shadow_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = source_id(*g_, *iter_);
+        value_.shadow_.target_id = target_id(*g_, *iter_);
       } else {
         value_.shadow_.source_id = this->source_vertex_id();
-        value_.shadow_.target_id = target_id(g_, *iter_);
+        value_.shadow_.target_id = target_id(*g_, *iter_);
       }
     } else {
-      value_.shadow_.target_id = target_id(g_, *iter_);
+      value_.shadow_.target_id = target_id(*g_, *iter_);
     }
     value_.shadow_.edge  = &*iter_;
     value_.shadow_.value = invoke(*value_fn_, *iter_);
@@ -126,10 +126,10 @@ public:
 
 private: // member variables
   //mutable shadow_value_type        value_ = {};
-  mutable internal_value           value_;
-  _detail::ref_to_ptr<graph_type&> g_;
-  edge_iterator                    iter_;
-  const EVF*                       value_fn_ = nullptr;
+  mutable internal_value value_;
+  graph_type*            g_ = nullptr;
+  edge_iterator          iter_;
+  const EVF*             value_fn_ = nullptr;
 
   friend bool operator==(const edge_iterator& lhs, const incidence_iterator& rhs) { return lhs == rhs.iter_; }
 };
@@ -141,7 +141,7 @@ class incidence_iterator<G, Sourced, void>
 public:
   using base_type = source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
 
-  using graph_type      = G;
+  using graph_type      = remove_reference_t<G>;
   using vertex_type     = vertex_t<graph_type>;
   using vertex_id_type  = vertex_id_t<graph_type>;
   using vertex_iterator = vertex_iterator_t<graph_type>;
@@ -179,8 +179,8 @@ protected:
 
 public:
   incidence_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter)
-        : base_type(vertex_id(g, ui)), g_(g), iter_(iter) {}
-  incidence_iterator(graph_type& g, vertex_id_type uid) : base_type(uid), g_(g), iter_(ranges::begin(edges(g, uid))) {}
+        : base_type(vertex_id(g, ui)), g_(&g), iter_(iter) {}
+  incidence_iterator(graph_type& g, vertex_id_type uid) : base_type(uid), g_(&g), iter_(ranges::begin(edges(g, uid))) {}
 
   constexpr incidence_iterator()                          = default;
   constexpr incidence_iterator(const incidence_iterator&) = default;
@@ -194,23 +194,23 @@ public:
   constexpr reference operator*() const {
     if constexpr (unordered_edge<G, edge_type>) {
       static_assert(sourced_adjacency_list<G>);
-      if (target_id(g_, *iter_) != this->source_vertex_id()) {
-        value_.shadow_.source_id = source_id(g_.*iter_);
-        value_.shadow_.target_id = target_id(g_, *iter_);
+      if (target_id(*g_, *iter_) != this->source_vertex_id()) {
+        value_.shadow_.source_id = source_id(*g_.*iter_);
+        value_.shadow_.target_id = target_id(*g_, *iter_);
       } else {
-        value_.shadow_.source_id = target_id(g_.*iter_);
-        value_.shadow_.target_id = source_id(g_, *iter_);
+        value_.shadow_.source_id = target_id(*g_.*iter_);
+        value_.shadow_.target_id = source_id(*g_, *iter_);
       }
     } else if constexpr (Sourced) {
       if constexpr (sourced_adjacency_list<G>) {
-        value_.shadow_.source_id = source_id(g_, *iter_);
-        value_.shadow_.target_id = target_id(g_, *iter_);
+        value_.shadow_.source_id = source_id(*g_, *iter_);
+        value_.shadow_.target_id = target_id(*g_, *iter_);
       } else {
         value_.shadow_.source_id = this->source_vertex_id();
-        value_.target_id         = target_id(g_, *iter_);
+        value_.target_id         = target_id(*g_, *iter_);
       }
     } else {
-      value_.shadow_.target_id = target_id(g_, *iter_);
+      value_.shadow_.target_id = target_id(*g_, *iter_);
     }
     value_.shadow_.edge = &*iter_;
     return value_.value_;
@@ -230,9 +230,9 @@ public:
   //constexpr bool operator==(const incidence_iterator& rhs) const { return iter_ == rhs; }
 
 private: // member variables
-  mutable internal_value           value_;
-  _detail::ref_to_ptr<graph_type&> g_;
-  edge_iterator                    iter_;
+  mutable internal_value value_;
+  graph_type*            g_ = nullptr;
+  edge_iterator          iter_;
 
   friend bool operator==(const edge_iterator& lhs, const incidence_iterator& rhs) { return lhs == rhs.iter_; }
 };
@@ -315,7 +315,7 @@ namespace views {
       static constexpr _Choice_t<_St_id> _Choice_id_evf = _Choose_id_evf<_G, EVF>();
 
     public:
-      /**
+    /**
      * @brief Get the outgoing incidence edges of a vertex id.
      * 
      * Complexity: O(n)
@@ -347,7 +347,7 @@ namespace views {
         }
       }
 
-      /**
+    /**
      * @brief Get the outgoing incidence edges of a vertex id and include an edge value in the result.
      * 
      * Complexity: O(n)
