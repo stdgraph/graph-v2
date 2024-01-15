@@ -46,7 +46,7 @@ struct bfs_element {
   vertex_id_t<G> u_id;
 };*/
 
-template <adjacency_list G, class Queue, class Alloc>
+template <adjacency_list G, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class bfs_base : public ranges::view_base {
 public:
@@ -61,6 +61,7 @@ public:
 
 private:
   using graph_ref_type = reference_wrapper<graph_type>;
+  using Queue          = queue<vertex_id_t<G>>;
   //using queue_elem     = bfs_element<graph_type>;
   using queue_elem = vertex_id_type;
 
@@ -192,14 +193,13 @@ protected:
  * 
  * @tparam G     Graph type
  * @tparam VVF   Vertex Value Function type
- * @tparam Queue Queue type for internal use
  * @tparam Alloc Allocator type
 */
-template <adjacency_list G, class VVF = void, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class VVF = void, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class vertices_breadth_first_search_view : public bfs_base<G, Queue, Alloc> {
+class vertices_breadth_first_search_view : public bfs_base<G, Alloc> {
 public:
-  using base_type        = bfs_base<G, Queue, Alloc>;
+  using base_type        = bfs_base<G, Alloc>;
   using graph_type       = G;
   using vertex_type      = vertex_t<G>;
   using vertex_id_type   = vertex_id_t<graph_type>;
@@ -208,7 +208,7 @@ public:
   using edge_type        = edge_t<G>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
-  using bfs_range_type   = vertices_breadth_first_search_view<graph_type, VVF, Queue, Alloc>;
+  using bfs_range_type   = vertices_breadth_first_search_view<graph_type, VVF, Alloc>;
 
   using vertex_value_func = VVF;
   using vertex_value_type = invoke_result_t<VVF, vertex_reference>;
@@ -323,11 +323,11 @@ private:
 };
 
 
-template <adjacency_list G, class Queue, class Alloc>
+template <adjacency_list G, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class vertices_breadth_first_search_view<G, void, Queue, Alloc> : public bfs_base<G, Queue, Alloc> {
+class vertices_breadth_first_search_view<G, void, Alloc> : public bfs_base<G, Alloc> {
 public:
-  using base_type        = bfs_base<G, Queue, Alloc>;
+  using base_type        = bfs_base<G, Alloc>;
   using graph_type       = G;
   using vertex_type      = vertex_t<G>;
   using vertex_id_type   = vertex_id_t<graph_type>;
@@ -336,7 +336,7 @@ public:
   using edge_type        = edge_t<G>;
   using edge_reference   = edge_reference_t<G>;
   using edge_iterator    = vertex_edge_iterator_t<graph_type>;
-  using bfs_range_type   = vertices_breadth_first_search_view<graph_type, void, Queue, Alloc>;
+  using bfs_range_type   = vertices_breadth_first_search_view<graph_type, void, Alloc>;
 
 public:
   vertices_breadth_first_search_view(graph_type& g, vertex_id_type seed, const Alloc& alloc = Alloc())
@@ -443,23 +443,18 @@ public:
  * @tparam G       Graph type
  * @tparam EVF     Edge Value Function type
  * @tparam Sourced Does the graph support @c source_id()?
- * @tparam Queue   Queue type for internal use
  * @tparam Alloc   Allocator type
 */
-template <adjacency_list G,
-          class EVF    = void,
-          bool Sourced = false,
-          class Queue  = queue<vertex_id_t<G>>,
-          class Alloc  = allocator<bool>>
+template <adjacency_list G, class EVF = void, bool Sourced = false, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class edges_breadth_first_search_view : public bfs_base<G, Queue, Alloc> {
+class edges_breadth_first_search_view : public bfs_base<G, Alloc> {
 public:
-  using base_type           = bfs_base<G, Queue, Alloc>;
+  using base_type           = bfs_base<G, Alloc>;
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
-  using bfs_range_type      = edges_breadth_first_search_view<G, EVF, Sourced, Queue, Alloc>;
+  using bfs_range_type      = edges_breadth_first_search_view<G, EVF, Sourced, Alloc>;
 
   using edge_value_func = EVF;
   using edge_value_type = invoke_result_t<EVF, edge_reference_type>;
@@ -568,16 +563,16 @@ private:
   const EVF* value_fn_ = nullptr;
 };
 
-template <adjacency_list G, bool Sourced, class Queue, class Alloc>
+template <adjacency_list G, bool Sourced, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-class edges_breadth_first_search_view<G, void, Sourced, Queue, Alloc> : public bfs_base<G, Queue, Alloc> {
+class edges_breadth_first_search_view<G, void, Sourced, Alloc> : public bfs_base<G, Alloc> {
 public:
-  using base_type           = bfs_base<G, Queue, Alloc>;
+  using base_type           = bfs_base<G, Alloc>;
   using graph_type          = G;
   using vertex_id_type      = vertex_id_t<graph_type>;
   using vertex_iterator     = vertex_iterator_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
-  using bfs_range_type      = edges_breadth_first_search_view<G, void, Sourced, Queue, Alloc>;
+  using bfs_range_type      = edges_breadth_first_search_view<G, void, Sourced, Alloc>;
 
 public:
   edges_breadth_first_search_view(G& g, vertex_id_type seed, const Alloc& alloc = Alloc())
@@ -678,6 +673,12 @@ public:
 };
 } // namespace std::graph
 
+
+#  if 0
+
+namespace std::graph::views {}
+#  else
+
 namespace std::graph::tag_invoke {
 // vertices_breadth_first_search CPO
 TAG_INVOKE_DEF(vertices_breadth_first_search); // vertices_breadth_first_search(g,seed)    -> vertices[vid,v]
@@ -727,62 +728,62 @@ namespace std::graph::views {
 // vertices_breadth_first_search(g,uid)
 // vertices_breadth_first_search(g,uid,vvf)
 //
-template <adjacency_list G, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
   if constexpr (tag_invoke::_has_vtx_bfs_adl<G, Alloc>)
     return tag_invoke::vertices_breadth_first_search(g, seed, alloc);
   else
-    return vertices_breadth_first_search_view<G, void, Queue>(g, seed, alloc);
+    return vertices_breadth_first_search_view<G, void>(g, seed, alloc);
 }
 
-template <adjacency_list G, class VVF, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class VVF, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
          is_invocable_v<VVF, vertex_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto vertices_breadth_first_search(G&& g, vertex_id_t<G> seed, const VVF& vvf, const Alloc& alloc = Alloc()) {
   if constexpr (tag_invoke::_has_vtx_bfs_vvf_adl<G, VVF, Alloc>)
     return tag_invoke::vertices_breadth_first_search(g, seed, vvf, alloc);
   else
-    return vertices_breadth_first_search_view<G, VVF, Queue>(g, seed, vvf, alloc);
+    return vertices_breadth_first_search_view<G, VVF>(g, seed, vvf, alloc);
 }
 
 //
 // edges_breadth_first_search(g,uid)
 // edges_breadth_first_search(g,uid,evf)
 //
-template <adjacency_list G, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
   if constexpr (tag_invoke::_has_edg_bfs_adl<G, Alloc>)
     return tag_invoke::edges_breadth_first_search(g, seed, alloc);
   else
-    return edges_breadth_first_search_view<G, void, false, Queue>(g, seed, alloc);
+    return edges_breadth_first_search_view<G, void, false>(g, seed, alloc);
 }
 
-template <adjacency_list G, class EVF, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class EVF, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
          is_invocable_v<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, const Alloc& alloc = Alloc()) {
   if constexpr (tag_invoke::_has_edg_bfs_evf_adl<G, EVF, Alloc>)
     return tag_invoke::edges_breadth_first_search(g, seed, evf, alloc);
   else
-    return edges_breadth_first_search_view<G, EVF, false, Queue>(g, seed, evf, alloc);
+    return edges_breadth_first_search_view<G, EVF, false>(g, seed, evf, alloc);
 }
 
 //
 // sourced_edges_breadth_first_search(g,uid)
 // sourced_edges_breadth_first_search(g,uid,evf)
 //
-template <adjacency_list G, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto sourced_edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const Alloc& alloc = Alloc()) {
   if constexpr (tag_invoke::_has_src_edg_bfs_adl<G, Alloc>)
     return tag_invoke::sourced_edges_breadth_first_search(g, seed, alloc);
   else
-    return edges_breadth_first_search_view<G, void, true, Queue>(g, seed, alloc);
+    return edges_breadth_first_search_view<G, void, true>(g, seed, alloc);
 }
 
-template <adjacency_list G, class EVF, class Queue = queue<vertex_id_t<G>>, class Alloc = allocator<bool>>
+template <adjacency_list G, class EVF, class Alloc = allocator<bool>>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
          is_invocable_v<EVF, edge_reference_t<G>> && _detail::is_allocator_v<Alloc>
 constexpr auto
@@ -790,11 +791,11 @@ sourced_edges_breadth_first_search(G&& g, vertex_id_t<G> seed, const EVF& evf, c
   if constexpr (tag_invoke::_has_src_edg_bfs_evf_adl<G, EVF, Alloc>)
     return tag_invoke::sourced_edges_breadth_first_search(g, seed, evf, alloc);
   else
-    return edges_breadth_first_search_view<G, EVF, true, Queue>(g, seed, evf, alloc);
+    return edges_breadth_first_search_view<G, EVF, true>(g, seed, evf, alloc);
 }
 
 
 } // namespace std::graph::views
+#  endif //1
 
-
-#endif // GRAPH_BFS_HPP
+#endif   // GRAPH_BFS_HPP
