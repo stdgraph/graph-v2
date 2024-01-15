@@ -44,7 +44,7 @@ template <adjacency_list G, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class dfs_base : public ranges::view_base {
 public:
-  using graph_type       = G;
+  using graph_type       = remove_reference_t<G>;
   using vertex_type      = vertex_t<G>;
   using vertex_id_type   = vertex_id_t<graph_type>;
   using vertex_reference = vertex_reference_t<graph_type>;
@@ -67,14 +67,14 @@ private:
 
 public:
   dfs_base(graph_type& g, vertex_id_type seed, const Alloc& alloc)
-        : graph_(g), S_(alloc), colors_(ranges::size(vertices(g)), white, alloc) {
-    if (seed < static_cast<vertex_id_type>(ranges::size(vertices(graph_))) && !ranges::empty(edges(graph_, seed))) {
-      edge_iterator uvi = ranges::begin(edges(graph_, seed));
+        : graph_(&g), S_(alloc), colors_(ranges::size(vertices(g)), white, alloc) {
+    if (seed < static_cast<vertex_id_type>(ranges::size(vertices(*graph_))) && !ranges::empty(edges(*graph_, seed))) {
+      edge_iterator uvi = ranges::begin(edges(*graph_, seed));
       S_.push(stack_elem{seed, uvi});
       colors_[seed] = grey;
 
       // Mark initial vertex as visited
-      if (uvi != ranges::end(edges(graph_, seed))) {
+      if (uvi != ranges::end(edges(*graph_, seed))) {
         vertex_id_type v_id = real_target_id(*uvi, seed);
         colors_[v_id]       = grey;
       }
@@ -100,19 +100,19 @@ protected:
   constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type) const
   requires ordered_edge<G, edge_type>
   {
-    return target_id(graph_, uv);
+    return target_id(*graph_, uv);
   }
   constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type src) const
   requires unordered_edge<G, edge_type>
   {
-    if (target_id(graph_, uv) != src)
-      return target_id(graph_, uv);
+    if (target_id(*graph_, uv) != src)
+      return target_id(*graph_, uv);
     else
-      return source_id((graph_), uv);
+      return source_id((*graph_), uv);
   }
 
   constexpr vertex_edge_iterator_t<G> find_unvisited(vertex_id_t<G> uid, vertex_edge_iterator_t<G> first) {
-    return ranges::find_if(first, ranges::end(edges(graph_, uid)), [this, uid](edge_reference uv) -> bool {
+    return ranges::find_if(first, ranges::end(edges(*graph_, uid)), [this, uid](edge_reference uv) -> bool {
       return colors_[real_target_id(uv, uid)] == white;
     });
   }
@@ -122,11 +122,11 @@ protected:
     auto [u_id, uvi]    = S_.top();
     vertex_id_type v_id = real_target_id(*uvi, u_id);
 
-    edge_iterator vwi = ranges::end(edges(graph_, v_id));
+    edge_iterator vwi = ranges::end(edges(*graph_, v_id));
     switch (cancel_) {
     case cancel_search::continue_search:
       // find first unvisited edge of v
-      vwi = find_unvisited(v_id, ranges::begin(edges(graph_, v_id)));
+      vwi = find_unvisited(v_id, ranges::begin(edges(*graph_, v_id)));
       break;
     case cancel_search::cancel_branch: {
       cancel_       = cancel_search::continue_search;
@@ -134,7 +134,7 @@ protected:
 
       // Continue with sibling?
       uvi = find_unvisited(u_id, ++uvi);
-      if (uvi != ranges::end(edges(graph_, u_id))) {
+      if (uvi != ranges::end(edges(*graph_, u_id))) {
         S_.top().uv = uvi;
         return;
       }
@@ -147,7 +147,7 @@ protected:
     }
 
     // unvisited edge found for vertex v?
-    if (vwi != ranges::end(edges(graph_, v_id))) {
+    if (vwi != ranges::end(edges(*graph_, v_id))) {
       S_.push(stack_elem{v_id, vwi});
       vertex_id_type w_id = real_target_id(*vwi, v_id);
       colors_[w_id]       = grey; // visited w
@@ -161,7 +161,7 @@ protected:
         xyi = find_unvisited(x_id, ++xyi);
 
         // unvisted edge found for vertex x?
-        if (xyi != ranges::end(edges(graph_, x_id))) {
+        if (xyi != ranges::end(edges(*graph_, x_id))) {
           S_.push({x_id, xyi});
           vertex_id_type y_id = real_target_id(*xyi, x_id);
           colors_[y_id]       = grey; // visited y
@@ -174,10 +174,10 @@ protected:
   }
 
 protected:
-  _detail::ref_to_ptr<graph_type&> graph_;
-  Stack                            S_;
-  vector<three_colors>             colors_;
-  cancel_search                    cancel_ = cancel_search::continue_search;
+  graph_type*          graph_ = nullptr;
+  Stack                S_;
+  vector<three_colors> colors_;
+  cancel_search        cancel_ = cancel_search::continue_search;
 };
 
 
@@ -276,7 +276,7 @@ public:
     }
 
     reference operator*() const noexcept {
-      auto& g             = the_range_->graph_;
+      auto& g             = *the_range_->graph_;
       auto&& [u_id, uvi]  = the_range_->S_.top();
       vertex_id_type v_id = the_range_->real_target_id(*uvi, u_id);
       auto&          v    = *find_vertex(g, v_id);
@@ -385,7 +385,7 @@ public:
     }
 
     reference operator*() const noexcept {
-      auto& g             = the_range_->graph_;
+      auto& g             = *the_range_->graph_;
       auto&& [u_id, uvi]  = the_range_->S_.top();
       vertex_id_type v_id = the_range_->real_target_id(*uvi, u_id);
       auto&          v    = *find_vertex(g, v_id);

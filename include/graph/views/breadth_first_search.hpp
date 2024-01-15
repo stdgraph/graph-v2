@@ -50,7 +50,7 @@ template <adjacency_list G, class Queue, class Alloc>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class bfs_base : public ranges::view_base {
 public:
-  using graph_type       = G;
+  using graph_type       = remove_reference_t<G>;
   using vertex_type      = vertex_t<G>;
   using vertex_id_type   = vertex_id_t<graph_type>;
   using vertex_reference = vertex_reference_t<graph_type>;
@@ -69,9 +69,9 @@ private:
 
 public:
   bfs_base(graph_type& g, vertex_id_type seed, const Alloc& alloc)
-        : graph_(g), Q_(alloc), colors_(ranges::size(vertices(g)), white, alloc) {
-    if (seed < ranges::size(vertices(graph_)) && !ranges::empty(edges(graph_, seed))) {
-      uv_ = ranges::begin(edges(graph_, seed));
+        : graph_(&g), Q_(alloc), colors_(ranges::size(vertices(g)), white, alloc) {
+    if (seed < ranges::size(vertices(*graph_)) && !ranges::empty(edges(*graph_, seed))) {
+      uv_ = ranges::begin(edges(*graph_, seed));
       Q_.push(queue_elem{seed});
       colors_[seed] = grey;
     }
@@ -79,11 +79,11 @@ public:
 
   template <class VKR>
   requires ranges::input_range<VKR> && convertible_to<ranges::range_value_t<VKR>, vertex_id_t<G>>
-  bfs_base(graph_type& g, const VKR& seeds = 0) : graph_(g), colors_(ranges::size(vertices(g)), white) {
+  bfs_base(graph_type& g, const VKR& seeds = 0) : graph_(&g), colors_(ranges::size(vertices(g)), white) {
     for (auto&& [seed] : seeds) {
-      if (seed < ranges::size(vertices(graph_)) && !ranges::empty(edges(graph_, seed))) {
+      if (seed < ranges::size(vertices(*graph_)) && !ranges::empty(edges(*graph_, seed))) {
         if (Q_.empty()) {
-          uv_ = ranges::begin(edges(graph_, seed));
+          uv_ = ranges::begin(edges(*graph_, seed));
         }
         Q_.push(queue_elem{seed});
         colors_[seed] = grey;
@@ -92,8 +92,8 @@ public:
     // advance uv_ to the first edge to be visited in case seeds adjacent to first seed
     while (!Q_.empty()) {
       auto          u_id = Q_.front();
-      edge_iterator uvi  = find_unvisited(u_id, ranges::begin(edges(graph_, u_id)));
-      if (uvi != ranges::end(edges(graph_, u_id))) {
+      edge_iterator uvi  = find_unvisited(u_id, ranges::begin(edges(*graph_, u_id)));
+      if (uvi != ranges::end(edges(*graph_, u_id))) {
         uv_ = uvi;
         break;
       } else {
@@ -123,19 +123,19 @@ protected:
   constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type) const
   requires ordered_edge<G, edge_type>
   {
-    return target_id(graph_, uv);
+    return target_id(*graph_, uv);
   }
   constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type src) const
   requires unordered_edge<G, edge_type>
   {
-    if (target_id(graph_, uv) != src)
-      return target_id(graph_, uv);
+    if (target_id(*graph_, uv) != src)
+      return target_id(*graph_, uv);
     else
-      return source_id((graph_), uv);
+      return source_id((*graph_), uv);
   }
 
   constexpr vertex_edge_iterator_t<G> find_unvisited(vertex_id_t<G> uid, vertex_edge_iterator_t<G> first) {
-    return ranges::find_if(first, ranges::end(edges(graph_, uid)), [this, uid](edge_reference uv) -> bool {
+    return ranges::find_if(first, ranges::end(edges(*graph_, uid)), [this, uid](edge_reference uv) -> bool {
       return colors_[real_target_id(uv, uid)] == white;
     });
   }
@@ -163,13 +163,13 @@ protected:
     }
 
     // visited all neighbors of u, or cancelled u
-    if (uv_ == ranges::end(edges(graph_, u_id))) {
+    if (uv_ == ranges::end(edges(*graph_, u_id))) {
       colors_[u_id] = black; // finished with u
       Q_.pop();
       while (!Q_.empty()) {
         u_id = Q_.front();
-        uv_  = find_unvisited(u_id, ranges::begin(edges(graph_, u_id)));
-        if (uv_ != ranges::end(edges(graph_, u_id))) {
+        uv_  = find_unvisited(u_id, ranges::begin(edges(*graph_, u_id)));
+        if (uv_ != ranges::end(edges(*graph_, u_id))) {
           break;
         } else {
           Q_.pop();
@@ -180,11 +180,11 @@ protected:
   }
 
 protected:
-  _detail::ref_to_ptr<graph_type&> graph_;
-  Queue                            Q_;
-  vertex_edge_iterator_t<G>        uv_;
-  vector<three_colors>             colors_;
-  cancel_search                    cancel_ = cancel_search::continue_search;
+  graph_type*               graph_ = nullptr;
+  Queue                     Q_;
+  vertex_edge_iterator_t<G> uv_;
+  vector<three_colors>      colors_;
+  cancel_search             cancel_ = cancel_search::continue_search;
 };
 
 /**
@@ -292,7 +292,7 @@ public:
     }
 
     reference operator*() const noexcept {
-      auto&          g    = the_range_->graph_;
+      auto&          g    = *the_range_->graph_;
       auto&&         u_id = the_range_->Q_.front();
       auto&&         uvi  = the_range_->uv_;
       vertex_id_type v_id = the_range_->real_target_id(*uvi, u_id);
@@ -410,7 +410,7 @@ public:
     }
 
     reference operator*() const noexcept {
-      auto&          g    = the_range_->graph_;
+      auto&          g    = *the_range_->graph_;
       auto&&         u_id = the_range_->Q_.front();
       auto&&         uvi  = the_range_->uv_;
       vertex_id_type v_id = the_range_->real_target_id(*uvi, u_id);
