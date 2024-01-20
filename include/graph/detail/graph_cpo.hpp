@@ -847,11 +847,11 @@ namespace _Target_id {
   void target_id();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G, class _UnCV>
+  template <class _G>
   concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
     { _Fake_copy_init(uv.target_id(__g)) };
   };
-  template <class _G, class _UnCV>
+  template <class _G>
   concept _Has_ref_ADL = requires(_G&& __g, edge_reference_t<_G> uv) {
     { _Fake_copy_init(target_id(__g, uv)) }; // intentional ADL
   };
@@ -863,11 +863,10 @@ namespace _Target_id {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-      using _UnCV = remove_cvref_t<_G>;
 
-      if constexpr (_Has_ref_member<_G, _UnCV>) {
+      if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().target_id(declval<_G>())))};
-      } else if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+      } else if constexpr (_Has_ref_ADL<_G>) {
         return {
               _St_ref::_Non_member,
               noexcept(_Fake_copy_init(target_id(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
@@ -927,12 +926,12 @@ namespace _Target {
   void target();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G, class _UnCV>
+  template <class _G>
   concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                               { _Fake_copy_init(target(__g, uv)) }; // intentional ADL
                             };
-  template <class _G, class _UnCV>
+  template <class _G>
   concept _Can_ref_eval = ranges::random_access_range<vertex_range_t<_G>> //
                           && requires(_G&& __g, edge_reference_t<_G> uv, vertex_id_t<_G> uid) {
                                { _Fake_copy_init(find_vertex(__g, uid)) };
@@ -946,12 +945,11 @@ namespace _Target {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-      using _UnCV = remove_cvref_t<_G>;
 
-      if constexpr (_Has_ref_ADL<_G, _UnCV>) {
+      if constexpr (_Has_ref_ADL<_G>) {
         return {_St_ref::_Non_member,
                 noexcept(_Fake_copy_init(target(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
-      } else if constexpr (_Can_ref_eval<_G, _UnCV>) {
+      } else if constexpr (_Can_ref_eval<_G>) {
         return {_St_ref::_Auto_eval,
                 noexcept(_Fake_copy_init(*find_vertex(
                       declval<_G>(), target_id(declval<_G>(), declval<edge_reference_t<_G>>()))))}; // intentional ADL
