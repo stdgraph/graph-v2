@@ -208,36 +208,36 @@ namespace views {
 #endif                                                          // ^^^ workaround ^^^
 
     // all
-    template <class _G, class _UnCV>
+    template <class _G>
     concept _Has_all_ADL = vertex_range<_G> && requires(_G&& __g) {
       { _Fake_copy_init(vertexlist(__g)) }; // intentional ADL
     };
-    template <class _G, class _UnCV>
+    template <class _G>
     concept _Can_all_eval = vertex_range<_G>;
 
-    template <class _G, class _UnCV, class VVF>
+    template <class _G, class VVF>
     concept _Has_all_vvf_ADL =
           vertex_range<_G> && invocable<VVF, vertex_reference_t<_G>> && requires(_G&& __g, const VVF& vvf) {
             { _Fake_copy_init(vertexlist(__g, vvf)) }; // intentional ADL
           };
 
-    template <class _G, class _UnCV, class VVF>
+    template <class _G, class VVF>
     concept _Can_all_vvf_eval = vertex_range<_G> && invocable<VVF, vertex_reference_t<_G>>;
 
     // rng
-    template <class _G, class _UnCV, class Rng>
+    template <class _G, class Rng>
     concept _Has_rng_ADL = vertex_range<_G> && ranges::forward_range<Rng> && requires(_G&& __g, Rng&& vr) {
       { _Fake_copy_init(vertexlist(__g, vr)) }; // intentional ADL
     };
-    template <class _G, class _UnCV, class Rng>
+    template <class _G, class Rng>
     concept _Can_rng_eval = vertex_range<_G> && convertible_to<ranges::iterator_t<Rng>, vertex_iterator_t<_G>>;
 
-    template <class _G, class _UnCV, class Rng, class VVF>
+    template <class _G, class Rng, class VVF>
     concept _Has_rng_vvf_ADL = ranges::forward_range<Rng> && invocable<VVF, vertex_reference_t<_G>> &&
                                requires(_G&& __g, vertex_range_t<_G>&& vr, const VVF& vvf) {
                                  { _Fake_copy_init(vertexlist(__g, vr, vvf)) }; // intentional ADL
                                };
-    template <class _G, class _UnCV, class Rng, class VVF>
+    template <class _G, class Rng, class VVF>
     concept _Can_rng_vvf_eval = vertex_range<_G> && convertible_to<ranges::iterator_t<Rng>, vertex_iterator_t<_G>> &&
                                 invocable<VVF, vertex_reference_t<_G>>;
 
@@ -250,12 +250,11 @@ namespace views {
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_all> _Choose_all() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
 
-        if constexpr (_Has_all_ADL<_G, _UnCV>) {
+        if constexpr (_Has_all_ADL<_G>) {
           return {_St_all::_Non_member, noexcept(_Fake_copy_init(vertexlist(declval<_G>())))}; // intentional ADL
-        } else if constexpr (_Can_all_eval<_G, _UnCV>) {
-          using view_type = vertexlist_view<_G>;
+        } else if constexpr (_Can_all_eval<_G>) {
+          using view_type = vertexlist_view<_G, void>;
           return {_St_all::_Auto_eval, noexcept(_Fake_copy_init(view_type(vertices(declval<_G>()))))};
         } else {
           return {_St_all::_None};
@@ -268,12 +267,11 @@ namespace views {
       template <class _G, class VVF>
       [[nodiscard]] static consteval _Choice_t<_St_all> _Choose_vvf_all() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
 
-        if constexpr (_Has_all_vvf_ADL<_G, _UnCV, VVF>) {
+        if constexpr (_Has_all_vvf_ADL<_G, VVF>) {
           return {_St_all::_Non_member,
                   noexcept(_Fake_copy_init(vertexlist(declval<_G>(), declval<VVF>())))}; // intentional ADL
-        } else if constexpr (_Can_all_vvf_eval<_G, _UnCV, VVF>) {
+        } else if constexpr (_Can_all_vvf_eval<_G, VVF>) {
           using view_type     = vertexlist_view<_G, VVF>;
           using iterator_type = vertexlist_iterator<_G, VVF>;
           return {_St_all::_Auto_eval,
@@ -290,13 +288,12 @@ namespace views {
       template <class _G, class Rng>
       [[nodiscard]] static consteval _Choice_t<_St_rng> _Choose_rng() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
 
-        if constexpr (_Has_rng_ADL<_G, _UnCV, Rng>) {
+        if constexpr (_Has_rng_ADL<_G, Rng>) {
           return {_St_rng::_Non_member,
                   noexcept(_Fake_copy_init(vertexlist(declval<_G>(), declval<Rng>())))}; // intentional ADL
-        } else if constexpr (_Can_rng_eval<_G, _UnCV, Rng>) {
-          using view_type     = vertexlist_view<_G>;
+        } else if constexpr (_Can_rng_eval<_G, Rng>) {
+          using view_type     = vertexlist_view<_G, void>;
           using iterator_type = vertexlist_iterator<_G>;
           return {_St_rng::_Auto_eval,
                   noexcept(_Fake_copy_init(view_type(declval<iterator_type>(), declval<vertex_iterator_t<_G>>())))};
@@ -312,12 +309,11 @@ namespace views {
       template <class _G, class Rng, class VVF>
       [[nodiscard]] static consteval _Choice_t<_St_rng> _Choose_vvf_rng() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
 
-        if constexpr (_Has_rng_vvf_ADL<_G, _UnCV, Rng, VVF>) {
+        if constexpr (_Has_rng_vvf_ADL<_G, Rng, VVF>) {
           return {_St_rng::_Non_member, noexcept(_Fake_copy_init(vertexlist(declval<_G>(), declval<Rng>(),
                                                                             declval<VVF>())))}; // intentional ADL
-        } else if constexpr (_Can_rng_vvf_eval<_G, _UnCV, Rng, VVF>) {
+        } else if constexpr (_Can_rng_vvf_eval<_G, Rng, VVF>) {
           using view_type     = vertexlist_view<_G, VVF>;
           using iterator_type = vertexlist_iterator<_G, VVF>;
           return {_St_rng::_Auto_eval,
@@ -344,14 +340,14 @@ namespace views {
        * @return The number of outgoing edges of vertex u.
       */
       template <class _G>
-      requires(_Choice_all<_G&>._Strategy != _St_all::_None)
-      [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_all<_G&>._No_throw) {
-        constexpr _St_all _Strat_all = _Choice_all<_G&>._Strategy;
+      requires(_Choice_all<_G>._Strategy != _St_all::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_all<_G>._No_throw) {
+        constexpr _St_all _Strat_all = _Choice_all<_G>._Strategy;
 
         if constexpr (_Strat_all == _St_all::_Non_member) {
           return vertexlist(__g); // intentional ADL
         } else if constexpr (_Strat_all == _St_all::_Auto_eval) {
-          return vertexlist_view<_G>(vertices(std::forward<_G>(__g)));
+          return vertexlist_view<_G, void>(vertices(forward<_G>(__g)));
         } else {
           static_assert(_Always_false<_G>,
                         "vertexlist(g) is not defined and the default implementation cannot be evaluated");
@@ -359,10 +355,10 @@ namespace views {
       }
 
       template <class _G, class VVF>
-      requires(_Choice_vvf_all<_G&, VVF>._Strategy != _St_all::_None)
+      requires(_Choice_vvf_all<_G, VVF>._Strategy != _St_all::_None)
       [[nodiscard]] constexpr auto operator()(_G&& __g, const VVF& vvf) const
-            noexcept(_Choice_vvf_all<_G&, VVF>._No_throw) {
-        constexpr _St_all _Strat_all = _Choice_vvf_all<_G&, VVF>._Strategy;
+            noexcept(_Choice_vvf_all<_G, VVF>._No_throw) {
+        constexpr _St_all _Strat_all = _Choice_vvf_all<_G, VVF>._Strategy;
 
         if constexpr (_Strat_all == _St_all::_Non_member) {
           return vertexlist(__g, vvf); // intentional ADL
@@ -391,14 +387,14 @@ namespace views {
        * @return The number of outgoing edges of vertex u.
       */
       template <class _G, class Rng>
-      requires(_Choice_rng<_G&, Rng>._Strategy != _St_rng::_None)
-      [[nodiscard]] constexpr auto operator()(_G&& __g, Rng&& vr) const noexcept(_Choice_rng<_G&, Rng>._No_throw) {
-        constexpr _St_rng _Strat_rng = _Choice_rng<_G&, Rng>._Strategy;
+      requires(_Choice_rng<_G, Rng>._Strategy != _St_rng::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, Rng&& vr) const noexcept(_Choice_rng<_G, Rng>._No_throw) {
+        constexpr _St_rng _Strat_rng = _Choice_rng<_G, Rng>._Strategy;
 
         if constexpr (_Strat_rng == _St_rng::_Non_member) {
           return vertexlist(forward<_G>(__g), forward<Rng>(vr)); // intentional ADL
         } else if constexpr (_Strat_rng == _St_rng::_Auto_eval) {
-          using view_type     = vertexlist_view<_G>;
+          using view_type     = vertexlist_view<_G, void>;
           using iterator_type = vertexlist_iterator<_G>;
           auto first          = ranges::begin(vr);
           auto last           = ranges::end(vr);
@@ -411,10 +407,10 @@ namespace views {
       }
 
       template <class _G, class Rng, class VVF>
-      requires(_Choice_vvf_rng<_G&, Rng, VVF>._Strategy != _St_rng::_None)
+      requires(_Choice_vvf_rng<_G, Rng, VVF>._Strategy != _St_rng::_None)
       [[nodiscard]] constexpr auto operator()(_G&& __g, Rng&& vr, const VVF& vvf) const
-            noexcept(_Choice_vvf_rng<_G&, Rng, VVF>._No_throw) {
-        constexpr _St_rng _Strat_rng = _Choice_vvf_rng<_G&, Rng, VVF>._Strategy;
+            noexcept(_Choice_vvf_rng<_G, Rng, VVF>._No_throw) {
+        constexpr _St_rng _Strat_rng = _Choice_vvf_rng<_G, Rng, VVF>._Strategy;
 
         if constexpr (_Strat_rng == _St_rng::_Non_member) {
           return vertexlist(forward<_G>(__g), forward<Rng>(vr), vvf); // intentional ADL

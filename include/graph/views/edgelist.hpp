@@ -106,7 +106,7 @@ class edgelist_iterator : public edgelist_iterator_base<G> {
 public:
   using base_type = edgelist_iterator_base<G>;
 
-  using graph_type      = G;
+  using graph_type      = remove_reference_t<G>;
   using vertex_type     = vertex_t<graph_type>;
   using vertex_id_type  = vertex_id_t<graph_type>;
   using vertex_iterator = vertex_iterator_t<G>;
@@ -128,9 +128,9 @@ public:
 
 public:
   edgelist_iterator(graph_type& g, vertex_iterator ui, const EVF& value_fn)
-        : base_type(), g_(g), ui_(ui), uvi_(), value_fn_(&value_fn) {}
+        : base_type(), g_(&g), ui_(ui), uvi_(), value_fn_(&value_fn) {}
   edgelist_iterator(graph_type& g, const EVF& value_fn) : edgelist_iterator(g, ranges::begin(vertices(g)), value_fn) {
-    this->find_non_empty_vertex(g_, ui_, uvi_);
+    this->find_non_empty_vertex(*g_, ui_, uvi_);
   }
 
   constexpr edgelist_iterator()                         = default;
@@ -161,23 +161,23 @@ protected:
 public:
   constexpr reference operator*() const {
     if constexpr (unordered_edge<G, edge_type>) {
-      if (target_id(g_, *uvi_) != vertex_id(g_, ui_)) {
-        value_.shadow_.source_id = source_id(g_, *uvi_);
-        value_.shadow_.target_id = target_id(g_, *uvi_);
+      if (target_id(*g_, *uvi_) != vertex_id(*g_, ui_)) {
+        value_.shadow_.source_id = source_id(*g_, *uvi_);
+        value_.shadow_.target_id = target_id(*g_, *uvi_);
       } else {
-        value_.shadow_.source_id = target_id(g_, *uvi_);
-        value_.shadow_.target_id = source_id(g_, *uvi_);
+        value_.shadow_.source_id = target_id(*g_, *uvi_);
+        value_.shadow_.target_id = source_id(*g_, *uvi_);
       }
       value_.shadow_.edge  = &*uvi_;
       value_.shadow_.value = invoke(*value_fn_, *uvi_);
     } else {
-      value_.shadow_ = {vertex_id(g_, ui_), target_id(g_, *uvi_), &*uvi_, invoke(*value_fn_, *uvi_)};
+      value_.shadow_ = {vertex_id(*g_, ui_), target_id(*g_, *uvi_), &*uvi_, invoke(*value_fn_, *uvi_)};
     }
     return value_.value_;
   }
 
   constexpr edgelist_iterator& operator++() {
-    this->find_next_edge(g_, ui_, uvi_);
+    this->find_next_edge(*g_, ui_, uvi_);
     return *this;
   }
   constexpr edgelist_iterator operator++(int) const {
@@ -190,11 +190,11 @@ public:
   //constexpr bool operator==(const edgelist_iterator& rhs) const { return uvi_ == rhs; }
 
 private: // member variables
-  mutable internal_value           value_;
-  _detail::ref_to_ptr<graph_type&> g_;
-  vertex_iterator                  ui_;
-  edge_iterator                    uvi_;
-  const EVF*                       value_fn_ = nullptr;
+  mutable internal_value value_;
+  graph_type*            g_ = nullptr;
+  vertex_iterator        ui_;
+  edge_iterator          uvi_;
+  const EVF*             value_fn_ = nullptr;
 
   friend bool operator==(const vertex_iterator& lhs, const edgelist_iterator& rhs) { return lhs == rhs.ui_; }
 };
@@ -205,7 +205,7 @@ class edgelist_iterator<G, void> : public edgelist_iterator_base<G> {
 public:
   using base_type = edgelist_iterator_base<G>;
 
-  using graph_type      = G;
+  using graph_type      = remove_reference_t<G>;
   using vertex_type     = vertex_t<graph_type>;
   using vertex_id_type  = vertex_id_t<graph_type>;
   using vertex_iterator = vertex_iterator_t<G>;
@@ -242,8 +242,8 @@ protected:
   };
 
 public:
-  edgelist_iterator(graph_type& g, vertex_iterator ui) : base_type(), g_(g), ui_(ui), uvi_() {
-    this->find_non_empty_vertex(g_, ui_, uvi_);
+  edgelist_iterator(graph_type& g, vertex_iterator ui) : base_type(), g_(&g), ui_(ui), uvi_() {
+    this->find_non_empty_vertex(*g_, ui_, uvi_);
   }
   edgelist_iterator(graph_type& g) : edgelist_iterator(g, ranges::begin(vertices(g))) {}
 
@@ -258,22 +258,22 @@ public:
 public:
   constexpr reference operator*() const {
     if constexpr (unordered_edge<G, edge_type>) {
-      if (target_id(g_, *uvi_) != vertex_id(g_, ui_)) {
-        value_.shadow_.source_id = source_id(g_, *uvi_);
-        value_.shadow_.target_id = target_id(g_, *uvi_);
+      if (target_id(*g_, *uvi_) != vertex_id(*g_, ui_)) {
+        value_.shadow_.source_id = source_id(*g_, *uvi_);
+        value_.shadow_.target_id = target_id(*g_, *uvi_);
       } else {
-        value_.shadow_.source_id = target_id(g_, *uvi_);
-        value_.shadow_.target_id = source_id(g_, *uvi_);
+        value_.shadow_.source_id = target_id(*g_, *uvi_);
+        value_.shadow_.target_id = source_id(*g_, *uvi_);
       }
       value_.shadow_.edge = &*uvi_;
     } else {
-      value_.shadow_ = {vertex_id(g_, ui_), target_id(g_, *uvi_), &*uvi_};
+      value_.shadow_ = {vertex_id(*g_, ui_), target_id(*g_, *uvi_), &*uvi_};
     }
     return value_.value_;
   }
 
   constexpr edgelist_iterator& operator++() {
-    this->find_next_edge(g_, ui_, uvi_);
+    this->find_next_edge(*g_, ui_, uvi_);
     return *this;
   }
   constexpr edgelist_iterator operator++(int) const {
@@ -286,10 +286,10 @@ public:
   //constexpr bool operator==(const edgelist_iterator& rhs) const { return uvi_ == rhs; }
 
 private: // member variables
-  mutable internal_value           value_;
-  _detail::ref_to_ptr<graph_type&> g_;
-  vertex_iterator                  ui_;
-  edge_iterator                    uvi_;
+  mutable internal_value value_;
+  graph_type*            g_ = nullptr;
+  vertex_iterator        ui_;
+  edge_iterator          uvi_;
 
   friend bool operator==(const vertex_iterator& lhs, const edgelist_iterator& rhs) { return lhs == rhs.ui_; }
 };
