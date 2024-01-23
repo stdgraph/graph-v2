@@ -649,18 +649,18 @@ namespace views {
     void vertices_depth_first_search();
 #  endif                                         // ^^^ workaround ^^^
 
-    template <class _G, class _Alloc, class _UnCV>
-    concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+    template <class _G, class _Alloc>
+    concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                                             //
                            && requires(_G&& __g, const vertex_id_t<_G>& uid, _Alloc alloc) {
                                 { _Fake_copy_init(vertices_depth_first_search(__g, uid, alloc)) }; // intentional ADL
                               };
-    template <class _G, class _Alloc, class _UnCV>
+    template <class _G, class _Alloc>
     concept _Can_ref_eval = index_adjacency_list<_G> //
                             && requires(_G&& __g, vertex_id_t<_G> uid, _Alloc alloc) {
                                  { _Fake_copy_init(vertices_depth_first_search_view<_G, void>(__g, uid, alloc)) };
                                };
 
-    template <class _G, class _VVF, class _Alloc, class _UnCV>
+    template <class _G, class _VVF, class _Alloc>
     concept _Has_ref_vvf_ADL = _Has_class_or_enum_type<_G>                //
                                && invocable<_VVF, vertex_reference_t<_G>> //
                                && requires(_G&& __g, const vertex_id_t<_G>& uid, _VVF vvf, _Alloc alloc) {
@@ -668,7 +668,7 @@ namespace views {
                                       _Fake_copy_init(vertices_depth_first_search(__g, uid, vvf, alloc))
                                     }; // intentional ADL
                                   };
-    template <class _G, class _VVF, class _Alloc, class _UnCV>
+    template <class _G, class _VVF, class _Alloc>
     concept _Can_ref_vvf_eval = index_adjacency_list<_G>                   //
                                 && invocable<_VVF, vertex_reference_t<_G>> //
                                 && requires(_G&& __g, vertex_id_t<_G> uid, _VVF vvf, _Alloc alloc) {
@@ -685,13 +685,11 @@ namespace views {
       template <class _G, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
         //static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_ref_ADL<_G, _Alloc, _UnCV>) {
+        if constexpr (_Has_ref_ADL<_G, _Alloc>) {
           return {_St_ref::_Non_member,
                   noexcept(_Fake_copy_init(vertices_depth_first_search(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                                        declval<_Alloc>())))}; // intentional ADL
-        } else if constexpr (_Can_ref_eval<_G, _Alloc, _UnCV>) {
+        } else if constexpr (_Can_ref_eval<_G, _Alloc>) {
           return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(vertices_depth_first_search_view<_G, void>(
                                              declval<_G>(), declval<vertex_id_t<_G>>(), declval<_Alloc>())))};
         } else {
@@ -705,13 +703,11 @@ namespace views {
       template <class _G, class _VVF, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref_vvf> _Choose_ref_vvf() noexcept {
         //static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_ref_vvf_ADL<_G, _VVF, _Alloc, _UnCV>) {
+        if constexpr (_Has_ref_vvf_ADL<_G, _VVF, _Alloc>) {
           return {_St_ref_vvf::_Non_member, noexcept(_Fake_copy_init(vertices_depth_first_search(
                                                   declval<_G>(), declval<vertex_id_t<_G>>(), declval<_VVF>(),
                                                   declval<_Alloc>())))}; // intentional ADL
-        } else if constexpr (_Can_ref_vvf_eval<_G, _VVF, _Alloc, _UnCV>) {
+        } else if constexpr (_Can_ref_vvf_eval<_G, _VVF, _Alloc>) {
           return {_St_ref_vvf::_Auto_eval,
                   noexcept(_Fake_copy_init(vertices_depth_first_search_view<_G, _VVF>(
                         declval<_G>(), declval<vertex_id_t<_G>>(), declval<_VVF>(), declval<_Alloc>())))};
@@ -742,7 +738,7 @@ namespace views {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return vertices_depth_first_search(__g, seed, alloc); // intentional ADL
+          return vertices_depth_first_search(__g, seed, alloc);                // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return vertices_depth_first_search_view<_G, void>(__g, seed, alloc); // default impl
         } else {
@@ -775,7 +771,7 @@ namespace views {
         constexpr _St_ref_vvf _Strat_ref_vvf = _Choice_ref_vvf<_G&, _VVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_vvf == _St_ref_vvf::_Non_member) {
-          return vertices_depth_first_search(__g, seed, vvf, alloc); // intentional ADL
+          return vertices_depth_first_search(__g, seed, vvf, alloc);                // intentional ADL
         } else if constexpr (_Strat_ref_vvf == _St_ref_vvf::_Auto_eval) {
           return vertices_depth_first_search_view<_G, _VVF>(__g, seed, vvf, alloc); // default impl
         } else {
@@ -803,18 +799,18 @@ namespace views {
     void edges_depth_first_search();
 #  endif                                      // ^^^ workaround ^^^
 
-    template <class _G, class _Alloc, class _UnCV>
-    concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+    template <class _G, class _Alloc>
+    concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                                          //
                            && requires(_G&& __g, const vertex_id_t<_G>& uid, _Alloc alloc) {
                                 { _Fake_copy_init(edges_depth_first_search(__g, uid, alloc)) }; // intentional ADL
                               };
-    template <class _G, class _Alloc, class _UnCV>
+    template <class _G, class _Alloc>
     concept _Can_ref_eval = index_adjacency_list<_G> //
                             && requires(_G&& __g, vertex_id_t<_G> uid, _Alloc alloc) {
                                  { _Fake_copy_init(edges_depth_first_search_view<_G, void, false>(__g, uid, alloc)) };
                                };
 
-    template <class _G, class _EVF, class _Alloc, class _UnCV>
+    template <class _G, class _EVF, class _Alloc>
     concept _Has_ref_evf_ADL = _Has_class_or_enum_type<_G>              //
                                && invocable<_EVF, edge_reference_t<_G>> //
                                && requires(_G&& __g, const vertex_id_t<_G>& uid, _EVF evf, _Alloc alloc) {
@@ -822,7 +818,7 @@ namespace views {
                                       _Fake_copy_init(edges_depth_first_search(__g, uid, evf, alloc))
                                     }; // intentional ADL
                                   };
-    template <class _G, class _EVF, class _Alloc, class _UnCV>
+    template <class _G, class _EVF, class _Alloc>
     concept _Can_ref_evf_eval =
           index_adjacency_list<_G>                 //
           && invocable<_EVF, edge_reference_t<_G>> //
@@ -838,13 +834,11 @@ namespace views {
       template <class _G, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
         //static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_ref_ADL<_G, _Alloc, _UnCV>) {
+        if constexpr (_Has_ref_ADL<_G, _Alloc>) {
           return {_St_ref::_Non_member,
                   noexcept(_Fake_copy_init(edges_depth_first_search(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                                     declval<_Alloc>())))}; // intentional ADL
-        } else if constexpr (_Can_ref_eval<_G, _Alloc, _UnCV>) {
+        } else if constexpr (_Can_ref_eval<_G, _Alloc>) {
           return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(edges_depth_first_search_view<_G, void, false>(
                                              declval<_G>(), declval<vertex_id_t<_G>>(), declval<_Alloc>())))};
         } else {
@@ -858,13 +852,11 @@ namespace views {
       template <class _G, class _EVF, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref_evf> _Choose_ref_evf() noexcept {
         //static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_ref_evf_ADL<_G, _EVF, _Alloc, _UnCV>) {
+        if constexpr (_Has_ref_evf_ADL<_G, _EVF, _Alloc>) {
           return {_St_ref_evf::_Non_member, noexcept(_Fake_copy_init(edges_depth_first_search(
                                                   declval<_G>(), declval<vertex_id_t<_G>>(), declval<_EVF>(),
                                                   declval<_Alloc>())))}; // intentional ADL
-        } else if constexpr (_Can_ref_evf_eval<_G, _EVF, _Alloc, _UnCV>) {
+        } else if constexpr (_Can_ref_evf_eval<_G, _EVF, _Alloc>) {
           return {_St_ref_evf::_Auto_eval,
                   noexcept(_Fake_copy_init(edges_depth_first_search_view<_G, _EVF, false>(
                         declval<_G>(), declval<vertex_id_t<_G>>(), declval<_EVF>(), declval<_Alloc>())))};
@@ -897,7 +889,7 @@ namespace views {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return edges_depth_first_search(__g, seed, alloc); // intentional ADL
+          return edges_depth_first_search(__g, seed, alloc);                       // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return edges_depth_first_search_view<_G, void, false>(__g, seed, alloc); // default impl
         } else {
@@ -930,7 +922,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return edges_depth_first_search(__g, seed, alloc); // intentional ADL
+          return edges_depth_first_search(__g, seed, alloc);                            // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_depth_first_search_view<_G, _EVF, false>(__g, seed, evf, alloc); // default impl
         } else {
@@ -958,20 +950,20 @@ namespace views {
     void sourced_edges_depth_first_search();
 #  endif                                              // ^^^ workaround ^^^
 
-    template <class _G, class _Alloc, class _UnCV>
+    template <class _G, class _Alloc>
     concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                            && requires(_G&& __g, const vertex_id_t<_G>& uid, _Alloc alloc) {
                                 {
                                   _Fake_copy_init(sourced_edges_depth_first_search(__g, uid, alloc))
                                 }; // intentional ADL
                               };
-    template <class _G, class _Alloc, class _UnCV>
+    template <class _G, class _Alloc>
     concept _Can_ref_eval = index_adjacency_list<_G> //
                             && requires(_G&& __g, vertex_id_t<_G> uid, _Alloc alloc) {
                                  { _Fake_copy_init(edges_depth_first_search_view<_G, void, true>(__g, uid, alloc)) };
                                };
 
-    template <class _G, class _EVF, class _Alloc, class _UnCV>
+    template <class _G, class _EVF, class _Alloc>
     concept _Has_ref_evf_ADL = _Has_class_or_enum_type<_G>              //
                                && invocable<_EVF, edge_reference_t<_G>> //
                                && requires(_G&& __g, const vertex_id_t<_G>& uid, _EVF evf, _Alloc alloc) {
@@ -979,7 +971,7 @@ namespace views {
                                       _Fake_copy_init(sourced_edges_depth_first_search(__g, uid, evf, alloc))
                                     }; // intentional ADL
                                   };
-    template <class _G, class _EVF, class _Alloc, class _UnCV>
+    template <class _G, class _EVF, class _Alloc>
     concept _Can_ref_evf_eval =
           index_adjacency_list<_G>                 //
           && invocable<_EVF, edge_reference_t<_G>> //
@@ -995,13 +987,11 @@ namespace views {
       template <class _G, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
         //static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_ref_ADL<_G, _Alloc, _UnCV>) {
+        if constexpr (_Has_ref_ADL<_G, _Alloc>) {
           return {_St_ref::_Non_member,
                   noexcept(_Fake_copy_init(sourced_edges_depth_first_search(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                                             declval<_Alloc>())))}; // intentional ADL
-        } else if constexpr (_Can_ref_eval<_G, _Alloc, _UnCV>) {
+        } else if constexpr (_Can_ref_eval<_G, _Alloc>) {
           return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(edges_depth_first_search_view<_G, void, true>(
                                              declval<_G>(), declval<vertex_id_t<_G>>(), declval<_Alloc>())))};
         } else {
@@ -1015,13 +1005,11 @@ namespace views {
       template <class _G, class _EVF, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref_evf> _Choose_ref_evf() noexcept {
         //static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_ref_evf_ADL<_G, _EVF, _Alloc, _UnCV>) {
+        if constexpr (_Has_ref_evf_ADL<_G, _EVF, _Alloc>) {
           return {_St_ref_evf::_Non_member, noexcept(_Fake_copy_init(sourced_edges_depth_first_search(
                                                   declval<_G>(), declval<vertex_id_t<_G>>(), declval<_EVF>(),
                                                   declval<_Alloc>())))}; // intentional ADL
-        } else if constexpr (_Can_ref_evf_eval<_G, _EVF, _Alloc, _UnCV>) {
+        } else if constexpr (_Can_ref_evf_eval<_G, _EVF, _Alloc>) {
           return {_St_ref_evf::_Auto_eval,
                   noexcept(_Fake_copy_init(edges_depth_first_search_view<_G, _EVF, true>(
                         declval<_G>(), declval<vertex_id_t<_G>>(), declval<_EVF>(), declval<_Alloc>())))};
@@ -1054,7 +1042,7 @@ namespace views {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return sourced_edges_depth_first_search(__g, seed, alloc); // intentional ADL
+          return sourced_edges_depth_first_search(__g, seed, alloc);              // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return edges_depth_first_search_view<_G, void, true>(__g, seed, alloc); // default impl
         } else {
@@ -1087,7 +1075,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return sourced_edges_depth_first_search(__g, seed, alloc); // intentional ADL
+          return sourced_edges_depth_first_search(__g, seed, alloc);                   // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_depth_first_search_view<_G, _EVF, true>(__g, seed, evf, alloc); // default impl
         } else {
