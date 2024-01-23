@@ -388,46 +388,46 @@ namespace views {
     void edgelist();
 #endif                                     // ^^^ workaround ^^^
 
-    template <class _G, class _UnCV>
+    template <class _G>
     concept _Has_adjlist_all_ADL = adjacency_list<_G> //
                                    && requires(_G&& __g) {
                                         { _Fake_copy_init(edgelist(__g)) }; // intentional ADL
                                       };
-    template <class _G, class _UnCV>
+    template <class _G>
     concept _Can_adjlist_all_eval = adjacency_list<_G>;
 
-    template <class _G, class _UnCV, class EVF>
+    template <class _G, class EVF>
     concept _Has_adjlist_all_evf_ADL = adjacency_list<_G> && invocable<EVF, edge_reference_t<_G>> //
                                        && requires(_G&& __g, EVF evf) {
                                             { _Fake_copy_init(edgelist(__g, evf)) }; // intentional ADL
                                           };
-    template <class _G, class _UnCV, class EVF>
+    template <class _G, class EVF>
     concept _Can_adjlist_all_evf_eval = adjacency_list<_G> && invocable<EVF, edge_reference_t<_G>>;
 
 
-    template <class _G, class _UnCV>
+    template <class _G>
     concept _Has_adjlist_idrng_ADL = adjacency_list<_G> //
                                      && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid) {
                                           { _Fake_copy_init(edgelist(__g, uid, vid)) }; // intentional ADL
                                         };
-    template <class _G, class _UnCV>
+    template <class _G>
     concept _Can_adjlist_idrng_eval = adjacency_list<_G>;
 
-    template <class _G, class _UnCV, class EVF>
+    template <class _G, class EVF>
     concept _Has_adjlist_idrng_evf_ADL = adjacency_list<_G>                      //
                                          && invocable<EVF, edge_reference_t<_G>> //
                                          && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid, EVF evf) {
                                               { _Fake_copy_init(edgelist(__g, uid, vid, evf)) }; // intentional ADL
                                             };
-    template <class _G, class _UnCV, class EVF>
+    template <class _G, class EVF>
     concept _Can_adjlist_idrng_evf_eval = adjacency_list<_G> //
                                           && invocable<EVF, edge_reference_t<_G>>;
 
 #ifdef ENABLE_EDGELIST_RANGE
-    template <class ELR, class _UnCV, class Proj>
+    template <class ELR, class class Proj>
     concept _Has_edgelist_all_proj_ADL = edgelist_range<ELR> //
                                          && invocable<Proj, ranges::range_value_t<ELR>>;
-    template <class ELR, class _UnCV, class Proj>
+    template <class ELR, class Proj>
     concept _Can_edgelist_all_proj_eval = edgelist_range<ELR> //
                                           && invocable<Proj, ranges::range_value_t<ELR>>;
 #endif
@@ -442,11 +442,9 @@ namespace views {
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_all> _Choose_all() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_adjlist_all_ADL<_G, _UnCV>) {
+        if constexpr (_Has_adjlist_all_ADL<_G>) {
           return {_St_adjlist_all::_Non_member, noexcept(_Fake_copy_init(edgelist(declval<_G>())))}; // intentional ADL
-        } else if constexpr (_Can_adjlist_all_eval<_G, _UnCV>) {
+        } else if constexpr (_Can_adjlist_all_eval<_G>) {
           return {_St_adjlist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
         } else {
           return {_St_adjlist_all::_None};
@@ -460,12 +458,10 @@ namespace views {
       template <class _G, class EVF>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_all> _Choose_all_evf() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_adjlist_all_evf_ADL<_G, _UnCV, EVF>) {
+        if constexpr (_Has_adjlist_all_evf_ADL<_G, EVF>) {
           return {_St_adjlist_all::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<EVF>())))}; // intentional ADL
-        } else if constexpr (_Can_adjlist_all_evf_eval<_G, _UnCV, EVF>) {
+        } else if constexpr (_Can_adjlist_all_evf_eval<_G, EVF>) {
           return {_St_adjlist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
         } else {
           return {_St_adjlist_all::_None};
@@ -480,13 +476,11 @@ namespace views {
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_idrng> _Choose_idrng() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_adjlist_idrng_ADL<_G, _UnCV>) {
+        if constexpr (_Has_adjlist_idrng_ADL<_G>) {
           return {_St_adjlist_idrng::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                     declval<vertex_id_t<_G>>())))}; // intentional ADL
-        } else if constexpr (_Can_adjlist_idrng_eval<_G, _UnCV>) {
+        } else if constexpr (_Can_adjlist_idrng_eval<_G>) {
           return {_St_adjlist_idrng::_Auto_eval, noexcept(true)}; // default impl (revisit)
         } else {
           return {_St_adjlist_idrng::_None};
@@ -500,13 +494,11 @@ namespace views {
       template <class _G, class EVF>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_idrng> _Choose_idrng_evf() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_adjlist_idrng_evf_ADL<_G, _UnCV, EVF>) {
+        if constexpr (_Has_adjlist_idrng_evf_ADL<_G, EVF>) {
           return {_St_adjlist_idrng::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                     declval<vertex_id_t<_G>>(), declval<EVF>())))}; // intentional ADL
-        } else if constexpr (_Can_adjlist_idrng_evf_eval<_G, _UnCV, EVF>) {
+        } else if constexpr (_Can_adjlist_idrng_evf_eval<_G, EVF>) {
           return {_St_adjlist_idrng::_Auto_eval, noexcept(true)}; // default impl (revisit)
         } else {
           return {_St_adjlist_idrng::_None};
@@ -521,12 +513,10 @@ namespace views {
       template <class ELR, class Proj>
       [[nodiscard]] static consteval _Choice_t<_St_edgelist_all> _Choose_elr_proj() noexcept {
         static_assert(is_lvalue_reference_v<ELR>);
-        using _UnCV = remove_cvref_t<ELR>;
-
-        if constexpr (_Has_edgelist_all_proj_ADL<ELR, _UnCV, Proj>) {
+        if constexpr (_Has_edgelist_all_proj_ADL<ELR, Proj>) {
           return {_St_edgelist_all::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<ELR>(), declval<Proj>())))}; // intentional ADL
-        } else if constexpr (_Can_edgelist_all_proj_eval<ELR, _UnCV, Proj>) {
+        } else if constexpr (_Can_edgelist_all_proj_eval<ELR, Proj>) {
           return {_St_edgelist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
         } else {
           return {_St_edgelist_all::_None};
