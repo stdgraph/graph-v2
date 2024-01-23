@@ -252,19 +252,19 @@ namespace views {
     void incidence();
 #endif                                     // ^^^ workaround ^^^
 
-    template <class _G, class _UnCV>
+    template <class _G>
     concept _Has_id_ADL = adjacency_list<_G> && requires(_G&& __g, const vertex_id_t<_G>& uid) {
       { _Fake_copy_init(incidence(__g, uid)) }; // intentional ADL
     };
-    template <class _G, class _UnCV>
+    template <class _G>
     concept _Can_id_eval = adjacency_list<_G>;
 
-    template <class _G, class _UnCV, class EVF>
+    template <class _G, class EVF>
     concept _Has_id_evf_ADL = adjacency_list<_G> && invocable<EVF, edge_reference_t<_G>> &&
                               requires(_G&& __g, const vertex_id_t<_G>& uid, const EVF& evf) {
                                 { _Fake_copy_init(incidence(__g, uid, evf)) }; // intentional ADL
                               };
-    template <class _G, class _UnCV, class EVF>
+    template <class _G, class EVF>
     concept _Can_id_evf_eval = adjacency_list<_G> && invocable<EVF, edge_reference_t<_G>>;
 
     class _Cpo {
@@ -275,12 +275,10 @@ namespace views {
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_id_ADL<_G, _UnCV>) {
+        if constexpr (_Has_id_ADL<_G>) {
           return {_St_id::_Non_member,
                   noexcept(_Fake_copy_init(incidence(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
-        } else if constexpr (_Can_id_eval<_G, _UnCV>) {
+        } else if constexpr (_Can_id_eval<_G>) {
           return {_St_id::_Auto_eval,
                   noexcept(_Fake_copy_init(incidence_view<_G, false, void>(
                         incidence_iterator<_G, false, void>(declval<_G>(), declval<vertex_id_t<_G>>()),
@@ -296,12 +294,10 @@ namespace views {
       template <class _G, class EVF>
       [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id_evf() noexcept {
         static_assert(is_lvalue_reference_v<_G>);
-        using _UnCV = remove_cvref_t<_G>;
-
-        if constexpr (_Has_id_evf_ADL<_G, _UnCV, EVF>) {
+        if constexpr (_Has_id_evf_ADL<_G, EVF>) {
           return {_St_id::_Non_member, noexcept(_Fake_copy_init(incidence(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                                           declval<EVF>())))}; // intentional ADL
-        } else if constexpr (_Can_id_evf_eval<_G, _UnCV, EVF>) {
+        } else if constexpr (_Can_id_evf_eval<_G, EVF>) {
           return {_St_id::_Auto_eval,
                   noexcept(_Fake_copy_init(incidence_view<_G, false, EVF>(
                         incidence_iterator<_G, false, EVF>(declval<_G>(), declval<vertex_id_t<_G>>(), declval<EVF>()),
