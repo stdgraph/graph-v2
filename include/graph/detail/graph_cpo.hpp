@@ -2299,7 +2299,7 @@ namespace _Partition_count {
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
-     if constexpr (_Has_ref_member<_G>) {
+      if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().partition_count()))};
       } else if constexpr (_Has_ref_ADL<_G>) {
         return {_St_ref::_Non_member, noexcept(_Fake_copy_init(partition_count(
