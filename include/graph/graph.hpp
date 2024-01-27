@@ -111,16 +111,16 @@ concept sourced_targeted_edge = targeted_edge<G, E> && sourced_edge<G, E> && //
  * 
  * @tparam G The graph type.
  */
-template <class G>
-concept _basic_vertex_range = ranges::sized_range<vertex_range_t<G>> && //
-                              requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
+template <class G>                                                       // (exposition only)
+concept _common_vertex_range = ranges::sized_range<vertex_range_t<G>> && //
+                               requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
 
 template <class G>
-concept vertex_range = _basic_vertex_range<vertex_range_t<G>> && //
+concept vertex_range = _common_vertex_range<vertex_range_t<G>> && //
                        ranges::forward_range<vertex_range_t<G>>;
 
 template <class G>
-concept index_vertex_range = _basic_vertex_range<vertex_range_t<G>> && //
+concept index_vertex_range = _common_vertex_range<vertex_range_t<G>> && //
                              ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>;
 
 /**
@@ -128,8 +128,12 @@ concept index_vertex_range = _basic_vertex_range<vertex_range_t<G>> && //
  * @brief Concept for a target edge range
 */
 template <class G>
-concept target_edge_range = requires(G&& g, vertex_id_t<G> uid, vertex_reference_t<G> u) {
+concept basic_target_edge_range = requires(G&& g, vertex_id_t<G> uid) {
   { edges(g, uid) } -> ranges::forward_range;
+};
+
+template <class G>
+concept target_edge_range = basic_target_edge_range<G> && requires(G&& g, vertex_reference_t<G> u) {
   { edges(g, u) } -> ranges::forward_range;
 };
 
@@ -145,6 +149,16 @@ concept target_edge_range = requires(G&& g, vertex_id_t<G> uid, vertex_reference
  * 
  * @tparam G The graph type.
 */
+template <class G>
+concept basic_adjacency_list = vertex_range<G> &&            //
+                               basic_target_edge_range<G> && //
+                               targeted_edge<G, edge_t<G>>;
+
+template <class G>
+concept basic_index_adjacency_list = index_vertex_range<G> &&      //
+                                     basic_target_edge_range<G> && //
+                                     targeted_edge<G, edge_t<G>>;
+
 template <class G>
 concept adjacency_list = vertex_range<G> &&      //
                          target_edge_range<G> && //
@@ -163,6 +177,14 @@ concept index_adjacency_list = index_vertex_range<G> && //
  * 
  * @tparam G The graph type.
 */
+template <class G>
+concept basic_sourced_adjacency_list = basic_adjacency_list<G> && //
+                                       sourced_targeted_edge<G, edge_t<G>>;
+
+template <class G>
+concept basic_index_sourced_adjacency_list = basic_index_adjacency_list<G> && //
+                                             sourced_targeted_edge<G, edge_t<G>>;
+
 template <class G>
 concept sourced_adjacency_list = adjacency_list<G> && //
                                  sourced_targeted_edge<G, edge_t<G>>;
