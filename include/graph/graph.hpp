@@ -58,61 +58,10 @@
 #  define GRAPH_HPP
 
 namespace std::graph {
-/**
- * @ingroup graph_properties
- * @brief Override for an edge type where source and target are unordered
- * 
- * For instance, given:
- *  @code
- *      vertex_iterator_t<G> ui = ...;
- *      for(auto&& uv : edges(g,*ui)) ...
- *  @endcode
- *  if(source_id(g,u) != vertex_id(ui)) then target_id(g,u) == vertex_id(ui)
- *
- * Example:
- *  @code
- *  namespace my_namespace {
- *      template<class X>
- *      class my_graph { ... };
- *  }
- *  namespace std::graph {
- *     template<class X>
- *     inline constexpr bool is_undirected_edge_v<edge_t<my_namespace::my_graph<X>>> = true;
- *  }
- *  @endcode
- * 
- * @tparam name E The edge type with unordered source and target
- */
-template <class E>
-inline constexpr bool is_undirected_edge_v = false;
 
 //
 // graph concepts
 //
-
-
-/**
- * @ingroup graph_concepts
- * @brief Concept for a range of vertices.
- * 
- * A vertex range must be a sized forward range, at a minimum.
- *
- * Required functions that must also be defined include
- *  * @c vertices(g) that returns a range of vertices of a graph.
- *  * @c vertex_id(g,ui) that returns a vertex id for a graph and vertex iterator of the graph.
- * 
- * @tparam G The graph type.
- */
-template <class G>
-concept _common_vertex_range = ranges::sized_range<vertex_range_t<G>> && //
-                               requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
-
-template <class G>
-concept vertex_range = _common_vertex_range<G> && ranges::forward_range<vertex_range_t<G>>;
-
-template <class G>
-concept index_vertex_range = _common_vertex_range<G> && //
-                             ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>;
 
 
 /**
@@ -140,10 +89,99 @@ concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
  * @tparam E The edge type.
  */
 template <class G, class E>
-concept sourced_edge = requires(G&& g, E& uv) {
+concept sourced_edge = requires(G&& g, edge_reference_t<G> uv) {
   source_id(g, uv);
   source(g, uv);
 };
+
+template <class G, class E>
+concept sourced_targeted_edge = targeted_edge<G, E> && sourced_edge<G, E> && //
+                                requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
+
+
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for a basic range of vertices.
+ * 
+ * A vertex range must be a sized range, at a minimum.
+ *
+ * Required functions that must also be defined include
+ *  * @c vertices(g) that returns a range of vertices of a graph (via vertex_range_t<G>)
+ *  * @c vertex_id(g,ui) that returns a vertex id for a graph and vertex iterator of the graph.
+ * 
+ * @tparam G The graph type.
+ */
+template <class G>
+concept _basic_vertex_range = ranges::sized_range<vertex_range_t<G>> && //
+                              requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
+
+template <class G>
+concept vertex_range = _basic_vertex_range<vertex_range_t<G>> && //
+                       ranges::forward_range<vertex_range_t<G>>;
+
+template <class G>
+concept index_vertex_range = _basic_vertex_range<vertex_range_t<G>> && //
+                             ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>;
+
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for a target edge range
+*/
+template <class G>
+concept target_edge_range = requires(G&& g, vertex_id_t<G> uid, vertex_reference_t<G> u) {
+  { edges(g, uid) } -> ranges::forward_range;
+  { edges(g, u) } -> ranges::forward_range;
+};
+
+//template <class G>
+//concept basic_adjacency_list = targeted_edge<G, edge_t<G>> && edge_functions<G>;
+
+
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph.
+ * 
+ * An adjacency list extends basic_adjacency_list to include function edges(g,u) for vertex reference u.
+ * 
+ * @tparam G The graph type.
+*/
+template <class G>
+concept adjacency_list = vertex_range<G> &&      //
+                         target_edge_range<G> && //
+                         targeted_edge<G, edge_t<G>>;
+
+template <class G>
+concept index_adjacency_list = index_vertex_range<G> && //
+                               target_edge_range<G> &&  //
+                               targeted_edge<G, edge_t<G>>;
+
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph with source_id(g,uv)
+ * 
+ * An adjacency list extends basic_adjacency_list to include function edges(g,u) for vertex reference u.
+ * 
+ * @tparam G The graph type.
+*/
+template <class G>
+concept sourced_adjacency_list = adjacency_list<G> && //
+                                 sourced_targeted_edge<G, edge_t<G>>;
+
+template <class G>
+concept index_sourced_adjacency_list = index_adjacency_list<G> && //
+                                       sourced_targeted_edge<G, edge_t<G>>;
+
+
+#  ifdef ENABLE_EDGELIST_RANGE
+template <class ELR>
+concept basic_edgelist_range = ranges::forward_range<ELR> && negation_v<basic_adjacency_list<ELR>>;
+template <class ELR>
+concept edgelist_range = ranges::forward_range<ELR> && negation_v<adjacency_list<ELR>>;
+#  endif
+
+//
+// property concepts
+//
 
 /**
  * @brief Type trait to determine if an edge is sourced.
@@ -166,77 +204,6 @@ struct is_sourced_edge : public integral_constant<bool, sourced_edge<G, E>> {};
 */
 template <class G, class E>
 inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
-
-/**
- * @ingroup graph_concepts
- * @brief Concept for an adjacency list graph.
- * 
- * An index_adjacency list requires that the vertices range is a forward range, it has a targeted edge,
- * and functionedges(g,uid) are defined.
- * 
- * @tparam G The graph type.
-*/
-template <class G>
-concept basic_adjacency_list = vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_id_t<G>& uid) {
-  { edges(g, uid) } -> ranges::forward_range;
-};
-
-template <class G>
-concept basic_index_adjacency_list =
-      index_vertex_range<G> && targeted_edge<G, edge_t<G>> && requires(G&& g, vertex_id_t<G>& uid) {
-        { edges(g, uid) } -> ranges::forward_range;
-      };
-
-/**
- * @ingroup graph_concepts
- * @brief Concept for an adjacency list graph.
- * 
- * An adjacency list extends basic_adjacency_list to include function edges(g,u) for vertex reference u.
- * 
- * @tparam G The graph type.
-*/
-template <class G>
-concept adjacency_list = basic_adjacency_list<G> && requires(G&& g, vertex_reference_t<G> u) {
-  { edges(g, u) } -> ranges::forward_range;
-};
-
-template <class G>
-concept index_adjacency_list = basic_index_adjacency_list<G> && requires(G&& g, vertex_reference_t<G> u) {
-  { edges(g, u) } -> ranges::forward_range;
-};
-
-//template <class G>
-//concept index_adjacency_list = adjacency_list<G> && //
-//                               ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>;
-
-
-// !is_same_v<vertex_range_t<G>, vertex_edge_range_t<G>>
-//      CSR fails this condition b/c row_index & col_index are both index_vectors; common?
-
-/**
- * @ingroup graph_concepts
- * @brief Concept for a sourced adjacency list.
- * 
- * A sourced adjacency list extends the adjacency list by requiring that edges are souced edges
- * and edge_id(g,uv) is defined.
- * 
- * @tparam G The graph type.
-*/
-template <class G>
-concept sourced_adjacency_list =
-      adjacency_list<G> && sourced_edge<G, edge_t<G>> && requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
-
-
-#  ifdef ENABLE_EDGELIST_RANGE
-template <class ELR>
-concept basic_edgelist_range = ranges::forward_range<ELR> && negation_v<basic_adjacency_list<ELR>>;
-template <class ELR>
-concept edgelist_range = ranges::forward_range<ELR> && negation_v<adjacency_list<ELR>>;
-#  endif
-
-//
-// property concepts
-//
 
 /**
  * @ingroup graph_properties
@@ -295,6 +262,34 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
   { contains_edge(g, uid, vid) } -> convertible_to<bool>;
 };
 
+
+/**
+ * @ingroup graph_properties
+ * @brief Override for an edge type where source and target are unordered
+ * 
+ * For instance, given:
+ *  @code
+ *      vertex_iterator_t<G> ui = ...;
+ *      for(auto&& uv : edges(g,*ui)) ...
+ *  @endcode
+ *  if(source_id(g,u) != vertex_id(ui)) then target_id(g,u) == vertex_id(ui)
+ *
+ * Example:
+ *  @code
+ *  namespace my_namespace {
+ *      template<class X>
+ *      class my_graph { ... };
+ *  }
+ *  namespace std::graph {
+ *     template<class X>
+ *     inline constexpr bool is_undirected_edge_v<edge_t<my_namespace::my_graph<X>>> = true;
+ *  }
+ *  @endcode
+ * 
+ * @tparam name E The edge type with unordered source and target
+ */
+template <class E>
+inline constexpr bool is_undirected_edge_v = false;
 
 /**
  * @ingroup graph_properties
