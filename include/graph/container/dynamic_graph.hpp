@@ -679,18 +679,8 @@ private:
   edges_type edges_;
 
 private: // tag_invoke properties
-#if EDGES_CPO
   friend constexpr edges_type&       edges(graph_type& g, vertex_type& u) { return u.edges_; }
   friend constexpr const edges_type& edges(const graph_type& g, const vertex_type& u) { return u.edges_; }
-#else
-  friend constexpr edges_type& tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, vertex_type& u) {
-    return u.edges_;
-  }
-  friend constexpr const edges_type&
-  tag_invoke(::std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_type& u) {
-    return u.edges_;
-  }
-#endif
 
   friend constexpr typename edges_type::iterator
   find_vertex_edge(graph_type& g, vertex_id_type uid, vertex_id_type vid) {
@@ -1255,23 +1245,12 @@ private: // tag_invoke properties
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
   }
 
-#if EDGES_CPO
   friend constexpr edges_type& edges(graph_type& g, const vertex_id_type uid) { //
     return g.vertices_[uid].edges();
   }
   friend constexpr const edges_type& edges(const graph_type& g, const vertex_id_type uid) {
     return g.vertices_[uid].edges();
   }
-#else
-  friend constexpr edges_type&
-  tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, const vertex_id_type uid) {
-    return g.vertices_[uid].edges();
-  }
-  friend constexpr const edges_type&
-  tag_invoke(::std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_id_type uid) {
-    return g.vertices_[uid].edges();
-  }
-#endif
 };
 
 /**

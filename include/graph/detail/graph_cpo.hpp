@@ -7,7 +7,6 @@
 #  define GRAPH_CPO_HPP
 
 #  define VERTICES_CPO 1 // warnings need to be tracked down
-#  define EDGES_CPO 1    // warnings need to be tracked down
 
 namespace std::graph {
 
@@ -643,7 +642,6 @@ using partition_id_t = decltype(partition_id(declval<G>(), declval<vertex_refere
 // edge_t                    = ranges::range_value_t<vertex_edge_range_t<G>>
 // edge_reference_t          = ranges::range_reference_t<vertex_edge_range_t<G>>
 //
-#  if EDGES_CPO
 namespace _Edges {
 #    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void edges() = delete;                       // Block unqualified name lookup
@@ -779,59 +777,6 @@ namespace _Edges {
 inline namespace _Cpos {
   inline constexpr _Edges::_Cpo edges;
 }
-#  else
-namespace tag_invoke {
-  TAG_INVOKE_DEF(edges);
-
-  template <class G>
-  concept _has_edges_vtxref_adl = requires(G&& g, vertex_reference_t<G> u) {
-    { edges(g, u) };
-  };
-
-  template <class G>
-  concept _has_edges_vtxid_adl = requires(G&& g, vertex_id_t<G> uid) {
-    { edges(g, uid) };
-  };
-} // namespace tag_invoke
-
-/**
- * @brief Get the outgoing edges of a vertex.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: n/a. This must be specialized for each graph type.
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param u Vertex reference.
- * @return A range of the outgoing edges.
-*/
-template <class G>
-requires tag_invoke::_has_edges_vtxref_adl<G>
-auto edges(G&& g, vertex_reference_t<G> u) -> decltype(tag_invoke::edges(g, u)) {
-  return tag_invoke::edges(g, u); // graph author must define
-}
-
-/**
- * @brief Get the outgoing edges of a vertex id.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: edges(g, *find_vertex(g, uid))
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uid Vertex id.
- * @return A range of the outgoing edges.
-*/
-template <class G>
-auto edges(G&& g, vertex_id_t<G> uid) -> decltype(tag_invoke::edges(g, uid)) {
-  if constexpr (tag_invoke::_has_edges_vtxid_adl<G>)
-    return tag_invoke::edges(g, uid);
-  else
-    return edges(g, *find_vertex(g, uid));
-}
-#  endif
 
 /**
  * @brief The outgoing edge range type of a vertex for graph G.
@@ -2083,7 +2028,6 @@ inline namespace _Cpos {
 
 
 namespace edgelist {
-#  if EDGES_CPO
   namespace _Edges {
 #    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
     void edges() = delete;                     // Block unqualified name lookup
@@ -2143,16 +2087,7 @@ namespace edgelist {
   inline namespace _Cpos {
     inline constexpr _Edges::_Cpo edges;
   }
-#  else
-  namespace tag_invoke {
-    TAG_INVOKE_DEF(edges); // edges(e) -> [edge list vertices]
-  }
 
-  template <class EL>
-  auto edges(EL&& el) {
-    return el;
-  }
-#  endif
 
   template <class EL>
   using edgelist_range_t = decltype(edges(declval<EL&&>()));
