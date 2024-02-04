@@ -6,8 +6,6 @@
 #ifndef GRAPH_CPO_HPP
 #  define GRAPH_CPO_HPP
 
-#  define VERTICES_CPO 1 // warnings need to be tracked down
-
 namespace std::graph {
 
 #  ifndef _MSC_VER
@@ -152,7 +150,6 @@ concept adjacency_matrix = is_adjacency_matrix_v<G>;
 // vertex_t<G>           = ranges::range_value_t<vertex_range_t<G>>
 // vertex_reference_t<G> = ranges::range_reference_t<vertex_range_t<G>>
 //
-#  if VERTICES_CPO
 namespace _Vertices {
 #    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void vertices() = delete;                    // Block unqualified name lookup
@@ -231,29 +228,6 @@ namespace _Vertices {
 inline namespace _Cpos {
   inline constexpr _Vertices::_Cpo vertices;
 }
-#  else
-namespace tag_invoke {
-  TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices]
-}
-
-/**
- * @brief Returns the vertices range for a graph G.
- * 
- * Default implementation: n/a.
- * 
- * Complexity: O(1)
- * 
- * This is a customization point function that is required to be overridden for each
- * graph type.
- * 
- * @tparam G The graph type
- * @param g A graph instance
-*/
-template <class G>
-auto vertices(G&& g) -> decltype(tag_invoke::vertices(g)) {
-  return tag_invoke::vertices(g);
-}
-#  endif
 
 /**
  * @brief The vertex range type for a graph G.

@@ -155,17 +155,8 @@ private:
   }
 
 private: // tag_invoke definitions
-#if VERTICES_CPO
   friend constexpr vertices_range&       vertices(graph_type& g) { return g.vertices_; }
   friend constexpr const vertices_range& vertices(const graph_type& g) { return g.vertices_; }
-#else
-  friend constexpr vertices_range& tag_invoke(std::graph::tag_invoke::vertices_fn_t, graph_type& g) {
-    return g.vertices_;
-  }
-  friend constexpr const vertices_range& tag_invoke(std::graph::tag_invoke::vertices_fn_t, const graph_type& g) {
-    return g.vertices_;
-  }
-#endif
 
   friend vertex_id_type vertex_id(const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
     return static_cast<vertex_id_type>(ui -
@@ -380,17 +371,8 @@ private:
   }
 
 private:
-#if VERTICES_CPO
   friend constexpr vertices_range&       vertices(graph_type& g) { return g.vertices_; }
   friend constexpr const vertices_range& vertices(const graph_type& g) { return g.vertices_; }
-#else
-  friend constexpr vertices_range& tag_invoke(std::graph::tag_invoke::vertices_fn_t, graph_type& g) {
-    return g.vertices_;
-  }
-  friend constexpr const vertices_range& tag_invoke(std::graph::tag_invoke::vertices_fn_t, const graph_type& g) {
-    return g.vertices_;
-  }
-#endif
 
   friend vertex_id_type vertex_id(const graph_type& g, std::ranges::iterator_t<vertices_range> ui) {
     return static_cast<vertex_id_type>(ui -
