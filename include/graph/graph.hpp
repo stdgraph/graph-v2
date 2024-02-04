@@ -77,10 +77,13 @@ template <class G, class E>
 concept basic_targeted_edge = requires(G&& g, edge_reference_t<G> uv) { target_id(g, uv); };
 
 template <class G, class E>
-concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
-  target_id(g, uv);
-  target(g, uv);
-};
+concept basic_sourced_edge = requires(G&& g, edge_reference_t<G> uv) { source_id(g, uv); };
+
+template <class G, class E>
+concept basic_sourced_targeted_edge = basic_targeted_edge<G, E> && //
+                                      basic_sourced_edge<G, E> &&  //
+                                      requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
+
 
 /**
  * @ingroup graph_concepts
@@ -92,17 +95,12 @@ concept targeted_edge = requires(G&& g, edge_reference_t<G> uv) {
  * @tparam E The edge type.
  */
 template <class G, class E>
-concept basic_sourced_edge = requires(G&& g, edge_reference_t<G> uv) { source_id(g, uv); };
+concept targeted_edge = basic_targeted_edge<G, E> && //
+                        requires(G&& g, edge_reference_t<G> uv) { target(g, uv); };
 
 template <class G, class E>
-concept sourced_edge = requires(G&& g, edge_reference_t<G> uv) {
-  source_id(g, uv);
-  source(g, uv);
-};
-
-template <class G, class E>
-concept basic_sourced_targeted_edge = basic_targeted_edge<G, E> && basic_sourced_edge<G, E> && //
-                                      requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
+concept sourced_edge = basic_sourced_edge<G, E> && //
+                       requires(G&& g, edge_reference_t<G> uv) { source(g, uv); };
 
 template <class G, class E>
 concept sourced_targeted_edge = targeted_edge<G, E> && //
@@ -135,9 +133,10 @@ concept index_vertex_range = _common_vertex_range<vertex_range_t<G>> &&        /
                              ranges::random_access_range<vertex_range_t<G>> && //
                              integral<vertex_id_t<G>>;
 
-template <class G>
-concept key_vertex_range = _common_vertex_range<vertex_range_t<G>> && //
-                           ranges::bidirectional_range<vertex_range_t<G>>;
+// Will something like this be needed when vertices are in a map? TBD
+//template <class G>
+//concept key_vertex_range = _common_vertex_range<vertex_range_t<G>> && //
+//                           ranges::bidirectional_range<vertex_range_t<G>>;
 
 /**
  * @ingroup graph_concepts
@@ -165,47 +164,112 @@ concept targeted_edge_range = basic_targeted_edge_range<G> && //
  * 
  * @tparam G The graph type.
 */
-
-//--------------------------------------------------------------------------------------------
-
 template <class G>
-concept basic_adjacency_list = vertex_range<G> &&            //
-                               basic_target_edge_range<G> && //
+concept basic_adjacency_list = vertex_range<G> &&              //
+                               basic_targeted_edge_range<G> && //
                                targeted_edge<G, edge_t<G>>;
 
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph.
+ * 
+ * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+ * and without a vertex object. It also requires that vertices are in a random-access
+ * range and the vertex_id is integral.
+ * 
+ * @tparam G The graph type.
+*/
 template <class G>
-concept basic_sourced_adjacency_list = vertex_range<G> &&            //
-                                       basic_target_edge_range<G> && //
+concept basic_index_adjacency_list = index_vertex_range<G> &&        //
+                                     basic_targeted_edge_range<G> && //
+                                     basic_targeted_edge<G, edge_t<G>>;
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph.
+ * 
+ * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+ * and without a vertex object. The edge type has a source_id.
+ * 
+ * @tparam G The graph type.
+*/
+template <class G>
+concept basic_sourced_adjacency_list = vertex_range<G> &&              //
+                                       basic_targeted_edge_range<G> && //
                                        basic_sourced_targeted_edge<G, edge_t<G>>;
 
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph.
+ * 
+ * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+ * and without a vertex object. It also requires that vertices are in a random-access
+ * range, the vertex_id is integral and the edge type has a source_id.
+ * 
+ * @tparam G The graph type.
+*/
 template <class G>
-concept adjacency_list = vertex_range<G> &&      //
-                         target_edge_range<G> && //
-                         targeted_edge<G, edge_t<G>>;
-
-template <class G>
-concept sourced_adjacency_list = vertex_range<G> &&      //
-                                 target_edge_range<G> && //
-                                 sourced_targeted_edge<G, edge_t<G>>;
+concept basic_sourced_index_adjacency_list = index_vertex_range<G> &&        //
+                                             basic_targeted_edge_range<G> && //
+                                             basic_sourced_targeted_edge<G, edge_t<G>>;
 
 //--------------------------------------------------------------------------------------------
 
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph.
+ * 
+ * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+ * and *with* a vertex object.
+ * 
+ * @tparam G The graph type.
+*/
 template <class G>
-concept index_basic_adjacency_list = index_vertex_range<G> &&      //
-                                     basic_target_edge_range<G> && //
-                                     basic_targeted_edge<G, edge_t<G>>;
-template <class G>
-concept index_basic_sourced_adjacency_list = index_vertex_range<G> &&      //
-                                             basic_target_edge_range<G> && //
-                                             basic_sourced_targeted_edge<G, edge_t<G>>;
+concept adjacency_list = vertex_range<G> &&        //
+                         targeted_edge_range<G> && //
+                         targeted_edge<G, edge_t<G>>;
 
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph.
+ * 
+ * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+ * and *with* a vertex object. It also requires that vertices are in a random-access
+ * range, the vertex_id is integral and the edge type has a source_id.
+ * 
+ * @tparam G The graph type.
+*/
 template <class G>
-concept index_adjacency_list = index_vertex_range<G> && //
-                               target_edge_range<G> &&  //
+concept index_adjacency_list = index_vertex_range<G> &&  //
+                               targeted_edge_range<G> && //
                                targeted_edge<G, edge_t<G>>;
+
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph.
+ * 
+ * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+ * and *with* a vertex object. The edge type has a source_id.
+ * 
+ * @tparam G The graph type.
+*/
 template <class G>
-concept index_sourced_adjacency_list = index_vertex_range<G> && //
-                                       target_edge_range<G> &&  //
+concept sourced_adjacency_list = vertex_range<G> &&        //
+                                 targeted_edge_range<G> && //
+                                 sourced_targeted_edge<G, edge_t<G>>;
+
+/**
+ * @ingroup graph_concepts
+ * @brief Concept for an adjacency list graph.
+ * 
+ * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+ * and *with* a vertex object. It also requires that vertices are in a random-access
+ * range, the vertex_id is integral and the edge type has a source_id.
+ * 
+ * @tparam G The graph type.
+*/
+template <class G>
+concept sourced_index_adjacency_list = index_vertex_range<G> &&  //
+                                       targeted_edge_range<G> && //
                                        sourced_targeted_edge<G, edge_t<G>>;
 
 //--------------------------------------------------------------------------------------------
