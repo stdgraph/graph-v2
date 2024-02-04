@@ -2152,11 +2152,11 @@ namespace edgelist {
 
 
   namespace _Target_id {
-#    if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-    void target_id() = delete;                 // Block unqualified name lookup
-#    else                                      // ^^^ no workaround / workaround vvv
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+    void target_id() = delete;               // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
     void target_id();
-#    endif                                     // ^^^ workaround ^^^
+#  endif                                     // ^^^ workaround ^^^
 
     template <class _G>
     concept _Has_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
@@ -2227,14 +2227,75 @@ namespace edgelist {
   using target_id_t = decltype(target_id(declval<EL&&>(), declval<edge_reference_t<EL>>()));
 
 
-  namespace tag_invoke {
-    TAG_INVOKE_DEF(edge_value);
+  namespace _Edge_value {
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+    void edge_value() = delete;              // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
+    void edge_value();
+#  endif                                     // ^^^ workaround ^^^
+
+    template <class _G>
+    concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                    //
+                           && requires(_G&& __g, edge_reference_t<_G> uv) {
+                                { _Fake_copy_init(edge_value(__g, uv)) }; // intentional ADL
+                              };
+    template <class _G>
+    concept _Can_ref_eval = true;
+
+    class _Cpo {
+    private:
+      enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        if constexpr (_Has_ref_ADL<_G>) {
+          return {_St_ref::_Non_member, noexcept(_Fake_copy_init(edge_value(
+                                              declval<_G>(), declval<edge_reference_t<_G>>())))};   // intentional ADL
+        } else if constexpr (_Can_ref_eval<_G>) {
+          return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>()))}; // intentional ADL
+        } else {
+          return {_St_ref::_None};
+        }
+      }
+
+      template <class _G>
+      static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+
+    public:
+      /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: uv (edge) if the vertex type is a range; otherwise it must be overridden by the graph
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param uv A vertex instance.
+     * @return The number of outgoing edges of vertex uv.
+    */
+      template <class _G>
+      requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+            noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
+        constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+
+        if constexpr (_Strat_ref == _St_ref::_Non_member) {
+          return edge_value(__g, uv); // intentional ADL
+        } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+          return uv; // default
+        } else {
+          static_assert(_Always_false<_G>, "edge_value(g,uv) must be defined for the graph");
+        }
+      }
+    };
+  } // namespace _Edge_value
+
+  inline namespace _Cpos {
+    inline constexpr _Edge_value::_Cpo edge_value;
   }
 
-  template <class EL>
-  auto edge_value(EL&& el, edge_reference_t<EL> uv) {
-    return tag_invoke::edge_value(el, uv);
-  }
 
   template <class EL>
   using edge_value_t = decltype(edge_value(declval<EL&&>(), declval<edge_reference_t<EL>>()));
@@ -2609,74 +2670,6 @@ inline namespace _Cpos {
 template <class G>
 using partition_edge_range_t = vertex_edge_range_t<G>;
 
-
-//
-// edges(g,u)  -> vertex_edge_range_t<G>
-// edges(g,uid) -> vertex_edge_range_t<G>
-//      default = edges(g,*find_vertex(g,uid))
-//
-// vertex_edge_range_t<G>    = edges(g,u)
-// vertex_edge_iterator_t<G> = ranges::iterator_t<vertex_edge_range_t<G>>
-// edge_t                    = ranges::range_value_t<vertex_edge_range_t<G>>
-// edge_reference_t          = ranges::range_reference_t<vertex_edge_range_t<G>>
-//
-#  if 0
-namespace tag_invoke {
-  TAG_INVOKE_DEF(edges);
-
-  template <class G>
-  concept _has_edges_vtxref_part_adl = requires(G&& g, vertex_reference_t<G> u, partition_id_t<G> p) {
-    { edges(g, u, p) };
-  };
-
-  template <class G>
-  concept _has_edges_vtxid_part_adl = requires(G&& g, vertex_id_t<G> uid, partition_id_t<G> p) {
-    { edges(g, uid, p) };
-  };
-} // namespace tag_invoke
-
-/**
- * @brief Get the outgoing edges of a vertex.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: edges(g,u)
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param u Vertex reference.
- * @return A range of the outgoing edges.
-*/
-template <class G>
-requires tag_invoke::_has_edges_vtxref_part_adl<G>
-auto edges(G&& g, vertex_reference_t<G> u, partition_id_t<G> p) -> decltype(tag_invoke::edges(g, u, p)) {
-  if constexpr (tag_invoke::_has_edges_vtxref_part_adl<G>)
-    return tag_invoke::edges(g, u, p); // graph author must define
-  else
-    return edges(g, u);
-}
-
-/**
- * @brief Get the outgoing edges of a vertex id.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: edges(g, *find_vertex(g, uid), p)
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @param uid Vertex id.
- * @return A range of the outgoing edges.
-*/
-template <class G>
-requires tag_invoke::_has_edges_vtxid_part_adl<G>
-auto edges(G&& g, vertex_id_t<G> uid, partition_id_t<G> p) -> decltype(tag_invoke::edges(g, uid, p)) {
-  if constexpr (tag_invoke::_has_edges_vtxid_part_adl<G>)
-    return tag_invoke::edges(g, uid, p);
-  else
-    return edges(g, *find_vertex(g, uid), p);
-}
-#  endif
 
 //
 // partition_target_id(g,puid) -> partition_vertex_id_t<_G>
