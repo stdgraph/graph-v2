@@ -738,7 +738,7 @@ private:                       // Member variables
   //v_vector_type    v_;         // v_[n]         holds the edge value for col_index_[n]
   //row_values_type  row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
 
-private: // tag_invoke properties
+private: // CPO properties
   friend constexpr vertices_type vertices(compressed_graph_base& g) {
     if (g.row_index_.empty())
       return vertices_type(g.row_index_); // really empty
@@ -908,7 +908,7 @@ public: // Construction/Destruction
   constexpr compressed_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
-private: // tag_invoke properties
+private: // CPO properties
   friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
   friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 
@@ -969,9 +969,6 @@ public: // Construction/Destruction
   constexpr compressed_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
-
-public:  // Operations
-private: // tag_invoke properties
 };
 
 } // namespace std::graph::container

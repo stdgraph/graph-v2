@@ -20,14 +20,15 @@
 ## Open
 
 ### ToDo 
-- Graph API
+- Graph Container Interface (GCI)
   - [ ] Common
-    - [ ] Apply tag_invoke design in P2300 [wait to see if we want to use tag_invoke]
+    - [ ] Use Neibloid style for all CPOs
   - [x] Ranges
   - [ ] Concepts and type_traits
-    - [x] graph: adjacency_list, sourced_adjacency_list, adjacency_matrix, undirected_incidence_graph
+    - [x] graph: adjacency_list, sourced_adjacency_list, adjacency_matrix
     - [ ] **view concepts: vertex_view, edge_view, neighbor_view returned from graph views**
     - [ ] **function concepts: VVF, EVF**
+    - [ ] Edgelist concept(s)
   - [ ] Graph API
     - [ ] depth() CPO? bfs, dfs. size() is different; depth for BFS takes extra work and is diff concept.
     - [x] cancel() CPO? bfs, dfs: no, member only
@@ -37,24 +38,29 @@
     - [x] view functions should be in std::graph::view
     - [ ] add range overloads to appropriate views (DFS, BFS, topo_sort, etc.)
     - [ ] vertexlist
-      - [ ] Copy VVF to iterator (not reference)
-      - [ ] Accept VVF(g,u) & allow vertex_value?
+      - [ ] Use VVF&& instead of const VVF&
       - [x] verify it is a std\::ranges\::view<>
       - [x] Implement vertexlist(g,vr)
       - [x] Implement vertexlist(g,vr,vvf)
+      - [ ] Implement basic_vertexlist(g,vr)
+      - [ ] Implement basic_vertexlist(g,vr,vvf)
+      - [ ] Extend support for vvf(uid), in addition to vvf(u)
     - [ ] incidence
-      - [ ] Copy EVF to iterator (not reference)
+      - [ ] Use EVF&& instead of const EVF&
       - [ ] unit tests for undirected_graph\<G\>
       - [x] verify it is a std\::ranges\::view<>
     - [ ] neighbors
-      - [ ] Copy VVF to iterator (not reference)
+      - [ ] Use VVF&& instead of const VVF&
+      - [ ] Extend support for vvf(uid), in addition to vvf(u)
       - [ ] unit tests for undirected_graph\<G\>
       - [x] verify it is a std\::ranges\::view<>
+      - [ ] Implement basic_neighbors(g,vr)
+      - [ ] Implement basic_neighbors(g,vr,vvf)
     - [ ] edgelist
-      - [ ] Copy EVF to iterator (not reference)
+      - [ ] Use EVF&& instead of const EVF&
       - [ ] unit tests for undirected_graph\<G\>
       - [x] verify it is a std\::ranges\::view<>
-    - [x] vertices_depth_first_search_view
+    - [x] vertices_dfs_view
       - [x] validate results & add unit tests
       - [x] support Cancelable
       - [x] support VVF
@@ -63,8 +69,8 @@
       - [x] verify it is a std::ranges::view<>
       - [x] create CPOs
       - [x] Use real_target_id(g,uv,src) for both directed_incidence_graph & undirected_incidence_graph to consolidate code
-      - [x] Add allocator parameter & use with _colors
-    - [x] edges_depth_first_search_view
+      - [ ] basic_vertices_dfs_view
+    - [x] edges_dfs_view
       - [x] validate results & add unit tests
       - [x] support Cancelable
       - [x] support EVF
@@ -73,32 +79,43 @@
       - [x] support begin, end, depth/size, empty, swap free functions
       - [x] verify it is a std::ranges::view<>
       - [x] create CPOs: edges, sourced_edges
-      - [x] Use real_target_id(g,uv,src) for both directed_incidence_graph & undirected_incidence_graph to consolidate code
-      - [x] Add allocator parameter & use with _colors
-    - [ ] **bfs_vertex_range**
-    - [ ] **bfs_edge_range**
-    - [ ] topological_sort_vertex_range
-    - [ ] topological_sort_edge_range
+      - [ ] basic__edges_dfs_view
+    - [ ] vertices_bfs_view
+    - [ ] edges_bfs_view
+    - [ ] topological_sort_vertices_view
+    - [ ] topological_sort_edges_view
     - [ ] allow options to exclude vertex/edge reference on results (Andrew)
+    - [ ] Common
+      - [ ] Add depth(search) CPO for dfs, bfs, topo_sort
+      - [ ] Add size(search) CPO for dfs, bfs, topo_sort
 - Algorithms
-  - [ ] Common
-    - [ ] Add depth(search) CPO for dfs, bfs, topo_sort
-    - [ ] Add size(search) CPO for dfs, bfs, topo_sort
   - [ ] Algorithms (full & simplified/book)
-    - [ ] Shortest Paths
-      - [x] Dijkstra book (impl from AndrewL)
-      - [ ] **dijkstra_shortest_path**
-      - [ ] **bellman_ford_shortest_path**
+    - [x] Shortest Paths
+      - [x] Dijkstra_clrs (book impl from AndrewL)
+      - [x] dijkstra_shortest_path
+      - [x] bellman_ford_shortest_path
+    - [ ] Clustering
+      - [ ] Triangle counting
+    - [ ] Communities
+      - [ ] Label propagation
     - [ ] Components
       - [ ] connected_components
-      - [ ] strongly_connected_components
+      - [ ] strongly_connected_components (Kosaraju & Tarjan)
       - [ ] biconnected_components
       - [ ] articulation_points
+    - [ ] Directed Acyclic Graphs
+      - [ ] Topological Sort, Single Source
+    - [ ] Maximal Independent Set
+      - [ ] Maximal Independent Set
+    - [ ] Link Analysis
+      - [ ] Jaccard Coefficient
+    - [ ] Minimal Spanning Tree
+      - [ ] Kruskal Minimum Spanning Tree
+      - [ ] Prim Minimal Spanning Tree
     - [ ] Others to consider
+      - [ ] page_rank; not a good candidate for the standard because there are too many options; better as an example
       - [ ] Edgelist algorithms (prove design; not for P1709)
-        - [ ] Maximal Independent Set (edgelist)
         - [ ] Union Find (edgelist)
-      - [ ] page_rank
       - [ ] betweenness_centrality
       - [ ] triangle_count
       - [ ] Minimum spanning tree
@@ -118,16 +135,13 @@
           - [ ] validate & add unit tests
 - Graph Containers (data structures)
     - [x] compressed_graph (for P1709)
-      - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
-      - [x] Support VV=void
-      - [x] Support EV=void
-      - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
-      - [x] Add ctor with initializer_list for simple demo
+      - [ ] Implement load_graph(), load_vertices(), load_edges() CPOs (define concepts)
     - [ ] dynamic_graph
-      - [ ] **Use concepts for load, load_edges, load_vertices, ctors**
+      - [ ] Implement load_graph(), load_vertices(), load_edges() CPOs (define concepts)
       - [ ] test push_or_insert() to assure it does the right thing for const, value, &, &&, ...
       - [ ] graph with map-based vertices (requires different algorithm impl)
       - [x] Use copyable_vertex & copyable_edge concepts in graph ctors, load functions
+      - [ ] Support non-integral vertex_ids
     - [ ] constexpr graph based on std::array
     - [ ] undirected_adjacency_list<EV,VV,GV,VId,Alloc>
     - [x] directed_adjacency_vector (retired)
@@ -168,6 +182,8 @@
 - C\+\+20 and C\+\+23
   - [ ] modules
   - [ ] coroutines (simplify DFS, BFS & TopoSort?)
+- [ ] Examples
+  - [ ] ABC
 - Documentation
   - [x] Decprecate original "graph" repository
   - [ ] README.md

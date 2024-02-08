@@ -376,7 +376,7 @@ public:
 private:
   value_type value_ = value_type();
 
-private: // tag_invoke properties
+private: // CPO properties
   friend constexpr value_type&       edge_value(graph_type& g, edge_type& uv) noexcept { return uv.value_; }
   friend constexpr const value_type& edge_value(const graph_type& g, const edge_type& uv) noexcept { return uv.value_; }
 };
@@ -678,7 +678,7 @@ public:
 private:
   edges_type edges_;
 
-private: // tag_invoke properties
+private: // CPO properties
   friend constexpr edges_type&       edges(graph_type& g, vertex_type& u) { return u.edges_; }
   friend constexpr const edges_type& edges(const graph_type& g, const vertex_type& u) { return u.edges_; }
 
@@ -748,7 +748,7 @@ public:
 private:
   value_type value_ = value_type();
 
-private: // tag_invoke properties
+private: // CPO properties
   friend constexpr value_type&       vertex_value(graph_type& g, vertex_type& u) { return u.value_; }
   friend constexpr const value_type& vertex_value(const graph_type& g, const vertex_type& u) { return u.value_; }
 };
@@ -1227,7 +1227,7 @@ public: // Operations
 private: // Member Variables
   vertices_type vertices_;
 
-private: // tag_invoke properties
+private: // CPO properties
   friend constexpr vertices_type&       vertices(dynamic_graph_base& g) { return g.vertices_; }
   friend constexpr const vertices_type& vertices(const dynamic_graph_base& g) { return g.vertices_; }
 
@@ -1600,7 +1600,7 @@ public:
 private:
   value_type value_; ///< Graph value
 
-private: // tag_invoke properties
+private: // CPO properties
   friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
   friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 };
