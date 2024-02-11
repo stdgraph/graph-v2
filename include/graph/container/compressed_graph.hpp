@@ -968,7 +968,6 @@ public: // Construction/Destruction
   // initializer list using edge_descriptor<VId,true,void,EV>
   constexpr compressed_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
-
 };
 
 } // namespace std::graph::container
