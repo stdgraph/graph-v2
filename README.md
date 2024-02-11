@@ -106,8 +106,5 @@ is being considered, subject to the size of the proposal and other priorities.
 Committee ([WG21](https://isocpp.org/std/the-committee)).
 - Bob Steagal for his [gcc-builder & clang-builder scripts](https://github.com/BobSteagall)
 - Jason Turner for his [cpp_starter_project](https://github.com/lefticus/cpp_starter_project)
-- René Ferdinand Rivera Morell for his [duck_invoke](https://github.com/bfgroup/duck_invoke), an implementation
-of tag_invoke ([P1895](https://wg21.link/P1895)) that works for both gcc and msvc. Minor modifications have
-been made so it it in the std namespace.
 - Vincent La for his [cvs-parser](https://github.com/vincentlaucsb/csv-parser)
 - The ISO C++ Standards Committee (WG21) for [C++](http://eel.is/c++draft/)

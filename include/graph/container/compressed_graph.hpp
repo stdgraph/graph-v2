@@ -738,8 +738,7 @@ private:                       // Member variables
   //v_vector_type    v_;         // v_[n]         holds the edge value for col_index_[n]
   //row_values_type  row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
 
-private: // tag_invoke properties
-#if VERTICES_CPO
+private: // CPO properties
   friend constexpr vertices_type vertices(compressed_graph_base& g) {
     if (g.row_index_.empty())
       return vertices_type(g.row_index_); // really empty
@@ -752,27 +751,11 @@ private: // tag_invoke properties
     else
       return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
-#else
-  friend constexpr vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t, compressed_graph_base& g) {
-    if (g.row_index_.empty())
-      return vertices_type(g.row_index_); // really empty
-    else
-      return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
-  }
-  friend constexpr const_vertices_type tag_invoke(::std::graph::tag_invoke::vertices_fn_t,
-                                                  const compressed_graph_base& g) {
-    if (g.row_index_.empty())
-      return const_vertices_type(g.row_index_); // really empty
-    else
-      return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
-  }
-#endif
 
   friend vertex_id_type vertex_id(const compressed_graph_base& g, const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.row_index_.begin());
   }
 
-#if EDGES_CPO
   friend constexpr edges_type edges(graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
@@ -802,40 +785,6 @@ private: // tag_invoke properties
     return const_edges_type(g.col_index_.begin() + g.row_index_[uid].index,
                             g.col_index_.begin() + g.row_index_[uid + 1].index);
   }
-#else
-  friend constexpr edges_type tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, vertex_type& u) {
-    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
-    vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
-    assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
-           static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
-    return edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
-  }
-  friend constexpr const_edges_type
-  tag_invoke(::std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_type& u) {
-    static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
-    const vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
-    assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
-           static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
-    return const_edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
-  }
-
-  friend constexpr edges_type
-  tag_invoke(::std::graph::tag_invoke::edges_fn_t, graph_type& g, const vertex_id_type uid) {
-    assert(static_cast<size_t>(uid + 1) < g.row_index_.size());                      // in row_index_ bounds?
-    assert(static_cast<size_t>(g.row_index_[uid + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
-    return edges_type(g.col_index_.begin() + g.row_index_[uid].index,
-                      g.col_index_.begin() + g.row_index_[uid + 1].index);
-  }
-  friend constexpr const_edges_type
-  tag_invoke(::std::graph::tag_invoke::edges_fn_t, const graph_type& g, const vertex_id_type uid) {
-    assert(static_cast<size_t>(uid + 1) < g.row_index_.size());                      // in row_index_ bounds?
-    assert(static_cast<size_t>(g.row_index_[uid + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
-    return const_edges_type(g.col_index_.begin() + g.row_index_[uid].index,
-                            g.col_index_.begin() + g.row_index_[uid + 1].index);
-  }
-#endif
 
 
   // target_id(g,uv), target(g,uv)
@@ -959,7 +908,7 @@ public: // Construction/Destruction
   constexpr compressed_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
-private: // tag_invoke properties
+private: // CPO properties
   friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
   friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 
@@ -1020,9 +969,6 @@ public: // Construction/Destruction
   constexpr compressed_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 
-
-public:  // Operations
-private: // tag_invoke properties
 };
 
 } // namespace std::graph::container
