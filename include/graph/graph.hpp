@@ -17,7 +17,7 @@
  * @ingroup general_concepts
  */
 
-#define ENABLE_EDGELIST_RANGE
+//#define ENABLE_EDGELIST_RANGE
 
 #include <ranges>
 #include <concepts>
