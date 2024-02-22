@@ -753,11 +753,9 @@ private: // CPO properties
   }
 
   friend constexpr auto num_edges(const compressed_graph_base& g) {
-      return static_cast<size_type>(g.col_index_.size());
+    return static_cast<size_type>(g.col_index_.size());
   }
-  friend constexpr bool has_edge(const compressed_graph_base& g) {
-      return g.col_index_.size() > 0;
-  }
+  friend constexpr bool has_edge(const compressed_graph_base& g) { return g.col_index_.size() > 0; }
 
   friend vertex_id_type vertex_id(const compressed_graph_base& g, const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.row_index_.begin());

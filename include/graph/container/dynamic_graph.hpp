@@ -1234,9 +1234,7 @@ private: // CPO properties
   friend constexpr vertices_type&       vertices(dynamic_graph_base& g) { return g.vertices_; }
   friend constexpr const vertices_type& vertices(const dynamic_graph_base& g) { return g.vertices_; }
 
-  friend auto num_edges(const dynamic_graph_base& g) {
-    return g.edge_count_;
-  }
+  friend auto num_edges(const dynamic_graph_base& g) { return g.edge_count_; }
   friend bool has_edge(const dynamic_graph_base& g) { return g.edge_count_ > 0; }
 
   friend vertex_id_type vertex_id(const dynamic_graph_base& g, typename vertices_type::const_iterator ui) {
