@@ -1102,6 +1102,7 @@ public: // Load operations
           edge_adder(edge_type(std::move(e.target_id), std::move(e.value)));
         }
       }
+      edge_count_ += 1;
     }
   }
 
@@ -1169,6 +1170,7 @@ public: // Load operations
           edge_adder(edge_type(std::move(e.target_id), std::move(e.value)));
         }
       }
+      edge_count_ += 1;
     }
   }
 
@@ -1226,10 +1228,16 @@ public: // Operations
 
 private: // Member Variables
   vertices_type vertices_;
+  size_t        edge_count_ = 0;
 
 private: // CPO properties
   friend constexpr vertices_type&       vertices(dynamic_graph_base& g) { return g.vertices_; }
   friend constexpr const vertices_type& vertices(const dynamic_graph_base& g) { return g.vertices_; }
+
+  friend auto num_edges(const dynamic_graph_base& g) {
+    return g.edge_count_;
+  }
+  friend bool has_edge(const dynamic_graph_base& g) { return g.edge_count_ > 0; }
 
   friend vertex_id_type vertex_id(const dynamic_graph_base& g, typename vertices_type::const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
