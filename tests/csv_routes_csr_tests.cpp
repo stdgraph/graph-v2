@@ -27,6 +27,8 @@ using std::graph::edge_value_t;
 using std::graph::graph_value;
 using std::graph::vertices;
 using std::graph::num_vertices;
+using std::graph::num_edges;
+using std::graph::has_edge;
 using std::graph::edges;
 using std::graph::vertex_id;
 using std::graph::vertex_value;
@@ -135,6 +137,9 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
 
     auto n = num_vertices(g);
     REQUIRE(n == 10);
+    auto e = num_edges(g);
+    REQUIRE(e == 11);
+    REQUIRE(has_edge(g) == true);
 
     auto uit = std::ranges::begin(vertices(g)) + 2;
     auto id  = vertex_id(g, uit);
@@ -171,6 +176,10 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
     const G& g2   = g;
     using id_type = uint32_t;
     auto&& d      = graph_value(g2);
+
+    auto e = num_edges(g2);
+    REQUIRE(e == 11);
+    REQUIRE(has_edge(g2) == true);
 
     auto uit = std::ranges::begin(vertices(g2)) + 2;
     auto id  = vertex_id(g2, uit);
