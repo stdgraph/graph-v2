@@ -77,17 +77,19 @@ if (ENABLE_PCH)
 endif()
 
 
-# Add libraries
-#include(${PROJECT_SOURCE_DIR}/cmake/FetchBoost.cmake)
+# Add libraries. Order is important based on dependencies.
+include(${PROJECT_SOURCE_DIR}/cmake/FetchFMT.cmake)
 include(${PROJECT_SOURCE_DIR}/cmake/FetchCatch.cmake)
 include(${PROJECT_SOURCE_DIR}/cmake/FetchDocopt.cmake)
-include(${PROJECT_SOURCE_DIR}/cmake/FetchFMT.cmake)
 include(${PROJECT_SOURCE_DIR}/cmake/FetchCSVParser.cmake)
-include(${PROJECT_SOURCE_DIR}/cmake/FetchRange.cmake)
-include(${PROJECT_SOURCE_DIR}/cmake/FetchSPDLog.cmake)
+#include(${PROJECT_SOURCE_DIR}/cmake/FetchRange.cmake)
+#include(${PROJECT_SOURCE_DIR}/cmake/FetchSPDLog.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/FetchBoost.cmake)
+
 
 add_library(graph INTERFACE)
 target_include_directories(graph INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+target_link_libraries(graph INTERFACE Boost::cobalt) # for coroutine library
 
 if(ENABLE_TESTING)
   enable_testing()
@@ -106,9 +108,5 @@ endif()
 #  message("Building Fuzz Tests, using fuzzing sanitizer https://www.llvm.org/docs/LibFuzzer.html")
 #  add_subdirectory(fuzz_test)
 #endif()
-
-
-# Include sub-projects.
-#add_subdirectory ("g")
 
 #add_subdirectory(src)
