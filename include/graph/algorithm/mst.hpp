@@ -98,33 +98,32 @@ bool disjoint_union_find(disjoint_vector<VId>& subsets, VId u, VId v) {
 //concept has_edge_value = requires(ED ed) { requires !same_as<decltype(ed.value), void>; };
 
 
-
-template<class ELVT>
+template <class ELVT>
 concept _has_edgelist_value = !is_void_v<typename ELVT::value_type>;
 
-template<class ELVT>
+template <class ELVT>
 concept _basic_edgelist_type = is_same_v<typename ELVT::target_id_type, typename ELVT::source_id_type>;
 
-template<class ELVT>
+template <class ELVT>
 concept _basic_index_edgelist_type = _basic_edgelist_type<ELVT> && is_integral_v<typename ELVT::target_id_type>;
 
-template<class ELVT>
+template <class ELVT>
 concept _edgelist_type = _basic_edgelist_type<ELVT> && _has_edgelist_value<ELVT>;
 
-template<class ELVT>
+template <class ELVT>
 concept _index_edgelist_type = _basic_index_edgelist_type<ELVT> && _has_edgelist_value<ELVT>;
 
 
-template<class EL>
+template <class EL>
 concept basic_edgelist_range = ranges::forward_range<EL> && _basic_edgelist_type<ranges::range_value_t<EL>>;
 
-template<class EL>
+template <class EL>
 concept basic_index_edgelist_range = ranges::forward_range<EL> && _basic_index_edgelist_type<ranges::range_value_t<EL>>;
 
-template<class EL>
+template <class EL>
 concept edgelist_range = ranges::forward_range<EL> && _edgelist_type<ranges::range_value_t<EL>>;
 
-template<class EL>
+template <class EL>
 concept index_edgelist_range = ranges::forward_range<EL> && _index_edgelist_type<ranges::range_value_t<EL>>;
 
 

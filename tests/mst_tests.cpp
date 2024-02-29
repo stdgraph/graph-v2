@@ -45,10 +45,10 @@ TEST_CASE("Kruskal Min ST Algorithm", "[min st]") {
   auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
   std::vector<std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>> e, t;
   for (auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
-    e.push_back( std::ranges::range_value_t<decltype(e)>() );
+    e.push_back(std::ranges::range_value_t<decltype(e)>());
     e.back().source_id = uid;
     e.back().target_id = vid;
-    e.back().value = evf(uv);
+    e.back().value     = evf(uv);
   }
 
   // Kruskal with separate edgelist data structure, don't modify edgelist
@@ -60,7 +60,7 @@ TEST_CASE("Kruskal Min ST Algorithm", "[min st]") {
     //cout << u << " " << v << " " << val << endl;
   }
   auto it = e.begin();
-  for ( auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
+  for (auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
     REQUIRE((*it++).value == evf(uv));
   }
 
@@ -95,10 +95,10 @@ TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
   auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
   std::vector<std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>> e, t;
   for (auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
-    e.push_back( std::ranges::range_value_t<decltype(e)>() );
+    e.push_back(std::ranges::range_value_t<decltype(e)>());
     e.back().source_id = uid;
     e.back().target_id = vid;
-    e.back().value = evf(uv);
+    e.back().value     = evf(uv);
   }
 
   // Kruskal with separate edgelist data structure, don't modify edgelist
@@ -110,7 +110,7 @@ TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
     //cout << u << " " << v << " " << val << endl;
   }
   auto it = e.begin();
-  for ( auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
+  for (auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
     REQUIRE((*it++).value == evf(uv));
   }
 
