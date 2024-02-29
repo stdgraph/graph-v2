@@ -96,22 +96,7 @@ TEMPLATE_TEST_CASE("Kevin Bacon example",
 
 
 #if 0
-enum class bfs_event : int {
-  none              = 0, // useful?
-  initialize_vertex = 0x0001,
-  examine_vertex    = 0x0002,
-  examine_edge      = 0x0004,
-  discover_vertex   = 0x0008,
-  edge_relaxed      = 0x0010,
-  edge_not_relaxed  = 0x0020,
-  finish_vertex     = 0x0040,
-
-  vertex_default = discover_vertex, // useful?
-  edge_default   = examine_edge     // useful?
-};
-
-
-TEST_CASE("Kevin Bacon example with revised bfs", "[example][bfs][basic_graph]") {
+TEST_CASE("Kevin Bacon example with revised bfs (too simple)", "[example][bfs][basic_graph]") {
   using Graph = vector<vector<size_t>>;
 
   Graph       costar_adjacency_list{{1, 5, 6}, {7, 10, 0, 5, 12}, {4, 3, 11}, {2, 11}, {8, 9, 2, 12}, {0, 1},
@@ -120,8 +105,7 @@ TEST_CASE("Kevin Bacon example with revised bfs", "[example][bfs][basic_graph]")
   vector<int> bacon_number(size(actors));
 
   // Only stop for one event in this example
-  basic_breadth_first_search bfs(costar_adjacency_list, bfs_event::examine_edge);
-  for (auto&& [event, uid, vid] : bfs) {
+  for (auto&& [event, uid, vid] : basic_breadth_first_search bfs(costar_adjacency_list, bfs_event::examine_edge)) {
     // The switch statement is overkill for this example, but it's useful for more complex algorithms.
     switch (event) {
     case bfs_event::examine_edge: bacon_number[vid] = bacon_number[uid] + 1; break;
@@ -129,7 +113,59 @@ TEST_CASE("Kevin Bacon example with revised bfs", "[example][bfs][basic_graph]")
     }
   }
   for (size_t i = 0; i < size(actors); ++i)
-	cout << actors[i] << " has Bacon number " << bacon_number[i] << std::endl;
+    cout << actors[i] << " has Bacon number " << bacon_number[i] << std::endl;
 }
-#endif
 
+TEST_CASE("Kevin Bacon example with revised bfs and variant 1", "[example][bfs][basic_graph]") {
+  using Graph = vector<vector<size_t>>;
+
+  Graph       costar_adjacency_list{{1, 5, 6}, {7, 10, 0, 5, 12}, {4, 3, 11}, {2, 11}, {8, 9, 2, 12}, {0, 1},
+                                    {7, 0},    {6, 1, 10},        {4, 9},     {4, 8},  {7, 1},        {2, 3},
+                                    {1, 4}};
+  vector<int> bacon_number(size(actors));
+
+  // Only stop for one event in this example
+  for (auto&& [event, desc] : basic_sourced_breadth_first_search(costar_adjacency_list, bfs_event::examine_edge)) {
+    // We'd want a better way to get this so we don't have to include it in our code.
+    using vertex_desc_type = decltype(get<0>(desc));
+    using edge_desc_type   = decltype(get<1>(desc));
+
+    // The switch statement is overkill for this example, but it's useful for more complex algorithms.
+    switch (event) {
+    case bfs_event::examine_edge: {
+      auto&& [uid, vid] = get<edge_desc_type>(desc);
+      bacon_number[vid] = bacon_number[uid] + 1; // overload existing fncs for bfs_desc
+    } break;
+
+    default: assert(false); // Unhandled event
+    }
+  }
+  for (size_t i = 0; i < size(actors); ++i)
+    cout << actors[i] << " has Bacon number " << bacon_number[i] << std::endl;
+}
+
+TEST_CASE("Kevin Bacon example with revised bfs and variant 2", "[example][bfs][basic_graph]") {
+  using Graph = vector<vector<size_t>>;
+
+  Graph       costar_adjacency_list{{1, 5, 6}, {7, 10, 0, 5, 12}, {4, 3, 11}, {2, 11}, {8, 9, 2, 12}, {0, 1},
+                                    {7, 0},    {6, 1, 10},        {4, 9},     {4, 8},  {7, 1},        {2, 3},
+                                    {1, 4}};
+  vector<int> bacon_number(size(actors));
+
+  // Only stop for one event in this example
+  for (auto&& [event, desc] : basic_sourced_breadth_first_search(costar_adjacency_list, bfs_event::examine_edge)) {
+    // The switch statement is overkill for this example, but it's useful for more complex algorithms.
+    switch (event) {
+    case bfs_event::examine_edge: {
+      // overload existing fncs for bfs_descriptor
+      bacon_number[target_id(desc)] = bacon_number[source_id(desc)] + 1;
+    } break;
+
+    default: assert(false); // Unhandled event
+    }
+  }
+  for (size_t i = 0; i < size(actors); ++i)
+    cout << actors[i] << " has Bacon number " << bacon_number[i] << std::endl;
+}
+
+#endif
