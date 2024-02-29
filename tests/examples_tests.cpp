@@ -6,6 +6,7 @@
 #include "graph/graph.hpp"
 #include "graph/views/breadth_first_search.hpp"
 #include "graph/container/compressed_graph.hpp"
+#include "graph/views/co_dfs.hpp"
 
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
 #define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file
@@ -92,3 +93,43 @@ TEMPLATE_TEST_CASE("Kevin Bacon example",
 #endif
 
 } // TEMPLATE_TEST_CASE
+
+
+#if 0
+enum class bfs_event : int {
+  none              = 0, // useful?
+  initialize_vertex = 0x0001,
+  examine_vertex    = 0x0002,
+  examine_edge      = 0x0004,
+  discover_vertex   = 0x0008,
+  edge_relaxed      = 0x0010,
+  edge_not_relaxed  = 0x0020,
+  finish_vertex     = 0x0040,
+
+  vertex_default = discover_vertex, // useful?
+  edge_default   = examine_edge     // useful?
+};
+
+
+TEST_CASE("Kevin Bacon example with revised bfs", "[example][bfs][basic_graph]") {
+  using Graph = vector<vector<size_t>>;
+
+  Graph       costar_adjacency_list{{1, 5, 6}, {7, 10, 0, 5, 12}, {4, 3, 11}, {2, 11}, {8, 9, 2, 12}, {0, 1},
+                                    {7, 0},    {6, 1, 10},        {4, 9},     {4, 8},  {7, 1},        {2, 3},
+                                    {1, 4}};
+  vector<int> bacon_number(size(actors));
+
+  // Only stop for one event in this example
+  basic_breadth_first_search bfs(costar_adjacency_list, bfs_event::examine_edge);
+  for (auto&& [event, uid, vid] : bfs) {
+    // The switch statement is overkill for this example, but it's useful for more complex algorithms.
+    switch (event) {
+    case bfs_event::examine_edge: bacon_number[vid] = bacon_number[uid] + 1; break;
+    default: assert(false); // Unhandled event
+    }
+  }
+  for (size_t i = 0; i < size(actors); ++i)
+	cout << actors[i] << " has Bacon number " << bacon_number[i] << std::endl;
+}
+#endif
+
