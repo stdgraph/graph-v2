@@ -10,6 +10,7 @@
  * @authors
  *   Andrew Lumsdaine
  *   Phil Ratzloff
+ *   Kevin Deweese
  */
 
 #include "graph/graph.hpp"
@@ -22,53 +23,62 @@
 
 namespace std::graph {
 
-template <typename vertex_id_t>
-vertex_id_t disjoint_find(std::vector<std::pair<vertex_id_t, size_t>>& subsets, vertex_id_t vtx) {
-  vertex_id_t parent = subsets[vtx].first;
-  while (parent != subsets[parent].first) {
-    parent = subsets[parent].first;
+template <class VId>
+struct disjoint_element {
+  VId    id    = VId();
+  size_t count = 0;
+};
+
+template <class VId>
+using disjoint_vector = vector<disjoint_element<VId>>;
+
+template <class VId>
+VId disjoint_find(disjoint_vector<VId>& subsets, VId vtx) {
+  VId parent = subsets[vtx].id;
+  while (parent != subsets[parent].id) {
+    parent = subsets[parent].id;
   }
   while (vtx != parent) {
-    vtx                = subsets[vtx].first;
-    subsets[vtx].first = parent;
+    vtx             = subsets[vtx].id;
+    subsets[vtx].id = parent;
   }
 
   return parent;
 }
 
-template <typename vertex_id_t>
-void disjoint_union(std::vector<std::pair<vertex_id_t, size_t>>& subsets, vertex_id_t u, vertex_id_t v) {
-  vertex_id_t u_root = disjoint_find(subsets, u);
-  vertex_id_t v_root = disjoint_find(subsets, v);
+template <class VId>
+void disjoint_union(disjoint_vector<VId>& subsets, VId u, VId v) {
+  VId u_root = disjoint_find(subsets, u);
+  VId v_root = disjoint_find(subsets, v);
 
-  if (subsets[u_root].second < subsets[v_root].second)
+  if (subsets[u_root].count < subsets[v_root].count)
     subsets[u_root].first = v_root;
 
-  else if (subsets[u_root].second > subsets[v_root].second)
+  else if (subsets[u_root].count > subsets[v_root].count)
     subsets[v_root].first = u_root;
 
   else {
     subsets[v_root].first = u_root;
-    subsets[u_root].second++;
+    subsets[u_root].count++;
   }
 }
 
-template <typename vertex_id_t>
-bool disjoint_union_find(std::vector<std::pair<vertex_id_t, size_t>>& subsets, vertex_id_t u, vertex_id_t v) {
-  vertex_id_t u_root = disjoint_find(subsets, u);
-  vertex_id_t v_root = disjoint_find(subsets, v);
+template <class VId>
+bool disjoint_union_find(disjoint_vector<VId>& subsets, VId u, VId v) {
+  VId u_root = disjoint_find(subsets, u);
+  VId v_root = disjoint_find(subsets, v);
 
   if (u_root != v_root) {
 
-    if (subsets[u_root].second < subsets[v_root].second)
-      subsets[u_root].first = v_root;
+    if (subsets[u_root].count < subsets[v_root].count)
+      subsets[u_root].id = v_root;
 
-    else if (subsets[u_root].second > subsets[v_root].second)
-      subsets[v_root].first = u_root;
+    else if (subsets[u_root].count > subsets[v_root].count)
+      subsets[v_root].id = u_root;
 
     else {
-      subsets[v_root].first = u_root;
-      subsets[u_root].second++;
+      subsets[v_root].id = u_root;
+      subsets[u_root].count++;
     }
 
     return true;
@@ -77,62 +87,190 @@ bool disjoint_union_find(std::vector<std::pair<vertex_id_t, size_t>>& subsets, v
   return false;
 }
 
+//template <typename ED>
+//concept has_integral_vertices =
+//      requires(ED ed) { requires integral<decltype(ed.source_id)> && integral<decltype(ed.target_id)>; };
+//
+//template <typename ED>
+//concept has_same_vertex_type = requires(ED ed) { requires same_as<decltype(ed.source_id), decltype(ed.target_id)>; };
+//
+//template <typename ED>
+//concept has_edge_value = requires(ED ed) { requires !same_as<decltype(ed.value), void>; };
+
+
+
+template<class ELVT>
+concept _has_edgelist_value = !is_void_v<typename ELVT::value_type>;
+
+template<class ELVT>
+concept _basic_edgelist_type = is_same_v<typename ELVT::target_id_type, typename ELVT::source_id_type>;
+
+template<class ELVT>
+concept _basic_index_edgelist_type = _basic_edgelist_type<ELVT> && is_integral_v<typename ELVT::target_id_type>;
+
+template<class ELVT>
+concept _edgelist_type = _basic_edgelist_type<ELVT> && _has_edgelist_value<ELVT>;
+
+template<class ELVT>
+concept _index_edgelist_type = _basic_index_edgelist_type<ELVT> && _has_edgelist_value<ELVT>;
+
+
+template<class EL>
+concept basic_edgelist_range = ranges::forward_range<EL> && _basic_edgelist_type<ranges::range_value_t<EL>>;
+
+template<class EL>
+concept basic_index_edgelist_range = ranges::forward_range<EL> && _basic_index_edgelist_type<ranges::range_value_t<EL>>;
+
+template<class EL>
+concept edgelist_range = ranges::forward_range<EL> && _edgelist_type<ranges::range_value_t<EL>>;
+
+template<class EL>
+concept index_edgelist_range = ranges::forward_range<EL> && _index_edgelist_type<ranges::range_value_t<EL>>;
+
+
+/*template<typename T, typename = void>
+struct has_edge : false_type { };
+template<typename T>
+struct has_edge<T, decltype(declval<T>().edge, void())> : true_type { };*/
+
 /**
  * @ingroup graph_algorithms
- * @brief Find the minimum weight spanning tree from a single seed vertex using Prim's algorithm.
+ * @brief Find the minimum weight spanning using Kruskal's algorithm.
  * 
  * Complexity: O(|E|log|V|)
  * 
- * @tparam E                The input egelist type.
- * @tparam T                The output edgelist type.
+ * @tparam IELR       The input egelist type.
+ * @tparam OELR       The output edgelist type.
  * 
  * @param e           The input edgelist.
  * @param t           The output edgelist containing the tree.
  */
-template <edgelist::edgelist E, edgelist::edgelist T>
-void kruskal(E&& e, // edge list
-             T&& t  // out: spanning tree edge list
-) {
+template <index_edgelist_range IELR, index_edgelist_range OELR>
+void kruskal(IELR&& e, OELR&& t) {
   kruskal(e, t, [](auto&& i, auto&& j) { return i < j; });
 }
 
 /**
  * @ingroup graph_algorithms
- * @brief Find the minimum weight spanning tree from a single seed vertex using Kruskal's algorithm.
+ * @brief Find the minimum weight spanning tree using Kruskal's algorithm.
  * 
  * Complexity: O(|E|log|V|)
  * 
- * @tparam E             The input edgelist type.
- * @tparam T             The output edgelist type.
- * @tparam CompareOp
+ * @tparam IELR       The input egelist type.
+ * @tparam OELR       The output edgelist type.
+ * @tparam CompareOp  The comparison operation type.
  * 
  * @param e           The input edgelist.
  * @param t           The output edgelist containing the tree.
  * @param compare     The comparison operator.
  */
-template <edgelist::edgelist E, edgelist::edgelist T, class CompareOp>
-void kruskal(E&&       e,      // graph
-             T&&       t,      // out: spanning tree edge list
+template <index_edgelist_range IELR, index_edgelist_range OELR, class CompareOp>
+void kruskal(IELR&&    e,      // graph
+             OELR&&    t,      // tree
              CompareOp compare // edge value comparitor
 ) {
-  using VId = edgelist::source_id_t<E>;
+  using edge_descriptor = ranges::range_value_t<IELR>;
+  using VId             = remove_const<typename edge_descriptor::source_id_type>::type;
+  using EV              = edge_descriptor::value_type;
 
-  auto outer_compare = [&](auto&& i, auto&& j) { return compare(std::get<2>(i), std::get<2>(j)); };
-  std::sort(e.begin(), e.end(), outer_compare);
+  vector<tuple<VId, VId, EV>> e_copy;
+  ranges::transform(e, back_inserter(e_copy),
+                    [](auto&& ed) { return make_tuple(ed.source_id, ed.target_id, ed.value); });
+  VId  N             = 0;
+  auto outer_compare = [&](auto&& i, auto&& j) {
+    if (get<0>(i) > N) {
+      N = get<0>(i);
+    }
+    if (get<1>(i) > N) {
+      N = get<1>(i);
+    }
+    return compare(get<2>(i), get<2>(j));
+  };
+  ranges::sort(e_copy, outer_compare);
 
-  VId                                 N = static_cast<VId>(e.max_vid() + 1);
-  std::vector<std::pair<VId, size_t>> subsets(N);
+  disjoint_vector<VId> subsets(N + 1);
   for (VId uid = 0; uid < N; ++uid) {
-    subsets[uid].first  = uid;
-    subsets[uid].second = 0;
+    subsets[uid].id    = uid;
+    subsets[uid].count = 0;
   }
 
-  for (auto iter = e.begin(); iter != e.end(); ++iter) {
-    VId u = std::get<0>(*iter);
-    VId v = std::get<1>(*iter);
+  t.reserve(N);
+  for (auto&& [uid, vid, val] : e_copy) {
+    if (disjoint_union_find(subsets, uid, vid)) {
+      t.push_back(ranges::range_value_t<OELR>());
+      t.back().source_id = uid;
+      t.back().target_id = vid;
+      t.back().value     = val;
+    }
+  }
+}
 
-    if (disjoint_union_find(subsets, u, v)) {
-      t.push_back(*iter);
+/**
+ * @ingroup graph_algorithms
+ * @brief Find the minimum weight spanning tree using Kruskal's algorithm modifying input edgelist.
+ * 
+ * Complexity: O(|E|log|V|)
+ * 
+ * @tparam IELR       The input egelist type.
+ * @tparam OELR       The output edgelist type.
+ * 
+ * @param e           The input edgelist.
+ * @param t           The output edgelist containing the tree.
+ */
+template <index_edgelist_range IELR, index_edgelist_range OELR>
+requires permutable<ranges::iterator_t<IELR>>
+void inplace_kruskal(IELR&& e, OELR&& t) {
+  inplace_kruskal(e, t, [](auto&& i, auto&& j) { return i < j; });
+}
+
+/**
+ * @ingroup graph_algorithms
+ * @brief Find the minimum weight spanning tree using Kruskal's algorithm modifying input edgelist.
+ * 
+ * Complexity: O(|E|log|V|)
+ * 
+ * @tparam IELR       The input egelist type.
+ * @tparam OELR       The output edgelist type.
+ * @tparam CompareOp  The comparison operation type.
+ * 
+ * @param e           The input edgelist.
+ * @param t           The output edgelist containing the tree.
+ * @param compare     The comparison operator.
+ */
+template <index_edgelist_range IELR, index_edgelist_range OELR, class CompareOp>
+requires permutable<ranges::iterator_t<IELR>>
+void inplace_kruskal(IELR&&    e,      // graph
+                     OELR&&    t,      // tree
+                     CompareOp compare // edge value comparitor
+) {
+  using edge_descriptor = ranges::range_value_t<IELR>;
+  using VId             = remove_const<typename edge_descriptor::source_id_type>::type;
+
+  VId  N             = 0;
+  auto outer_compare = [&](auto&& i, auto&& j) {
+    if (i.source_id > N) {
+      N = i.source_id;
+    }
+    if (i.target_id > N) {
+      N = i.target_id;
+    }
+    return compare(i.value, j.value);
+  };
+  ranges::sort(e, outer_compare);
+
+  disjoint_vector<VId> subsets(N + 1);
+  for (VId uid = 0; uid < N; ++uid) {
+    subsets[uid].id    = uid;
+    subsets[uid].count = 0;
+  }
+
+  t.reserve(N);
+  for (auto&& [uid, vid, val] : e) {
+    if (disjoint_union_find(subsets, uid, vid)) {
+      t.push_back(ranges::range_value_t<OELR>());
+      t.back().source_id = uid;
+      t.back().target_id = vid;
+      t.back().value     = val;
     }
   }
 }
@@ -162,7 +300,7 @@ void prim(G&&            g,           // graph
 ) {
   prim(
         g, predecessor, weight, [](auto&& i, auto&& j) { return i < j; },
-        std::numeric_limits<ranges::range_value_t<Weight>>::max(), seed);
+        numeric_limits<ranges::range_value_t<Weight>>::max(), seed);
 }
 
 /**
@@ -196,19 +334,19 @@ void prim(G&&                           g,           // graph
 ) {
   typedef ranges::range_value_t<Weight> EV;
   size_t                                N(size(vertices(g)));
-  std::vector<EV>                       distance(N, init_dist);
+  vector<EV>                            distance(N, init_dist);
   distance[seed]    = 0;
   predecessor[seed] = seed;
 
-  using weighted_vertex = std::tuple<vertex_id_t<G>, EV>;
+  using weighted_vertex = tuple<vertex_id_t<G>, EV>;
 
   auto evf           = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
-  auto outer_compare = [&](auto&& i, auto&& j) { return compare(std::get<1>(i), std::get<1>(j)); };
+  auto outer_compare = [&](auto&& i, auto&& j) { return compare(get<1>(i), get<1>(j)); };
 
-  std::priority_queue<weighted_vertex, std::vector<weighted_vertex>, decltype(outer_compare)> Q(outer_compare);
+  priority_queue<weighted_vertex, vector<weighted_vertex>, decltype(outer_compare)> Q(outer_compare);
   Q.push({seed, distance[seed]});
   while (!Q.empty()) {
-    auto uid = std::get<0>(Q.top());
+    auto uid = get<0>(Q.top());
     Q.pop();
 
     for (auto&& [vid, uv, w] : views::incidence(g, uid, evf)) {

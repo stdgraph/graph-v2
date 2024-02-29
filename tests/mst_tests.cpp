@@ -41,22 +41,44 @@ TEST_CASE("Kruskal Min ST Algorithm", "[min st]") {
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   size_t N(size(vertices(g)));
-  size_t M = 0;
-  for (auto&& [uid, u] : std::graph::views::vertexlist(g)) {
-    M += std::graph::degree(g, u);
-  }
-
-  edgelist e, t;
 
   auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
+  std::vector<std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>> e, t;
   for (auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
-    e.push_back(std::make_tuple(uid, vid, evf(uv)));
+    e.push_back( std::ranges::range_value_t<decltype(e)>() );
+    e.back().source_id = uid;
+    e.back().target_id = vid;
+    e.back().value = evf(uv);
   }
 
-  //Replace with whatever conforms to std::graph::edgelist
+  // Kruskal with separate edgelist data structure, don't modify edgelist
   std::graph::kruskal(e, t);
   double last = -1;
   for (auto&& [u, v, val] : t) {
+    REQUIRE(val > last);
+    last = val;
+    //cout << u << " " << v << " " << val << endl;
+  }
+  auto it = e.begin();
+  for ( auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
+    REQUIRE((*it++).value == evf(uv));
+  }
+
+  // Kruskal inplace, modifiy input edgelist
+  std::vector<std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>> t2;
+  std::graph::inplace_kruskal(e, t2);
+  last = -1;
+  for (auto&& [u, v, val] : t2) {
+    REQUIRE(val > last);
+    last = val;
+    //cout << u << " " << v << " " << val << endl;
+  }
+
+  // Kruskal inplace from adjacency list
+  std::vector<std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>> t3;
+  std::graph::kruskal(std::graph::views::edgelist(g, evf), t3);
+  last = -1;
+  for (auto&& [u, v, val] : t3) {
     REQUIRE(val > last);
     last = val;
     //cout << u << " " << v << " " << val << endl;
@@ -69,22 +91,44 @@ TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   size_t N(size(vertices(g)));
-  size_t M = 0;
-  for (auto&& [uid, u] : std::graph::views::vertexlist(g)) {
-    M += std::graph::degree(g, u);
-  }
-
-  edgelist e, t;
 
   auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
+  std::vector<std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>> e, t;
   for (auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
-    e.push_back(std::make_tuple(uid, vid, evf(uv)));
+    e.push_back( std::ranges::range_value_t<decltype(e)>() );
+    e.back().source_id = uid;
+    e.back().target_id = vid;
+    e.back().value = evf(uv);
   }
 
-  //Replace with whatever conforms to std::graph::edgelist
+  // Kruskal with separate edgelist data structure, don't modify edgelist
   std::graph::kruskal(e, t, [](auto&& i, auto&& j) { return i > j; });
   double last = std::numeric_limits<double>::max();
   for (auto&& [u, v, val] : t) {
+    REQUIRE(val < last);
+    last = val;
+    //cout << u << " " << v << " " << val << endl;
+  }
+  auto it = e.begin();
+  for ( auto&& [uid, vid, uv] : std::graph::views::edgelist(g)) {
+    REQUIRE((*it++).value == evf(uv));
+  }
+
+  // Kruskal inplace, modifiy input edgelist
+  std::vector<std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>> t2;
+  std::graph::inplace_kruskal(e, t2, [](auto&& i, auto&& j) { return i > j; });
+  last = std::numeric_limits<double>::max();
+  for (auto&& [u, v, val] : t2) {
+    REQUIRE(val < last);
+    last = val;
+    //cout << u << " " << v << " " << val << endl;
+  }
+
+  // Kruskal inplace from adjacency list
+  std::vector<std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>> t3;
+  std::graph::kruskal(std::graph::views::edgelist(g, evf), t3, [](auto&& i, auto&& j) { return i > j; });
+  last = std::numeric_limits<double>::max();
+  for (auto&& [u, v, val] : t3) {
     REQUIRE(val < last);
     last = val;
     //cout << u << " " << v << " " << val << endl;
