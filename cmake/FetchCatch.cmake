@@ -6,7 +6,7 @@ message(STATUS "Cloning External Project: catch2")
 FetchContent_Declare(
     catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v2.13.8
+    GIT_TAG        v3.5.2
 )
 
 FetchContent_GetProperties(catch2)
