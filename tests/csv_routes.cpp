@@ -1,3 +1,5 @@
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 
 void utf8_append(std::string& out, const char ch) {
@@ -36,3 +38,5 @@ std::string quoted_utf8(const char* s) {
     utf8_append(out, *ch);
   return out;
 }
+
+TEST_CASE("Dummy 001 test", "[dummy]") {}
