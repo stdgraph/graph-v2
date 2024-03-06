@@ -1,7 +1,10 @@
-#define CATCH_CONFIG_MAIN // This tells the catch header to generate a main
+//#define CATCH_CONFIG_MAIN // This tells the catch header to generate a main
 
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_template_test_macros.hpp>
+#ifdef _MSC_VER
+#include <Windows.h>
+#endif
+
+#include <cstdio>
 
 
 // Intialize the console for outputting UTF-8 using cout
