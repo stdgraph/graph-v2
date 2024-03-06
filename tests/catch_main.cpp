@@ -1,7 +1,7 @@
 //#define CATCH_CONFIG_MAIN // This tells the catch header to generate a main
 
 #ifdef _MSC_VER
-#include <Windows.h>
+#  include <Windows.h>
 #endif
 
 #include <cstdio>
