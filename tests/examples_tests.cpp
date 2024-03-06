@@ -7,7 +7,7 @@
 #include "graph/graph.hpp"
 #include "graph/views/breadth_first_search.hpp"
 #include "graph/container/compressed_graph.hpp"
-#include "graph/views/co_dfs.hpp"
+#include "graph/views/co_bfs.hpp"
 
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
 #define TEST_OPTION_GEN (2)    // generate unit test code to be pasted into this file
