@@ -9,4 +9,4 @@ add_compile_definitions(EXAMPLE_OUTPUT_DIR="${EXAMPLE_OUTPUT_DIR}")
 #target_link_options(catch_main INTERFACE $<$<CXX_COMPILER_ID:GNU>:-pthread -fconcepts-diagnostics-depth=1>)
 
 add_executable(CppCon2022  "rr_adaptor.hpp" "graphviz_output.hpp" "germany_routes_example.cpp")
-target_link_libraries(CppCon2022 PRIVATE project_warnings project_options catch_main Catch2::Catch2 graph)
+target_link_libraries(CppCon2022 PRIVATE project_warnings project_options catch_main Catch2::Catch2WithMain graph)

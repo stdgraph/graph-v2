@@ -53,7 +53,7 @@ set(UNITTEST_SOURCES
 foreach(SOURCE IN LISTS UNITTEST_SOURCES)
 	get_filename_component(TEST_NAME ${SOURCE} NAME_WLE)
 	add_executable(${TEST_NAME} ${SOURCE})
-	target_link_libraries(${TEST_NAME} PRIVATE project_warnings project_options catch_main Catch2::Catch2 graph)
+	target_link_libraries(${TEST_NAME} PRIVATE project_warnings project_options catch_main Catch2::Catch2WithMain graph)
 	target_link_libraries(${TEST_NAME} PRIVATE fmt::fmt)
 	target_include_directories(${TEST_NAME} 
 				INTERFACE ${Catch2_INCLUDE_DIRS_DEBUG} 

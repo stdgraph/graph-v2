@@ -1,6 +1,7 @@
 #pragma once
 #include "graph/graph.hpp"
 #include "graph/graph_utility.hpp"
+#include <functional>
 
 //
 // incidence(g,uid)     -> edge_descriptor<VId,false,E,EV> -> {target_id, edge&}
@@ -107,7 +108,7 @@ public:
       value_.shadow_.target_id = target_id(*g_, *iter_);
     }
     value_.shadow_.edge  = &*iter_;
-    value_.shadow_.value = invoke(*value_fn_, *iter_);
+    value_.shadow_.value = std::invoke(*value_fn_, *iter_);
     return value_.value_;
   }
 
