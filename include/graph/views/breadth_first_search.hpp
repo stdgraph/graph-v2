@@ -46,8 +46,7 @@ struct bfs_element {
   vertex_id_t<G> u_id;
 };*/
 
-template <adjacency_list G, class Alloc>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+template <index_adjacency_list G, class Alloc>
 class bfs_base : public ranges::view_base {
 public:
   using graph_type       = remove_reference_t<G>;
