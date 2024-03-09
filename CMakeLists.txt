@@ -84,12 +84,12 @@ include(${PROJECT_SOURCE_DIR}/cmake/FetchDocopt.cmake)
 include(${PROJECT_SOURCE_DIR}/cmake/FetchCSVParser.cmake)
 #include(${PROJECT_SOURCE_DIR}/cmake/FetchRange.cmake)
 #include(${PROJECT_SOURCE_DIR}/cmake/FetchSPDLog.cmake)
-include(${PROJECT_SOURCE_DIR}/cmake/FetchBoost.cmake)
+#include(${PROJECT_SOURCE_DIR}/cmake/FetchBoost.cmake)
 
 
 add_library(graph INTERFACE)
 target_include_directories(graph INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
-target_link_libraries(graph INTERFACE Boost::cobalt) # for coroutine library
+#target_link_libraries(graph INTERFACE Boost::cobalt) # for coroutine library
 
 if(ENABLE_TESTING)
   enable_testing()
