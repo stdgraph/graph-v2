@@ -257,7 +257,7 @@ TEST_CASE("co fib test", "[fibonacci][coroutine]") {
 TEST_CASE("co fib class test", "[fibonacci][coroutine]") {
   try {
     fib_seq fs(10);
-    auto gen = fibonacci_sequence(10); // max 94 before uint64_t overflows
+    auto    gen = fibonacci_sequence(10); // max 94 before uint64_t overflows
 
     for (int j = 0; gen; ++j)
       std::cout << "fib(" << j << ")=" << gen() << '\n';
