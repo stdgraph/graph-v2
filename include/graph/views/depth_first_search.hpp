@@ -71,12 +71,12 @@ public:
     if (seed < static_cast<vertex_id_type>(ranges::size(vertices(*graph_))) && !ranges::empty(edges(*graph_, seed))) {
       edge_iterator uvi = ranges::begin(edges(*graph_, seed));
       S_.push(stack_elem{seed, uvi});
-      colors_[seed] = grey;
+      colors_[seed] = gray;
 
       // Mark initial vertex as visited
       if (uvi != ranges::end(edges(*graph_, seed))) {
         vertex_id_type v_id = real_target_id(*uvi, seed);
-        colors_[v_id]       = grey;
+        colors_[v_id]       = gray;
       }
     }
   }
@@ -150,7 +150,7 @@ protected:
     if (vwi != ranges::end(edges(*graph_, v_id))) {
       S_.push(stack_elem{v_id, vwi});
       vertex_id_type w_id = real_target_id(*vwi, v_id);
-      colors_[w_id]       = grey; // visited w
+      colors_[w_id]       = gray; // visited w
     }
     // we've reached the end of a branch in the DFS tree; start unwinding the stack to find other unvisited branches
     else {
@@ -164,7 +164,7 @@ protected:
         if (xyi != ranges::end(edges(*graph_, x_id))) {
           S_.push({x_id, xyi});
           vertex_id_type y_id = real_target_id(*xyi, x_id);
-          colors_[y_id]       = grey; // visited y
+          colors_[y_id]       = gray; // visited y
           break;
         } else {
           colors_[x_id] = black; // finished with x

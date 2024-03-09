@@ -3,7 +3,7 @@
 namespace std::graph {
 
 // Common types for DFS & BFS views
-enum three_colors : int8_t { black, white, grey }; // { finished, undiscovered, discovered }
+enum three_colors : int8_t { black, white, gray }; // { finished, undiscovered, discovered }
 enum struct cancel_search : int8_t { continue_search, cancel_branch, cancel_all };
 
 
