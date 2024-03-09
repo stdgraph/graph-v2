@@ -703,7 +703,7 @@ namespace views {
 #endif //ENABLE_EDGELIST_RANGE
 
     }; // class _Cpo
-  }    // namespace _Edgelist
+  } // namespace _Edgelist
 
   inline namespace _Cpos {
     inline constexpr _Edgelist::_Cpo edgelist;

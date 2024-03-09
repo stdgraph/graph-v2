@@ -252,13 +252,13 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
     generate_routes_tests(g, test_name);
     int x = 0;
 #elif TEST_OPTION == TEST_OPTION_TEST
-    auto ui = begin(vertices(g));
+    auto           ui  = begin(vertices(g));
     vertex_id_t<G> uid = 0;
     if (ui != end(vertices(g))) {
       REQUIRE(0 == uid);
       REQUIRE("Frankf\xc3\xbcrt" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
       REQUIRE(6 == target_id(g, *uvi));
       REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
@@ -283,7 +283,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(1 == ++uid);
       REQUIRE("Mannheim" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
       REQUIRE(2 == target_id(g, *uvi));
       REQUIRE("Karlsruhe" == vertex_value(g, target(g, *uvi)));
@@ -296,7 +296,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(2 == ++uid);
       REQUIRE("Karlsruhe" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
       REQUIRE(3 == target_id(g, *uvi));
       REQUIRE("Augsburg" == vertex_value(g, target(g, *uvi)));
@@ -309,7 +309,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(3 == ++uid);
       REQUIRE("Augsburg" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
       REQUIRE(8 == target_id(g, *uvi));
       REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
@@ -322,7 +322,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(4 == ++uid);
       REQUIRE("W\xc3\xbcrzburg" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
       REQUIRE(7 == target_id(g, *uvi));
       REQUIRE("Erfurt" == vertex_value(g, target(g, *uvi)));
@@ -341,7 +341,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(5 == ++uid);
       REQUIRE("N\xc3\xbcrnberg" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
       REQUIRE(9 == target_id(g, *uvi));
       REQUIRE("Stuttgart" == vertex_value(g, target(g, *uvi)));
@@ -360,7 +360,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(6 == ++uid);
       REQUIRE("Kassel" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
       REQUIRE(8 == target_id(g, *uvi));
       REQUIRE("M\xc3\xbcnchen" == vertex_value(g, target(g, *uvi)));
@@ -373,7 +373,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(7 == ++uid);
       REQUIRE("Erfurt" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
 
       REQUIRE(0 == uv_cnt);
@@ -382,7 +382,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(8 == ++uid);
       REQUIRE("M\xc3\xbcnchen" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
 
       REQUIRE(0 == uv_cnt);
@@ -391,7 +391,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       REQUIRE(9 == ++uid);
       REQUIRE("Stuttgart" == vertex_value(g, *ui));
 
-      auto uvi = begin(edges(g, *ui));
+      auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
 
       REQUIRE(0 == uv_cnt);

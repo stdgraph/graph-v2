@@ -160,8 +160,7 @@ TEST_CASE("Prim Max ST Algorithm", "[prim max st]") {
   std::vector<vertex_id_t<G>> preds(size(vertices(g)));
   std::vector<double>         weights(size(vertices(g)));
 
-  std::graph::prim(
-        g, preds, weights, [](auto&& i, auto&& j) { return i > j; }, 0);
+  std::graph::prim(g, preds, weights, [](auto&& i, auto&& j) { return i > j; }, 0);
   double treeweight = 0;
   for (auto&& [uid, u] : std::graph::views::vertexlist(g)) {
     //cout << "pred of " << uid << " is " << preds[uid] << " with val " << weights[uid] << endl;

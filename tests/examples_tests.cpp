@@ -94,4 +94,3 @@ TEMPLATE_TEST_CASE("Kevin Bacon example",
 #endif
 
 } // TEMPLATE_TEST_CASE
-

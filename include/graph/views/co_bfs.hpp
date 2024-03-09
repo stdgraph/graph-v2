@@ -87,12 +87,12 @@ struct Generator {
     std::suspend_always final_suspend() noexcept { return {}; }
     void                unhandled_exception() {
       exception_ = std::current_exception();
-    }                                      // saving
-                                           // exception
+    } // saving
+    // exception
 
     template <std::convertible_to<T> From> // C++20 concept
     std::suspend_always yield_value(From&& from) {
-      value_ = std::forward<From>(from);   // caching the result in promise
+      value_ = std::forward<From>(from); // caching the result in promise
       return {};
     }
     void return_void() {}
@@ -103,7 +103,7 @@ struct Generator {
   Generator(handle_type h)
         : h_(h) //
   {}
-  ~Generator()  //
+  ~Generator() //
   {
     h_.destroy();
   }
