@@ -37,36 +37,6 @@ concept edge_weight_function = // e.g. weight(uv)
       copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
 
 
-//enum class bfs_features : int {
-//  edge_basic     = 0x0000,
-//  edge_reference = 0x0001,
-//
-//  edge_unsourced = 0x0000,
-//  edge_sourced   = 0x0002,
-//
-//  vertex_basic     = 0x0000,
-//  vertex_reference = 0x0001
-//};
-
-// using bfs_desc = bfs_descriptor<...>;
-//
-// The following functions would be overloaded to access all possible values of the variant.
-// source_id(bfs_desc);
-// target_id(bfs_desc);
-// edge(bfs_desc);
-// edge_value(bfs_desc);
-// vertex_id(bfs_desc);
-// vertex(bfs_desc);
-// vertex_value(bfs_desc);
-
-// Additional values for bfs_descriptor? (e.g. distance, color, predecessor, etc.)
-// An alternative could be a pointer to an internal structure that holds these values, and the functions would be overloaded to access them.
-// That would be a much more versatile solution that goes beyond the existing descriptors.
-// Structured bindings would no longer be necessary. (Could we retain them for our uses? Maybe retain them for existing views?)
-
-/*
-*/
-
 template <typename T>
 struct Generator {
   // The class name 'Generator' is our choice and it is not required for coroutine
@@ -85,14 +55,12 @@ struct Generator {
     Generator           get_return_object() { return Generator(handle_type::from_promise(*this)); }
     std::suspend_always initial_suspend() { return {}; }
     std::suspend_always final_suspend() noexcept { return {}; }
-    void                unhandled_exception() {
-      exception_ = std::current_exception();
-    } // saving
+    void                unhandled_exception() { exception_ = std::current_exception(); } // saving
     // exception
 
     template <std::convertible_to<T> From> // C++20 concept
     std::suspend_always yield_value(From&& from) {
-      value_ = std::forward<From>(from); // caching the result in promise
+      value_ = std::forward<From>(from);   // caching the result in promise
       return {};
     }
     void return_void() {}
@@ -103,7 +71,7 @@ struct Generator {
   Generator(handle_type h)
         : h_(h) //
   {}
-  ~Generator() //
+  ~Generator()  //
   {
     h_.destroy();
   }
@@ -138,6 +106,7 @@ private:
   }
 };
 
+#  if 0
 Generator<std::uint64_t> fibonacci_sequence(unsigned n) {
   if (n == 0)
     co_return;
@@ -201,9 +170,10 @@ public:
 private:
   unsigned n_ = 0;
 };
+#  endif //0
 
 
-enum class bfs_event : int {
+enum class bfs_events : int {
   none              = 0,      // useful?
   initialize_vertex = 0x0001,
   discover_vertex   = 0x0002, // e.g. white_target
@@ -215,71 +185,46 @@ enum class bfs_event : int {
   black_target      = 0x0080,
   finish_vertex     = 0x0100,
 };
-constexpr bfs_event& operator&=(bfs_event& lhs, bfs_event rhs) noexcept {
-  lhs = static_cast<bfs_event>(static_cast<int>(lhs) & static_cast<int>(rhs));
+constexpr bfs_events& operator&=(bfs_events& lhs, bfs_events rhs) noexcept {
+  lhs = static_cast<bfs_events>(static_cast<int>(lhs) & static_cast<int>(rhs));
   return lhs;
 }
-constexpr bfs_event  operator&(bfs_event lhs, bfs_event rhs) noexcept { return (lhs &= rhs); }
-constexpr bfs_event& operator|=(bfs_event& lhs, bfs_event rhs) noexcept {
-  lhs = static_cast<bfs_event>(static_cast<int>(lhs) | static_cast<int>(rhs));
+constexpr bfs_events  operator&(bfs_events lhs, bfs_events rhs) noexcept { return (lhs &= rhs); }
+constexpr bfs_events& operator|=(bfs_events& lhs, bfs_events rhs) noexcept {
+  lhs = static_cast<bfs_events>(static_cast<int>(lhs) | static_cast<int>(rhs));
   return lhs;
 }
-constexpr bfs_event operator|(bfs_event lhs, bfs_event rhs) noexcept { return (lhs |= rhs); }
+constexpr bfs_events operator|(bfs_events lhs, bfs_events rhs) noexcept { return (lhs |= rhs); }
 
-template <class VId, class V, bool Sourced, class E>
-using bfs_descriptor = std::variant<         // --> traverse_descriptor? (include neighbor_descriptor?)
-      vertex_descriptor<VId, V, void>,       //
-      edge_descriptor<VId, Sourced, E, void> //
-      >;
+// Iterators selected over references because references aren't movable and neither is reference_wrapper,
+// which is a requirement of a coroutine promise.
+// (verify a promise can't be moved, or it's just our implementation)
+template <class G>
+using bfs_vertex_value_t = vertex_descriptor<vertex_id_t<G>, reference_wrapper<vertex_t<G>>, void>;
+template <class G>
+using bfs_edge_value_t = edge_descriptor<vertex_id_t<G>, true, reference_wrapper<edge_t<G>>, void>;
+template <class G>
+using bfs_variant_value_t = variant<monostate, bfs_vertex_value_t<G>, bfs_edge_value_t<G>>;
 
 template <class G>
-using bfs_vertex_value_t = vertex_descriptor<vertex_id_t<G>, vertex_t<G>, void>;
-template <class G>
-using bfs_edge_value_t = edge_descriptor<vertex_id_t<G>, true, edge_t<G>, void>;
-template <class G>
-using bfs_variant_value_t = variant<bfs_vertex_value_t<G>, bfs_edge_value_t<G>>;
+using bfs_value_t = pair<bfs_events, bfs_variant_value_t<G>>;
 
-template <class G>
-using bfs_value_t = pair<bfs_event, bfs_variant_value_t<G>>;
+//template<class Enum, class V, class E>
+//requires is_enum_v<Enum> && requires(V v) {
+//  v.id;
+//}
+//auto vertex_id(const pair<Enum, variant<monostate, V, E>>& val) {
+//  return get<V>(val.second).id;
+//}
 
-class null_range_type : public std::vector<size_t> {
-  using T         = size_t;
-  using Allocator = std::allocator<T>;
-  using Base      = std::vector<T, Allocator>;
-
-public:
-  null_range_type() noexcept(noexcept(Allocator())) = default;
-  explicit null_range_type(const Allocator& alloc) noexcept {}
-  null_range_type(Base::size_type count, const T& value, const Allocator& alloc = Allocator()) {}
-  explicit null_range_type(Base::size_type count, const Allocator& alloc = Allocator()) {}
-  template <class InputIt>
-  null_range_type(InputIt first, InputIt last, const Allocator& alloc = Allocator()) {}
-  null_range_type(const null_range_type& other) : Base() {}
-  null_range_type(const null_range_type& other, const Allocator& alloc) {}
-  null_range_type(null_range_type&& other) noexcept {}
-  null_range_type(null_range_type&& other, const Allocator& alloc) {}
-  null_range_type(std::initializer_list<T> init, const Allocator& alloc = Allocator()) {}
-};
-
-inline static null_range_type null_predecessors;
-
-
-template <class... Ts>
-struct print_types_t;
-
-template <class... Ts>
-constexpr auto print_types(Ts...) {
-  return print_types_t<Ts...>{};
-}
-
-#  define yield_vertex(event, uid, u)                                                                                  \
-    if ((event & events) != bfs_event::none)                                                                           \
+#  define yield_vertex(event, uid)                                                                                     \
+    if ((event & events) != bfs_events::none)                                                                          \
       co_yield bfs_value_type {                                                                                        \
-        event, bfs_vertex_type { uid, u }                                                                              \
+        event, bfs_vertex_type { uid, *find_vertex(g, uid) }                                                           \
       }
 
 #  define yield_edge(event, uid, vid, uv)                                                                              \
-    if ((event & events) != bfs_event::none)                                                                           \
+    if ((event & events) != bfs_events::none)                                                                          \
       co_yield bfs_value_type {                                                                                        \
         event, bfs_edge_type { uid, vid, uv }                                                                          \
       }
@@ -287,7 +232,7 @@ constexpr auto print_types(Ts...) {
 template <index_adjacency_list G>
 Generator<bfs_value_t<G>> co_bfs(G&&            g,    // graph
                                  vertex_id_t<G> seed, // starting vertex_id
-                                 bfs_event      events)    // events to stop at
+                                 bfs_events     events)   // events to stop at
 {
   using id_type         = vertex_id_t<G>;
   using bfs_vertex_type = bfs_vertex_value_t<G>;
@@ -299,13 +244,13 @@ Generator<bfs_value_t<G>> co_bfs(G&&            g,    // graph
 
   vector<three_colors> color(N, three_colors::white);
 
-  if ((events & bfs_event::initialize_vertex) != bfs_event::none) {
+  if ((events & bfs_events::initialize_vertex) != bfs_events::none) {
     for (id_type uid = 0; uid < num_vertices(g); ++uid) {
-      yield_vertex(bfs_event::initialize_vertex, uid, *find_vertex(g, uid));
+      yield_vertex(bfs_events::initialize_vertex, uid);
     }
   }
   color[seed] = three_colors::gray;
-  yield_vertex(bfs_event::discover_vertex, seed, *find_vertex(g, seed));
+  yield_vertex(bfs_events::discover_vertex, seed);
 
   using q_compare = decltype([](const id_type& a, const id_type& b) { return a > b; });
   std::priority_queue<id_type, vector<id_type>, q_compare> Q;
@@ -316,30 +261,29 @@ Generator<bfs_value_t<G>> co_bfs(G&&            g,    // graph
   while (!Q.empty()) {
     const id_type uid = Q.top();
     Q.pop();
-    yield_vertex(bfs_event::examine_vertex, uid, *find_vertex(g, uid));
+    yield_vertex(bfs_events::examine_vertex, uid);
 
     for (auto&& [vid, uv] : views::incidence(g, uid)) {
-      yield_edge(bfs_event::examine_edge, uid, vid, uv);
+      yield_edge(bfs_events::examine_edge, uid, vid, uv);
 
       if (color[vid] == three_colors::white) {
         color[vid] = three_colors::gray;
-        yield_vertex(bfs_event::discover_vertex, vid, *find_vertex(g, vid));
-        yield_edge(bfs_event::tree_edge, uid, vid, uv);
+        yield_vertex(bfs_events::discover_vertex, vid);
+        yield_edge(bfs_events::tree_edge, uid, vid, uv);
         Q.push(vid);
       } else {
-        yield_edge(bfs_event::non_tree_edge, uid, vid, uv);
+        yield_edge(bfs_events::non_tree_edge, uid, vid, uv);
         if (color[vid] == three_colors::gray) {
-          yield_vertex(bfs_event::gray_target, vid, *find_vertex(g, vid));
+          yield_vertex(bfs_events::gray_target, vid);
         } else {
-          yield_vertex(bfs_event::black_target, vid, *find_vertex(g, vid));
+          yield_vertex(bfs_events::black_target, vid);
         }
       }
     }
     color[uid] = three_colors::black;
-    yield_vertex(bfs_event::finish_vertex, uid, *find_vertex(g, uid));
+    yield_vertex(bfs_events::finish_vertex, uid);
   }
 }
-
 
 
 enum class dijkstra_event : int {

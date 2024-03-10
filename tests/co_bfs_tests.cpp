@@ -4,6 +4,7 @@
 #include "graph/graph.hpp"
 #include "graph/views/co_bfs.hpp"
 #include "graph/container/dynamic_graph.hpp"
+#include "graph/container/compressed_graph.hpp"
 
 #define TEST_OPTION_OUTPUT (1)
 #define TEST_OPTION_GEN (2)
@@ -28,7 +29,7 @@ using std::graph::vertex_reference_t;
 using std::graph::edge_t;
 using std::graph::edge_value_t;
 using std::graph::edge_reference_t;
-using std::graph::bfs_event;
+using std::graph::bfs_events;
 
 using std::graph::graph_value;
 using std::graph::vertices;
@@ -48,6 +49,8 @@ using std::graph::bfs_edge_value_t;
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
+using routes_compressed_graph_type = std::graph::container::compressed_graph<double, std::string, std::string>;
+
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -62,50 +65,53 @@ auto find_frankfurt(G&& g) {
 TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
   init_console();
 
-  using G  = routes_vol_graph_type;
+  using G  = routes_compressed_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
 
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
   SECTION("co_bfs vertices") {
-    for (auto bfs = co_bfs(g, frankfurt_id, bfs_event::discover_vertex); bfs;) {
+    for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::discover_vertex); bfs;) {
       auto&& [event, payload] = bfs();
       switch (event) {
-      case bfs_event::discover_vertex: {
+      case bfs_events::discover_vertex: {
         auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload);
-        cout << '[' << uid << "] " << vertex_value(g, u) << endl;
+        cout << "[" << uid << "] " << vertex_value(g, u) << endl;
       } break;
+      default: break;
       }
     }
   }
 
   SECTION("co_bfs edges") {
-    for (auto bfs = co_bfs(g, frankfurt_id, bfs_event::examine_edge); bfs;) {
+    for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::examine_edge); bfs;) {
       auto&& [event, payload] = bfs();
       switch (event) {
-      case bfs_event::examine_edge: {
+      case bfs_events::examine_edge: {
         auto&& [uid, vid, v] = get<bfs_edge_value_t<G>>(payload);
         cout << '[' << uid << "," << vid << "] " << vertex_value(g, *find_vertex(g, uid)) << " -> "
              << vertex_value(g, *find_vertex(g, vid)) << endl;
       } break;
+      default: break;
       }
     }
   }
 
   SECTION("co_bfs vertices+edges") {
-    for (auto bfs = co_bfs(g, frankfurt_id, (bfs_event::discover_vertex | bfs_event::examine_edge)); bfs;) {
+    for (auto bfs = co_bfs(g, frankfurt_id, (bfs_events::discover_vertex | bfs_events::examine_edge)); bfs;) {
       auto&& [event, payload] = bfs();
       switch (event) {
-      case bfs_event::discover_vertex: {
+      case bfs_events::discover_vertex: {
         auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload);
         cout << '[' << uid << "] " << vertex_value(g, u) << endl;
       } break;
-      case bfs_event::examine_edge: {
+      case bfs_events::examine_edge: {
         auto&& [uid, vid, uv] = get<bfs_edge_value_t<G>>(payload);
         cout << "  [" << uid << "," << vid << "] " << vertex_value(g, *find_vertex(g, uid)) << " -> "
              << vertex_value(g, *find_vertex(g, vid)) << endl;
       } break;
+      default: break;
       }
     }
   }
@@ -249,6 +255,7 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
 #endif
 }
 
+#if 0
 using std::graph::fibonacci_sequence;
 using std::graph::fib_seq;
 
@@ -278,20 +285,21 @@ TEST_CASE("co fib class test", "[fibonacci][coroutine]") {
     std::cerr << "Unknown exception.\n";
   }
 }
+#endif //0
 
 /* Target syntax
   // Only stop for one event in this example
-  for (auto&& [event, desc] : co_bfs(costar_adjacency_list, bfs_event::examine_edge)) {
+  for (auto&& [event, desc] : co_bfs(costar_adjacency_list, bfs_events::examine_edge)) {
     // The switch statement is overkill for this example, but it's useful for more complex algorithms.
     switch (event) {
     // Option 1: Use edge(desc) and vertex(desc) functions to return existing descriptors so structured bindings can be used
-    case bfs_event::examine_edge: {
+    case bfs_events::examine_edge: {
       auto&& [uid, vid] = edge(desc);
       bacon_number[vid] = bacon_number[uid] + 1; // overload existing fncs for bfs_desc
     } break;
 
     // Option 2: Use existing functions
-    case bfs_event::examine_edge: {
+    case bfs_events::examine_edge: {
       bacon_number[target_id(desc)] = bacon_number[source_id(desc)] + 1; // overload existing fncs for bfs_desc
     } break;
 
