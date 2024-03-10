@@ -37,6 +37,7 @@ concept edge_weight_function = // e.g. weight(uv)
       copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
 
 
+// A simple generator from https://en.cppreference.com/w/cpp/language/coroutines.
 template <typename T>
 struct Generator {
   // The class name 'Generator' is our choice and it is not required for coroutine
@@ -173,8 +174,9 @@ private:
 #  endif //0
 
 
+// These events duplicate boost::graph's BFSVisitorConcept
 enum class bfs_events : int {
-  none              = 0,      // useful?
+  none              = 0,
   initialize_vertex = 0x0001,
   discover_vertex   = 0x0002, // e.g. white_target
   examine_vertex    = 0x0004,
@@ -196,9 +198,8 @@ constexpr bfs_events& operator|=(bfs_events& lhs, bfs_events rhs) noexcept {
 }
 constexpr bfs_events operator|(bfs_events lhs, bfs_events rhs) noexcept { return (lhs |= rhs); }
 
-// Iterators selected over references because references aren't movable and neither is reference_wrapper,
-// which is a requirement of a coroutine promise.
-// (verify a promise can't be moved, or it's just our implementation)
+// These types comprise the bfs value type, made up of bfs_events and variant<vertex_descriptor, edge_descriptor>.
+// monostate is used to indicate that the value is not set and to make it default-constructible.
 template <class G>
 using bfs_vertex_value_t = vertex_descriptor<vertex_id_t<G>, reference_wrapper<vertex_t<G>>, void>;
 template <class G>
@@ -209,14 +210,8 @@ using bfs_variant_value_t = variant<monostate, bfs_vertex_value_t<G>, bfs_edge_v
 template <class G>
 using bfs_value_t = pair<bfs_events, bfs_variant_value_t<G>>;
 
-//template<class Enum, class V, class E>
-//requires is_enum_v<Enum> && requires(V v) {
-//  v.id;
-//}
-//auto vertex_id(const pair<Enum, variant<monostate, V, E>>& val) {
-//  return get<V>(val.second).id;
-//}
-
+// Helper macros to keep the visual clutter down in a coroutine. I'd like to investigate using CRTP to avoid them,
+// but I'm not sure how it will play with coroutines.
 #  define yield_vertex(event, uid)                                                                                     \
     if ((event & events) != bfs_events::none)                                                                          \
       co_yield bfs_value_type {                                                                                        \
@@ -229,6 +224,16 @@ using bfs_value_t = pair<bfs_events, bfs_variant_value_t<G>>;
         event, bfs_edge_type { uid, vid, uv }                                                                          \
       }
 
+// co_bfs is a coroutine that yields bfs_value_t<G> values as it traverses the graph, based on the
+// events that are passed in. The generator is templated on the graph type, and the events are passed 
+// in as a bitmask.
+//
+// The implementation is based on boost::graph::breadth_first_visit.
+// 
+// @param g      The graph to use
+// @param seed   The starting vertex_id
+// @param events A bitmap of the different events to stop at
+//
 template <index_adjacency_list G>
 Generator<bfs_value_t<G>> co_bfs(G&&            g,    // graph
                                  vertex_id_t<G> seed, // starting vertex_id
@@ -239,7 +244,7 @@ Generator<bfs_value_t<G>> co_bfs(G&&            g,    // graph
   using bfs_edge_type   = bfs_edge_value_t<G>;
   using bfs_value_type  = bfs_value_t<G>;
 
-  size_t N(size(vertices(g))); // Question(Andrew): Do we want a num_vertices(g) CPO?
+  size_t N(num_vertices(g));
   assert(seed < N && seed >= 0);
 
   vector<three_colors> color(N, three_colors::white);

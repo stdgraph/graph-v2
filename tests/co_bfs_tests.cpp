@@ -4,7 +4,6 @@
 #include "graph/graph.hpp"
 #include "graph/views/co_bfs.hpp"
 #include "graph/container/dynamic_graph.hpp"
-#include "graph/container/compressed_graph.hpp"
 
 #define TEST_OPTION_OUTPUT (1)
 #define TEST_OPTION_GEN (2)
@@ -49,8 +48,6 @@ using std::graph::bfs_edge_value_t;
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
-using routes_compressed_graph_type = std::graph::container::compressed_graph<double, std::string, std::string>;
-
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -65,18 +62,19 @@ auto find_frankfurt(G&& g) {
 TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
   init_console();
 
-  using G  = routes_compressed_graph_type;
+  using G  = routes_vol_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
 
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
+  // The syntax using structured bindings for visiting vertices.
   SECTION("co_bfs vertices") {
     for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::discover_vertex); bfs;) {
       auto&& [event, payload] = bfs();
       switch (event) {
       case bfs_events::discover_vertex: {
-        auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload);
+        auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
         cout << "[" << uid << "] " << vertex_value(g, u) << endl;
       } break;
       default: break;
@@ -84,12 +82,13 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
     }
   }
 
+  // The syntax using structured bindings for visiting edges.
   SECTION("co_bfs edges") {
     for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::examine_edge); bfs;) {
       auto&& [event, payload] = bfs();
       switch (event) {
       case bfs_events::examine_edge: {
-        auto&& [uid, vid, v] = get<bfs_edge_value_t<G>>(payload);
+        auto&& [uid, vid, v] = get<bfs_edge_value_t<G>>(payload); // or get<2>(payload);
         cout << '[' << uid << "," << vid << "] " << vertex_value(g, *find_vertex(g, uid)) << " -> "
              << vertex_value(g, *find_vertex(g, vid)) << endl;
       } break;
@@ -98,6 +97,7 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
     }
   }
 
+  // The syntax using structured bindings for visiting vertices and edges.
   SECTION("co_bfs vertices+edges") {
     for (auto bfs = co_bfs(g, frankfurt_id, (bfs_events::discover_vertex | bfs_events::examine_edge)); bfs;) {
       auto&& [event, payload] = bfs();
@@ -110,6 +110,20 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
         auto&& [uid, vid, uv] = get<bfs_edge_value_t<G>>(payload);
         cout << "  [" << uid << "," << vid << "] " << vertex_value(g, *find_vertex(g, uid)) << " -> "
              << vertex_value(g, *find_vertex(g, vid)) << endl;
+      } break;
+      default: break;
+      }
+    }
+  }
+
+  SECTION("co_bfs vertices Option 2") {
+    for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::discover_vertex); bfs;) {
+      auto&& [event, payload] = bfs();
+      switch (event) {
+      case bfs_events::discover_vertex: {
+        // This is another syntax that might be nice to have, but may be harder to impl than I'd first imagined.
+        // It's using the same CPO names as before, only for the BFS vertex/edge variant.
+        //cout << "[" << vertex_id(payload) << "] " << vertex_value(g, vertex_id(payload)) << endl;
       } break;
       default: break;
       }
