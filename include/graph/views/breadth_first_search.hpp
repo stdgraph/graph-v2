@@ -73,7 +73,7 @@ public:
     if (seed < ranges::size(vertices(*graph_)) && !ranges::empty(edges(*graph_, seed))) {
       uv_ = ranges::begin(edges(*graph_, seed));
       Q_.push(queue_elem{seed});
-      colors_[seed] = grey;
+      colors_[seed] = gray;
     }
   }
 
@@ -86,7 +86,7 @@ public:
           uv_ = ranges::begin(edges(*graph_, seed));
         }
         Q_.push(queue_elem{seed});
-        colors_[seed] = grey;
+        colors_[seed] = gray;
       }
     }
     // advance uv_ to the first edge to be visited in case seeds adjacent to first seed
@@ -148,7 +148,7 @@ protected:
     switch (cancel_) {
     case cancel_search::continue_search:
       Q_.push(queue_elem{v_id});
-      colors_[v_id] = grey; // visited v
+      colors_[v_id] = gray; // visited v
       uv_           = find_unvisited(u_id, ++uv_);
       break;
     case cancel_search::cancel_branch:

@@ -625,7 +625,7 @@ treeViewBootstrapIconMimicColor = "text-muted"
 treeViewBootstrapOnhoverColor = "#F5F5F5"
 '''
 **Optional**
-    The hover color for elements in the hierarchy trees.  Default color is a light-grey,
+    The hover color for elements in the hierarchy trees.  Default color is a light-gray,
     as specified by default value of ``bootstrap-treeview``'s `onhoverColor`_.
 
 *Value in** ``exhale_args`` (str)

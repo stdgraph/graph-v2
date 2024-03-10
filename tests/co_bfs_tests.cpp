@@ -28,6 +28,7 @@ using std::graph::vertex_reference_t;
 using std::graph::edge_t;
 using std::graph::edge_value_t;
 using std::graph::edge_reference_t;
+using std::graph::bfs_events;
 
 using std::graph::graph_value;
 using std::graph::vertices;
@@ -40,9 +41,13 @@ using std::graph::edge_value;
 using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
+using std::graph::co_bfs;
+using std::graph::bfs_vertex_value_t;
+using std::graph::bfs_edge_value_t;
 
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
+
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -63,45 +68,71 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  SECTION("co_bfs") {
-    //vertices_breadth_first_search_view<G, void> bfs(g, frankfurt_id);
-    //auto                                        it1 = bfs.begin();
-    //using I                                         = decltype(it1);
+  // The syntax using structured bindings for visiting vertices.
+  SECTION("co_bfs vertices") {
+    for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::discover_vertex); bfs;) {
+      auto&& [event, payload] = bfs();
+      switch (event) {
+      case bfs_events::discover_vertex: {
+        auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
+        cout << "[" << uid << "] " << vertex_value(g, u) << endl;
+      } break;
+      default: break;
+      }
+    }
+  }
 
-    //auto it2 = it1;            // copyable
-    //I    it3(it1);             // copy-constuctible
-    //auto it4 = std::move(it2); // movable
-    //I    it5(std::move(it3));  // move-constuctible
-    //I    it6;                  // default-constructible
+  // The syntax using structured bindings for visiting edges.
+  SECTION("co_bfs edges") {
+    for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::examine_edge); bfs;) {
+      auto&& [event, payload] = bfs();
+      switch (event) {
+      case bfs_events::examine_edge: {
+        auto&& [uid, vid, v] = get<bfs_edge_value_t<G>>(payload); // or get<2>(payload);
+        cout << '[' << uid << "," << vid << "] " << vertex_value(g, *find_vertex(g, uid)) << " -> "
+             << vertex_value(g, *find_vertex(g, vid)) << endl;
+      } break;
+      default: break;
+      }
+    }
+  }
 
-    //using I2 = std::remove_cvref_t<I>;
-    //static_assert(std::move_constructible<I2>);
-    //static_assert(std::copyable<I2>);
-    //static_assert(std::movable<I2>);
-    //static_assert(std::swappable<I2>);
-    //static_assert(std::is_default_constructible_v<I2>);
+  // The syntax using structured bindings for visiting vertices and edges.
+  SECTION("co_bfs vertices+edges") {
+    for (auto bfs = co_bfs(g, frankfurt_id, (bfs_events::discover_vertex | bfs_events::examine_edge)); bfs;) {
+      auto&& [event, payload] = bfs();
+      switch (event) {
+      case bfs_events::discover_vertex: {
+        auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload);
+        cout << '[' << uid << "] " << vertex_value(g, u) << endl;
+      } break;
+      case bfs_events::examine_edge: {
+        auto&& [uid, vid, uv] = get<bfs_edge_value_t<G>>(payload);
+        cout << "  [" << uid << "," << vid << "] " << vertex_value(g, *find_vertex(g, uid)) << " -> "
+             << vertex_value(g, *find_vertex(g, vid)) << endl;
+      } break;
+      default: break;
+      }
+    }
+  }
 
-    ////static_assert(std::input_iterator<I2>);
-    //static_assert(std::input_or_output_iterator<I2>);
-    //static_assert(std::indirectly_readable<I2>);
-    //static_assert(std::input_iterator<I2>);
-
-    //using Rng = decltype(bfs);
-    //static_assert(std::is_constructible_v<Rng>);
-    //static_assert(std::ranges::range<Rng>);
-    //static_assert(std::movable<Rng>);
-    //static_assert(std::derived_from<Rng, std::ranges::view_base>);
-    //static_assert(std::ranges::enable_view<Rng>);
-    //static_assert(std::ranges::view<decltype(bfs)>);
-
-    //auto it8  = std::ranges::begin(bfs);
-    //auto it9  = std::ranges::end(bfs);
-    //auto n    = std::ranges::size(bfs);
-    //auto empt = std::ranges::empty(bfs);
+  SECTION("co_bfs vertices Option 2") {
+    for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::discover_vertex); bfs;) {
+      auto&& [event, payload] = bfs();
+      switch (event) {
+      case bfs_events::discover_vertex: {
+        // This is another syntax that might be nice to have, but may be harder to impl than I'd first imagined.
+        // It's using the same CPO names as before, only for the BFS vertex/edge variant.
+        //cout << "[" << vertex_id(payload) << "] " << vertex_value(g, vertex_id(payload)) << endl;
+      } break;
+      default: break;
+      }
+    }
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-  SECTION("vertices_breadth_first_search_view output") {
+  SECTION("co_bfs output") {
+
     //vertices_breadth_first_search_view<G, void> bfs(g, frankfurt_id);
 
     //int cnt = 0;
@@ -238,6 +269,7 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
 #endif
 }
 
+#if 0
 using std::graph::fibonacci_sequence;
 using std::graph::fib_seq;
 
@@ -257,7 +289,7 @@ TEST_CASE("co fib test", "[fibonacci][coroutine]") {
 TEST_CASE("co fib class test", "[fibonacci][coroutine]") {
   try {
     fib_seq fs(10);
-    auto    gen = fibonacci_sequence(10); // max 94 before uint64_t overflows
+    auto    gen = fs(); // max 94 before uint64_t overflows
 
     for (int j = 0; gen; ++j)
       std::cout << "fib(" << j << ")=" << gen() << '\n';
@@ -267,20 +299,21 @@ TEST_CASE("co fib class test", "[fibonacci][coroutine]") {
     std::cerr << "Unknown exception.\n";
   }
 }
+#endif //0
 
 /* Target syntax
   // Only stop for one event in this example
-  for (auto&& [event, desc] : co_bfs(costar_adjacency_list, bfs_event::examine_edge)) {
+  for (auto&& [event, desc] : co_bfs(costar_adjacency_list, bfs_events::examine_edge)) {
     // The switch statement is overkill for this example, but it's useful for more complex algorithms.
     switch (event) {
     // Option 1: Use edge(desc) and vertex(desc) functions to return existing descriptors so structured bindings can be used
-    case bfs_event::examine_edge: {
+    case bfs_events::examine_edge: {
       auto&& [uid, vid] = edge(desc);
       bacon_number[vid] = bacon_number[uid] + 1; // overload existing fncs for bfs_desc
     } break;
 
     // Option 2: Use existing functions
-    case bfs_event::examine_edge: {
+    case bfs_events::examine_edge: {
       bacon_number[target_id(desc)] = bacon_number[source_id(desc)] + 1; // overload existing fncs for bfs_desc
     } break;
 
