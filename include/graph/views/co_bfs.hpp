@@ -61,7 +61,7 @@ struct Generator {
 
     template <std::convertible_to<T> From> // C++20 concept
     std::suspend_always yield_value(From&& from) {
-      value_ = std::forward<From>(from);   // caching the result in promise
+      value_ = std::forward<From>(from); // caching the result in promise
       return {};
     }
     void return_void() {}
@@ -72,7 +72,7 @@ struct Generator {
   Generator(handle_type h)
         : h_(h) //
   {}
-  ~Generator()  //
+  ~Generator() //
   {
     h_.destroy();
   }
@@ -225,11 +225,11 @@ using bfs_value_t = pair<bfs_events, bfs_variant_value_t<G>>;
       }
 
 // co_bfs is a coroutine that yields bfs_value_t<G> values as it traverses the graph, based on the
-// events that are passed in. The generator is templated on the graph type, and the events are passed 
+// events that are passed in. The generator is templated on the graph type, and the events are passed
 // in as a bitmask.
 //
 // The implementation is based on boost::graph::breadth_first_visit.
-// 
+//
 // @param g      The graph to use
 // @param seed   The starting vertex_id
 // @param events A bitmap of the different events to stop at
