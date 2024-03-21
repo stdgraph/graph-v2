@@ -14,7 +14,7 @@
 
 namespace std::graph {
 
-enum class dijkstra_event : int {
+enum class dijkstra_events : int {
   initialize_vertex,
   discover_vertex,
   examine_vertex,
@@ -24,7 +24,33 @@ enum class dijkstra_event : int {
   finish_vertex
 };
 
+constexpr dijkstra_events& operator&=(dijkstra_events& lhs, dijkstra_events rhs) noexcept {
+  lhs = static_cast<dijkstra_events>(static_cast<int>(lhs) & static_cast<int>(rhs));
+  return lhs;
+}
+constexpr dijkstra_events  operator&(dijkstra_events lhs, dijkstra_events rhs) noexcept { return (lhs &= rhs); }
+constexpr dijkstra_events& operator|=(dijkstra_events& lhs, dijkstra_events rhs) noexcept {
+  lhs = static_cast<dijkstra_events>(static_cast<int>(lhs) | static_cast<int>(rhs));
+  return lhs;
+}
+constexpr dijkstra_events operator|(dijkstra_events lhs, dijkstra_events rhs) noexcept { return (lhs |= rhs); }
 
+
+template<class G>
+class co_dijkstra_clrs {
+public:
+  co_dijkstra_clrs() = default;
+  co_dijkstra_clrs(const G& g, vertex_id_t<G> seed) : g_(g) {}
+
+public:
+public:
+public:
+public:
+
+private:
+  reference_wrapper<G> g_;
+  vertex_id_t<G>       seed_{};
+};
 
 }
 
