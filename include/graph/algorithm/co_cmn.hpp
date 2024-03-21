@@ -10,6 +10,17 @@
 
 namespace std::graph {
 
+template <class G, class WF, class DistanceValue, class Compare, class Combine>
+concept basic_edge_weight_function = // e.g. weight(uv)
+      is_arithmetic_v<DistanceValue> && strict_weak_order<Compare, DistanceValue, DistanceValue> &&
+      assignable_from<add_lvalue_reference_t<DistanceValue>,
+                      invoke_result_t<Combine, DistanceValue, invoke_result_t<WF, edge_reference_t<G>>>>;
+
+template <class G, class WF, class DistanceValue>
+concept edge_weight_function = // e.g. weight(uv)
+      is_arithmetic_v<invoke_result_t<WF, edge_reference_t<G>>> &&
+      basic_edge_weight_function<G, WF, DistanceValue, less<DistanceValue>, plus<DistanceValue>>;
+
 // These types comprise the bfs value type, made up of bfs_events and variant<vertex_descriptor, edge_descriptor>.
 // monostate is used to indicate that the value is not set and to make it default-constructible.
 template <class G>

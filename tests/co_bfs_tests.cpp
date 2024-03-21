@@ -272,6 +272,7 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
 #if 0
 using std::graph::fibonacci_sequence;
 using std::graph::fib_seq;
+using std::graph::fib_seq_wrap;
 
 TEST_CASE("co fib test", "[fibonacci][coroutine]") {
   try {
@@ -299,7 +300,24 @@ TEST_CASE("co fib class test", "[fibonacci][coroutine]") {
     std::cerr << "Unknown exception.\n";
   }
 }
+
+// This doesn't terminate after 10 iterations
+//TEST_CASE("co fib wrapper test", "[fibonacci][coroutine]") {
+//  try {
+//    auto gen = fib_seq_wrap(10); // max 94 before uint64_t overflows
+//
+//    for (int j = 0; gen; ++j)
+//      std::cout << "fib(" << j << ")=" << gen() << '\n';
+//  } catch (const std::exception& ex) {
+//    std::cerr << "Exception: " << ex.what() << '\n';
+//  } catch (...) {
+//    std::cerr << "Unknown exception.\n";
+//  }
+//}
+
 #endif //0
+
+
 
 /* Target syntax
   // Only stop for one event in this example

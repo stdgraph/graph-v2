@@ -8,13 +8,8 @@
 
 namespace std::graph {
 
-template <class G, class F>
-concept edge_weight_function = // e.g. weight(uv)
-      copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
-
-
 // These events duplicate boost::graph's BFSVisitorConcept
-enum class bfs_events : int {
+enum class bfs_events {
   none              = 0,
   initialize_vertex = 0x0001,
   discover_vertex   = 0x0002, // e.g. white_target

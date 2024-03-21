@@ -74,7 +74,7 @@ private:
   }
 };
 
-#if 0
+#if 1
 Generator<std::uint64_t> fibonacci_sequence(unsigned n) {
   if (n == 0)
     co_return;
@@ -138,6 +138,11 @@ public:
 private:
   unsigned n_ = 0;
 };
+
+Generator<std::uint64_t> fib_seq_wrap(unsigned n) {
+  fib_seq fs(n);
+  return fs();
+}
 #endif //0
 
 } // namespace std::graph
