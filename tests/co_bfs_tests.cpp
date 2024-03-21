@@ -2,7 +2,7 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/views/co_bfs.hpp"
+#include "graph/algorithm/co_bfs.hpp"
 #include "graph/container/dynamic_graph.hpp"
 
 #define TEST_OPTION_OUTPUT (1)

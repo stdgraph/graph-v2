@@ -1,29 +1,6 @@
 #pragma once
 
-#include <variant>
-
-#include "graph/graph.hpp"
-#include "graph/views/incidence.hpp"
-#include "graph/detail/co_generator.hpp"
-
-#include <queue>
-#include <algorithm>
-
-
-#if defined(__GNUC__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Woverloaded-virtual"
-#  pragma GCC diagnostic ignored "-Wsign-conversion"
-#  pragma GCC diagnostic ignored "-Wconversion"
-#  pragma GCC diagnostic ignored "-Wshadow"
-#  pragma GCC diagnostic ignored "-Wpedantic"
-#endif
-
-//#include <boost/cobalt/generator.hpp>
-
-#if defined(__clang__) || defined(__GNUC__)
-#  pragma GCC diagnostic pop
-#endif
+#include "graph/algorithm/co_cmn.hpp"
 
 
 #ifndef GRAPH_CO_BFS_HPP
@@ -60,32 +37,6 @@ constexpr bfs_events& operator|=(bfs_events& lhs, bfs_events rhs) noexcept {
 }
 constexpr bfs_events operator|(bfs_events lhs, bfs_events rhs) noexcept { return (lhs |= rhs); }
 
-// These types comprise the bfs value type, made up of bfs_events and variant<vertex_descriptor, edge_descriptor>.
-// monostate is used to indicate that the value is not set and to make it default-constructible.
-template <class G>
-using bfs_vertex_value_t = vertex_descriptor<vertex_id_t<G>, reference_wrapper<vertex_t<G>>, void>;
-template <class G>
-using bfs_edge_value_t = edge_descriptor<vertex_id_t<G>, true, reference_wrapper<edge_t<G>>, void>;
-template <class G>
-using bfs_variant_value_t = variant<monostate, bfs_vertex_value_t<G>, bfs_edge_value_t<G>>;
-
-template <class G>
-using bfs_value_t = pair<bfs_events, bfs_variant_value_t<G>>;
-
-// Helper macros to keep the visual clutter down in a coroutine. I'd like to investigate using CRTP to avoid them,
-// but I'm not sure how it will play with coroutines.
-#  define yield_vertex(event, uid)                                                                                     \
-    if ((event & events) != bfs_events::none)                                                                          \
-      co_yield bfs_value_type {                                                                                        \
-        event, bfs_vertex_type { uid, *find_vertex(g, uid) }                                                           \
-      }
-
-#  define yield_edge(event, uid, vid, uv)                                                                              \
-    if ((event & events) != bfs_events::none)                                                                          \
-      co_yield bfs_value_type {                                                                                        \
-        event, bfs_edge_type { uid, vid, uv }                                                                          \
-      }
-
 // co_bfs is a coroutine that yields bfs_value_t<G> values as it traverses the graph, based on the
 // events that are passed in. The generator is templated on the graph type, and the events are passed
 // in as a bitmask.
@@ -97,14 +48,14 @@ using bfs_value_t = pair<bfs_events, bfs_variant_value_t<G>>;
 // @param events A bitmap of the different events to stop at
 //
 template <index_adjacency_list G>
-Generator<bfs_value_t<G>> co_bfs(G&&            g,    // graph
-                                 vertex_id_t<G> seed, // starting vertex_id
-                                 bfs_events     events)   // events to stop at
+Generator<bfs_value_t<bfs_events, G>> co_bfs(G&&            g,    // graph
+                                             vertex_id_t<G> seed, // starting vertex_id
+                                             bfs_events     events)   // events to stop at
 {
   using id_type         = vertex_id_t<G>;
   using bfs_vertex_type = bfs_vertex_value_t<G>;
   using bfs_edge_type   = bfs_edge_value_t<G>;
-  using bfs_value_type  = bfs_value_t<G>;
+  using bfs_value_type  = bfs_value_t<bfs_events, G>;
 
   size_t N(num_vertices(g));
   assert(seed < N && seed >= 0);
@@ -152,19 +103,6 @@ Generator<bfs_value_t<G>> co_bfs(G&&            g,    // graph
   }
 }
 
-
-enum class dijkstra_event : int {
-  //tree_edge,
-  //gray_target,
-
-  initialize_vertex,
-  discover_vertex,
-  examine_vertex,
-  examine_edge,
-  edge_relaxed,
-  edge_not_relaxed,
-  finish_vertex
-};
 
 // BGL list of all possible events?
 enum event_visitor_enum {
