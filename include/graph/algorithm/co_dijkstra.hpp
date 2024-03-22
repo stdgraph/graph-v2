@@ -75,7 +75,7 @@ public:
         G&           g,
         Distance&    distance,
         Predecessor& predecessor,
-        WF&&         weight =
+        WF&         weight =
               [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }, // default weight(uv) -> 1
         Compare&& compare = less<ranges::range_value_t<Distance>>(),
         Combine&& combine = plus<ranges::range_value_t<Distance>>())
@@ -122,6 +122,7 @@ public:
     using bfs_value_type  = bfs_value_t<dijkstra_events, G, DistanceValue>;
 
     constexpr auto zero = DistanceValue{};
+    constexpr auto infinite = numeric_limits<DistanceValue>::max();
 
     size_t N(num_vertices(g_));
     assert(seed < N && seed >= 0);
@@ -139,7 +140,6 @@ public:
     using q_compare = decltype([](const id_type& a, const id_type& b) { return a > b; });
     std::priority_queue<id_type, vector<id_type>, q_compare> Q;
 
-    // Remark(Andrew):  CLRS puts all vertices in the queue to start but standard prctice seems to be to enqueue source
     Q.push(seed);
     //color[seed] = three_colors::gray;
     discovered[seed] = true;
@@ -156,7 +156,7 @@ public:
 
         // if weight(uv)==0, vid would be discovered more than once if another path to vid exists
         // could be mitigated by using vector<bool> to flag discovered vertices
-        if (!discovered[vid] && distance_[vid] == zero) { //if (color[vid] == three_colors::white) {
+        if (!discovered[vid] && distance_[vid] == infinite) { //if (color[vid] == three_colors::white) {
           // tree_edge
           bool decreased = relax_target(uv, uid);
           if (decreased)
