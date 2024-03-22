@@ -2,7 +2,7 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/algorithm/co_dijstra_clrs.hpp"
+#include "graph/algorithm/co_dijstra.hpp"
 #include "graph/container/dynamic_graph.hpp"
 
 #define TEST_OPTION_OUTPUT (1)
@@ -41,7 +41,7 @@ using std::graph::edge_value;
 using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
-using std::graph::co_dijkstra_clrs;
+using std::graph::co_dijkstra;
 using std::graph::bfs_vertex_value_t;
 using std::graph::bfs_edge_value_t;
 
@@ -69,7 +69,7 @@ TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]")
   auto frankfurt_id = find_frankfurt_id(g);
 
   // The syntax using structured bindings for visiting vertices.
-  //SECTION("co_dijkstra_clrs vertices") {
+  //SECTION("co_dijkstra vertices") {
   //  for (auto bfs = co_dijkstra_clrs(g, frankfurt_id, bfs_events::discover_vertex); bfs;) {
   //    auto&& [event, payload] = bfs();
   //    switch (event) {
@@ -83,7 +83,7 @@ TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]")
   //}
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-  SECTION("co_bfs output") {
+  SECTION("co_dikstra output") {
 
     //vertices_breadth_first_search_view<G, void> bfs(g, frankfurt_id);
 

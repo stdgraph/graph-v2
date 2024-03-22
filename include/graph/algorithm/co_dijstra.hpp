@@ -30,6 +30,7 @@ namespace std::graph {
         event, bfs_edge_type { uid, vid, uv }                                                                          \
       }
 
+// distance[x] = 0, distance[x] + w < distance[v] : white, gray
 enum class dijkstra_events {
   none = 0,
   initialize_vertex,
@@ -63,14 +64,14 @@ template <index_adjacency_list        G,
 requires is_arithmetic_v<ranges::range_value_t<Distance>> &&                   //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distance>, Compare, Combine>
-class co_dijkstra_clrs {
+class co_dijkstra {
 public:
   using DistanceValue = ranges::range_value_t<Distance>;
 
   // Construction/Desstruction/Assignment
 public:
-  co_dijkstra_clrs() = delete;
-  co_dijkstra_clrs(
+  co_dijkstra() = delete;
+  co_dijkstra(
         const G&     g,
         Distance&    distance,
         Predecessor& predecessor,
@@ -119,22 +120,26 @@ public:
     using bfs_edge_type   = bfs_edge_value_t<G>;
     using bfs_value_type  = bfs_value_t<dijkstra_events, G>;
 
+    constexpr auto zero = DistanceValue{};
+
     size_t N(num_vertices(g_));
     assert(seed < N && seed >= 0);
 
-    vector<three_colors> color(N, three_colors::white);
+    //vector<three_colors> color(N, three_colors::white);
+    vector<bool> discovered(N);
 
-    if ((events & dijkstra_events::initialize_vertex) != dijkstra_events::none) {
-      for (id_type uid = 0; uid < num_vertices(g_); ++uid) {
+    if ((events & dijkstra_events::initialize_vertex) != dijkstra_events::initialize_vertex) {
+      for (id_type uid = 0; uid < num_vertices(g_); ++uid)
         dijkstra_yield_vertex(dijkstra_events::initialize_vertex, uid);
-      }
     }
+
     using q_compare = decltype([](const id_type& a, const id_type& b) { return a > b; });
     std::priority_queue<id_type, vector<id_type>, q_compare> Q;
 
     // Remark(Andrew):  CLRS puts all vertices in the queue to start but standard prctice seems to be to enqueue source
     Q.push(seed);
-    color[seed] = three_colors::gray;
+    //color[seed] = three_colors::gray;
+    discovered[seed] = true;
     dijkstra_yield_vertex(dijkstra_events::discover_vertex, seed);
 
     while (!Q.empty()) {
@@ -145,33 +150,39 @@ public:
       for (auto&& [vid, uv] : views::incidence(g_, uid)) {
         dijkstra_yield_edge(dijkstra_events::examine_edge, uid, vid, uv);
 
-        if (color[vid] == three_colors::white) {
+        // if weight(uv)==0, vid would be discovered more than once if another path to vid exists
+        // could be mitigated by using vector<bool> to flag discovered vertices
+        if (!discovered(vid) && distance_[vid] == zero) { //if (color[vid] == three_colors::white) {
           // tree_edge
           bool decreased = relax_target(uv, uid);
           if (decreased)
             dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
           else
             dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
-          color[vid] = three_colors::gray;
+          //color[vid] = three_colors::gray; // distance_[vid] > 0
+          discovered[vid] = true;
           dijkstra_yield_vertex(dijkstra_events::discover_vertex, vid);
           Q.push(vid);
         } else {
           // non-tree edge
-          if (color[vid] == three_colors::gray) {
-            DistanceValue old_distance = distance_[vid];
+          //if (color[vid] == three_colors::gray) {
+          //  DistanceValue old_distance = distance_[vid];
 
-            bool decreased = relax_target(uv, uid);
-            if (decreased) {
-              Q.push(vid);
-              dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
-            } else
-              dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
+          bool decreased = relax_target(uv, uid);
+          if (decreased) {
+            Q.push(vid);
+            dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
           } else {
-            //black_target: ignore
+            dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
           }
+          // Note: black node same as gray node. OK? What use case am I missing?
+
+          //} else {
+          //  //black_target: ignore
+          //}
         }
       }
-      color[uid] = three_colors::black;
+      //color[uid] = three_colors::black;
       dijkstra_yield_vertex(dijkstra_events::finish_vertex, uid);
     }
   }

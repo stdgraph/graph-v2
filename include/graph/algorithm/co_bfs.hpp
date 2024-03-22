@@ -2,6 +2,15 @@
 
 #include "graph/algorithm/co_cmn.hpp"
 
+/*
+* coroutine notes
+* 1. coroutine function must be the one to call co_yield - can't be called function from the coroutine using simple genrator
+*   a. is there a way around this if we implement our own generator-like function?
+*   b. does the one in the standard offer more flexibility?
+* 2. to offer bgl-like bfs composition, would something like CRTP work, where dijkstra visitor is the base class with eveent handlers?
+* 3. Can an abstraction be added to offer optional colors[] processing, where they aren't included for high performance?
+*/
+
 
 #ifndef GRAPH_CO_BFS_HPP
 #  define GRAPH_CO_BFS_HPP
