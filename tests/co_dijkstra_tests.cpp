@@ -2,7 +2,7 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/algorithm/co_dijstra.hpp"
+#include "graph/algorithm/co_dijkstra.hpp"
 #include "graph/container/dynamic_graph.hpp"
 
 #define TEST_OPTION_OUTPUT (1)
@@ -48,6 +48,9 @@ using std::graph::bfs_edge_value_t;
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
+using Distance     = double;
+using Distances    = std::vector<Distance>;
+using Predecessors = std::vector<vertex_id_t<routes_vol_graph_type>>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -68,19 +71,25 @@ TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]")
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  // The syntax using structured bindings for visiting vertices.
-  //SECTION("co_dijkstra vertices") {
-  //  for (auto bfs = co_dijkstra_clrs(g, frankfurt_id, bfs_events::discover_vertex); bfs;) {
-  //    auto&& [event, payload] = bfs();
-  //    switch (event) {
-  //    case bfs_events::discover_vertex: {
-  //      auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
-  //      cout << "[" << uid << "] " << vertex_value(g, u) << endl;
-  //    } break;
-  //    default: break;
-  //    }
-  //  }
-  //}
+  Distances    distance(size(vertices(g)), std::numeric_limits<double>::max());
+  Predecessors predecessors(size(vertices(g)));
+  for (size_t i = 0; i < size(predecessors); ++i)
+    predecessors[i] = static_cast<vertex_id_t<G>>(i);
+  //init_shortest_paths(distance, predecessors);
+
+  SECTION("co_dijkstra vertices") {
+    co_dijkstra dijkstra(g, distance, predecessors); // frankfurt_id, bfs_events::discover_vertex
+    for (auto bfs = dijkstra(frankfurt_id, dijkstra_events::discover_vertex); bfs;) {
+      auto&& [event, payload] = bfs();
+      switch (event) {
+      case dijkstra_events::discover_vertex: {
+        auto&& [uid, u, distance] = get<bfs_vertex_value_t<G, double>>(payload); // or get<1>(payload);
+        cout << "[" << uid << "] " << vertex_value(g, u) << " " << distance << "km" << endl;
+      } break;
+      default: break;
+      }
+    }
+  }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("co_dikstra output") {
@@ -252,4 +261,3 @@ TEST_CASE("co fib class test", "[fibonacci][coroutine]") {
   }
 }
 #endif //0
-
