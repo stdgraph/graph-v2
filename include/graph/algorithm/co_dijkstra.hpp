@@ -55,6 +55,26 @@ constexpr dijkstra_events& operator|=(dijkstra_events& lhs, dijkstra_events rhs)
 constexpr dijkstra_events operator|(dijkstra_events lhs, dijkstra_events rhs) noexcept { return (lhs |= rhs); }
 
 
+/**
+ * @brief dijkstra shortest paths
+ * 
+ * This is an experimental implementation of Dijkstra's shortest paths to separate the
+ * construction from execution using a coroutine. For this to work over multiple calls,
+ * more work is needed to support re-initializing the distance and predecessor values.
+ * 
+ * The implementation was taken from boost::graph (BGL) dijkstra_shortes_paths_no_init.
+ * The colors[] vector has been replaced with a discovered[] vector<bool>, with the
+ * consequence that the same vertex and it's descendents may be processed more than
+ * once if the weights are less than had been previously discovered. This may be a
+ * feature (need to discuss with Andrew).
+ * 
+ * @tparam Compare Comparison function for Distance values. Defaults to less<Distance>.
+ * @tparam Combine Combine function for Distance values. Defaults to plus<Distanct>.
+ * @tparam WF      Edge weigth fundtion. Defaults to a function that returns 1.
+ * @tparam G       The graph type,
+ * @tparam Distance The distance vector.
+ * @tparam Predecessor The predecessor vector.
+ */
 template <index_adjacency_list        G,
           ranges::random_access_range Distance,
           ranges::random_access_range Predecessor,
@@ -180,8 +200,8 @@ public:
               dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
             }
             // Note: black node treated same as gray node. Is that OK? What use case am I missing?
-            //    This will cause the same vertex to be processed multiple times in unbalanced
-            // graph where a longer number of hops results in a lower accumulated weight.
+            //    This will cause the same vertex to be processed multiple times in an unbalanced
+            // graph where a path with a longer number of hops results in a lower accumulated weight.
             // It seems like this might be desired?
             //    ABC required a similar technique to accumulate all contributing costs.
           }
