@@ -24,14 +24,14 @@
 
 namespace std::graph {
 
-template <class G, class WF, class DistanceValue, class Compare, class Combine>
-concept basic_edge_weight_function = // e.g. weight(uv)
+template <class G, class WF, class DistanceValue, class Compare, class Combine> // For exposition only
+concept basic_edge_weight_function =                                            // e.g. weight(uv)
       is_arithmetic_v<DistanceValue> && strict_weak_order<Compare, DistanceValue, DistanceValue> &&
       assignable_from<add_lvalue_reference_t<DistanceValue>,
                       invoke_result_t<Combine, DistanceValue, invoke_result_t<WF, edge_reference_t<G>>>>;
 
-template <class G, class WF, class DistanceValue>
-concept edge_weight_function = // e.g. weight(uv)
+template <class G, class WF, class DistanceValue> // For exposition only
+concept edge_weight_function =                    // e.g. weight(uv)
       is_arithmetic_v<invoke_result_t<WF, edge_reference_t<G>>> &&
       basic_edge_weight_function<G, WF, DistanceValue, less<DistanceValue>, plus<DistanceValue>>;
 
@@ -150,8 +150,8 @@ template <index_adjacency_list        G,
           class WF        = function<ranges::range_value_t<Distances>(edge_reference_t<G>)>, //
           class Allocator = allocator<vertex_id_t<G>>                                        //
           >
-requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
-         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
+requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                                //
+         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&              //
          edge_weight_function<G, WF, ranges::range_value_t<Distances>>
 void dijkstra_shortest_paths(
       G&&            g,            // graph
@@ -219,7 +219,7 @@ template <index_adjacency_list        G,
           class WF        = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>, //
           class Allocator = allocator<vertex_id_t<G>>                                             //
           >
-requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
+requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                                     //
          edge_weight_function<G, WF, ranges::range_value_t<Distances>>
 void dijkstra_shortest_distances(
       G&&            g,         // graph
@@ -260,8 +260,8 @@ template <index_adjacency_list        G,
           class WF        = function<ranges::range_value_t<Distances>(edge_reference_t<G>)>, //
           class Allocator = allocator<vertex_id_t<G>>                                        //
           >
-requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
-         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
+requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                                //
+         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&              //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 void dijkstra_shortest_paths(
       G&&            g,            // graph
@@ -333,7 +333,7 @@ template <index_adjacency_list        G,
           class WF        = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>, //
           class Allocator = allocator<vertex_id_t<G>>                                             //
           >
-requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
+requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                                     //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 void dijkstra_shortest_distances(
       G&&            g,         // graph
