@@ -318,7 +318,6 @@ TEST_CASE("co fib class test", "[fibonacci][coroutine]") {
 #endif //0
 
 
-
 /* Target syntax
   // Only stop for one event in this example
   for (auto&& [event, desc] : co_bfs(costar_adjacency_list, bfs_events::examine_edge)) {
