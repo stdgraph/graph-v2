@@ -271,19 +271,19 @@ struct neighbor_descriptor<VId, true, void, void> {
 //
 // copyable_edge_t
 //
-template <class VId, class VV>
+template <class VId, class VV>                                        // For exposition only
 using copyable_neighbor_t = neighbor_descriptor<VId, true, void, VV>; // {source_id, target_id [, value]}
 
 //
 // view concepts
 //
-template <class T, class VId, class VV>
+template <class T, class VId, class VV> // For exposition only
 concept copyable_vertex = convertible_to<T, copyable_vertex_t<VId, VV>>;
 
-template <class T, class VId, class EV>
+template <class T, class VId, class EV> // For exposition only
 concept copyable_edge = convertible_to<T, copyable_edge_t<VId, EV>>;
 
-template <class T, class VId, class EV>
+template <class T, class VId, class EV> // For exposition only
 concept copyable_neighbor = convertible_to<T, copyable_neighbor_t<VId, EV>>;
 
 //

@@ -73,13 +73,13 @@ namespace std::graph {
  * @tparam G The graph type.
  * @tparam E The edge type.
  */
-template <class G, class E>
+template <class G, class E> // For exposition only
 concept basic_targeted_edge = requires(G&& g, edge_reference_t<G> uv) { target_id(g, uv); };
 
-template <class G, class E>
+template <class G, class E> // For exposition only
 concept basic_sourced_edge = requires(G&& g, edge_reference_t<G> uv) { source_id(g, uv); };
 
-template <class G, class E>
+template <class G, class E>                                        // For exposition only
 concept basic_sourced_targeted_edge = basic_targeted_edge<G, E> && //
                                       basic_sourced_edge<G, E> &&  //
                                       requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
@@ -94,15 +94,15 @@ concept basic_sourced_targeted_edge = basic_targeted_edge<G, E> && //
  * @tparam G The graph type.
  * @tparam E The edge type.
  */
-template <class G, class E>
+template <class G, class E>                          // For exposition only
 concept targeted_edge = basic_targeted_edge<G, E> && //
                         requires(G&& g, edge_reference_t<G> uv) { target(g, uv); };
 
-template <class G, class E>
+template <class G, class E>                        // For exposition only
 concept sourced_edge = basic_sourced_edge<G, E> && //
                        requires(G&& g, edge_reference_t<G> uv) { source(g, uv); };
 
-template <class G, class E>
+template <class G, class E>                            // For exposition only
 concept sourced_targeted_edge = targeted_edge<G, E> && //
                                 sourced_edge<G, E> &&  //
                                 requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
@@ -124,11 +124,11 @@ template <class G>                                                       // (exp
 concept _common_vertex_range = ranges::sized_range<vertex_range_t<G>> && //
                                requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
 
-template <class G>
+template <class G>                                                // For exposition only
 concept vertex_range = _common_vertex_range<vertex_range_t<G>> && //
                        ranges::forward_range<vertex_range_t<G>>;
 
-template <class G>
+template <class G>                                                             // For exposition only
 concept index_vertex_range = _common_vertex_range<vertex_range_t<G>> &&        //
                              ranges::random_access_range<vertex_range_t<G>> && //
                              integral<vertex_id_t<G>>;
@@ -142,12 +142,12 @@ concept index_vertex_range = _common_vertex_range<vertex_range_t<G>> &&        /
  * @ingroup graph_concepts
  * @brief Concept for a target edge range
 */
-template <class G>
+template <class G> // For exposition only
 concept basic_targeted_edge_range = requires(G&& g, vertex_id_t<G> uid) {
   { edges(g, uid) } -> ranges::forward_range;
 };
 
-template <class G>
+template <class G>                                            // For exposition only
 concept targeted_edge_range = basic_targeted_edge_range<G> && //
                               requires(G&& g, vertex_reference_t<G> u) {
                                 { edges(g, u) } -> ranges::forward_range;
@@ -164,7 +164,7 @@ concept targeted_edge_range = basic_targeted_edge_range<G> && //
  * 
  * @tparam G The graph type.
 */
-template <class G>
+template <class G>                                             // For exposition only
 concept basic_adjacency_list = vertex_range<G> &&              //
                                basic_targeted_edge_range<G> && //
                                targeted_edge<G, edge_t<G>>;
@@ -179,7 +179,7 @@ concept basic_adjacency_list = vertex_range<G> &&              //
  * 
  * @tparam G The graph type.
 */
-template <class G>
+template <class G>                                                   // For exposition only
 concept basic_index_adjacency_list = index_vertex_range<G> &&        //
                                      basic_targeted_edge_range<G> && //
                                      basic_targeted_edge<G, edge_t<G>>;
@@ -192,7 +192,7 @@ concept basic_index_adjacency_list = index_vertex_range<G> &&        //
  * 
  * @tparam G The graph type.
 */
-template <class G>
+template <class G>                                                     // For exposition only
 concept basic_sourced_adjacency_list = vertex_range<G> &&              //
                                        basic_targeted_edge_range<G> && //
                                        basic_sourced_targeted_edge<G, edge_t<G>>;
@@ -207,7 +207,7 @@ concept basic_sourced_adjacency_list = vertex_range<G> &&              //
  * 
  * @tparam G The graph type.
 */
-template <class G>
+template <class G>                                                           // For exposition only
 concept basic_sourced_index_adjacency_list = index_vertex_range<G> &&        //
                                              basic_targeted_edge_range<G> && //
                                              basic_sourced_targeted_edge<G, edge_t<G>>;
@@ -223,7 +223,7 @@ concept basic_sourced_index_adjacency_list = index_vertex_range<G> &&        //
  * 
  * @tparam G The graph type.
 */
-template <class G>
+template <class G>                                 // For exposition only
 concept adjacency_list = vertex_range<G> &&        //
                          targeted_edge_range<G> && //
                          targeted_edge<G, edge_t<G>>;
@@ -238,7 +238,7 @@ concept adjacency_list = vertex_range<G> &&        //
  * 
  * @tparam G The graph type.
 */
-template <class G>
+template <class G>                                       // For exposition only
 concept index_adjacency_list = index_vertex_range<G> &&  //
                                targeted_edge_range<G> && //
                                targeted_edge<G, edge_t<G>>;
@@ -252,7 +252,7 @@ concept index_adjacency_list = index_vertex_range<G> &&  //
  * 
  * @tparam G The graph type.
 */
-template <class G>
+template <class G>                                         // For exposition only
 concept sourced_adjacency_list = vertex_range<G> &&        //
                                  targeted_edge_range<G> && //
                                  sourced_targeted_edge<G, edge_t<G>>;
@@ -267,7 +267,7 @@ concept sourced_adjacency_list = vertex_range<G> &&        //
  * 
  * @tparam G The graph type.
 */
-template <class G>
+template <class G>                                               // For exposition only
 concept sourced_index_adjacency_list = index_vertex_range<G> &&  //
                                        targeted_edge_range<G> && //
                                        sourced_targeted_edge<G, edge_t<G>>;
@@ -315,7 +315,7 @@ inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
  * 
  * @tparam G The graph type
 */
-template <class G>
+template <class G> // For exposition only
 concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
   { degree(g, u) };
 };
@@ -332,7 +332,7 @@ concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
  * 
  * @tparam G The graph type
 */
-template <class G>
+template <class G> // For exposition only
 concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
   { find_vertex(g, uid) } -> forward_iterator;
 };
@@ -345,7 +345,7 @@ concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
  * 
  * @tparam G The graph type
 */
-template <class G>
+template <class G> // For exposition only
 concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
   { find_vertex_edge(g, u, vid) } -> forward_iterator;
   { find_vertex_edge(g, uid, vid) } -> forward_iterator;
@@ -359,7 +359,7 @@ concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G
  * 
  * @tparam G The graph type
 */
-template <class G>
+template <class G> // For exposition only
 concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
   { contains_edge(g, uid, vid) } -> convertible_to<bool>;
 };
@@ -436,7 +436,7 @@ struct is_unordered_edge : public conjunction<define_unordered_edge<E>, is_sourc
 template <class G, class E>
 inline constexpr bool is_unordered_edge_v = is_unordered_edge<G, E>::value;
 
-template <class G, class E>
+template <class G, class E> // For exposition only
 concept unordered_edge = is_unordered_edge_v<G, E>;
 
 //
@@ -448,7 +448,7 @@ struct is_ordered_edge : public negation<is_unordered_edge<G, E>> {};
 template <class G, class E>
 inline constexpr bool is_ordered_edge_v = is_ordered_edge<G, E>::value;
 
-template <class G, class E>
+template <class G, class E> // For exposition only
 concept ordered_edge = is_ordered_edge_v<G, E>;
 
 
