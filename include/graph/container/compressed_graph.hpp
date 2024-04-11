@@ -602,9 +602,9 @@ public: // Operations
       auto&& edge = eprojection(edge_data); // compressed_graph requires EV!=void
       assert(edge.source_id >= last_uid);   // ordered by uid? (requirement)
       row_index_.resize(static_cast<size_t>(edge.source_id) + 1,
-                        vertex_type{static_cast<vertex_id_type>(static_cast<col_values_base&>(*this).size())});
+                        vertex_type{static_cast<vertex_id_type>(col_index_.size())});
       col_index_.push_back(edge_type{edge.target_id});
-      if (!is_void_v<EV>)
+      if constexpr (!is_void_v<EV>)
         static_cast<col_values_base&>(*this).emplace_back(std::move(edge.value));
       last_uid = edge.source_id;
       max_vid  = max(max_vid, edge.target_id);
@@ -614,8 +614,7 @@ public: // Operations
     vertex_count = max(vertex_count, max(row_index_.size(), static_cast<size_type>(max_vid + 1)));
 
     // add any rows that haven't been added yet, and (+1) terminating row
-    row_index_.resize(vertex_count + 1,
-                      vertex_type{static_cast<vertex_id_type>(static_cast<col_values_base&>(*this).size())});
+    row_index_.resize(vertex_count + 1, vertex_type{static_cast<vertex_id_type>(col_index_.size())});
 
     // If load_vertices(vrng,vproj) has been called but it doesn't have enough values for all
     // the vertices then we extend the size to remove possibility of out-of-bounds occuring when
@@ -655,7 +654,7 @@ public: // Operations
       auto&& edge = eprojection(edge_data); // compressed_graph requires EV!=void
       assert(edge.source_id >= last_uid);   // ordered by uid? (requirement)
       row_index_.resize(static_cast<size_t>(edge.source_id) + 1,
-                        vertex_type{static_cast<vertex_id_type>(static_cast<col_values_base&>(*this).size())});
+                        vertex_type{static_cast<vertex_id_type>(col_index_.size())});
       col_index_.push_back(edge_type{edge.target_id});
       if constexpr (!is_void_v<EV>)
         static_cast<col_values_base&>(*this).push_back(edge.value);
@@ -667,8 +666,7 @@ public: // Operations
     vertex_count = max(vertex_count, max(row_index_.size(), static_cast<size_type>(max_vid + 1)));
 
     // add any rows that haven't been added yet, and (+1) terminating row
-    row_index_.resize(vertex_count + 1,
-                      vertex_type{static_cast<vertex_id_type>(static_cast<col_values_base&>(*this).size())});
+    row_index_.resize(vertex_count + 1, vertex_type{static_cast<vertex_id_type>(col_index_.size())});
 
     // If load_vertices(vrng,vproj) has been called but it doesn't have enough values for all
     // the vertices then we extend the size to remove possibility of out-of-bounds occuring when
@@ -956,7 +954,7 @@ public: // Construction/Destruction
   // edge-only construction
   template <ranges::forward_range ERng, class EProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr compressed_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
+  constexpr compressed_graph(const ERng& erng, EProj eprojection = identity(), const Alloc& alloc = Alloc())
         : base_type(erng, eprojection, alloc) {}
 
   // edge and vertex value construction
