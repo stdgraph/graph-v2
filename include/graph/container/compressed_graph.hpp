@@ -230,7 +230,7 @@ public:
   using value_type = void;
   using size_type  = size_t; //VId;
 
-public: // Properties
+public:                      // Properties
   [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
   [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
   [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
@@ -342,7 +342,7 @@ public:
   using value_type = void;
   using size_type  = size_t; //VId;
 
-public: // Properties
+public:                      // Properties
   [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
   [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
   [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
@@ -359,6 +359,10 @@ public: // Operations
 /**
  * @ingroup graph_containers
  * @brief Base class for compressed sparse row adjacency graph
+ * 
+ * For constructors that accept a partition function, the function must return a partition id for a vertex id.
+ * When used, the range of input edges must be ordered by the partition id they're in. Partions may be skipped
+ * (empty) but the partition id must be in increasing order.
  *
  * @tparam EV      The edge value type. If "void" is used no user value is stored on the edge and 
  *                 calls to @c edge_value(g,uv) will generate a compile error.
@@ -390,6 +394,9 @@ class compressed_graph_base
 public: // Types
   using graph_type = compressed_graph_base<EV, VV, GV, VId, EIndex, Alloc>;
 
+  using partition_id_type = VId;
+  using partition_vector  = vector<VId>;
+
   using vertex_id_type      = VId;
   using vertex_type         = row_type;
   using vertex_value_type   = VV;
@@ -417,26 +424,33 @@ public: // Construction/Destruction
   constexpr compressed_graph_base& operator=(compressed_graph_base&&)      = default;
 
   constexpr compressed_graph_base(const Alloc& alloc)
-        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {}
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), partition_(alloc) {}
 
   /**
    * @brief Constructor that takes a edge range to create the CSR graph.
    * 
    * Edges must be ordered by source_id (enforced by asssertion).
    * 
-   * @tparam ERng   Edge range type
-   * @tparam EProj  Edge projection function type
+   * @tparam ERng    Edge range type
+   * @tparam EProj   Edge projection function type
+   * @tparam PartFnc Partition id function type
    * 
    * @param erng        The input range of edges
    * @param eprojection Projection function that creates a @c copyable_edge_t<VId,EV> from an erng value
+   * @param part_fnc    Partition function that returns a partition id for a vertex id.
    * @param alloc       Allocator to use for internal containers
   */
-  template <ranges::forward_range ERng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr compressed_graph_base(const ERng& erng, EProj eprojection = {}, const Alloc& alloc = Alloc())
-        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
+  template <ranges::forward_range ERng, class PartFnc, class EProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> && //
+                 convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  constexpr compressed_graph_base(
+        const ERng&  erng,
+        EProj        eprojection = {},
+        PartFnc      part_fnc    = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        const Alloc& alloc       = Alloc())
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), partition_(alloc) {
 
-    load_edges(erng, eprojection);
+    load_edges(erng, eprojection, part_fnc);
   }
 
   /**
@@ -455,17 +469,24 @@ public: // Construction/Destruction
    * @param vprojection Projection function that creates a @c copyable_vertex_t<VId,EV> from a @c vrng value
    * @param alloc       Allocator to use for internal containers
   */
-  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  template <ranges::forward_range ERng,
+            ranges::forward_range VRng,
+            class PartFnc,
+            class EProj = identity,
+            class VProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
   //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
   //      copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr compressed_graph_base(const ERng&  erng,
-                                  const VRng&  vrng,
-                                  EProj        eprojection = {}, // eproj(eval) -> {source_id,target_id [,value]}
-                                  VProj        vprojection = {}, // vproj(vval) -> {target_id [,value]}
-                                  const Alloc& alloc       = Alloc())
-        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
+  constexpr compressed_graph_base(
+        const ERng&  erng,
+        const VRng&  vrng,
+        EProj        eprojection = {}, // eproj(eval) -> {source_id,target_id [,value]}
+        VProj        vprojection = {}, // vproj(vval) -> {target_id [,value]}
+        PartFnc      part_fnc    = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        const Alloc& alloc       = Alloc())
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), partition_(alloc) {
 
-    load(erng, vrng, eprojection, vprojection);
+    load(erng, vrng, eprojection, vprojection, part_fnc);
   }
 
   /**
@@ -476,12 +497,13 @@ public: // Construction/Destruction
    * @param alloc   Allocator to use for internal containers
   */
   constexpr compressed_graph_base(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
-        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc) {
-    load_edges(ilist, identity());
+        : row_values_base(alloc), col_values_base(alloc), row_index_(alloc), col_index_(alloc), partition_(alloc) {
+    auto part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; };
+    load_edges(ilist, identity(), part_fnc);
   }
 
 public:
-public: // Operations
+public:                            // Operations
   void reserve_vertices(size_type count) {
     row_index_.reserve(count + 1); // +1 for terminating row
     row_values_base::reserve(count);
@@ -569,20 +591,36 @@ public: // Operations
    * 
    * @tparam ERng   Edge range type
    * @tparam EProj  Edge projection function type
+   * @tparam PartFnc Partition id function type
    * 
-   * @param erng        Input range for edges
-   * @param eprojection Edge projection function that returns a @ copyable_edge_t<VId,EV> for an element in @c erng
+   * @param erng         Input range for edges
+   * @param eprojection  Edge projection function that returns a @ copyable_edge_t<VId,EV> for an element in @c erng
+   * @param part_fnc     Partition function that returns a partition id for a vertex id
+   * @param vertex_count The number of vertices in the graph. If 0, the number of vertices is determined by the
+   *                     largest vertex id in the edge range.
+   * @param edge_count   The number of edges in the graph. If 0, the number of edges is determined by the size of the
+   *                     edge range.
   */
-  template <class ERng, class EProj = identity>
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr void load_edges(ERng&& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
+  constexpr void load_edges(
+        ERng&&    erng,
+        EProj     eprojection  = {},
+        PartFnc   part_fnc     = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        size_type vertex_count = 0,
+        size_type edge_count   = 0) {
     // should only be loading into an empty graph
     assert(row_index_.empty() && col_index_.empty() && static_cast<col_values_base&>(*this).empty());
 
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng)) {
+      terminate_partitions();
       return;
     }
+
+    // We have at least one partition
+    partition_.push_back(part_fnc(0));
 
     // We can get the last vertex id from the list because erng is required to be ordered by
     // the source id. It's possible a target_id could have a larger id also, which is taken
@@ -608,6 +646,9 @@ public: // Operations
         static_cast<col_values_base&>(*this).emplace_back(std::move(edge.value));
       last_uid = edge.source_id;
       max_vid  = max(max_vid, edge.target_id);
+
+      // Add partition id for the source vertex if needed
+      partition_.push_back(part_fnc(edge.source_id));
     }
 
     // uid and vid may refer to rows that exceed the value evaluated for vertex_count (if any)
@@ -621,20 +662,31 @@ public: // Operations
     // getting a value for a row.
     if (row_values_base::size() > 1 && row_values_base::size() < vertex_count)
       row_values_base::resize(vertex_count);
+
+    terminate_partitions();
   }
 
   // The only diff with this and ERng&& is v_.push_back vs. v_.emplace_back
-  template <class ERng, class EProj = identity>
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr void
-  load_edges(const ERng& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
+  constexpr void load_edges(
+        const ERng& erng,
+        EProj       eprojection  = {},
+        PartFnc     part_fnc     = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        size_type   vertex_count = 0,
+        size_type   edge_count   = 0) {
     // should only be loading into an empty graph
     assert(row_index_.empty() && col_index_.empty() && static_cast<col_values_base&>(*this).empty());
 
     // Nothing to do?
     if (ranges::begin(erng) == ranges::end(erng)) {
+      terminate_partitions();
       return;
     }
+
+    // We have at least one partition
+    partition_.push_back(part_fnc(0));
 
     // We can get the last vertex id from the list because erng is required to be ordered by
     // the source id. It's possible a target_id could have a larger id also, which is taken
@@ -660,6 +712,9 @@ public: // Operations
         static_cast<col_values_base&>(*this).push_back(edge.value);
       last_uid = edge.source_id;
       max_vid  = max(max_vid, edge.target_id);
+
+      // Add partition id for the source vertex if needed
+      partition_.push_back(part_fnc(edge.source_id));
     }
 
     // uid and vid may refer to rows that exceed the value evaluated for vertex_count (if any)
@@ -673,6 +728,8 @@ public: // Operations
     // getting a value for a row.
     if (row_values_base::size() > 0 && row_values_base::size() < vertex_count)
       row_values_base::resize(vertex_count);
+
+    terminate_partitions();
   }
 
   /**
@@ -688,11 +745,21 @@ public: // Operations
    * @param eprojection Edge projection function object
    * @param vprojection Vertex projection function object
   */
-  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  template <ranges::forward_range ERng,
+            ranges::forward_range VRng,
+            class PartFnc,
+            class EProj = identity,
+            class VProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
   //requires views::copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
   //      views::copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr void load(const ERng& erng, const VRng& vrng, EProj eprojection = {}, VProj vprojection = {}) {
-    load_edges(erng, eprojection);
+  constexpr void load(
+        const ERng& erng,
+        const VRng& vrng,
+        EProj       eprojection = {},
+        VProj       vprojection = {},
+        PartFnc     part_fnc    = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; }) {
+    load_edges(erng, eprojection, part_fnc);
     load_vertices(vrng, vprojection); // load the values
   }
 
@@ -709,6 +776,20 @@ protected:
       }
     }
     return last_id;
+  }
+
+  constexpr void terminate_partitions() {
+    if (partition_.empty())
+      partition_.push_back(0);
+    partition_.push_back(static_cast<partition_id_type>(row_index_.size()));
+  }
+
+  template<class PartFnc>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  constexpr void add_partition(partition_id_type part_id) {
+    // Consider empty partitions when part_id skips previous partition
+    while (static_cast<size_t>(part_id) >= partition_.size() - 1)
+      partition_.push_back(static_cast<partition_id_type>(row_index_.size()));
   }
 
 public: // Operations
@@ -733,19 +814,22 @@ public: // Operators
 private:                       // Member variables
   row_index_vector row_index_; // starting index into col_index_ and v_; holds +1 extra terminating row
   col_index_vector col_index_; // col_index_[n] holds the column index (aka target)
+  partition_vector
+        partition_; // partition_[n] holds the first vertex id for each partition n; holds +1 extra terminating partition
+
   //v_vector_type    v_;         // v_[n]         holds the edge value for col_index_[n]
   //row_values_type  row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
 
 private: // CPO properties
   friend constexpr vertices_type vertices(compressed_graph_base& g) {
     if (g.row_index_.empty())
-      return vertices_type(g.row_index_); // really empty
+      return vertices_type(g.row_index_);                                 // really empty
     else
       return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
   friend constexpr const_vertices_type vertices(const compressed_graph_base& g) {
     if (g.row_index_.empty())
-      return const_vertices_type(g.row_index_); // really empty
+      return const_vertices_type(g.row_index_);                                 // really empty
     else
       return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
@@ -762,7 +846,7 @@ private: // CPO properties
   friend constexpr edges_type edges(graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size());    // in row_index_ bounds?
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
@@ -770,7 +854,7 @@ private: // CPO properties
   friend constexpr const_edges_type edges(const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     const vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size());    // in row_index_ bounds?
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     return const_edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
@@ -806,6 +890,10 @@ private: // CPO properties
 /**
  * @ingroup graph_containers
  * @brief Compressed Sparse Row adjacency graph container.
+ *
+ * For constructors that accept a partition function, the function must return a partition id for a vertex id.
+ * When used, the range of input edges must be ordered by the partition id they're in. Partions may be skipped
+ * (empty) but the partition id must be in increasing order.
  *
  * @tparam EV Edge value type
  * @tparam VV Vertex value type
@@ -850,62 +938,94 @@ public: // Construction/Destruction
   // compressed_graph(gv&,  erng, eprojection, alloc)
   // compressed_graph(gv&&, erng, eprojection, alloc)
 
-  template <ranges::forward_range ERng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr compressed_graph(const ERng& erng, EProj eprojection, const Alloc& alloc = Alloc())
-        : base_type(erng, eprojection, alloc) {}
+  template <ranges::forward_range ERng, class PartFnc, class EProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+           convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  constexpr compressed_graph(
+        const ERng&  erng,
+        EProj        eprojection,
+        PartFnc      part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        const Alloc& alloc    = Alloc())
+        : base_type(erng, eprojection, part_fnc, alloc) {}
 
-  template <ranges::forward_range ERng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr compressed_graph(const graph_value_type& value,
-                             const ERng&             erng,
-                             EProj                   eprojection,
-                             const Alloc&            alloc = Alloc())
-        : base_type(erng, eprojection, alloc), value_(value) {}
+  template <ranges::forward_range ERng, class PartFnc, class EProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+                 convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  constexpr compressed_graph(
+        const graph_value_type& value,
+        const ERng&             erng,
+        EProj                   eprojection,
+        PartFnc                 part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        const Alloc&            alloc    = Alloc())
+        : base_type(erng, eprojection, part_fnc, alloc), value_(value) {}
 
-  template <ranges::forward_range ERng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr compressed_graph(graph_value_type&& value,
-                             const ERng&        erng,
-                             EProj              eprojection,
-                             const Alloc&       alloc = Alloc())
-        : base_type(erng, eprojection, alloc), value_(move(value)) {}
+  template <ranges::forward_range ERng, class PartFnc, class EProj = identity>
+  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
+                 convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  constexpr compressed_graph(
+        graph_value_type&& value,
+        const ERng&        erng,
+        EProj              eprojection,
+        PartFnc            part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        const Alloc&       alloc    = Alloc())
+        : base_type(erng, eprojection, part_fnc, alloc), value_(move(value)) {}
 
   // compressed_graph(      erng, vrng, eprojection, vprojection, alloc)
   // compressed_graph(gv&,  erng, vrng, eprojection, vprojection, alloc)
   // compressed_graph(gv&&, erng, vrng, eprojection, vprojection, alloc)
 
-  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  template <ranges::forward_range ERng,
+            ranges::forward_range VRng,
+            class PartFnc,
+            class EProj = identity,
+            class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-           copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr compressed_graph(const ERng&  erng,
-                             const VRng&  vrng,
-                             EProj        eprojection = {},
-                             VProj        vprojection = {},
-                             const Alloc& alloc       = Alloc())
-        : base_type(erng, vrng, eprojection, vprojection, alloc) {}
+           copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV> &&
+           convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  constexpr compressed_graph(
+        const ERng&  erng,
+        const VRng&  vrng,
+        EProj        eprojection = {},
+        VProj        vprojection = {},
+        PartFnc      part_fnc    = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        const Alloc& alloc       = Alloc())
+        : base_type(erng, vrng, eprojection, vprojection, part_fnc, alloc) {}
 
-  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  template <ranges::forward_range ERng,
+            ranges::forward_range VRng,
+            class PartFnc,
+            class EProj = identity,
+            class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-                 copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr compressed_graph(const graph_value_type& value,
-                             const ERng&             erng,
-                             const VRng&             vrng,
-                             EProj                   eprojection = {},
-                             VProj                   vprojection = {},
-                             const Alloc&            alloc       = Alloc())
-        : base_type(erng, vrng, eprojection, vprojection, alloc), value_(value) {}
+                 copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV> &&
+                 convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  constexpr compressed_graph(
+        const graph_value_type& value,
+        const ERng&             erng,
+        const VRng&             vrng,
+        EProj                   eprojection = {},
+        VProj                   vprojection = {},
+        PartFnc                 part_fnc    = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        const Alloc&            alloc       = Alloc())
+        : base_type(erng, vrng, eprojection, vprojection, part_fnc, alloc), value_(value) {}
 
-  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  template <ranges::forward_range ERng,
+            ranges::forward_range VRng,
+            class PartFnc,
+            class EProj = identity,
+            class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-                 copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr compressed_graph(graph_value_type&& value,
-                             const ERng&        erng,
-                             const VRng&        vrng,
-                             EProj              eprojection = {},
-                             VProj              vprojection = {},
-                             const Alloc&       alloc       = Alloc())
-        : base_type(erng, vrng, eprojection, vprojection, alloc), value_(move(value)) {}
+                 copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV> &&
+                 convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  constexpr compressed_graph(
+        graph_value_type&& value,
+        const ERng&        erng,
+        const VRng&        vrng,
+        EProj              eprojection = {},
+        VProj              vprojection = {},
+        PartFnc            part_fnc    = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        const Alloc&       alloc       = Alloc())
+        : base_type(erng, vrng, eprojection, vprojection, part_fnc, alloc), value_(move(value)) {}
 
 
   constexpr compressed_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
@@ -922,6 +1042,10 @@ private: // Member variables
 /**
  * @ingroup graph_containers
  * @brief Compressed Sparse Row adjacency graph container.
+ *
+ * For constructors that accept a partition function, the function must return a partition id for a vertex id.
+ * When used, the range of input edges must be ordered by the partition id they're in. Partions may be skipped
+ * (empty) but the partition id must be in increasing order.
  *
  * @tparam EV Edge value type
  * @tparam VV Vertex value type
@@ -958,15 +1082,22 @@ public: // Construction/Destruction
         : base_type(erng, eprojection, alloc) {}
 
   // edge and vertex value construction
-  template <ranges::forward_range ERng, ranges::forward_range VRng, class EProj = identity, class VProj = identity>
+  template <ranges::forward_range ERng,
+            ranges::forward_range VRng,
+            class PartFnc,
+            class EProj = identity,
+            class VProj = identity>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
-           copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV>
-  constexpr compressed_graph(const ERng&  erng,
-                             const VRng&  vrng,
-                             EProj        eprojection = {},
-                             VProj        vprojection = {},
-                             const Alloc& alloc       = Alloc())
-        : base_type(erng, vrng, eprojection, vprojection, alloc) {}
+           copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV> &&
+           convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  constexpr compressed_graph(
+        const ERng&  erng,
+        const VRng&  vrng,
+        EProj        eprojection = {},
+        VProj        vprojection = {},
+        PartFnc      part_fnc    = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        const Alloc& alloc       = Alloc())
+        : base_type(erng, vrng, eprojection, vprojection, part_fnc, alloc) {}
 
   // initializer list using edge_descriptor<VId,true,void,EV>
   constexpr compressed_graph(const initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())

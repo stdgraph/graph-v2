@@ -251,8 +251,9 @@ auto load_graph(csv::string_view csv_file) {
     };
   };
 
+  auto part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; };
   csv::CSVReader reader(csv_file); // CSV file reader
-  g.load_edges(reader, eproj, size(city_names), csv_row_cnt);
+  g.load_edges(reader, eproj, part_fnc, size(city_names), csv_row_cnt);
 
   return g;
 }
@@ -375,7 +376,8 @@ auto load_ordered_graph(csv::string_view        csv_file,
                                     static_cast<vertex_id_type>(row.target_id->second), row.value};
     return retval;
   };
-  g.load_edges(row_deq, eproj, lbls.size(), row_deq.size());
+  auto part_fnc = [](vertex_id_type) -> partition_id_t<graph_type> { return 0; };
+  g.load_edges(row_deq, eproj, part_fnc, lbls.size(), row_deq.size());
 
   return g;
 }

@@ -811,6 +811,10 @@ public:
  * 
  * No additional space is used if the edge value type (EV) or vertex value type (VV) is void.
  * 
+ * The partition function is intended to determine the partition id for a vertex id on constructors.
+ * It has been added to assure the same interface as the compresssed_graph, but is not implemented
+ * at this time.
+ * 
  * @tparam EV      The edge value type. If "void" is used no user value is stored on the edge and 
  *                 calls to @c edge_value(g,uv) will generate a compile error.
  * @tparam VV      The vertex value type. If "void" is used no user value is stored on the vertex
@@ -884,11 +888,13 @@ public: // Construction/Destruction/Assignment
    *              identity() if VRng value_type is already copyable_vertex_t<G>.
    * @param alloc The allocator used for vertices and edges containers.
   */
-  template <class ERng, class VRng, class EProj = identity, class VProj>
-  dynamic_graph_base(ERng&& erng, VRng&& vrng, EProj eproj, VProj vproj, vertex_allocator_type alloc)
+  template <class ERng, class VRng, class PartFnc, class EProj = identity, class VProj>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph_base(ERng&& erng, VRng&& vrng, EProj eproj, VProj vproj, PartFnc part_fnc, vertex_allocator_type alloc)
         : vertices_(alloc) {
     load_vertices(vrng, vproj);
-    load_edges(vertices_.size(), 0, erng, eproj);
+    // TODO: not all partitions may be created properly when vertex_ids in edges don't include vertices in all partitions
+    load_edges(vertices_.size(), 0, erng, eproj, part_fnc);
   }
 
   /**
@@ -913,10 +919,10 @@ public: // Construction/Destruction/Assignment
    *              or identity() if ERng value_type is already copyable_edge_t<G>.
    * @param alloc The allocator used for vertices and edges containers.
   */
-  template <class ERng, class EProj>
-  dynamic_graph_base(ERng&& erng, EProj eproj, vertex_allocator_type alloc) : vertices_(alloc) {
-
-    load_edges(move(erng), eproj);
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph_base(ERng&& erng, EProj eproj, PartFnc part_fnc, vertex_allocator_type alloc) : vertices_(alloc) {
+    load_edges(move(erng), eproj, part_fnc);
   }
 
   /**
@@ -942,10 +948,11 @@ public: // Construction/Destruction/Assignment
    *                     or identity() if ERng value_type is already copyable_edge_t<G>.
    * @param alloc        The allocator used for vertices and edges containers.
   */
-  template <class ERng, class EProj>
-  dynamic_graph_base(size_type vertex_count, ERng&& erng, EProj eproj, vertex_allocator_type alloc) : vertices_(alloc) {
-
-    load_edges(vertex_count, 0, move(erng), eproj);
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph_base(size_type vertex_count, ERng&& erng, EProj eproj, PartFnc part_fnc, vertex_allocator_type alloc)
+        : vertices_(alloc) {
+    load_edges(vertex_count, 0, move(erng), eproj, part_fnc);
   }
 
   /**
@@ -963,7 +970,8 @@ public: // Construction/Destruction/Assignment
     for (auto&& e : il)
       last_id = max(last_id, static_cast<size_t>(max(e.source_id, e.target_id)));
     resize_vertices(last_id + 1);
-    load_edges(il);
+    auto part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; };
+    load_edges(il, {}, part_fnc);
   }
 
 public: // Load operations
@@ -1068,8 +1076,14 @@ public: // Load operations
    *                        to match @c vertex_count, if applicable. Vertex values need to be movable.
    * @param edge_count_hint (not used)
   */
-  template <class ERng, class EProj = identity>
-  void load_edges(const ERng& erng, EProj eproj = {}, size_type vertex_count = 0, size_type edge_count_hint = 0) {
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  void load_edges(
+        const ERng& erng,
+        EProj       eproj           = {},
+        PartFnc     part_fnc        = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        size_type   vertex_count    = 0,
+        size_type   edge_count_hint = 0) {
     if constexpr (resizable<vertices_type>) {
       if (vertices_.size() < vertex_count)
         vertices_.resize(vertex_count, vertex_type(vertices_.get_allocator()));
@@ -1136,8 +1150,14 @@ public: // Load operations
    *                        to match @c vertex_count, if applicable. Vertex values need to be movable.
    * @param edge_count_hint (not used)
   */
-  template <class ERng, class EProj = identity>
-  void load_edges(ERng&& erng, EProj eproj = {}, size_type vertex_count = 0, size_type edge_count_hint = 0) {
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>> //
+  void load_edges(
+        ERng&&    erng,
+        EProj     eproj           = {},
+        PartFnc   part_fnc        = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        size_type vertex_count    = 0,
+        size_type edge_count_hint = 0) {
     if constexpr (resizable<vertices_type>) {
       if (vertices_.size() < vertex_count)
         vertices_.resize(vertex_count, vertex_type(vertices_.get_allocator()));
@@ -1209,7 +1229,7 @@ public: // Properties
   constexpr typename vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
   constexpr const typename vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
 
-public: // Operations
+public:                                      // Operations
   void reserve_vertices(size_type count) {
     if constexpr (reservable<vertices_type>) // reserve if we can; otherwise ignored
       vertices_.reserve(count);
@@ -1270,6 +1290,10 @@ private: // CPO properties
  * 
  * Only integral VId types are supported at the moment. It is the goal to support any type that can be
  * used as a key to find a vertex in the vertices container.
+ * 
+ * The partition function is intended to determine the partition id for a vertex id on constructors.
+ * It has been added to assure the same interface as the compresssed_graph, but is not implemented
+ * at this time.
  * 
  * @tparam EV      @showinitializer =void The edge value type. If "void" is used no user value is stored on the edge
  *                 and calls to @c edge_value(g,uv) will generate a compile error.
@@ -1366,10 +1390,16 @@ public: // Construction/Destruction/Assignment
    *              If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class VRng, class EProj = identity, class VProj = identity>
+  template <class ERng, class VRng, class PartFnc, class EProj = identity, class VProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
   dynamic_graph(
-        const ERng& erng, const VRng& vrng, EProj eproj = {}, VProj vproj = {}, allocator_type alloc = allocator_type())
-        : base_type(erng, vrng, eproj, vproj, alloc) {}
+        const ERng&    erng,
+        const VRng&    vrng,
+        EProj          eproj    = {},
+        VProj          vproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
+        : base_type(erng, vrng, eproj, vproj, part_fnc, alloc) {}
 
   /**
    * @brief Constructs the graph from a range of edge data and range of vertex data.
@@ -1398,13 +1428,16 @@ public: // Construction/Destruction/Assignment
    *              If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class VRng, class EProj = identity, class VProj = identity>
-  dynamic_graph(const GV&      gv,
-                const ERng&    erng,
-                const VRng&    vrng,
-                EProj          eproj = {},
-                VProj          vproj = {},
-                allocator_type alloc = allocator_type())
+  template <class ERng, class VRng, class PartFnc, class EProj = identity, class VProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph(
+        const GV&      gv,
+        const ERng&    erng,
+        const VRng&    vrng,
+        EProj          eproj    = {},
+        VProj          vproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc), value_(gv) {}
 
   /**
@@ -1434,10 +1467,17 @@ public: // Construction/Destruction/Assignment
    *              If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class EProj, class VRng, class VProj = identity>
+  template <class ERng, class EProj, class VRng, class PartFnc, class VProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
   dynamic_graph(
-        const ERng& erng, const VRng& vrng, EProj eproj, VProj vproj, GV&& gv, allocator_type alloc = allocator_type())
-        : base_type(erng, vrng, eproj, vproj, alloc), value_(move(gv)) {}
+        const ERng&    erng,
+        const VRng&    vrng,
+        EProj          eproj,
+        VProj          vproj,
+        GV&&           gv,
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
+        : base_type(erng, vrng, eproj, vproj, part_fnc, alloc), value_(move(gv)) {}
 
 
   //       max_vertex_id, erng, eproj, alloc
@@ -1463,8 +1503,13 @@ public: // Construction/Destruction/Assignment
    *              If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class EProj = identity>
-  dynamic_graph(vertex_id_type max_vertex_id, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
+  template <class ERng, class PartFnc, class EProj = identity>
+  dynamic_graph(
+        vertex_id_type max_vertex_id,
+        ERng&          erng,
+        EProj          eproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
         : base_type(max_vertex_id, erng, eproj, alloc) {}
 
   /**
@@ -1485,13 +1530,15 @@ public: // Construction/Destruction/Assignment
    *              If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class EProj = identity>
-  dynamic_graph(const GV&      gv,
-                vertex_id_type max_vertex_id,
-                ERng&          erng,
-                EProj          eproj = {},
-                allocator_type alloc = allocator_type())
-        : base_type(max_vertex_id, erng, eproj, alloc), value_(gv) {}
+  template <class ERng, class PartFnc, class EProj = identity>
+  dynamic_graph(
+        const GV&      gv,
+        vertex_id_type max_vertex_id,
+        ERng&          erng,
+        EProj          eproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, part_fnc, alloc), value_(gv) {}
 
   /**
    * @brief Construct the graph given the graph value, maximum vertex id and edge data range.
@@ -1511,10 +1558,16 @@ public: // Construction/Destruction/Assignment
    *              If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class EProj = identity>
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
   dynamic_graph(
-        GV&& gv, vertex_id_type max_vertex_id, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
-        : base_type(max_vertex_id, erng, eproj, alloc), value_(move(gv)) {}
+        GV&&           gv,
+        vertex_id_type max_vertex_id,
+        ERng&          erng,
+        EProj          eproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, part_fnc, alloc), value_(move(gv)) {}
 
   // erng, eproj,       alloc
   // erng, eproj, gv&,  alloc
@@ -1537,9 +1590,14 @@ public: // Construction/Destruction/Assignment
    *              If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class EProj = identity>
-  dynamic_graph(ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
-        : base_type(erng, eproj, alloc) {}
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph(
+        ERng&          erng,
+        EProj          eproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
+        : base_type(erng, eproj, part_fnc, alloc) {}
 
   /**
    * @brief Construct the graph given a graph value and edge data range.
@@ -1559,9 +1617,15 @@ public: // Construction/Destruction/Assignment
    *              If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class EProj = identity>
-  dynamic_graph(const GV& gv, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
-        : base_type(erng, eproj, alloc), value_(gv) {}
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph(
+        const GV&      gv,
+        ERng&          erng,
+        EProj          eproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
+        : base_type(erng, eproj, part_fnc, alloc), value_(gv) {}
 
   /**
    * @brief Construct the graph given a graph value and edge data range.
@@ -1581,9 +1645,15 @@ public: // Construction/Destruction/Assignment
    *              If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class EProj = identity>
-  dynamic_graph(GV&& gv, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
-        : base_type(erng, eproj, alloc), value_(move(gv)) {}
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph(
+        GV&&           gv,
+        ERng&          erng,
+        EProj          eproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
+        : base_type(erng, eproj, part_fnc, alloc), value_(move(gv)) {}
 
 
   /**
@@ -1606,7 +1676,7 @@ public:
 private:
   value_type value_; ///< Graph value
 
-private: // CPO properties
+private:             // CPO properties
   friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
   friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 };
@@ -1621,6 +1691,10 @@ private: // CPO properties
  * will generate a compiler error so the user can resolve the incorrect usage.
  * 
  * See the dynamic_graph description for more information about this class.
+ * 
+ * The partition function is intended to determine the partition id for a vertex id on constructors.
+ * It has been added to assure the same interface as the compresssed_graph, but is not implemented
+ * at this time.
  * 
  * @tparam EV      @showinitializer =void The edge value type. If "void" is used no user value is stored on the edge
  *                 and calls to @c edge_value(g,uv) will generate a compile error.
@@ -1675,9 +1749,14 @@ public: // Construction/Destruction/Assignment
    *              If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class EProj = identity>
-  dynamic_graph(ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
-        : base_type(erng, eproj, alloc) {}
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph(
+        ERng&          erng,
+        EProj          eproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
+        : base_type(erng, eproj, part_fnc, alloc) {}
 
   /**
    * @brief Construct the graph given the maximum vertex id and edge data range.
@@ -1696,9 +1775,15 @@ public: // Construction/Destruction/Assignment
    *              If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, typename EProj = identity>
-  dynamic_graph(vertex_id_type max_vertex_id, ERng& erng, EProj eproj = {}, allocator_type alloc = allocator_type())
-        : base_type(max_vertex_id, erng, eproj, alloc) {}
+  template <class ERng, class PartFnc, class EProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph(
+        vertex_id_type max_vertex_id,
+        ERng&          erng,
+        EProj          eproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, part_fnc, alloc) {}
 
   /**
    * @brief Constructs the graph from a range of edge data and range of vertex data.
@@ -1724,8 +1809,15 @@ public: // Construction/Destruction/Assignment
    *              If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
    * @param alloc The allocator used for the vertices and edges containers.
   */
-  template <class ERng, class VRng, class EProj = identity, class VProj = identity>
-  dynamic_graph(ERng& erng, VRng& vrng, EProj eproj = {}, VProj vproj = {}, allocator_type alloc = allocator_type())
+  template <class ERng, class VRng, class PartFnc, class EProj = identity, class VProj = identity>
+  requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
+  dynamic_graph(
+        ERng&          erng,
+        VRng&          vrng,
+        EProj          eproj    = {},
+        VProj          vproj    = {},
+        PartFnc        part_fnc = [](vertex_id_t<graph_type>) -> partition_id_t<graph_type> { return 0; },
+        allocator_type alloc    = allocator_type())
         : base_type(erng, vrng, eproj, vproj, alloc) {}
 
   /**
