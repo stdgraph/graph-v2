@@ -784,7 +784,7 @@ protected:
     partition_.push_back(static_cast<partition_id_type>(row_index_.size()));
   }
 
-  template<class PartFnc>
+  template <class PartFnc>
   requires convertible_to<invoke_result_t<PartFnc, vertex_id_t<graph_type>>, partition_id_t<graph_type>>
   constexpr void add_partition(partition_id_type part_id) {
     // Consider empty partitions when part_id skips previous partition
@@ -880,6 +880,25 @@ private: // CPO properties
   friend constexpr vertex_type&       target(graph_type& g, edge_type& uv) noexcept { return g.row_index_[uv.index]; }
   friend constexpr const vertex_type& target(const graph_type& g, const edge_type& uv) noexcept {
     return g.row_index_[uv.index];
+  }
+
+  friend constexpr auto num_partitions(const compressed_graph_base& g) {
+    return static_cast<partition_id_type>(g.partition_.size());
+  }
+
+  friend constexpr auto partition_id(const compressed_graph_base& g, vertex_id_type uid) {
+    auto it = std::upper_bound(g.partition_.begin(), g.partition_.end(), uid);
+    return static_cast<partition_id_type>(it - g.partition_.begin() - 1);
+  }
+
+  friend constexpr auto num_vertices(const compressed_graph_base& g, partition_id_type pid) {
+    assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
+    g.partition_[pid + 1] - g.partition_[pid];
+  }
+
+  friend constexpr auto vertices(const compressed_graph_base& g, partition_id_type pid) {
+    assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
+    return ranges::subrange(g.row_index_.begin() + g.partition_[pid], g.row_index_.begin() + g.partition_[pid + 1]);
   }
 
   friend row_values_base;
