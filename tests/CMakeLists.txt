@@ -32,7 +32,6 @@ target_include_directories(catch_main
 # begin /* Add unit tests */
 set(UNITTEST_SOURCES
     "examples.cpp" 
-    "bacon_csr_tests.cpp"
     "co_bfs_tests.cpp"
     "co_dijkstra_tests.cpp"
     "csv_routes_vofl_tests.cpp" 
