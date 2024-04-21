@@ -35,18 +35,22 @@ public:
 
   class bfs_edge_range_iterator {
   private:
-    bfs_edge_range<Graph, Queue>&           the_range_;
-    typename Graph::iterator                G;
-    vertex_id_type                          v_;
+    bfs_edge_range<Graph, Queue>& the_range_;
+    typename Graph::iterator      G;
+    vertex_id_type                v_;
     //typename inner_range_t<Graph>::iterator u_begin, u_end;
     std::graph::vertex_iterator_t<Graph> u_begin, u_end;
 
   public:
     bfs_edge_range_iterator(bfs_edge_range<Graph, Queue>& range)
-        : the_range_(range), G(the_range_.the_graph_.begin()), v_(the_range_.Q_.front()), u_begin(G[v_].begin()), u_end(G[v_].end()) {}
+          : the_range_(range)
+          , G(the_range_.the_graph_.begin())
+          , v_(the_range_.Q_.front())
+          , u_begin(G[v_].begin())
+          , u_end(G[v_].end()) {}
 
     bfs_edge_range_iterator(const bfs_edge_range_iterator& ite)
-        : the_range_(ite.the_range_), G(ite.G), v_(ite.v_), u_begin(u_begin), u_end(u_end) {}
+          : the_range_(ite.the_range_), G(ite.G), v_(ite.v_), u_begin(u_begin), u_end(u_end) {}
 
     bfs_edge_range_iterator& operator++() {
       auto& Q       = the_range_.Q_;
@@ -62,7 +66,8 @@ public:
 
       while (u_begin == u_end) {
         Q.pop();
-        if (Q.empty()) break;
+        if (Q.empty())
+          break;
 
         v_ = Q.front();
 
@@ -108,7 +113,7 @@ private:
 
 public:
   bfs_edge_range_2(Graph& graph, PriorityQueue& Q, std::tuple<size_t, size_t> seed = {0, 0})
-      : the_graph_(graph), Q_(Q), colors_(graph.end() - graph.begin(), white) {
+        : the_graph_(graph), Q_(Q), colors_(graph.end() - graph.begin(), white) {
     Q_.push(seed);
     colors_[std::get<0>(seed)] = grey;
   }
@@ -130,8 +135,11 @@ public:
 
   public:
     bfs_edge_range_2_iterator(bfs_edge_range_2<Graph, PriorityQueue>& range)
-        : the_range_(range), G(the_range_.the_graph_.begin()), v_(std::get<0>(the_range_.Q_.top())), u_begin(G[v_].begin()),
-          u_end(G[v_].end()) {}
+          : the_range_(range)
+          , G(the_range_.the_graph_.begin())
+          , v_(std::get<0>(the_range_.Q_.top()))
+          , u_begin(G[v_].begin())
+          , u_end(G[v_].end()) {}
 
     bfs_edge_range_2_iterator& operator++() {
       auto& Q      = the_range_.Q_;
@@ -151,7 +159,8 @@ public:
         while (colors[std::get<0>(Q.top())] == black && !Q.empty())
           Q.pop();
 
-        if (Q.empty()) break;
+        if (Q.empty())
+          break;
 
         v_      = std::get<0>(Q.top());
         u_begin = G[v_].begin();
@@ -165,7 +174,9 @@ public:
       return *this;
     }
 
-    auto operator*() { return std::tuple<vertex_id_type, vertex_id_type, size_t>(v_, std::get<0>(*u_begin), std::get<1>(*u_begin)); }
+    auto operator*() {
+      return std::tuple<vertex_id_type, vertex_id_type, size_t>(v_, std::get<0>(*u_begin), std::get<1>(*u_begin));
+    }
 
     class end_sentinel_type {
     public:
@@ -187,4 +198,4 @@ private:
   std::vector<three_colors> colors_;
 };
 
-#endif    // NWGRAPH_BFS_EDGE_RANGE_HPP
+#endif // NWGRAPH_BFS_EDGE_RANGE_HPP

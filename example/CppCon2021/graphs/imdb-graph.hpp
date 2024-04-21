@@ -5,7 +5,7 @@
 //  No Warranty Disclaimer
 //
 
-//  IMDB Example 
+//  IMDB Example
 
 
 #include <string>

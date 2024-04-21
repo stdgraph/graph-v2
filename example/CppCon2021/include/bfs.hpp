@@ -40,7 +40,7 @@ auto bfs(const Graph& graph, vertex_id_t<Graph> source) {
     auto u = Q.front();
     Q.pop();
     for (auto&& e : graph[u]) {
-      auto v = target(graph, e);    // neighbor vertex
+      auto v = target(graph, e); // neighbor vertex
       if (color[v] == WHITE) {
         color[v] == GREY;
         Q.push(v);
@@ -50,4 +50,4 @@ auto bfs(const Graph& graph, vertex_id_t<Graph> source) {
   }
 }
 
-#endif    // NWGRAPH_BFS_HPP
+#endif // NWGRAPH_BFS_HPP

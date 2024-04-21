@@ -63,7 +63,8 @@ int main() {
       auto   k = i;
       size_t d = distance[k];
       while (k != kevin_bacon) {
-        std::cout << "   " << actors[k] << " starred with " << actors[parents[k]] << " in " << movies[together_in[k]] << std::endl;
+        std::cout << "   " << actors[k] << " starred with " << actors[parents[k]] << " in " << movies[together_in[k]]
+                  << std::endl;
         k = parents[k];
         if (d-- == 0) {
           break;

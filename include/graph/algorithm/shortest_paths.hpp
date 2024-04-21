@@ -150,7 +150,7 @@ template <index_adjacency_list        G,
           ranges::random_access_range Distances,
           ranges::random_access_range Predecessors,
           class WF        = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>, //
-          class Allocator = allocator<vertex_id_t<G>>                                        //
+          class Allocator = allocator<vertex_id_t<G>>                                             //
           >
 requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //

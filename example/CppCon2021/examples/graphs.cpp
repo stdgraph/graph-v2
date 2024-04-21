@@ -65,9 +65,9 @@ int main() {
   auto [j, k] = make_plain_bipartite_graphs<decltype(movies), decltype(actors), decltype(movies_actors),
                                             std::vector<std::list<size_t>>>(movies, actors, movies_actors);
   auto l      = make_plain_bipartite_graph<decltype(movies), decltype(actors), decltype(movies_actors),
-                                      std::vector<std::list<size_t>>>(movies, actors, movies_actors, 0);
+                                           std::vector<std::list<size_t>>>(movies, actors, movies_actors, 0);
   auto m      = make_plain_bipartite_graph<decltype(movies), decltype(actors), decltype(movies_actors),
-                                      std::vector<std::list<size_t>>>(movies, actors, movies_actors, 1);
+                                           std::vector<std::list<size_t>>>(movies, actors, movies_actors, 1);
 
   auto n = make_plain_graph<decltype(spice_vertices), decltype(spice_edges), std::vector<std::list<int>>>(
         spice_vertices, spice_edges);

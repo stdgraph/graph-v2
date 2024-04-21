@@ -119,4 +119,4 @@ auto tag_invoke(const untarget_tag, const T& graph, const U& e) {
 
 #endif // 0
 
-#endif    // NWGRAPH_GRAPH_CONCEPTS_HPP
+#endif // NWGRAPH_GRAPH_CONCEPTS_HPP

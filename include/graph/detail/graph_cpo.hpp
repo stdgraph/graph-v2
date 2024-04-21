@@ -2614,7 +2614,7 @@ namespace edgelist {
 //
 namespace _Partition_count {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void num_partitions() = delete;           // Block unqualified name lookup
+  void num_partitions() = delete;            // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
   void num_partitions();
 #  endif                                     // ^^^ workaround ^^^
