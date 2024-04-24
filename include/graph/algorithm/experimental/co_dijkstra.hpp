@@ -56,7 +56,6 @@ constexpr dijkstra_events& operator|=(dijkstra_events& lhs, dijkstra_events rhs)
 constexpr dijkstra_events operator|(dijkstra_events lhs, dijkstra_events rhs) noexcept { return (lhs |= rhs); }
 
 
-
 /**
  * @brief dijkstra shortest paths
  * 
@@ -92,14 +91,14 @@ template <index_adjacency_list        G,
 requires is_arithmetic_v<ranges::range_value_t<Distance>> &&                   //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distance>, Compare, Combine>
-class co_dijkstra {
+class co_dijkstra_class {
 public:
   using DistanceValue = ranges::range_value_t<Distance>;
 
   // Construction/Desstruction/Assignment
 public:
-  co_dijkstra() = delete;
-  co_dijkstra(
+  co_dijkstra_class() = delete;
+  co_dijkstra_class(
         G&           g,
         Distance&    distance,
         Predecessor& predecessor,
@@ -233,6 +232,114 @@ private:
   Combine      combine_;
 };
 
-} // namespace std::graph
+
+template <index_adjacency_list        G,
+          ranges::random_access_range Distances,
+          ranges::random_access_range Predecessors,
+          class Compare = less<ranges::range_value_t<Distances>>,
+          class Combine = plus<ranges::range_value_t<Distances>>,
+          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>>
+requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
+         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
+         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
+Generator<bfs_value_t<dijkstra_events, G, ranges::range_value_t<Distances>>> co_dijkstra(
+      G&                    g_,
+      vertex_id_t<G>        seed,
+      const dijkstra_events events,
+      Distances&            distances,
+      Predecessors&         predecessor,
+      WF&                   weight =
+            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      Compare&& compare = less<ranges::range_value_t<Distances>>(),
+      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
+  using id_type         = vertex_id_t<G>;
+  using DistanceValue   = ranges::range_value_t<Distances>;
+  using bfs_vertex_type = bfs_vertex_value_t<G, DistanceValue>;
+  using bfs_edge_type   = bfs_edge_value_t<G>;
+  using bfs_value_type  = bfs_value_t<dijkstra_events, G, DistanceValue>;
+
+  auto relax_target = [&g_, &predecessor, &distances, &weight, &compare, &combine] //
+        (edge_reference_t<G> e, vertex_id_t<G> uid) -> bool {
+    vertex_id_t<G>      vid = target_id(g_, e);
+    const DistanceValue d_u = distances[uid];
+    const DistanceValue d_v = distances[vid];
+    const auto          w_e = weight(e);
+
+    // From BGL; This may no longer apply since the x87 is long gone:
+    //
+    // The seemingly redundant comparisons after the distance assignments are to
+    // ensure that extra floating-point precision in x87 registers does not
+    // lead to relax() returning true when the distance did not actually
+    // change.
+    if (compare(combine(d_u, w_e), d_v)) {
+      distances[vid] = combine(d_u, w_e);
+      if (compare(distances[vid], d_v)) {
+        predecessor[vid] = uid;
+        return true;
+      }
+    }
+    return false;
+  };
+
+  constexpr auto zero     = shortest_path_zero<DistanceValue>();
+  constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
+
+  size_t N(num_vertices(g_));
+  assert(seed < N && seed >= 0);
+
+  if ((events & dijkstra_events::initialize_vertex) == dijkstra_events::initialize_vertex) {
+    for (id_type uid = 0; uid < num_vertices(g_); ++uid) {
+      co_yield bfs_value_type{dijkstra_events::initialize_vertex,
+                              bfs_vertex_type{uid, *find_vertex(g_, uid), distances[uid]}};
+    }
+  }
+
+  using q_compare = decltype([](const id_type& a, const id_type& b) { return a > b; });
+  std::priority_queue<id_type, vector<id_type>, q_compare> Q;
+
+  Q.push(seed);
+  distances[seed] = zero; // mark seed as discovered
+  dijkstra_yield_vertex(dijkstra_events::discover_vertex, seed, distances[seed]);
+
+  while (!Q.empty()) {
+    const id_type uid = Q.top();
+    Q.pop();
+    dijkstra_yield_vertex(dijkstra_events::examine_vertex, uid, distances[uid]);
+
+    for (auto&& [vid, uv] : views::incidence(g_, uid)) {
+      dijkstra_yield_edge(dijkstra_events::examine_edge, uid, vid, uv);
+
+      if (distances[vid] == infinite) {
+        // tree_edge
+        bool decreased = relax_target(uv, uid);
+        if (decreased) {
+          dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
+        } else {
+          dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
+        }
+        dijkstra_yield_vertex(dijkstra_events::discover_vertex, vid, distances[vid]);
+        Q.push(vid);
+      } else {
+        // non-tree edge
+        //  DistanceValue old_distance = distances[vid];
+        bool decreased = relax_target(uv, uid);
+        if (decreased) {
+          dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
+          Q.push(vid);
+        } else {
+          dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
+        }
+      }
+    }
+
+    // Note: while we *think* we're done with this vertex, we may not be. If the graph is unbalanced
+    // and another path to this vertex has a lower accumulated weight, we'll process it again.
+    // A consequence is that examine_vertex could be call subsequently on the same vertex.
+    dijkstra_yield_vertex(dijkstra_events::finish_vertex, uid, distances[uid]);
+  }
+}
+
+
+} // namespace std::graph::experimental
 
 #endif // GRAPH_CO_DIJKSTRA_CLRS_HPP
