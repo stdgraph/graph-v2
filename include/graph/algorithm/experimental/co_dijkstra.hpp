@@ -3,7 +3,7 @@
 #include "graph/graph.hpp"
 #include "graph/views/incidence.hpp"
 #include "graph/detail/co_generator.hpp"
-#include "graph/algorithm/co_cmn.hpp"
+#include "graph/algorithm/experimental/co_cmn.hpp"
 
 #include <variant>
 #include <queue>
