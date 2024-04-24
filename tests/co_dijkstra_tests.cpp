@@ -78,7 +78,7 @@ TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]")
   //init_shortest_paths(distance, predecessors);
 
   SECTION("co_dijkstra vertices") {
-    auto distance = [&g](edge_reference_t<G> uv) -> double { return edge_value(g,uv); };
+    auto        distance = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
     co_dijkstra dijkstra(g, distances, predecessors, distance); // frankfurt_id, bfs_events::discover_vertex
     for (auto bfs = dijkstra(frankfurt_id, dijkstra_events::discover_vertex); bfs;) {
       auto&& [event, payload] = bfs();

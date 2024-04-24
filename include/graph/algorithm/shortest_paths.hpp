@@ -16,22 +16,24 @@
 #include <queue>
 #include <vector>
 #include <ranges>
+#include <functional>
 #include <fmt/format.h>
 #include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
 
 #ifndef GRAPH_SHORTEST_PATHS_HPP
 #  define GRAPH_SHORTEST_PATHS_HPP
 
 namespace std::graph {
 
-template <class G, class WF, class DistanceValue, class Compare, class Combine>
-concept basic_edge_weight_function = // e.g. weight(uv)
+template <class G, class WF, class DistanceValue, class Compare, class Combine> // For exposition only
+concept basic_edge_weight_function =                                            // e.g. weight(uv)
       is_arithmetic_v<DistanceValue> && strict_weak_order<Compare, DistanceValue, DistanceValue> &&
       assignable_from<add_lvalue_reference_t<DistanceValue>,
                       invoke_result_t<Combine, DistanceValue, invoke_result_t<WF, edge_reference_t<G>>>>;
 
-template <class G, class WF, class DistanceValue>
-concept edge_weight_function = // e.g. weight(uv)
+template <class G, class WF, class DistanceValue> // For exposition only
+concept edge_weight_function =                    // e.g. weight(uv)
       is_arithmetic_v<invoke_result_t<WF, edge_reference_t<G>>> &&
       basic_edge_weight_function<G, WF, DistanceValue, less<DistanceValue>, plus<DistanceValue>>;
 
@@ -147,8 +149,8 @@ inline static _null_range_type _null_predecessors;
 template <index_adjacency_list        G,
           ranges::random_access_range Distances,
           ranges::random_access_range Predecessors,
-          class WF        = function<ranges::range_value_t<Distances>(edge_reference_t<G>)>, //
-          class Allocator = allocator<vertex_id_t<G>>                                        //
+          class WF        = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>, //
+          class Allocator = allocator<vertex_id_t<G>>                                             //
           >
 requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //

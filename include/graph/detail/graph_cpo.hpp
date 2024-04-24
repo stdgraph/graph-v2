@@ -2610,23 +2610,23 @@ namespace edgelist {
 } // namespace edgelist
 
 
-// partition_count(g) -> ?   default = vertex_id_t<G>(1) when vertex_id_t<G> is integral, size_t(0) otherwise
+// num_partitions(g) -> ?   default = vertex_id_t<G>(1) when vertex_id_t<G> is integral, size_t(0) otherwise
 //
 namespace _Partition_count {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void partition_count() = delete;           // Block unqualified name lookup
+  void num_partitions() = delete;            // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
-  void partition_count();
+  void num_partitions();
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
   concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u) {
-    { _Fake_copy_init(__g.partition_count()) };
+    { _Fake_copy_init(__g.num_partitions()) };
   };
   template <class _G>
   concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
                          && requires(_G&& __g) {
-                              { _Fake_copy_init(partition_count(__g)) }; // intentional ADL
+                              { _Fake_copy_init(num_partitions(__g)) }; // intentional ADL
                             };
   template <class _G>
   concept _Can_ref_eval = integral<vertex_id_t<_G>> //
@@ -2642,9 +2642,9 @@ namespace _Partition_count {
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
-        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().partition_count()))};
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().num_partitions()))};
       } else if constexpr (_Has_ref_ADL<_G>) {
-        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(partition_count(
+        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(num_partitions(
                                             declval<_G>(), declval<vertex_reference_t<_G>>())))}; // intentional ADL
       } else if constexpr (_Can_ref_eval<_G>) {
         return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(vertex_id_t<_G>(1)))};
@@ -2674,21 +2674,21 @@ namespace _Partition_count {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
-        return __g.partition_count();
+        return __g.num_partitions();
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        return partition_count(__g); // intentional ADL
+        return num_partitions(__g); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return vertex_id_t<_G>(1); // default impl
       } else {
         static_assert(_Always_false<_G>,
-                      "partition_count(g) is not defined and the default implementation cannot be evaluated");
+                      "num_partitions(g) is not defined and the default implementation cannot be evaluated");
       }
     }
   };
 } // namespace _Partition_count
 
 inline namespace _Cpos {
-  inline constexpr _Partition_count::_Cpo partition_count;
+  inline constexpr _Partition_count::_Cpo num_partitions;
 }
 
 

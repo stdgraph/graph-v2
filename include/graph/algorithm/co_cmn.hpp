@@ -23,15 +23,15 @@ concept edge_weight_function = // e.g. weight(uv)
 
 // These types comprise the bfs value type, made up of bfs_events and variant<vertex_descriptor, edge_descriptor>.
 // monostate is used to indicate that the value is not set and to make it default-constructible.
-template <class G, class VValue=void>
+template <class G, class VValue = void>
 using bfs_vertex_value_t = vertex_descriptor<vertex_id_t<G>, reference_wrapper<vertex_t<G>>, VValue>;
 template <class G>
 using bfs_edge_value_t = edge_descriptor<vertex_id_t<G>, true, reference_wrapper<edge_t<G>>, void>;
-template <class G, class VValue=void>
-using bfs_variant_value_t = variant<monostate, bfs_vertex_value_t<G,VValue>, bfs_edge_value_t<G>>;
+template <class G, class VValue = void>
+using bfs_variant_value_t = variant<monostate, bfs_vertex_value_t<G, VValue>, bfs_edge_value_t<G>>;
 
 template <class Events, class G, class VValue = void>
-using bfs_value_t = pair<Events, bfs_variant_value_t<G,VValue>>;
+using bfs_value_t = pair<Events, bfs_variant_value_t<G, VValue>>;
 
 // Helper macros to keep the visual clutter down in a coroutine. I'd like to investigate using CRTP to avoid them,
 // but I'm not sure how it will play with coroutines.

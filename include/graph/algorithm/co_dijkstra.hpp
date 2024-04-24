@@ -95,7 +95,7 @@ public:
         G&           g,
         Distance&    distance,
         Predecessor& predecessor,
-        WF&         weight =
+        WF&          weight =
               [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }, // default weight(uv) -> 1
         Compare&& compare = less<ranges::range_value_t<Distance>>(),
         Combine&& combine = plus<ranges::range_value_t<Distance>>())
@@ -141,7 +141,7 @@ public:
     using bfs_edge_type   = bfs_edge_value_t<G>;
     using bfs_value_type  = bfs_value_t<dijkstra_events, G, DistanceValue>;
 
-    constexpr auto zero = DistanceValue{};
+    constexpr auto zero     = DistanceValue{};
     constexpr auto infinite = numeric_limits<DistanceValue>::max();
 
     size_t N(num_vertices(g_));
