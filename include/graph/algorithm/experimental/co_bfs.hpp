@@ -15,7 +15,7 @@
 #ifndef GRAPH_CO_BFS_HPP
 #  define GRAPH_CO_BFS_HPP
 
-namespace std::graph {
+namespace std::graph::experimental {
 
 // These events duplicate boost::graph's BFSVisitorConcept
 enum class bfs_events {
@@ -130,6 +130,6 @@ enum event_visitor_enum {
   on_edge_not_minimized_num
 };
 
-} // namespace std::graph
+} // namespace std::graph::experimental
 
 #endif // GRAPH_CO_BFS_HPP

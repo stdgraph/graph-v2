@@ -13,7 +13,7 @@
 #ifndef GRAPH_CO_DIJKSTRA_CLRS_HPP
 #  define GRAPH_CO_DIJKSTRA_CLRS_HPP
 
-namespace std::graph {
+namespace std::graph::experimental {
 
 
 // Helper macros to keep the visual clutter down in a coroutine. I'd like to investigate using CRTP to avoid them,
@@ -32,14 +32,15 @@ namespace std::graph {
 
 // distance[x] = 0, distance[x] + w < distance[v] : white, gray
 enum class dijkstra_events {
-  none = 0,
-  initialize_vertex,
-  discover_vertex,
-  examine_vertex,
-  examine_edge,
-  edge_relaxed,
-  edge_not_relaxed,
-  finish_vertex
+  none              = 0,
+  initialize_vertex = 0x0001,
+  discover_vertex   = 0x0002,
+  examine_vertex    = 0x0004,
+  examine_edge      = 0x0008,
+  edge_relaxed      = 0x0010,
+  edge_not_relaxed  = 0x0020,
+  finish_vertex     = 0x0040,
+  all               = 0x007F,
 };
 
 constexpr dijkstra_events& operator&=(dijkstra_events& lhs, dijkstra_events rhs) noexcept {
@@ -55,6 +56,7 @@ constexpr dijkstra_events& operator|=(dijkstra_events& lhs, dijkstra_events rhs)
 constexpr dijkstra_events operator|(dijkstra_events lhs, dijkstra_events rhs) noexcept { return (lhs |= rhs); }
 
 
+
 /**
  * @brief dijkstra shortest paths
  * 
@@ -67,6 +69,12 @@ constexpr dijkstra_events operator|(dijkstra_events lhs, dijkstra_events rhs) no
  * consequence that the same vertex and it's descendents may be processed more than
  * once if the weights are less than had been previously discovered. This may be a
  * feature (need to discuss with Andrew).
+ * 
+ * Andrew: There's no need to have a colors vector. We can use the distance vector
+ * to determine if a vertex has been discovered or not. We should use the events
+ * from BGL dijkstra_shortest_paths_no_init.
+ * 
+ * Need to add Queue parameter with default of priority_queue. Add queue concept.
  * 
  * @tparam Compare Comparison function for Distance values. Defaults to less<Distance>.
  * @tparam Combine Combine function for Distance values. Defaults to plus<Distanct>.
@@ -109,7 +117,6 @@ public:
   // Properties
 public:
   // Operattions
-public:
 private:
   bool relax_target(edge_reference_t<G> e, vertex_id_t<G> uid) {
     vertex_id_t<G>      vid = target_id(g_, e);
@@ -117,7 +124,8 @@ private:
     const DistanceValue d_v = distance_[vid];
     const auto          w_e = weight_(e);
 
-    // From BGL; This may no longer apply since the x87 is long gone
+    // From BGL; This may no longer apply since the x87 is long gone:
+    //
     // The seemingly redundant comparisons after the distance assignments are to
     // ensure that extra floating-point precision in x87 registers does not
     // lead to relax() returning true when the distance did not actually

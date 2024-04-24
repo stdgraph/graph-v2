@@ -28,7 +28,7 @@ using std::graph::vertex_reference_t;
 using std::graph::edge_t;
 using std::graph::edge_value_t;
 using std::graph::edge_reference_t;
-using std::graph::bfs_events;
+using std::graph::experimental::bfs_events;
 
 using std::graph::graph_value;
 using std::graph::vertices;
@@ -41,9 +41,9 @@ using std::graph::edge_value;
 using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
-using std::graph::co_bfs;
-using std::graph::bfs_vertex_value_t;
-using std::graph::bfs_edge_value_t;
+using std::graph::experimental::co_bfs;
+using std::graph::experimental::bfs_vertex_value_t;
+using std::graph::experimental::bfs_edge_value_t;
 
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;

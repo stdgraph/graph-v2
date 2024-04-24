@@ -863,7 +863,7 @@ private: // CPO properties
   }
 
   friend constexpr auto num_partitions(const compressed_graph_base& g) {
-    return static_cast<partition_id_type>(g.partition_.size());
+    return static_cast<partition_id_type>(g.partition_.size() - 1);
   }
 
   friend constexpr auto partition_id(const compressed_graph_base& g, vertex_id_type uid) {
