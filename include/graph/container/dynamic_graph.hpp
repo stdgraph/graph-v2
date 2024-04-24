@@ -1294,6 +1294,25 @@ private: // CPO properties
   friend constexpr const edges_type& edges(const graph_type& g, const vertex_id_type uid) {
     return g.vertices_[uid].edges();
   }
+
+  friend constexpr auto num_partitions(const dynamic_graph_base& g) {
+    return static_cast<partition_id_type>(g.partition_.size());
+  }
+
+  friend constexpr auto partition_id(const dynamic_graph_base& g, vertex_id_type uid) {
+    auto it = std::upper_bound(g.partition_.begin(), g.partition_.end(), uid);
+    return static_cast<partition_id_type>(it - g.partition_.begin() - 1);
+  }
+
+  friend constexpr auto num_vertices(const dynamic_graph_base& g, partition_id_type pid) {
+    assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
+    g.partition_[pid + 1] - g.partition_[pid];
+  }
+
+  friend constexpr auto vertices(const dynamic_graph_base& g, partition_id_type pid) {
+    assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
+    return ranges::subrange(g.vertices_.begin() + g.partition_[pid], g.vertices_.begin() + g.partition_[pid + 1]);
+  }
 };
 
 /**
