@@ -67,15 +67,20 @@ struct my_dijkstra_visitor : dijkstra_visitor_base<routes_vol_graph_type, Distan
   using base_t = dijkstra_visitor_base<G, Distance>;
 
   my_dijkstra_visitor(routes_vol_graph_type& g) : base_t(g) {}
-  ~my_dijkstra_visitor() override = default;
+  ~my_dijkstra_visitor() = default;
 
-  void on_discover_vertex(const base_t::vertex_desc_type& vdesc) noexcept override {
+  //void on_discover_vertex(const base_t::vertex_desc_type& vdesc) noexcept {
+  //  auto&& [uid, u, km] = vdesc;
+  //  cout << "[" << uid << "] discover " << vertex_value(graph(), u) << " " << km << "km" << endl;
+  //}
+
+  void on_finish_vertex(const base_t::vertex_desc_type& vdesc) noexcept {
     auto&& [uid, u, km] = vdesc;
-    cout << "[" << uid << "] " << vertex_value(graph(), u) << " " << km << "km" << endl;
+    cout << "[" << uid << "] finish " << vertex_value(graph(), u) << " " << km << "km" << endl;
   }
 };
 
-TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]") {
+TEST_CASE("dijstra visitor test", "[dynamic][dijkstra][bfs][vertex][visitor]") {
   init_console();
 
   using G  = routes_vol_graph_type;
@@ -93,19 +98,6 @@ TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]")
     auto                distance_fnc = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
     dijkstra_with_visitor(g, frankfurt_id, visitor, distances, predecessors, distance_fnc);
-
-    //auto distance = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-    //for (auto bfs = co_dijkstra(g, frankfurt_id, dijkstra_events::discover_vertex, distances, predecessors, distance);
-    //     bfs;) {
-    //  auto&& [event, payload] = bfs();
-    //  switch (event) {
-    //  case dijkstra_events::discover_vertex: {
-    //    auto&& [uid, u, km] = get<bfs_vertex_value_t<G, double>>(payload); // or get<1>(payload);
-    //    cout << "[" << uid << "] " << vertex_value(g, u) << " " << km << "km" << endl;
-    //  } break;
-    //  default: break;
-    //  }
-    //}
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT

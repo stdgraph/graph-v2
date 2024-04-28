@@ -43,7 +43,7 @@ public:
   dijkstra_visitor_base()                             = delete;
   dijkstra_visitor_base(const dijkstra_visitor_base&) = default;
   dijkstra_visitor_base(dijkstra_visitor_base&&)      = default;
-  virtual ~dijkstra_visitor_base()                    = default;
+  ~dijkstra_visitor_base()                            = default;
 
   dijkstra_visitor_base& operator=(const dijkstra_visitor_base&) = default;
   dijkstra_visitor_base& operator=(dijkstra_visitor_base&&)      = default;
@@ -55,15 +55,15 @@ public:
   // Visitor Functions
 public:
   // vertex visitor functions
-  constexpr virtual void on_initialize_vertex(const vertex_desc_type& vdesc) noexcept {}
-  constexpr virtual void on_discover_vertex(const vertex_desc_type& vdesc) noexcept {}
-  constexpr virtual void on_examine_vertex(const vertex_desc_type& vdesc) noexcept {}
-  constexpr virtual void on_finish_vertex(const vertex_desc_type& vdesc) noexcept {}
+  constexpr void on_initialize_vertex(const vertex_desc_type& vdesc) noexcept {}
+  constexpr void on_discover_vertex(const vertex_desc_type& vdesc) noexcept {}
+  constexpr void on_examine_vertex(const vertex_desc_type& vdesc) noexcept {}
+  constexpr void on_finish_vertex(const vertex_desc_type& vdesc) noexcept {}
 
   // edge visitor functions
-  constexpr virtual void on_examine_edge(const sourced_edge_desc_type& edesc) noexcept {}
-  constexpr virtual void on_edge_relaxed(const sourced_edge_desc_type& edesc) noexcept {}
-  constexpr virtual void on_edge_not_relaxed(const sourced_edge_desc_type& edesc) noexcept {}
+  constexpr void on_examine_edge(const sourced_edge_desc_type& edesc) noexcept {}
+  constexpr void on_edge_relaxed(const sourced_edge_desc_type& edesc) noexcept {}
+  constexpr void on_edge_not_relaxed(const sourced_edge_desc_type& edesc) noexcept {}
 
   // Data Members
 private:
@@ -106,8 +106,7 @@ template <index_adjacency_list G,
                                            greater<vertex_id_t<G>>>>
 requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
-         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
-         //dijkstra_visitor<G, Visitor>
+         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine> //&& dijkstra_visitor<G, Visitor>
 void dijkstra_with_visitor(
       G&             g_,
       vertex_id_t<G> seed,
@@ -119,8 +118,8 @@ void dijkstra_with_visitor(
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
       Combine&& combine = plus<ranges::range_value_t<Distances>>(),
       Queue     queue   = Queue()) {
-  using id_type         = vertex_id_t<G>;
-  using DistanceValue   = ranges::range_value_t<Distances>;
+  using id_type       = vertex_id_t<G>;
+  using DistanceValue = ranges::range_value_t<Distances>;
 
   auto relax_target = [&g_, &predecessor, &distances, &weight, &compare, &combine] //
         (edge_reference_t<G> e, vertex_id_t<G> uid) -> bool {
@@ -151,10 +150,8 @@ void dijkstra_with_visitor(
   size_t N(num_vertices(g_));
   assert(seed < N && seed >= 0);
 
-  if constexpr (_has_overridden_on_initialize_vertex<Visitor>) {
-    for (id_type uid = 0; uid < num_vertices(g_); ++uid) {
-      visitor.on_initialize_vertex({uid, *find_vertex(g_, uid), distances[uid]});
-    }
+  for (id_type uid = 0; uid < num_vertices(g_); ++uid) {
+    visitor.on_initialize_vertex({uid, *find_vertex(g_, uid), distances[uid]});
   }
 
   queue.push(seed);
@@ -164,7 +161,7 @@ void dijkstra_with_visitor(
   while (!queue.empty()) {
     const id_type uid = queue.top();
     queue.pop();
-    visitor.on_discover_vertex({uid, *find_vertex(g_, uid), distances[seed]});
+    visitor.on_examine_vertex({uid, *find_vertex(g_, uid), distances[uid]});
 
     for (auto&& [vid, uv] : views::incidence(g_, uid)) {
       visitor.on_examine_edge({uid, vid, uv});
@@ -177,7 +174,7 @@ void dijkstra_with_visitor(
         } else {
           visitor.on_edge_not_relaxed({uid, vid, uv});
         }
-        visitor.on_discover_vertex({uid, *find_vertex(g_, vid), distances[seed]});
+        visitor.on_discover_vertex({vid, *find_vertex(g_, vid), distances[vid]});
         queue.push(vid);
       } else {
         // non-tree edge
@@ -194,7 +191,7 @@ void dijkstra_with_visitor(
     // Note: while we *think* we're done with this vertex, we may not be. If the graph is unbalanced
     // and another path to this vertex has a lower accumulated weight, we'll process it again.
     // A consequence is that examine_vertex could be call subsequently on the same vertex.
-    visitor.on_finish_vertex({uid, *find_vertex(g_, uid), distances[seed]});
+    visitor.on_finish_vertex({uid, *find_vertex(g_, uid), distances[uid]});
   }
 }
 
