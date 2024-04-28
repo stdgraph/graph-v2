@@ -28,7 +28,7 @@ struct Generator {
 
     template <std::convertible_to<T> From> // C++20 concept
     std::suspend_always yield_value(From&& from) {
-      value_ = std::forward<From>(from); // caching the result in promise
+      value_ = static_cast<T>(std::forward<From>(from)); // caching the result in promise
       return {};
     }
     void return_void() {}

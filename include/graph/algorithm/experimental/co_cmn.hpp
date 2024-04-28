@@ -3,10 +3,9 @@
 #include "graph/graph.hpp"
 #include "graph/views/incidence.hpp"
 #include "graph/detail/co_generator.hpp"
+#include "bfs_cmn.hpp"
 
 #include <variant>
-#include <queue>
-#include <algorithm>
 
 namespace std::graph::experimental {
 
@@ -33,6 +32,8 @@ using bfs_variant_value_t = variant<monostate, bfs_vertex_value_t<G, VValue>, bf
 template <class Events, class G, class VValue = void>
 using bfs_value_t = pair<Events, bfs_variant_value_t<G, VValue>>;
 
+struct event_not_overridden {};
+
 // Helper macros to keep the visual clutter down in a coroutine. I'd like to investigate using CRTP to avoid them,
 // but I'm not sure how it will play with coroutines.
 #define yield_vertex(event, uid)                                                                                       \
@@ -48,64 +49,5 @@ using bfs_value_t = pair<Events, bfs_variant_value_t<G, VValue>>;
     }
 
 
-/**
- * @ingroup graph_algorithms
- * @brief Returns a value to define an invalid distance used to initialize distance values
- * in the distance range before one of the shorts paths functions.
- * 
- * @tparam DistanceValue The type of the distance.
- * 
- * @return A unique sentinal value to indicate that a value is invalid, or undefined.
-*/
-template <class DistanceValue>
-constexpr auto shortest_path_invalid_distance() {
-  return numeric_limits<DistanceValue>::max();
-}
-
-/**
- * @ingroup graph_algorithms
- * @brief Returns a distance value of zero.
- * 
- * @tparam DistanceValue The type of the distance.
- * 
- * @return A value of zero distance.
-*/
-template <class DistanceValue>
-constexpr auto shortest_path_zero() {
-  return DistanceValue();
-}
-
-/**
- * @ingroup graph_algorithms
- * @brief Intializes the distance values to shortest_path_invalid_distance().
- * 
- * @tparam Distances The range type of the distances.
- * 
- * @param distances The range of distance values to initialize.
-*/
-template <class Distances>
-constexpr void init_shortest_paths(Distances& distances) {
-  ranges::fill(distances, shortest_path_invalid_distance<ranges::range_value_t<Distances>>());
-}
-
-/**
- * @ingroup graph_algorithms
- * @brief Intializes the distance and predecessor values for shortest paths algorithms.
- * 
- * @tparam Distances The range type of the distances.
- * @tparam Predecessors The range type of the predecessors.
- * 
- * @param distances The range of distance values to initialize.
- * @param predecessors The range of predecessors to initialize.
-*/
-template <class Distances, class Predecessors>
-constexpr void init_shortest_paths(Distances& distances, Predecessors& predecessors) {
-  init_shortest_paths(distances);
-
-  using pred_t = ranges::range_value_t<Predecessors>;
-  pred_t i     = pred_t();
-  for (auto& pred : predecessors)
-    pred = i++;
-}
 
 } // namespace std::graph::experimental
