@@ -14,3 +14,4 @@ Benchmarking
 
 Issues
 1. co_dijkstra isn't passing the distance to vertices
+2. visitor requires new implementation (code bloat)

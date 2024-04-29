@@ -27,13 +27,12 @@ concept dijkstra_visitor = //is_arithmetic<typename Visitor::distance_type> &&
         { v.on_edge_not_relaxed(edesc) };
       };
 
-template <adjacency_list G, class Distance>
+template <adjacency_list G>
 class dijkstra_visitor_base {
   // Types
 public:
   using graph_type             = G;
-  using distance_type          = Distance;
-  using vertex_desc_type       = vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, Distance>;
+  using vertex_desc_type       = vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>;
   using sourced_edge_desc_type = edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>;
 
   // Construction, Destruction, Assignment
@@ -98,21 +97,25 @@ template <index_adjacency_list G,
           class Visitor,
           ranges::random_access_range Distances,
           ranges::random_access_range Predecessors,
-          class WF        = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
-          class Compare   = less<ranges::range_value_t<Distances>>,
-          class Combine   = plus<ranges::range_value_t<Distances>>,
-          queueable Queue = priority_queue<vertex_id_t<G>,
-                                           vector<vertex_id_t<G>>,
-                                           greater<vertex_id_t<G>>>>
+          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
+          class Compare    = less<ranges::range_value_t<Distances>>,
+          class Combine    = plus<ranges::range_value_t<Distances>>,
+          _queueable Queue = priority_queue<vertex_id_t<G>,
+                                            vector<vertex_id_t<G>>,
+                                            greater<vertex_id_t<G>>>>
 requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
-         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine> //&& dijkstra_visitor<G, Visitor>
+         basic_edge_weight_function<G,
+                                    WF,
+                                    ranges::range_value_t<Distances>,
+                                    Compare,
+                                    Combine> //&& dijkstra_visitor<G, Visitor>
 void dijkstra_with_visitor(
       G&             g_,
-      vertex_id_t<G> seed,
       Visitor&&      visitor,
-      Distances&     distances,
+      vertex_id_t<G> seed,
       Predecessors&  predecessor,
+      Distances&     distances,
       WF&            weight =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
@@ -151,17 +154,17 @@ void dijkstra_with_visitor(
   assert(seed < N && seed >= 0);
 
   for (id_type uid = 0; uid < num_vertices(g_); ++uid) {
-    visitor.on_initialize_vertex({uid, *find_vertex(g_, uid), distances[uid]});
+    visitor.on_initialize_vertex({uid, *find_vertex(g_, uid)});
   }
 
   queue.push(seed);
   distances[seed] = zero; // mark seed as discovered
-  visitor.on_discover_vertex({seed, *find_vertex(g_, seed), distances[seed]});
+  visitor.on_discover_vertex({seed, *find_vertex(g_, seed)});
 
   while (!queue.empty()) {
     const id_type uid = queue.top();
     queue.pop();
-    visitor.on_examine_vertex({uid, *find_vertex(g_, uid), distances[uid]});
+    visitor.on_examine_vertex({uid, *find_vertex(g_, uid)});
 
     for (auto&& [vid, uv] : views::incidence(g_, uid)) {
       visitor.on_examine_edge({uid, vid, uv});
@@ -174,7 +177,7 @@ void dijkstra_with_visitor(
         } else {
           visitor.on_edge_not_relaxed({uid, vid, uv});
         }
-        visitor.on_discover_vertex({vid, *find_vertex(g_, vid), distances[vid]});
+        visitor.on_discover_vertex({vid, *find_vertex(g_, vid)});
         queue.push(vid);
       } else {
         // non-tree edge
@@ -191,7 +194,7 @@ void dijkstra_with_visitor(
     // Note: while we *think* we're done with this vertex, we may not be. If the graph is unbalanced
     // and another path to this vertex has a lower accumulated weight, we'll process it again.
     // A consequence is that examine_vertex could be call subsequently on the same vertex.
-    visitor.on_finish_vertex({uid, *find_vertex(g_, uid), distances[uid]});
+    visitor.on_finish_vertex({uid, *find_vertex(g_, uid)});
   }
 }
 

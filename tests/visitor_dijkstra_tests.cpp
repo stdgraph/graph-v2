@@ -62,11 +62,11 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
-struct my_dijkstra_visitor : dijkstra_visitor_base<routes_vol_graph_type, Distance> {
+struct my_dijkstra_visitor : dijkstra_visitor_base<routes_vol_graph_type> {
   using G      = routes_vol_graph_type;
-  using base_t = dijkstra_visitor_base<G, Distance>;
+  using base_t = dijkstra_visitor_base<G>;
 
-  my_dijkstra_visitor(routes_vol_graph_type& g) : base_t(g) {}
+  my_dijkstra_visitor(routes_vol_graph_type& g, Distances& distances) : base_t(g), distances_(distances) {}
   ~my_dijkstra_visitor() = default;
 
   //void on_discover_vertex(const base_t::vertex_desc_type& vdesc) noexcept {
@@ -75,13 +75,22 @@ struct my_dijkstra_visitor : dijkstra_visitor_base<routes_vol_graph_type, Distan
   //}
 
   void on_finish_vertex(const base_t::vertex_desc_type& vdesc) noexcept {
-    auto&& [uid, u, km] = vdesc;
+    auto&& [uid, u] = vdesc;
+    auto km         = distances_[uid];
     cout << "[" << uid << "] finish " << vertex_value(graph(), u) << " " << km << "km" << endl;
   }
+
+private:
+  Distances& distances_;
 };
 
 TEST_CASE("dijstra visitor test", "[dynamic][dijkstra][bfs][vertex][visitor]") {
   init_console();
+
+  // Todo:
+  // Remove Distance from dijkstra_visitor_base, and it's vertex_desc_type
+  // (my_dijkstra_visitor can take it as a constructor and output distance if desired)
+  //
 
   using G  = routes_vol_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
@@ -94,10 +103,10 @@ TEST_CASE("dijstra visitor test", "[dynamic][dijkstra][bfs][vertex][visitor]") {
   init_shortest_paths(distances, predecessors);
 
   SECTION("co_dijkstra fnc vertices") {
-    my_dijkstra_visitor visitor(g);
+    my_dijkstra_visitor visitor(g, distances);
     auto                distance_fnc = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
-    dijkstra_with_visitor(g, frankfurt_id, visitor, distances, predecessors, distance_fnc);
+    dijkstra_with_visitor(g, visitor, frankfurt_id, predecessors, distances, distance_fnc);
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT

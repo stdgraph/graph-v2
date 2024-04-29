@@ -77,21 +77,21 @@ constexpr dijkstra_events operator|(dijkstra_events lhs, dijkstra_events rhs) no
 template <index_adjacency_list        G,
           ranges::random_access_range Distances,
           ranges::random_access_range Predecessors,
-          class Compare   = less<ranges::range_value_t<Distances>>,
-          class Combine   = plus<ranges::range_value_t<Distances>>,
-          class WF        = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
-          queueable Queue = priority_queue<vertex_id_t<G>,
-                                           vector<vertex_id_t<G>>,
-                                           greater<vertex_id_t<G>>>>
+          class Compare    = less<ranges::range_value_t<Distances>>,
+          class Combine    = plus<ranges::range_value_t<Distances>>,
+          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
+          _queueable Queue = priority_queue<vertex_id_t<G>,
+                                            vector<vertex_id_t<G>>,
+                                            greater<vertex_id_t<G>>>>
 requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 Generator<bfs_value_t<dijkstra_events, G, ranges::range_value_t<Distances>>> co_dijkstra(
       G&                    g_,
-      vertex_id_t<G>        seed,
       const dijkstra_events events,
-      Distances&            distances,
+      vertex_id_t<G>        seed,
       Predecessors&         predecessor,
+      Distances&            distances,
       WF&                   weight =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Compare&& compare = less<ranges::range_value_t<Distances>>(),

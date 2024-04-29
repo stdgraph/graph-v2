@@ -73,7 +73,7 @@ constexpr void init_shortest_paths(Distances& distances, Predecessors& predecess
  * the caller's domain.
 */
 template <class Q> // For exposition only
-concept queueable = requires(Q&& q, typename Q::value_type value) {
+concept _queueable = requires(Q&& q, typename Q::value_type value) {
   typename Q::value_type;
   typename Q::size_type;
   typename Q::reference;
