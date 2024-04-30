@@ -2,7 +2,7 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/algorithm/co_dijkstra.hpp"
+#include "graph/algorithm/experimental/co_dijkstra.hpp"
 #include "graph/container/dynamic_graph.hpp"
 
 #define TEST_OPTION_OUTPUT (1)
@@ -28,7 +28,7 @@ using std::graph::vertex_reference_t;
 using std::graph::edge_t;
 using std::graph::edge_value_t;
 using std::graph::edge_reference_t;
-using std::graph::dijkstra_events;
+using std::graph::experimental::dijkstra_events;
 
 using std::graph::graph_value;
 using std::graph::vertices;
@@ -41,9 +41,11 @@ using std::graph::edge_value;
 using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
-using std::graph::co_dijkstra;
-using std::graph::bfs_vertex_value_t;
-using std::graph::bfs_edge_value_t;
+using std::graph::experimental::co_dijkstra;
+using std::graph::experimental::bfs_vertex_value_t;
+using std::graph::experimental::bfs_edge_value_t;
+using std::graph::experimental::shortest_path_invalid_distance;
+using std::graph::experimental::init_shortest_paths;
 
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
@@ -71,16 +73,14 @@ TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]")
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  Distances    distances(size(vertices(g)), std::numeric_limits<double>::max());
+  Distances    distances(size(vertices(g)));
   Predecessors predecessors(size(vertices(g)));
-  for (size_t i = 0; i < size(predecessors); ++i)
-    predecessors[i] = static_cast<vertex_id_t<G>>(i);
-  //init_shortest_paths(distance, predecessors);
+  init_shortest_paths(distances, predecessors);
 
-  SECTION("co_dijkstra vertices") {
-    auto        distance = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-    co_dijkstra dijkstra(g, distances, predecessors, distance); // frankfurt_id, bfs_events::discover_vertex
-    for (auto bfs = dijkstra(frankfurt_id, dijkstra_events::discover_vertex); bfs;) {
+  SECTION("co_dijkstra fnc vertices") {
+    auto distance = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
+    for (auto bfs = co_dijkstra(g, dijkstra_events::discover_vertex, frankfurt_id, predecessors, distances, distance);
+         bfs;) {
       auto&& [event, payload] = bfs();
       switch (event) {
       case dijkstra_events::discover_vertex: {

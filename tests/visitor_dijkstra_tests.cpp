@@ -2,7 +2,7 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/algorithm/experimental/co_bfs.hpp"
+#include "graph/algorithm/experimental/visitor_dijkstra.hpp"
 #include "graph/container/dynamic_graph.hpp"
 
 #define TEST_OPTION_OUTPUT (1)
@@ -28,7 +28,7 @@ using std::graph::vertex_reference_t;
 using std::graph::edge_t;
 using std::graph::edge_value_t;
 using std::graph::edge_reference_t;
-using std::graph::experimental::bfs_events;
+using std::graph::adjacency_list;
 
 using std::graph::graph_value;
 using std::graph::vertices;
@@ -41,13 +41,16 @@ using std::graph::edge_value;
 using std::graph::degree;
 using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
-using std::graph::experimental::co_bfs;
-using std::graph::experimental::bfs_vertex_value_t;
-using std::graph::experimental::bfs_edge_value_t;
+using std::graph::experimental::dijkstra_visitor_base;
+using std::graph::experimental::dijkstra_with_visitor;
+using std::graph::experimental::init_shortest_paths;
 
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
+using Distance     = double;
+using Distances    = std::vector<Distance>;
+using Predecessors = std::vector<vertex_id_t<routes_vol_graph_type>>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -59,8 +62,35 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
-TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
+struct my_dijkstra_visitor : dijkstra_visitor_base<routes_vol_graph_type> {
+  using G      = routes_vol_graph_type;
+  using base_t = dijkstra_visitor_base<G>;
+
+  my_dijkstra_visitor(routes_vol_graph_type& g, Distances& distances) : base_t(g), distances_(distances) {}
+  ~my_dijkstra_visitor() = default;
+
+  //void on_discover_vertex(const base_t::vertex_desc_type& vdesc) noexcept {
+  //  auto&& [uid, u, km] = vdesc;
+  //  cout << "[" << uid << "] discover " << vertex_value(graph(), u) << " " << km << "km" << endl;
+  //}
+
+  void on_finish_vertex(const base_t::vertex_desc_type& vdesc) noexcept {
+    auto&& [uid, u] = vdesc;
+    auto km         = distances_[uid];
+    cout << "[" << uid << "] finish " << vertex_value(graph(), u) << " " << km << "km" << endl;
+  }
+
+private:
+  Distances& distances_;
+};
+
+TEST_CASE("dijstra visitor test", "[dynamic][dijkstra][bfs][vertex][visitor]") {
   init_console();
+
+  // Todo:
+  // Remove Distance from dijkstra_visitor_base, and it's vertex_desc_type
+  // (my_dijkstra_visitor can take it as a constructor and output distance if desired)
+  //
 
   using G  = routes_vol_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
@@ -68,70 +98,19 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-  // The syntax using structured bindings for visiting vertices.
-  SECTION("co_bfs vertices") {
-    for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::discover_vertex); bfs;) {
-      auto&& [event, payload] = bfs();
-      switch (event) {
-      case bfs_events::discover_vertex: {
-        auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
-        cout << "[" << uid << "] " << vertex_value(g, u) << endl;
-      } break;
-      default: break;
-      }
-    }
-  }
+  Distances    distances(size(vertices(g)));
+  Predecessors predecessors(size(vertices(g)));
+  init_shortest_paths(distances, predecessors);
 
-  // The syntax using structured bindings for visiting edges.
-  SECTION("co_bfs edges") {
-    for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::examine_edge); bfs;) {
-      auto&& [event, payload] = bfs();
-      switch (event) {
-      case bfs_events::examine_edge: {
-        auto&& [uid, vid, v] = get<bfs_edge_value_t<G>>(payload); // or get<2>(payload);
-        cout << '[' << uid << "," << vid << "] " << vertex_value(g, *find_vertex(g, uid)) << " -> "
-             << vertex_value(g, *find_vertex(g, vid)) << endl;
-      } break;
-      default: break;
-      }
-    }
-  }
+  SECTION("co_dijkstra fnc vertices") {
+    my_dijkstra_visitor visitor(g, distances);
+    auto                distance_fnc = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
-  // The syntax using structured bindings for visiting vertices and edges.
-  SECTION("co_bfs vertices+edges") {
-    for (auto bfs = co_bfs(g, frankfurt_id, (bfs_events::discover_vertex | bfs_events::examine_edge)); bfs;) {
-      auto&& [event, payload] = bfs();
-      switch (event) {
-      case bfs_events::discover_vertex: {
-        auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload);
-        cout << '[' << uid << "] " << vertex_value(g, u) << endl;
-      } break;
-      case bfs_events::examine_edge: {
-        auto&& [uid, vid, uv] = get<bfs_edge_value_t<G>>(payload);
-        cout << "  [" << uid << "," << vid << "] " << vertex_value(g, *find_vertex(g, uid)) << " -> "
-             << vertex_value(g, *find_vertex(g, vid)) << endl;
-      } break;
-      default: break;
-      }
-    }
-  }
-
-  SECTION("co_bfs vertices Option 2") {
-    for (auto bfs = co_bfs(g, frankfurt_id, bfs_events::discover_vertex); bfs;) {
-      auto&& [event, payload] = bfs();
-      switch (event) {
-      case bfs_events::discover_vertex: {
-        // This is another syntax that might be nice to have, but may be harder to impl than I'd first imagined.
-        // It's using the same CPO names as before, only for the BFS vertex/edge variant.
-        //cout << "[" << vertex_id(payload) << "] " << vertex_value(g, vertex_id(payload)) << endl;
-      } break;
-      default: break;
-      }
-    }
+    dijkstra_with_visitor(g, visitor, frankfurt_id, predecessors, distances, distance_fnc);
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-  SECTION("co_bfs output") {
+  SECTION("co_dikstra output") {
 
     //vertices_breadth_first_search_view<G, void> bfs(g, frankfurt_id);
 
@@ -272,7 +251,6 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
 #if 0
 using std::graph::fibonacci_sequence;
 using std::graph::fib_seq;
-using std::graph::fib_seq_wrap;
 
 TEST_CASE("co fib test", "[fibonacci][coroutine]") {
   try {
@@ -300,45 +278,4 @@ TEST_CASE("co fib class test", "[fibonacci][coroutine]") {
     std::cerr << "Unknown exception.\n";
   }
 }
-
-// This doesn't terminate after 10 iterations
-//TEST_CASE("co fib wrapper test", "[fibonacci][coroutine]") {
-//  try {
-//    auto gen = fib_seq_wrap(10); // max 94 before uint64_t overflows
-//
-//    for (int j = 0; gen; ++j)
-//      std::cout << "fib(" << j << ")=" << gen() << '\n';
-//  } catch (const std::exception& ex) {
-//    std::cerr << "Exception: " << ex.what() << '\n';
-//  } catch (...) {
-//    std::cerr << "Unknown exception.\n";
-//  }
-//}
-
 #endif //0
-
-
-/* Target syntax
-  // Only stop for one event in this example
-  for (auto&& [event, desc] : co_bfs(costar_adjacency_list, bfs_events::examine_edge)) {
-    // The switch statement is overkill for this example, but it's useful for more complex algorithms.
-    switch (event) {
-    // Option 1: Use edge(desc) and vertex(desc) functions to return existing descriptors so structured bindings can be used
-    case bfs_events::examine_edge: {
-      auto&& [uid, vid] = edge(desc);
-      bacon_number[vid] = bacon_number[uid] + 1; // overload existing fncs for bfs_desc
-    } break;
-
-    // Option 2: Use existing functions
-    case bfs_events::examine_edge: {
-      bacon_number[target_id(desc)] = bacon_number[source_id(desc)] + 1; // overload existing fncs for bfs_desc
-    } break;
-
-    // Option 3: Both Option 1 and Option 2
-
-    default: assert(false); // Unhandled event
-    }
-  }
-  for (size_t i = 0; i < size(actors); ++i)
-    cout << actors[i] << " has Bacon number " << bacon_number[i] << std::endl;
-*/

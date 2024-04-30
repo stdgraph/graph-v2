@@ -3,12 +3,11 @@
 #include "graph/graph.hpp"
 #include "graph/views/incidence.hpp"
 #include "graph/detail/co_generator.hpp"
+#include "bfs_cmn.hpp"
 
 #include <variant>
-#include <queue>
-#include <algorithm>
 
-namespace std::graph {
+namespace std::graph::experimental {
 
 template <class G, class WF, class DistanceValue, class Compare, class Combine>
 concept basic_edge_weight_function = // e.g. weight(uv)
@@ -33,6 +32,8 @@ using bfs_variant_value_t = variant<monostate, bfs_vertex_value_t<G, VValue>, bf
 template <class Events, class G, class VValue = void>
 using bfs_value_t = pair<Events, bfs_variant_value_t<G, VValue>>;
 
+struct event_not_overridden {};
+
 // Helper macros to keep the visual clutter down in a coroutine. I'd like to investigate using CRTP to avoid them,
 // but I'm not sure how it will play with coroutines.
 #define yield_vertex(event, uid)                                                                                       \
@@ -47,4 +48,6 @@ using bfs_value_t = pair<Events, bfs_variant_value_t<G, VValue>>;
       event, bfs_edge_type { uid, vid, uv }                                                                            \
     }
 
-} // namespace std::graph
+
+
+} // namespace std::graph::experimental

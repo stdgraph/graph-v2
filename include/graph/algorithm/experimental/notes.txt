@@ -1,0 +1,17 @@
+BFS & DFS Experiment Using coroutines & visitors
+
+Observations
+1. Adding a visitor template argument means generating new code for each unique visitor (code bloat)
+
+Questions
+1. visitor: Is the optimizer smart enough to remove visitor calls that do nothing?
+2. coroutines: Is it possible to optimize the "generator" so we don't have to have a look-ahead copy?
+3. How to make values available to caller? distances[], depth[]
+4. How to enable cancellation?
+
+Benchmarking
+1. coroutine: test with and without event flags (performance impact of reducing i/f complexity?)
+
+Issues
+1. co_dijkstra isn't passing the distance to vertices
+2. visitor requires new implementation (code bloat)
