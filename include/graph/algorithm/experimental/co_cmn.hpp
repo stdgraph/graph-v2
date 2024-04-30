@@ -49,5 +49,4 @@ struct event_not_overridden {};
     }
 
 
-
 } // namespace std::graph::experimental
