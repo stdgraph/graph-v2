@@ -88,9 +88,9 @@ concept _has_overridden_on_initialize_vertex = requires(V obj, typename V::verte
  * @tparam G            The graph type,
  * @tparam Distances    The distance vector.
  * @tparam Predecessors The predecessor vector.
+ * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Compare      Comparison function for Distance values. Defaults to less<DistanceValue>.
  * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanctValue>.
- * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Queue        The queue type. Defaults to a priority_queue with comparator of greater<vertex_id_t<G>>.
  */
 template <index_adjacency_list G,
