@@ -461,6 +461,69 @@ public:
   explicit graph_error(const char* what_arg) : runtime_error(what_arg) {}
 };
 
+
+// function support
+// source_id(el)
+// target_id(el)
+// edge_value(el)
+// num_edges
+// has_edge
+// contains_edge(el,uid,vid)
+// edge_id(
+//
+// type support
+// vertex_id_t<EL>
+// edge_t<EL>
+// edge_value_t<EL>
+// edge_range_t<EL>
+//
+// edge_descriptor<VId, true, void, void> : {source_id, target_id}
+// edge_descriptor<VId, true, void, EV>   : {source_id, target_id, EV}
+//
+// is_edge_descriptor_v<E>
+//
+
+//
+namespace ELConcepts {
+  template <class E>
+  concept _source_target_id = requires(E e) {
+    { source_id(e) };
+    { target_id(e) } -> same_as<decltype(source_id(e))>;
+  };
+  template <class E>
+  concept _index_source_target_id = requires(E e) {
+    { source_id(e) } -> integral;
+    { target_id(e) } -> same_as<decltype(source_id(e))>;
+  };
+  template <class E>
+  concept _has_edge_value = requires(E e) {
+    { edge_value(e) };
+  };
+
+  template <class EL> // For exposition only
+  concept basic_edgelist_range = ranges::forward_range<EL> && _source_target_id<ranges::range_value_t<EL>>;
+
+  template <class EL> // For exposition only
+  concept basic_index_edgelist_range = ranges::forward_range<EL> && _index_source_target_id<ranges::range_value_t<EL>>;
+
+  template <class EL> // For exposition only
+  concept edgelist_range = basic_edgelist_range<EL> && _has_edge_value<ranges::range_value_t<EL>>;
+
+  template <class EL> // For exposition only
+  concept index_edgelist_range = basic_index_edgelist_range<EL> && _has_edge_value<ranges::range_value_t<EL>>;
+
+  template <basic_edgelist_range EL>
+  using edge_t = ranges::range_value_t<EL>;
+
+  template <basic_edgelist_range EL>
+  using vertex_id_t = decltype(source_id(declval<edge_t<EL>>()));
+
+  template <edgelist_range EL>
+  using edge_value_t = decltype(edge_value(declval<edge_t<EL>>()));
+
+} // namespace ELConcepts
+
+
 } // namespace std::graph
 
 #endif //GRAPH_HPP
