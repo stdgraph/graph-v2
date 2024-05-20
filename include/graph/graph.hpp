@@ -483,19 +483,19 @@ public:
 // is_edge_descriptor_v<E>
 //
 
-//
+// Target concepts for edgelist
 namespace ELConcepts {
-  template <class E>
+  template <class E> // For exposition only
   concept _source_target_id = requires(E e) {
     { source_id(e) };
     { target_id(e) } -> same_as<decltype(source_id(e))>;
   };
-  template <class E>
+  template <class E> // For exposition only
   concept _index_source_target_id = requires(E e) {
     { source_id(e) } -> integral;
     { target_id(e) } -> same_as<decltype(source_id(e))>;
   };
-  template <class E>
+  template <class E> // For exposition only
   concept _has_edge_value = requires(E e) {
     { edge_value(e) };
   };
@@ -512,13 +512,13 @@ namespace ELConcepts {
   template <class EL> // For exposition only
   concept index_edgelist_range = basic_index_edgelist_range<EL> && _has_edge_value<ranges::range_value_t<EL>>;
 
-  template <basic_edgelist_range EL>
+  template <basic_edgelist_range EL> // For exposition only
   using edge_t = ranges::range_value_t<EL>;
 
-  template <basic_edgelist_range EL>
+  template <basic_edgelist_range EL> // For exposition only
   using vertex_id_t = decltype(source_id(declval<edge_t<EL>>()));
 
-  template <edgelist_range EL>
+  template <edgelist_range EL> // For exposition only
   using edge_value_t = decltype(edge_value(declval<edge_t<EL>>()));
 
 } // namespace ELConcepts
