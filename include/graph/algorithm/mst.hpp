@@ -118,7 +118,8 @@ template <class EL> // For exposition only
 concept x_basic_edgelist_range = ranges::forward_range<EL> && _basic_edgelist_type<ranges::range_value_t<EL>>;
 
 template <class EL> // For exposition only
-concept x_basic_index_edgelist_range = ranges::forward_range<EL> && _basic_index_edgelist_type<ranges::range_value_t<EL>>;
+concept x_basic_index_edgelist_range =
+      ranges::forward_range<EL> && _basic_index_edgelist_type<ranges::range_value_t<EL>>;
 
 template <class EL> // For exposition only
 concept x_edgelist_range = ranges::forward_range<EL> && _edgelist_type<ranges::range_value_t<EL>>;

@@ -462,8 +462,6 @@ public:
 };
 
 
-
-
 } // namespace std::graph
 
 #endif //GRAPH_HPP
