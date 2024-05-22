@@ -115,17 +115,17 @@ concept _index_edgelist_type = _basic_index_edgelist_type<ELVT> && _has_edgelist
 
 
 template <class EL> // For exposition only
-concept basic_edgelist_range = ranges::forward_range<EL> && _basic_edgelist_type<ranges::range_value_t<EL>>;
+concept x_basic_edgelist_range = ranges::forward_range<EL> && _basic_edgelist_type<ranges::range_value_t<EL>>;
 
 template <class EL> // For exposition only
-concept basic_index_edgelist_range = ranges::forward_range<EL> && _basic_index_edgelist_type<ranges::range_value_t<EL>>;
+concept x_basic_index_edgelist_range =
+      ranges::forward_range<EL> && _basic_index_edgelist_type<ranges::range_value_t<EL>>;
 
 template <class EL> // For exposition only
-concept edgelist_range = ranges::forward_range<EL> && _edgelist_type<ranges::range_value_t<EL>>;
+concept x_edgelist_range = ranges::forward_range<EL> && _edgelist_type<ranges::range_value_t<EL>>;
 
 template <class EL> // For exposition only
-concept index_edgelist_range = ranges::forward_range<EL> && _index_edgelist_type<ranges::range_value_t<EL>>;
-
+concept x_index_edgelist_range = ranges::forward_range<EL> && _index_edgelist_type<ranges::range_value_t<EL>>;
 
 /*template<typename T, typename = void>
 struct has_edge : false_type { };
@@ -144,7 +144,7 @@ struct has_edge<T, decltype(declval<T>().edge, void())> : true_type { };*/
  * @param e           The input edgelist.
  * @param t           The output edgelist containing the tree.
  */
-template <index_edgelist_range IELR, index_edgelist_range OELR>
+template <x_index_edgelist_range IELR, x_index_edgelist_range OELR>
 void kruskal(IELR&& e, OELR&& t) {
   kruskal(e, t, [](auto&& i, auto&& j) { return i < j; });
 }
@@ -163,7 +163,7 @@ void kruskal(IELR&& e, OELR&& t) {
  * @param t           The output edgelist containing the tree.
  * @param compare     The comparison operator.
  */
-template <index_edgelist_range IELR, index_edgelist_range OELR, class CompareOp>
+template <x_index_edgelist_range IELR, x_index_edgelist_range OELR, class CompareOp>
 void kruskal(IELR&&    e,      // graph
              OELR&&    t,      // tree
              CompareOp compare // edge value comparitor
@@ -216,7 +216,7 @@ void kruskal(IELR&&    e,      // graph
  * @param e           The input edgelist.
  * @param t           The output edgelist containing the tree.
  */
-template <index_edgelist_range IELR, index_edgelist_range OELR>
+template <x_index_edgelist_range IELR, x_index_edgelist_range OELR>
 requires permutable<ranges::iterator_t<IELR>>
 void inplace_kruskal(IELR&& e, OELR&& t) {
   inplace_kruskal(e, t, [](auto&& i, auto&& j) { return i < j; });
@@ -236,7 +236,7 @@ void inplace_kruskal(IELR&& e, OELR&& t) {
  * @param t           The output edgelist containing the tree.
  * @param compare     The comparison operator.
  */
-template <index_edgelist_range IELR, index_edgelist_range OELR, class CompareOp>
+template <x_index_edgelist_range IELR, x_index_edgelist_range OELR, class CompareOp>
 requires permutable<ranges::iterator_t<IELR>>
 void inplace_kruskal(IELR&&    e,      // graph
                      OELR&&    t,      // tree
