@@ -84,22 +84,6 @@ template <class _G>
 using _rr_vertex_id_t = typename _rr_vertex_id<_G>::type;
 
 
-// Edgelist internal concepts
-template <class E> // For exposition only
-concept _source_target_id = requires(E e) {
-  { source_id(e) };
-  { target_id(e) } -> same_as<decltype(source_id(e))>;
-};
-template <class E> // For exposition only
-concept _index_source_target_id = requires(E e) {
-  { source_id(e) } -> integral;
-  { target_id(e) } -> same_as<decltype(source_id(e))>;
-};
-template <class E> // For exposition only
-concept _has_edge_value = requires(E e) {
-  { edge_value(e) };
-};
-
 
 // Tags are defined in tag_invoke namespace to avoid conflicts with function names
 // in std::graph, allowing customization for default behavior.
