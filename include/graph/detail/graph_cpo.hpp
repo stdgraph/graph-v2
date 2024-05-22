@@ -1135,7 +1135,7 @@ namespace _EL_Source_id {
     }
 
     template <class _E>
-    static constexpr _Choice_t<_St_ref> _Choice_adjl_ref = _Choose_edgl_ref<_E>();
+    static constexpr _Choice_t<_St_ref> _Choice_adjl_ref = _Choose_adjl_ref<_E>();
 
     template <class _E>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_edgl_ref() noexcept {
