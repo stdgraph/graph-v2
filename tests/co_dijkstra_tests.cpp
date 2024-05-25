@@ -84,8 +84,8 @@ TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]")
       auto&& [event, payload] = bfs();
       switch (event) {
       case dijkstra_events::discover_vertex: {
-        auto&& [uid, u, km] = get<bfs_vertex_value_t<G, double>>(payload); // or get<1>(payload);
-        cout << "[" << uid << "] " << vertex_value(g, u) << " " << km << "km" << endl;
+        auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
+        cout << "[" << uid << "] " << vertex_value(g, u) << endl;
       } break;
       default: break;
       }
