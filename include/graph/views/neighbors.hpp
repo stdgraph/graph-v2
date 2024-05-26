@@ -37,7 +37,8 @@ template <adjacency_list G, bool Sourced, class VVF>
 class neighbor_iterator
       : public _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
+  using base_type =
+        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type            = remove_reference_t<G>;
   using vertex_type           = vertex_t<graph_type>;
@@ -151,7 +152,8 @@ template <adjacency_list G, bool Sourced>
 class neighbor_iterator<G, Sourced, void>
       : public _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
 public:
-  using base_type = _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
+  using base_type =
+        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
 
   using graph_type            = remove_reference_t<G>;
   using vertex_type           = vertex_t<graph_type>;
