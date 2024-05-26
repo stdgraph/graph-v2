@@ -885,13 +885,13 @@ public: // Construction/Destruction/Assignment
    *                 If VRng value_type is already copyable_vertex_t<G>, identify can be used.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param erng  The edge values.
-   * @param vrng  The vertex values.
-   * @param eproj The projection function that converts the ERng value_type to copyable_edge_t<G>, 
-   *              or identity() if ERng value_type is already copyable_edge_t<G>.
-   * @param vproj The projection function that converts the ERng value_type to copyable_vertex_t<G>, or 
-   *              identity() if VRng value_type is already copyable_vertex_t<G>.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param erng                The edge values.
+   * @param vrng                The vertex values.
+   * @param eproj               The projection function that converts the ERng value_type to copyable_edge_t<G>, 
+   *                            or identity() if ERng value_type is already copyable_edge_t<G>.
+   * @param vproj               The projection function that converts the ERng value_type to copyable_vertex_t<G>, or 
+   *                            identity() if VRng value_type is already copyable_vertex_t<G>.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
    * @param alloc The allocator used for vertices and edges containers.
   */
   template <class ERng, class VRng, ranges::forward_range PartRng, class EProj = identity, class VProj = identity>
@@ -900,9 +900,9 @@ public: // Construction/Destruction/Assignment
                      VRng&&                vrng,
                      EProj                 eproj,
                      VProj                 vproj,
-                     const PartRng&        part_start_ids = vector<VId>(),
-                     vertex_allocator_type alloc          = vertex_allocator_type())
-        : vertices_(alloc), partition_(part_start_ids, alloc) {
+                     const PartRng&        partition_start_ids = vector<VId>(),
+                     vertex_allocator_type alloc               = vertex_allocator_type())
+        : vertices_(alloc), partition_(partition_start_ids, alloc) {
     load_vertices(vrng, vproj);
     // TODO: not all partitions may be created properly when vertex_ids in edges don't include vertices in all partitions
     load_edges(vertices_.size(), 0, erng, eproj);
@@ -927,19 +927,19 @@ public: // Construction/Destruction/Assignment
    *                 If ERng value_type is already copyable_vertex_t<G>, identity can be used.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param erng            The edge values.
-   * @param eproj           The projection function that converts the ERng value_type to copyable_edge_t<G>, 
-   *                        or identity() if ERng value_type is already copyable_edge_t<G>.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for vertices and edges containers.
+   * @param erng                The edge values.
+   * @param eproj               The projection function that converts the ERng value_type to copyable_edge_t<G>, 
+   *                            or identity() if ERng value_type is already copyable_edge_t<G>.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph_base(ERng&&                erng,
                      EProj                 eproj,
-                     const PartRng&        part_start_ids = vector<VId>(),
-                     vertex_allocator_type alloc          = vertex_allocator_type())
-        : vertices_(alloc), partition_(part_start_ids, alloc) {
+                     const PartRng&        partition_start_ids = vector<VId>(),
+                     vertex_allocator_type alloc               = vertex_allocator_type())
+        : vertices_(alloc), partition_(partition_start_ids, alloc) {
     load_edges(move(erng), eproj);
     terminate_partitions();
   }
@@ -962,21 +962,21 @@ public: // Construction/Destruction/Assignment
    *                 If ERng value_type is already copyable_vertex_t<G>, identity can be used.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param vertex_count    The number of vertices to create.
-   * @param erng            The edge values.
-   * @param eproj           A function that converts the ERng value_type to copyable_edge_t<G>, 
-   *                        or identity() if ERng value_type is already copyable_edge_t<G>.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for vertices and edges containers.
+   * @param vertex_count        The number of vertices to create.
+   * @param erng                The edge values.
+   * @param eproj               A function that converts the ERng value_type to copyable_edge_t<G>, 
+   *                            or identity() if ERng value_type is already copyable_edge_t<G>.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph_base(size_type             vertex_count,
                      ERng&&                erng,
                      EProj                 eproj,
-                     const PartRng&        part_start_ids = vector<VId>(),
-                     vertex_allocator_type alloc          = vertex_allocator_type())
-        : vertices_(alloc), partition_(part_start_ids, alloc) {
+                     const PartRng&        partition_start_ids = vector<VId>(),
+                     vertex_allocator_type alloc               = vertex_allocator_type())
+        : vertices_(alloc), partition_(partition_start_ids, alloc) {
     load_edges(vertex_count, 0, move(erng), eproj);
     terminate_partitions();
   }
@@ -1254,7 +1254,7 @@ public: // Properties
   constexpr typename vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
   constexpr const typename vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
 
-public: // Operations
+public:                                      // Operations
   void reserve_vertices(size_type count) {
     if constexpr (reservable<vertices_type>) // reserve if we can; otherwise ignored
       vertices_.reserve(count);
@@ -1271,13 +1271,13 @@ public: // Operations
     // ignored for this graph; may be meaningful for another data structure like CSR
   }
 
-private: // Member Variables
+private:                       // Member Variables
   vertices_type    vertices_;
   partition_vector partition_; // partition_[n] holds the first vertex id for each partition n
                                // holds +1 extra terminating partition
   size_t edge_count_ = 0;      // total number of edges in the graph
 
-private: // CPO properties
+private:                       // CPO properties
   friend constexpr vertices_type&       vertices(dynamic_graph_base& g) { return g.vertices_; }
   friend constexpr const vertices_type& vertices(const dynamic_graph_base& g) { return g.vertices_; }
 
@@ -1429,24 +1429,24 @@ public: // Construction/Destruction/Assignment
    *                 If the @c VRng value type is already @c copyable_vertex_t<VId,VV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param erng            The edge data range used to create new edges.
-   * @param vrng            The vertex data range used to define the number of vertices and define vertex values.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param vproj           The vertex projection function used to convert the @c vrng value type to @c copyable_vertex_t<VId,VV>.
-   *                        If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param erng                The edge data range used to create new edges.
+   * @param vrng                The vertex data range used to define the number of vertices and define vertex values.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param vproj               The vertex projection function used to convert the @c vrng value type to @c copyable_vertex_t<VId,VV>.
+   *                            If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, class VRng, ranges::forward_range PartRng, class EProj = identity, class VProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(const ERng&    erng,
                 const VRng&    vrng,
-                EProj          eproj          = {},
-                VProj          vproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(erng, vrng, eproj, vproj, part_start_ids, alloc) {}
+                EProj          eproj               = {},
+                VProj          vproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(erng, vrng, eproj, vproj, partition_start_ids, alloc) {}
 
   /**
    * @brief Constructs the graph from a range of edge data and range of vertex data.
@@ -1467,26 +1467,26 @@ public: // Construction/Destruction/Assignment
    *                 If the @c VRng value type is already @c copyable_vertex_t<VId,VV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param gv              The value to copy to the internal graph value.
-   * @param erng            The edge data range used to create new edges.
-   * @param vrng            The vertex data range used to define the number of vertices and define vertex values.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param vproj           The vertex projection function used to convert the @c vrng value type to @c copyable_vertex_t<VId,VV>.
-   *                        If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param gv                  The value to copy to the internal graph value.
+   * @param erng                The edge data range used to create new edges.
+   * @param vrng                The vertex data range used to define the number of vertices and define vertex values.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param vproj               The vertex projection function used to convert the @c vrng value type to @c copyable_vertex_t<VId,VV>.
+   *                            If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, class VRng, ranges::forward_range PartRng, class EProj = identity, class VProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(const GV&      gv,
                 const ERng&    erng,
                 const VRng&    vrng,
-                EProj          eproj          = {},
-                VProj          vproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(erng, vrng, eproj, vproj, part_start_ids, alloc), value_(gv) {}
+                EProj          eproj               = {},
+                VProj          vproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(erng, vrng, eproj, vproj, partition_start_ids, alloc), value_(gv) {}
 
   /**
    * @brief Constructs the graph from a range of edge data and range of vertex data.
@@ -1507,15 +1507,15 @@ public: // Construction/Destruction/Assignment
    *                 If the @c VRng value type is already @c copyable_vertex_t<VId,VV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param gv              The value to move to the internal graph value.
-   * @param erng            The edge data range used to create new edges.
-   * @param vrng            The vertex data range used to define the number of vertices and define vertex values.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param vproj           The vertex projection function used to convert the @c vrng value type to @c copyable_vertex_t<VId,VV>.
-   *                        If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param gv                  The value to move to the internal graph value.
+   * @param erng                The edge data range used to create new edges.
+   * @param vrng                The vertex data range used to define the number of vertices and define vertex values.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param vproj               The vertex projection function used to convert the @c vrng value type to @c copyable_vertex_t<VId,VV>.
+   *                            If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, class EProj, class VRng, ranges::forward_range PartRng, class VProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
@@ -1524,9 +1524,9 @@ public: // Construction/Destruction/Assignment
                 EProj          eproj,
                 VProj          vproj,
                 GV&&           gv,
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(erng, vrng, eproj, vproj, part_start_ids, alloc), value_(move(gv)) {}
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(erng, vrng, eproj, vproj, partition_start_ids, alloc), value_(move(gv)) {}
 
 
   //       max_vertex_id, erng, eproj, alloc
@@ -1546,21 +1546,21 @@ public: // Construction/Destruction/Assignment
    *                 If the @c ERng value type is already @c copyable_edge_t<VId,EV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param max_vertex_id   The maximum vertex id used by edges. The vertices container is pre-extended to store the number
-   *                        of elements, if applicable.
-   * @param erng            The edge data range used to create new edges.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param max_vertex_id       The maximum vertex id used by edges. The vertices container is pre-extended to store the number
+   *                            of elements, if applicable.
+   * @param erng                The edge data range used to create new edges.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   dynamic_graph(vertex_id_type max_vertex_id,
                 ERng&          erng,
-                EProj          eproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(max_vertex_id, erng, eproj, part_start_ids, alloc) {}
+                EProj          eproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, partition_start_ids, alloc) {}
 
   /**
    * @brief Construct the graph given the graph value, maximum vertex id and edge data range.
@@ -1573,24 +1573,24 @@ public: // Construction/Destruction/Assignment
    *                 If the @c ERng value type is already @c copyable_edge_t<VId,EV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param gv              The value to copy to the internal graph value.
-   * @param max_vertex_id   The maximum vertex id used by edges. The vertices container is pre-extended to store the number
-   *                        of elements, if applicable.
-   * @param erng            The edge data range used to create new edges.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param gv                  The value to copy to the internal graph value.
+   * @param max_vertex_id       The maximum vertex id used by edges. The vertices container is pre-extended to store the number
+   *                            of elements, if applicable.
+   * @param erng                The edge data range used to create new edges.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(const GV&      gv,
                 vertex_id_type max_vertex_id,
                 ERng&          erng,
-                EProj          eproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(max_vertex_id, erng, eproj, part_start_ids, alloc), value_(gv) {}
+                EProj          eproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, partition_start_ids, alloc), value_(gv) {}
 
   /**
    * @brief Construct the graph given the graph value, maximum vertex id and edge data range.
@@ -1603,24 +1603,24 @@ public: // Construction/Destruction/Assignment
    *                 If the @c ERng value type is already @c copyable_edge_t<VId,EV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param gv              The value to move to the internal graph value.
-   * @param max_vertex_id   The maximum vertex id used by edges. The vertices container is pre-extended to store the number
-   *                        of elements, if applicable.
-   * @param erng            The edge data range used to create new edges.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param gv                  The value to move to the internal graph value.
+   * @param max_vertex_id       The maximum vertex id used by edges. The vertices container is pre-extended to store the number
+   *                            of elements, if applicable.
+   * @param erng                The edge data range used to create new edges.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(GV&&           gv,
                 vertex_id_type max_vertex_id,
                 ERng&          erng,
-                EProj          eproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(max_vertex_id, erng, eproj, part_start_ids, alloc), value_(move(gv)) {}
+                EProj          eproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, partition_start_ids, alloc), value_(move(gv)) {}
 
   // erng, eproj,       alloc
   // erng, eproj, gv&,  alloc
@@ -1639,19 +1639,19 @@ public: // Construction/Destruction/Assignment
    *                 If the @c ERng value type is already @c copyable_edge_t<VId,EV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param erng            The edge data range used to create new edges.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param erng                The edge data range used to create new edges.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(ERng&          erng,
-                EProj          eproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(erng, eproj, part_start_ids, alloc) {}
+                EProj          eproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(erng, eproj, partition_start_ids, alloc) {}
 
   /**
    * @brief Construct the graph given a graph value and edge data range.
@@ -1666,21 +1666,21 @@ public: // Construction/Destruction/Assignment
    *                 If the @c ERng value type is already @c copyable_edge_t<VId,EV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param gv              The value to copy to the internal graph value.
-   * @param erng            The edge data range used to create new edges.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param gv                  The value to copy to the internal graph value.
+   * @param erng                The edge data range used to create new edges.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(const GV&      gv,
                 ERng&          erng,
-                EProj          eproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(erng, eproj, part_start_ids, alloc), value_(gv) {}
+                EProj          eproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(erng, eproj, partition_start_ids, alloc), value_(gv) {}
 
   /**
    * @brief Construct the graph given a graph value and edge data range.
@@ -1695,21 +1695,21 @@ public: // Construction/Destruction/Assignment
    *                 If the @c ERng value type is already @c copyable_edge_t<VId,EV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param gv              The value to move to the internal graph value.
-   * @param erng            The edge data range used to create new edges.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param gv                  The value to move to the internal graph value.
+   * @param erng                The edge data range used to create new edges.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(GV&&           gv,
                 ERng&          erng,
-                EProj          eproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(erng, eproj, part_start_ids, alloc), value_(move(gv)) {}
+                EProj          eproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(erng, eproj, partition_start_ids, alloc), value_(move(gv)) {}
 
 
   /**
@@ -1732,7 +1732,7 @@ public:
 private:
   value_type value_; ///< Graph value
 
-private: // CPO properties
+private:             // CPO properties
   friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
   friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 };
@@ -1801,19 +1801,19 @@ public: // Construction/Destruction/Assignment
    *                 If the @c ERng value type is already @c copyable_edge_t<VId,EV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param erng            The edge data range used to create new edges.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param erng                The edge data range used to create new edges.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(ERng&          erng,
-                EProj          eproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(erng, eproj, part_start_ids, alloc) {}
+                EProj          eproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(erng, eproj, partition_start_ids, alloc) {}
 
   /**
    * @brief Construct the graph given the maximum vertex id and edge data range.
@@ -1826,22 +1826,22 @@ public: // Construction/Destruction/Assignment
    *                 If the @c ERng value type is already @c copyable_edge_t<VId,EV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param max_vertex_id   The maximum vertex id used by edges. The vertices container is pre-extended to store the number
-   *                        of elements, if applicable.
-   * @param erng            The edge data range used to create new edges.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param max_vertex_id       The maximum vertex id used by edges. The vertices container is pre-extended to store the number
+   *                            of elements, if applicable.
+   * @param erng                The edge data range used to create new edges.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, ranges::forward_range PartRng, class EProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(vertex_id_type max_vertex_id,
                 ERng&          erng,
-                EProj          eproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(max_vertex_id, erng, eproj, part_start_ids, alloc) {}
+                EProj          eproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(max_vertex_id, erng, eproj, partition_start_ids, alloc) {}
 
   /**
    * @brief Constructs the graph from a range of edge data and range of vertex data.
@@ -1860,24 +1860,24 @@ public: // Construction/Destruction/Assignment
    *                 If the @c VRng value type is already @c copyable_vertex_t<VId,VV> then @c identity can be used instead.
    * @tparam PartRng Range of starting vertex Ids for each partition
    * 
-   * @param erng            The edge data range used to create new edges.
-   * @param vrng            The vertex data range used to define the number of vertices and define vertex values.
-   * @param eproj           The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
-   *                        If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
-   * @param vproj           The vertex projection function used to convert the @c vrng value type to @c copyable_vertex_t<VId,VV>.
-   *                        If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
-   * @param part_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
-   * @param alloc           The allocator used for the vertices and edges containers.
+   * @param erng                The edge data range used to create new edges.
+   * @param vrng                The vertex data range used to define the number of vertices and define vertex values.
+   * @param eproj               The edge projection function used to convert the @c erng value type to @c copyable_edge_t<VId,EV>.
+   *                            If the @c erng value type is already @c copyable_edge_t<VId,EV> then @c identity() can be used instead.
+   * @param vproj               The vertex projection function used to convert the @c vrng value type to @c copyable_vertex_t<VId,VV>.
+   *                            If the @c vrng value type is already @c copyable_vertex_t<VId,VV> then @c identity() can be used instead.
+   * @param partition_start_ids Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
+   * @param alloc               The allocator used for the vertices and edges containers.
   */
   template <class ERng, class VRng, ranges::forward_range PartRng, class EProj = identity, class VProj = identity>
   requires convertible_to<ranges::range_value_t<PartRng>, VId>
   dynamic_graph(ERng&          erng,
                 VRng&          vrng,
-                EProj          eproj          = {},
-                VProj          vproj          = {},
-                const PartRng& part_start_ids = vector<VId>(),
-                allocator_type alloc          = allocator_type())
-        : base_type(erng, vrng, eproj, vproj, part_start_ids, alloc) {}
+                EProj          eproj               = {},
+                VProj          vproj               = {},
+                const PartRng& partition_start_ids = vector<VId>(),
+                allocator_type alloc               = allocator_type())
+        : base_type(erng, vrng, eproj, vproj, partition_start_ids, alloc) {}
 
   /**
    * @brief Construct the graph using a intializer list of copyable edges.

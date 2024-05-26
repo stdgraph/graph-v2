@@ -77,15 +77,17 @@ TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]")
   Predecessors predecessors(size(vertices(g)));
   init_shortest_paths(distances, predecessors);
 
+  std::vector<vertex_id_t<G>> seeds{frankfurt_id};
+
   SECTION("co_dijkstra fnc vertices") {
     auto distance = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-    for (auto bfs = co_dijkstra(g, dijkstra_events::discover_vertex, frankfurt_id, predecessors, distances, distance);
+    for (auto bfs = co_dijkstra(g, dijkstra_events::discover_vertex, seeds, predecessors, distances, distance);
          bfs;) {
       auto&& [event, payload] = bfs();
       switch (event) {
       case dijkstra_events::discover_vertex: {
-        auto&& [uid, u, km] = get<bfs_vertex_value_t<G, double>>(payload); // or get<1>(payload);
-        cout << "[" << uid << "] " << vertex_value(g, u) << " " << km << "km" << endl;
+        auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
+        cout << "[" << uid << "] " << vertex_value(g, u) << endl;
       } break;
       default: break;
       }

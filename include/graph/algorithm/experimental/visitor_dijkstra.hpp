@@ -88,22 +88,22 @@ concept _has_overridden_on_initialize_vertex = requires(V obj, typename V::verte
  * @tparam G            The graph type,
  * @tparam Distances    The distance vector.
  * @tparam Predecessors The predecessor vector.
+ * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Compare      Comparison function for Distance values. Defaults to less<DistanceValue>.
  * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanctValue>.
- * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Queue        The queue type. Defaults to a priority_queue with comparator of greater<vertex_id_t<G>>.
  */
 template <index_adjacency_list G,
           class Visitor,
+          ranges::input_range         Seeds,
           ranges::random_access_range Distances,
           ranges::random_access_range Predecessors,
           class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
           class Compare    = less<ranges::range_value_t<Distances>>,
           class Combine    = plus<ranges::range_value_t<Distances>>,
-          _queueable Queue = priority_queue<vertex_id_t<G>,
-                                            vector<vertex_id_t<G>>,
-                                            greater<vertex_id_t<G>>>>
-requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
+          _queueable Queue = priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, greater<vertex_id_t<G>>>>
+requires convertible_to<ranges::range_value_t<Seeds>, vertex_id_t<G>> && //
+         is_arithmetic_v<ranges::range_value_t<Distances>> &&            //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
          basic_edge_weight_function<G,
                                     WF,
@@ -111,12 +111,12 @@ requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
                                     Compare,
                                     Combine> //&& dijkstra_visitor<G, Visitor>
 void dijkstra_with_visitor(
-      G&             g_,
-      Visitor&&      visitor,
-      vertex_id_t<G> seed,
-      Predecessors&  predecessor,
-      Distances&     distances,
-      WF&            weight =
+      G&            g_,
+      Visitor&&     visitor,
+      const Seeds&  seeds,
+      Predecessors& predecessor,
+      Distances&    distances,
+      WF&           weight =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
       Combine&& combine = plus<ranges::range_value_t<Distances>>(),
@@ -151,15 +151,17 @@ void dijkstra_with_visitor(
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
   size_t N(num_vertices(g_));
-  assert(seed < N && seed >= 0);
 
   for (id_type uid = 0; uid < num_vertices(g_); ++uid) {
     visitor.on_initialize_vertex({uid, *find_vertex(g_, uid)});
   }
 
-  queue.push(seed);
-  distances[seed] = zero; // mark seed as discovered
-  visitor.on_discover_vertex({seed, *find_vertex(g_, seed)});
+  for (auto&& seed : seeds) {
+    assert(seed < N && seed >= 0);
+    queue.push(seed);
+    distances[seed] = zero; // mark seed as discovered
+    visitor.on_discover_vertex({seed, *find_vertex(g_, seed)});
+  }
 
   while (!queue.empty()) {
     const id_type uid = queue.top();
@@ -198,5 +200,36 @@ void dijkstra_with_visitor(
   }
 }
 
+template <index_adjacency_list G,
+          class Visitor,
+          ranges::random_access_range Distances,
+          ranges::random_access_range Predecessors,
+          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
+          class Compare    = less<ranges::range_value_t<Distances>>,
+          class Combine    = plus<ranges::range_value_t<Distances>>,
+          _queueable Queue = priority_queue<vertex_id_t<G>,
+                                            vector<vertex_id_t<G>>,
+                                            greater<vertex_id_t<G>>>>
+requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
+         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
+         basic_edge_weight_function<G,
+                                    WF,
+                                    ranges::range_value_t<Distances>,
+                                    Compare,
+                                    Combine> //&& dijkstra_visitor<G, Visitor>
+void dijkstra_with_visitor(
+      G&             g_,
+      Visitor&&      visitor,
+      vertex_id_t<G> seed,
+      Predecessors&  predecessor,
+      Distances&     distances,
+      WF&            weight =
+            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      Compare&& compare = less<ranges::range_value_t<Distances>>(),
+      Combine&& combine = plus<ranges::range_value_t<Distances>>(),
+      Queue     queue   = Queue()) {
+  dijkstra_with_visitor(g_, forward<Visitor>(visitor), ranges::subrange(&seed, (&seed + 1)), predecessor,
+                               distances, weight, forward<Compare>(compare), forward<Combine>(combine), queue);
+}
 
 } // namespace std::graph::experimental
