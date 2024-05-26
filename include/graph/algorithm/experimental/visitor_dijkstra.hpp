@@ -228,8 +228,8 @@ void dijkstra_with_visitor(
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
       Combine&& combine = plus<ranges::range_value_t<Distances>>(),
       Queue     queue   = Queue()) {
-  dijkstra_with_visitor(g_, forward<Visitor>(visitor), ranges::subrange(&seed, (&seed + 1)), predecessor,
-                               distances, weight, forward<Compare>(compare), forward<Combine>(combine), queue);
+  dijkstra_with_visitor(g_, forward<Visitor>(visitor), ranges::subrange(&seed, (&seed + 1)), predecessor, distances,
+                        weight, forward<Compare>(compare), forward<Combine>(combine), queue);
 }
 
 } // namespace std::graph::experimental

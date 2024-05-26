@@ -1254,7 +1254,7 @@ public: // Properties
   constexpr typename vertices_type::value_type&       operator[](size_type i) noexcept { return vertices_[i]; }
   constexpr const typename vertices_type::value_type& operator[](size_type i) const noexcept { return vertices_[i]; }
 
-public:                                      // Operations
+public: // Operations
   void reserve_vertices(size_type count) {
     if constexpr (reservable<vertices_type>) // reserve if we can; otherwise ignored
       vertices_.reserve(count);
@@ -1271,13 +1271,13 @@ public:                                      // Operations
     // ignored for this graph; may be meaningful for another data structure like CSR
   }
 
-private:                       // Member Variables
+private: // Member Variables
   vertices_type    vertices_;
   partition_vector partition_; // partition_[n] holds the first vertex id for each partition n
                                // holds +1 extra terminating partition
   size_t edge_count_ = 0;      // total number of edges in the graph
 
-private:                       // CPO properties
+private: // CPO properties
   friend constexpr vertices_type&       vertices(dynamic_graph_base& g) { return g.vertices_; }
   friend constexpr const vertices_type& vertices(const dynamic_graph_base& g) { return g.vertices_; }
 
@@ -1732,7 +1732,7 @@ public:
 private:
   value_type value_; ///< Graph value
 
-private:             // CPO properties
+private: // CPO properties
   friend constexpr value_type&       graph_value(graph_type& g) { return g.value_; }
   friend constexpr const value_type& graph_value(const graph_type& g) { return g.value_; }
 };

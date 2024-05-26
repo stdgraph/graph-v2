@@ -81,8 +81,7 @@ TEST_CASE("co_dijstra_clrs test", "[dynamic][dijkstra][bfs][vertex][coroutine]")
 
   SECTION("co_dijkstra fnc vertices") {
     auto distance = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-    for (auto bfs = co_dijkstra(g, dijkstra_events::discover_vertex, seeds, predecessors, distances, distance);
-         bfs;) {
+    for (auto bfs = co_dijkstra(g, dijkstra_events::discover_vertex, seeds, predecessors, distances, distance); bfs;) {
       auto&& [event, payload] = bfs();
       switch (event) {
       case dijkstra_events::discover_vertex: {
