@@ -98,6 +98,8 @@ TEST_CASE("dijstra visitor test", "[dynamic][dijkstra][bfs][vertex][visitor]") {
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
+  std::vector<vertex_id_t<G>> seeds{frankfurt_id};
+
   Distances    distances(size(vertices(g)));
   Predecessors predecessors(size(vertices(g)));
   init_shortest_paths(distances, predecessors);
@@ -106,7 +108,7 @@ TEST_CASE("dijstra visitor test", "[dynamic][dijkstra][bfs][vertex][visitor]") {
     my_dijkstra_visitor visitor(g, distances);
     auto                distance_fnc = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
-    dijkstra_with_visitor(g, visitor, frankfurt_id, predecessors, distances, distance_fnc);
+    dijkstra_with_visitor(g, visitor, seeds, predecessors, distances, distance_fnc);
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
