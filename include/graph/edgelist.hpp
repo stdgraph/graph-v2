@@ -335,9 +335,8 @@ namespace _Edge_value {
   concept _is_tuple_edge = _detail::_el_tuple_edge<_E> && (tuple_size_v<_E> >= 3);
 
   template <class _E>
-  concept _is_edge_desc = _detail::_el_basic_sourced_edge_desc<_E> && requires(_E elv) {
-    true;
-    { elv.value }; //->same_as<typename _E::value_type>;
+  concept _is_edge_desc = _detail::_el_basic_sourced_edge_desc<_E> && requires(_E e) {
+    { e.value }; //->same_as<typename _E::value_type>;
   };
 
   class _Cpo {
@@ -427,6 +426,9 @@ concept has_edge_value = basic_sourced_edgelist<EL> && //
                          requires(ranges::range_value_t<EL> e) {
                            { edge_value(e) };
                          };
+
+//template<class EL>
+//struct has_directed_edge = ...;
 
 // (non-basic concepts imply inclusion of an edge reference which doesn't make much sense)
 
