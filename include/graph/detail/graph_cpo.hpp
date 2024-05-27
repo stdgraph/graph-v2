@@ -1,6 +1,7 @@
 #pragma once
 
 // (included from graph.hpp)
+#include "graph/graph_descriptors.hpp"
 #include "tag_invoke.hpp"
 
 #ifndef GRAPH_CPO_HPP
@@ -964,15 +965,6 @@ namespace _Target_id {
   template <class _G>
   concept _Is_tuple_id_adj = integral<tuple_element_t<0, _rr_edge_t<_G>>>; // vertex<vertex<tuple<int,...>>>
 
-  template <class _E>
-  concept _Has_edgl_ref_member = requires(_E&& e) {
-    { _Fake_copy_init(e.target_id()) };
-  };
-  template <class _E>
-  concept _Has_edgl_ref_ADL = requires(_E&& __e) {
-    { _Fake_copy_init(target_id(__e)) }; // intentional ADL
-  };
-
   class _Cpo {
   private:
     enum class _St_ref { _None, _Member, _Non_member, _Basic_id, _Tuple_id, _Auto_eval };
@@ -1001,22 +993,6 @@ namespace _Target_id {
 
     template <class _G>
     static constexpr _Choice_t<_St_ref> _Choice_adjl_ref = _Choose_adjl_ref<_G>();
-
-    template <class _E>
-    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_edgl_ref() noexcept {
-      static_assert(is_lvalue_reference_v<_E>);
-
-      if constexpr (_Has_edgl_ref_member<_E>) {
-        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_E&>().target_id()))};
-      } else if constexpr (_Has_edgl_ref_ADL<_E>) {
-        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(target_id(declval<_E>())))}; // intentional ADL
-      } else {
-        return {_St_ref::_None};
-      }
-    }
-
-    template <class _E>
-    static constexpr _Choice_t<_St_ref> _Choice_edgl_ref = _Choose_edgl_ref<_E>();
 
   public:
     /**
@@ -1051,32 +1027,6 @@ namespace _Target_id {
         static_assert(_Always_false<_G>, "target_id(g,uv) or g.target_id(uv) is not defined");
       }
     }
-
-    /**
-     * @brief The target_id of an edgelist edge.
-     * 
-     * Complexity: O(1)
-     * 
-     * Default implementation: 
-     * 
-     * @tparam G The graph type.
-     * @param g A graph instance.
-     * @param uv An edge instance.
-     * @return The target_id on an edge for an ajacency_list
-    */
-    template <class _E>
-    //requires(_Choice_edgl_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E&>._No_throw) {
-      constexpr _St_ref _Strat_ref = _Choice_edgl_ref<_E&>._Strategy;
-
-      if constexpr (_Strat_ref == _St_ref::_Member) {
-        return __e.target_id();
-      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        return target_id(__e); // intentional ADL
-      } else {
-        static_assert(_Always_false<_E>, "target_id(e) or e.target_id() is not defined");
-      }
-    }
   };
 } // namespace _Target_id
 
@@ -1088,7 +1038,7 @@ inline namespace _Cpos {
 //
 // source_id(g,uv) -> vertex_id_t<G> (optional; only when a source_id exists on an edge)
 //
-namespace _EL_Source_id {
+namespace _Source_id {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void source_id() = delete;                 // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
@@ -1103,16 +1053,6 @@ namespace _EL_Source_id {
   concept _Has_adjl_ref_ADL = _Has_class_or_enum_type<_G> //
                               && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                                    { _Fake_copy_init(source_id(__g, uv)) }; // intentional ADL
-                                 };
-
-  template <class _E>
-  concept _Has_edgl_ref_member = requires(_E&& __e) {
-    { _Fake_copy_init(__e.source_id()) };
-  };
-  template <class _E>
-  concept _Has_edgl_ref_ADL = _Has_class_or_enum_type<_E> //
-                              && requires(_E&& __e) {
-                                   { _Fake_copy_init(source_id(__e)) }; // intentional ADL
                                  };
 
   class _Cpo {
@@ -1135,21 +1075,6 @@ namespace _EL_Source_id {
 
     template <class _E>
     static constexpr _Choice_t<_St_ref> _Choice_adjl_ref = _Choose_adjl_ref<_E>();
-
-    template <class _E>
-    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_edgl_ref() noexcept {
-      static_assert(is_lvalue_reference_v<_E>);
-      if constexpr (_Has_edgl_ref_member<_E>) {
-        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_E>().source_id()))};
-      } else if constexpr (_Has_edgl_ref_ADL<_E>) {
-        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(source_id(declval<_E>())))}; // intentional ADL
-      } else {
-        return {_St_ref::_None};
-      }
-    }
-
-    template <class _E>
-    static constexpr _Choice_t<_St_ref> _Choice_edgl_ref = _Choose_edgl_ref<_E>();
 
   public:
     /**
@@ -1180,37 +1105,11 @@ namespace _EL_Source_id {
         static_assert(_Always_false<_G>, "source_id(g,uv) or g.source_id(uv) is not defined");
       }
     }
-
-    /**
-     * @brief The source_id of an edgelist edge
-     * 
-     * Complexity: O(1)
-     * 
-     * Default implementation: 
-     * 
-     * @tparam E The edgelist value_type.
-     * @param e A edgelist edge instance.
-     * @return The source_id of the edge.
-    */
-    template <class _E>
-    requires(_Choice_edgl_ref<_E&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_E&& __e, edge_reference_t<_E> uv) const
-          noexcept(_Choice_edgl_ref<_E&>._No_throw) {
-      constexpr _St_ref _Strat_ref = _Choice_edgl_ref<_E&>._Strategy;
-
-      if constexpr (_Strat_ref == _St_ref::_Member) {
-        return __e.source_id();
-      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        return source_id(__e); // intentional ADL
-      } else {
-        static_assert(_Always_false<_E>, "source_id(e) or e.source_id() is not defined");
-      }
-    }
   };
-} // namespace _EL_Source_id
+} // namespace _Source_id
 
 inline namespace _Cpos {
-  inline constexpr _EL_Source_id::_Cpo source_id;
+  inline constexpr _Source_id::_Cpo source_id;
 }
 
 
