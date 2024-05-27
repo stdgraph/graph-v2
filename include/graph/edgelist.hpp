@@ -92,7 +92,7 @@ namespace _detail {
   //
   // Support the use of std containers for edgelist edge definitions
   //
-  template <class _E>                       // For exposition only
+  template <class _E>                      // For exposition only
   concept _el_tuple_edge = _el_edge<_E> && //
                            same_as<tuple_element_t<0, _E>, tuple_element_t<1, _E>>;
 
@@ -106,7 +106,7 @@ namespace _detail {
   // explicit use of edge_descriptor. This is deemed more flexible and no
   // functionality is compromised for it.)
   //
-  template <class _E>                                    // For exposition only
+  template <class _E>                                   // For exposition only
   concept _el_basic_sourced_edge_desc = _el_edge<_E> && //
                                         same_as<typename _E::source_id_type, decltype(declval<_E>().source_id)> &&
                                         same_as<typename _E::target_id_type, decltype(declval<_E>().target_id)> &&
@@ -232,7 +232,7 @@ namespace _Source_id {
     { _Fake_copy_init(__e.source_id()) };
   };
   template <class _E>
-  concept _Has_edgl_ref_ADL = _Has_class_or_enum_type<_E>               //
+  concept _Has_edgl_ref_ADL = _Has_class_or_enum_type<_E> //
                               && requires(_E&& __e) {
                                    { _Fake_copy_init(source_id(__e)) }; // intentional ADL
                                  };
@@ -292,7 +292,7 @@ namespace _Source_id {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return source_id(__e); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Tuple_id) {
-        return get<1>(__e);    // first element of tuple/pair
+        return get<1>(__e); // first element of tuple/pair
       } else if constexpr (_Strat_ref == _St_ref::_EDesc_id) {
         return __e.source_id;
       } else {
@@ -326,7 +326,7 @@ namespace _Edge_value {
     { _Fake_copy_init(__e.edge_value()) };
   };
   template <class _E>
-  concept _Has_edgl_ref_ADL = _Has_class_or_enum_type<_E>                //
+  concept _Has_edgl_ref_ADL = _Has_class_or_enum_type<_E> //
                               && requires(_E&& __e) {
                                    { _Fake_copy_init(edge_value(__e)) }; // intentional ADL
                                  };
@@ -388,7 +388,7 @@ namespace _Edge_value {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return edge_value(__e); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Tuple_id) {
-        return get<2>(__e);     // first element of tuple/pair
+        return get<2>(__e); // first element of tuple/pair
       } else if constexpr (_Strat_ref == _St_ref::_EDesc_id) {
         return __e.value;
       } else {
