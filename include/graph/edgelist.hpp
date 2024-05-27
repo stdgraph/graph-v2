@@ -1,6 +1,5 @@
 #pragma once
 
-#include "detail/graph_cpo.hpp"
 #include "graph.hpp"
 #include <ranges>
 #include <type_traits>
@@ -8,67 +7,116 @@
 #ifndef EDGELIST_HPP
 #  define EDGELIST_HPP
 
-// function support
-// source_id(el)
-// target_id(el)
-// edge_value(el)
-// num_edges
-// has_edge
-// contains_edge(el,uid,vid)
-// edge_id
+// This file implements the interface for an edgelist (el).
 //
-// type support
-// vertex_id_t<EL>
-// edge_t<EL>
-// edge_value_t<EL>
-// edge_range_t<EL>
+// An edgelist is a range of edges where source_id(e) and target_id(e) are property
+// functions that can be called on an edge (value type of the range).
 //
-// edge_descriptor<VId, true, void, void> : {source_id, target_id}
-// edge_descriptor<VId, true, void, EV>   : {source_id, target_id, EV}
+// An optional edge_value(e) property can also be used if a value is defined for
+// the edgelist. Use the has_edge_value<EL> concept to determine if it defined.
 //
-// is_edge_descriptor_v<E>
+// The concepts, types and property functions mirror definitions for edges and
+// and edge for an adjacency list.
 //
 
-// Target concepts for edgelist
+// edgelist concepts
+// -----------------------------------------------------------------------------
+// basic_sourced_edgelist<EL>
+// basic_sourced_index_edgelist<EL>
+// has_edge_value<EL>
+//
+// Type aliases
+// -----------------------------------------------------------------------------
+// edge_range_t<EL>     = EL
+// edge_iterator_t<EL>  = range_iterator_t<EL>
+// edge_t<EL>           = range_value_t<EL>
+// edge_reference_t<EL> = range_value_t<EL>
+// edge_value_t<EL>     = decltype(edge_value(e)) (optional)
+// vertex_id_t<EL>      = decltype(source_id(e))
+//
+// edgelist functions
+// -----------------------------------------------------------------------------
+// num_edges(el)  (todo)
+// has_edge(el)  (todo)
+// contains_edge(el,uid,vid)  (todo)
+//
+// edge functions
+// -----------------------------------------------------------------------------
+// source_id(e)
+// target_id(e)
+// edge_value(e)
+// edge_id(e) (todo)
+//
+// Edge definitions supported without overrides
+// -----------------------------------------------------------------------------
+// The standard implementation supports two edge types with support for
+// source_id(e) and target_id(e) to return their respective values, and an
+// optional edge_value(e) if the edge has a value (shown following). The
+// functions can be overridden for user-defined edge types.
+//
+//  pair<T,T>
+//  tuple<T,T>
+//  tuple<T,T,EV,...>
+//
+//  edge_descriptor<VId, true, void, void> : {source_id, target_id}
+//  edge_descriptor<VId, true, void, EV>   : {source_id, target_id, EV}
+//
+//  edge_descriptor<VId, true, E&, void>   : {source_id, target_id, edge}
+//  edge_descriptor<VId, true, E&, EV>     : {source_id, target_id, edge, EV}
+//
+// Naming conventions
+// -----------------------------------------------------------------------------
+// Type     Variable    Description
+// -------- ----------- --------------------------------------------------------
+// EL       el          EdgeList
+// E        e           Edge on an edgelist
+// EV       val         Edge Value
+//
+
+// merge implementation into std::graph with single namespace?
+// Issues:
+//  1.  name conflict with edgelist view? No: basic_sourced_edgelist vs. views::edgelist.
+//  2.  template aliases can't be distinguished by concepts
+//  3.  vertex_id_t definition for adjlist and edgelist have be done in separate locations
+
 namespace std::graph::edgelist {
-// move implementations for source_id(e), target_id(e), edge_value(e) into std::graph::edgelist?
-// other functions to support: num_edges(el), contains_edge(uid,vid), edge_id(e)
 
-// Support the use of std containers for adj list definitions
-template <class _E>
-concept _el_value = !ranges::forward_range<_E>; // avoid conflict with adjacency list
+namespace _detail {
+  //
+  // An edge type cannot be a range, which distinguishes it from an adjacency list
+  // that is a range-of-ranges.
+  //
+  template <class _E> // For exposition only
+  concept _el_edge = !ranges::range<_E>;
 
-template <class _E>
-concept _el_tuple_edge = _el_value<_E> && //
-                         same_as<tuple_element_t<0, _E>, tuple_element_t<1, _E>>;
+  //
+  // Support the use of std containers for edgelist edge definitions
+  //
+  template <class _E>                       // For exposition only
+  concept _el_tuple_edge = _el_edge<_E> && //
+                           same_as<tuple_element_t<0, _E>, tuple_element_t<1, _E>>;
 
-template <class _E>
-concept _el_index_tuple_edge = _el_tuple_edge<_E> && //
-                               integral<tuple_element_t<0, _E>>;
+  template <class _E>                                  // For exposition only
+  concept _el_index_tuple_edge = _el_tuple_edge<_E> && //
+                                 integral<tuple_element_t<0, _E>>;
 
-template <class _E>
-concept _el_basic_sourced_edge_desc =
-      same_as<typename _E::source_id_type, typename _E::target_id_type> && requires(_E elv) {
-        { elv.source_id };
-        { elv.target_id };
-      };
+  //
+  // Suport the use of edge_descriptor for edgelist edge definitions
+  // (Only types and values needed from edge_descriptor are used and there is no
+  // explicit use of edge_descriptor. This is deemed more flexible and no
+  // functionality is compromised for it.)
+  //
+  template <class _E>                                    // For exposition only
+  concept _el_basic_sourced_edge_desc = _el_edge<_E> && //
+                                        same_as<typename _E::source_id_type, decltype(declval<_E>().source_id)> &&
+                                        same_as<typename _E::target_id_type, decltype(declval<_E>().target_id)> &&
+                                        same_as<typename _E::source_id_type, typename _E::target_id_type>;
 
-template <class _E>
-concept _el_basic_sourced_index_edge_desc = _el_basic_sourced_edge_desc<_E> && requires(_E elv) {
-  { elv.source_id } -> integral;
-  { elv.target_id } -> same_as<decltype(elv.source_id)>;
-};
-
-//template <class _E>
-//concept _el_sourced_edge_desc = _el_basic_sourced_edge_desc<_E> && requires(_E elv) {
-//  { elv.value };
-//};
-//
-//template <class _E>
-//concept _el_sourced_index_edge_desc = _el_basic_sourced_index_edge_desc<_E> && requires(_E elv) {
-//  { elv.value };
-//};
-
+  template <class _E> // For exposition only
+  concept _el_basic_sourced_index_edge_desc =
+        _el_basic_sourced_edge_desc<_E> && integral<typename _E::source_id_type> &&
+        integral<typename _E::target_id_type>;
+} // namespace _detail
 
 //
 // target_id(g,uv) -> vertex_id_t<E>
@@ -94,10 +142,10 @@ namespace _Target_id {
   };
 
   template <class _E>
-  concept _is_tuple_edge = _el_tuple_edge<_E>;
+  concept _is_tuple_edge = _detail::_el_tuple_edge<_E>;
 
   template <class _E>
-  concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
+  concept _is_edge_desc = _detail::_el_basic_sourced_edge_desc<_E>;
 
   class _Cpo {
   private:
@@ -131,7 +179,9 @@ namespace _Target_id {
      * 
      * Complexity: O(1)
      * 
-     * Default implementation: 
+     * Default implementation:
+     *  get<0>(e)   for tuple<T,T,...> or pair<T,T>
+     *  e.source_id for edge_descriptor<VId,true,_,_>
      * 
      * @tparam G The graph type.
      * @param g A graph instance.
@@ -142,9 +192,6 @@ namespace _Target_id {
     requires(_Choice_edgl_ref<_E>._Strategy != _St_ref::_None)
     [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E>._No_throw) {
       constexpr _St_ref _Strat_ref = _Choice_edgl_ref<_E>._Strategy;
-      //static_assert(_Choice_edgl_ref<_E>._Strategy == _St_ref::_Tuple_id);
-      //static_assert(same_as<tuple_element<0, _E>, int>);
-      //static_assert(_Choice_edgl_ref<_E>._Strategy == _St_ref::_Tuple_id);
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
         return __e.target_id();
@@ -191,10 +238,10 @@ namespace _Source_id {
                                  };
 
   template <class _E>
-  concept _is_tuple_edge = _el_tuple_edge<_E>;
+  concept _is_tuple_edge = _detail::_el_tuple_edge<_E>;
 
   template <class _E>
-  concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
+  concept _is_edge_desc = _detail::_el_basic_sourced_edge_desc<_E>;
 
   class _Cpo {
   private:
@@ -228,6 +275,8 @@ namespace _Source_id {
      * Complexity: O(1)
      * 
      * Default implementation: 
+     *  get<1>(e)   for tuple<T,T,...> or pair<T,T>
+     *  e.target_id for edge_descriptor<VId,true,_,_>
      * 
      * @tparam E The edgelist value_type.
      * @param e A edgelist edge instance.
@@ -237,9 +286,6 @@ namespace _Source_id {
     requires(_Choice_edgl_ref<_E>._Strategy != _St_ref::_None)
     [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E>._No_throw) {
       constexpr _St_ref _Strat_ref = _Choice_edgl_ref<_E>._Strategy;
-      //static_assert(_Choice_edgl_ref<_E>._Strategy == _St_ref::_Tuple_id);
-      //static_assert(same_as<tuple_element<1, _E>, int>);
-      //static_assert(_Choice_edgl_ref<_E>._Strategy == _St_ref::_Tuple_id);
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
         return __e.source_id();
@@ -286,10 +332,10 @@ namespace _Edge_value {
                                  };
 
   template <class _E>
-  concept _is_tuple_edge = _el_tuple_edge<_E> && (tuple_size_v<_E> >= 3);
+  concept _is_tuple_edge = _detail::_el_tuple_edge<_E> && (tuple_size_v<_E> >= 3);
 
   template <class _E>
-  concept _is_edge_desc = _el_basic_sourced_edge_desc<_E> && requires(_E elv) {
+  concept _is_edge_desc = _detail::_el_basic_sourced_edge_desc<_E> && requires(_E elv) {
     true;
     { elv.value }; //->same_as<typename _E::value_type>;
   };
@@ -326,18 +372,17 @@ namespace _Edge_value {
      * Complexity: O(1)
      * 
      * Default implementation: 
+     *  get<2>(e)   for tuple<T,T,V,...>
+     *  e.value     for edge_descriptor<VId,true,_,V>
      * 
      * @tparam E The edgelist value_type.
      * @param e A edgelist edge instance.
-     * @return The edge_value of the edge.
+     * @return The edge_value of the edge, when supported.
     */
     template <class _E>
     //requires(_Choice_edgl_ref<_E>._Strategy != _St_ref::_None)
     [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E>._No_throw) {
       constexpr _St_ref _Strat_ref = _Choice_edgl_ref<_E>._Strategy;
-      //static_assert(_Choice_edgl_ref<_E>._Strategy == _St_ref::_Tuple_id);
-      //static_assert(same_as<tuple_element<2, _E>, int>);
-      //static_assert(_Choice_edgl_ref<_E>._Strategy == _St_ref::_Tuple_id);
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
         return __e.edge_value();
@@ -362,51 +407,54 @@ inline namespace _Cpos {
 //
 // edgelist concepts
 //
-template <class E> // For exposition only
-concept _source_target_id = requires(E e) {
-  { source_id(e) };
-  { target_id(e) } -> same_as<decltype(source_id(e))>;
-};
-template <class E> // For exposition only
-concept _index_source_target_id = requires(E e) {
-  { source_id(e) } -> integral;
-  { target_id(e) } -> same_as<decltype(source_id(e))>;
-};
-template <class _E> // For exposition only; specialization of edge_value<G>(g,uv) needed
-concept _has_edge_value = requires(_E e) {
-  { edge_value(e) };
-};
+template <class EL>                                                           // For exposition only
+concept basic_sourced_edgelist = ranges::forward_range<EL> &&                 //
+                                 !ranges::range<ranges::range_value_t<EL>> && // distinguish from adjacency list
+                                 requires(ranges::range_value_t<EL> e) {
+                                   { source_id(e) };
+                                   { target_id(e) } -> same_as<decltype(source_id(e))>;
+                                 };
 
-template <class EL> // For exposition only
-concept basic_sourced_edgelist = ranges::forward_range<EL> && _source_target_id<ranges::range_value_t<EL>>;
+template <class EL>                                                  // For exposition only
+concept basic_sourced_index_edgelist = basic_sourced_edgelist<EL> && //
+                                       requires(ranges::range_value_t<EL> e) {
+                                         { source_id(e) } -> integral;
+                                         { target_id(e) } -> integral;
+                                       };
 
-template <class EL> // For exposition only
-concept basic_sourced_index_edgelist = ranges::forward_range<EL> && _index_source_target_id<ranges::range_value_t<EL>>;
+template <class EL>                                    // For exposition only
+concept has_edge_value = basic_sourced_edgelist<EL> && //
+                         requires(ranges::range_value_t<EL> e) {
+                           { edge_value(e) };
+                         };
 
-
-// non-basic concepts imply edge reference which doesn't make much sense
+// (non-basic concepts imply inclusion of an edge reference which doesn't make much sense)
 
 
 //
 // edgelist types (note that concepts don't really do anything except document expectations)
 //
 template <basic_sourced_edgelist EL> // For exposition only
-using edge_iterator_t = ranges::iterator_t<EL>;
+using edge_range_t = EL;
 
 template <basic_sourced_edgelist EL> // For exposition only
-using edge_t = ranges::range_value_t<EL>;
+using edge_iterator_t = ranges::iterator_t<edge_range_t<EL>>;
 
 template <basic_sourced_edgelist EL> // For exposition only
-using edge_reference_t = ranges::range_reference_t<EL>;
+using edge_t = ranges::range_value_t<edge_range_t<EL>>;
 
 template <basic_sourced_edgelist EL> // For exposition only
-using vertex_id_t = decltype(source_id(declval<edge_t<EL>>()));
+using edge_reference_t = ranges::range_reference_t<edge_range_t<EL>>;
 
 template <basic_sourced_edgelist EL> // For exposition only
-using edge_value_t = decltype(edge_value(declval<edge_t<EL>>()));
+using edge_value_t = decltype(edge_value(declval<edge_t<edge_range_t<EL>>>()));
 
 template <basic_sourced_edgelist EL> // For exposition only
-using edge_id_t = decltype(edge_id(declval<edge_t<EL>>()));
+using edge_id_t = decltype(edge_id(declval<edge_t<edge_range_t<EL>>>()));
+
+template <basic_sourced_edgelist EL> // For exposition only
+using vertex_id_t = decltype(source_id(declval<edge_t<edge_range_t<EL>>>()));
+
 
 // template aliases can't be distinguished with concepts :(
 //
