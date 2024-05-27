@@ -92,7 +92,7 @@ namespace _detail {
   //
   // Support the use of std containers for edgelist edge definitions
   //
-  template <class _E>                       // For exposition only
+  template <class _E>                      // For exposition only
   concept _el_tuple_edge = _el_edge<_E> && //
                            same_as<tuple_element_t<0, _E>, tuple_element_t<1, _E>>;
 
@@ -106,7 +106,7 @@ namespace _detail {
   // explicit use of edge_descriptor. This is deemed more flexible and no
   // functionality is compromised for it.)
   //
-  template <class _E>                                    // For exposition only
+  template <class _E>                                   // For exposition only
   concept _el_basic_sourced_edge_desc = _el_edge<_E> && //
                                         same_as<typename _E::source_id_type, decltype(declval<_E>().source_id)> &&
                                         same_as<typename _E::target_id_type, decltype(declval<_E>().target_id)> &&
@@ -407,7 +407,7 @@ inline namespace _Cpos {
 // edgelist concepts
 //
 template <class EL>                                                           // For exposition only
-concept basic_sourced_edgelist = ranges::forward_range<EL> &&                 //
+concept basic_sourced_edgelist = ranges::input_range<EL> &&                   //
                                  !ranges::range<ranges::range_value_t<EL>> && // distinguish from adjacency list
                                  requires(ranges::range_value_t<EL> e) {
                                    { source_id(e) };
@@ -421,16 +421,20 @@ concept basic_sourced_index_edgelist = basic_sourced_edgelist<EL> && //
                                          { target_id(e) } -> integral; // this is redundant, but makes it clear
                                        };
 
+// (non-basic concepts imply inclusion of an edge reference which doesn't make much sense)
+
 template <class EL>                                    // For exposition only
 concept has_edge_value = basic_sourced_edgelist<EL> && //
                          requires(ranges::range_value_t<EL> e) {
                            { edge_value(e) };
                          };
 
-//template<class EL>
-//struct has_directed_edge = ...;
+template <class EL>
+struct is_directed : public false_type {}; // specialized for graph container
 
-// (non-basic concepts imply inclusion of an edge reference which doesn't make much sense)
+template <class EL>
+inline constexpr bool is_directed_v = is_directed<EL>::value;
+
 
 
 //
