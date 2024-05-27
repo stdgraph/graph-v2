@@ -59,15 +59,15 @@ concept _el_basic_sourced_index_edge_desc = _el_basic_sourced_edge_desc<_E> && r
   { elv.target_id } -> same_as<decltype(elv.source_id)>;
 };
 
-template <class _E>
-concept _el_sourced_edge_desc = _el_basic_sourced_edge_desc<_E> && requires(_E elv) {
-  { elv.value };
-};
-
-template <class _E>
-concept _el_sourced_index_edge_desc = _el_basic_sourced_index_edge_desc<_E> && requires(_E elv) {
-  { elv.value };
-};
+//template <class _E>
+//concept _el_sourced_edge_desc = _el_basic_sourced_edge_desc<_E> && requires(_E elv) {
+//  { elv.value };
+//};
+//
+//template <class _E>
+//concept _el_sourced_index_edge_desc = _el_basic_sourced_index_edge_desc<_E> && requires(_E elv) {
+//  { elv.value };
+//};
 
 
 //
@@ -98,9 +98,6 @@ namespace _Target_id {
 
   template <class _E>
   concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
-
-  //template <class _E>
-  //concept _has_value = _el_sourced_edge_desc<_E>;
 
   class _Cpo {
   private:
@@ -199,9 +196,6 @@ namespace _Source_id {
   template <class _E>
   concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
 
-  //template <class _E>
-  //concept _has_value = _el_sourced_edge_desc<_E>;
-
   class _Cpo {
   private:
     enum class _St_ref { _None, _Member, _Non_member, _Tuple_id, _EDesc_id };
@@ -268,7 +262,105 @@ inline namespace _Cpos {
 
 
 //
-// edgelist ranges
+// edge_value(e) -> vertex_id_t<E>
+//
+// For E=tuple<VId,VId,Vid>,             returns get<2>(e)
+// For E=edge_descriptor<VId,true,_,EV>, returns e.value
+// Caller may override
+//
+namespace _Edge_value {
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  void edge_value() = delete;                // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
+  void edge_value();
+#  endif                                     // ^^^ workaround ^^^
+
+  template <class _E>
+  concept _Has_edgl_ref_member = requires(_E&& __e) {
+    { _Fake_copy_init(__e.edge_value()) };
+  };
+  template <class _E>
+  concept _Has_edgl_ref_ADL = _Has_class_or_enum_type<_E>                //
+                              && requires(_E&& __e) {
+                                   { _Fake_copy_init(edge_value(__e)) }; // intentional ADL
+                                 };
+
+  template <class _E>
+  concept _is_tuple_edge = _el_tuple_edge<_E> && (tuple_size_v<_E> >= 3);
+
+  template <class _E>
+  concept _is_edge_desc = _el_basic_sourced_edge_desc<_E> && requires(_E elv) {
+    true;
+    { elv.value }; //->same_as<typename _E::value_type>;
+  };
+
+  class _Cpo {
+  public:
+    enum class _St_ref { _None, _Member, _Non_member, _Tuple_id, _EDesc_id };
+
+    template <class _E>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_edgl_ref() noexcept {
+      //static_assert(is_lvalue_reference_v<_E>);
+      if constexpr (_Has_edgl_ref_member<_E>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_E>().edge_value()))};
+      } else if constexpr (_Has_edgl_ref_ADL<_E>) {
+        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(edge_value(declval<_E>())))}; // intentional ADL
+      } else if constexpr (_is_tuple_edge<_E>) {
+        return {_St_ref::_Tuple_id,
+                noexcept(_Fake_copy_init(declval<tuple_element_t<2, _E>>()))}; // first element of tuple/pair
+      } else if constexpr (_is_edge_desc<_E>) {
+        return {_St_ref::_EDesc_id,
+                noexcept(_Fake_copy_init(declval<typename _E::value_type>()))}; // edge_value of edge_descriptor
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _E>
+    static constexpr _Choice_t<_St_ref> _Choice_edgl_ref = _Choose_edgl_ref<remove_reference_t<_E>>();
+
+  public:
+    /**
+     * @brief The edge_value of an edgelist edge
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: 
+     * 
+     * @tparam E The edgelist value_type.
+     * @param e A edgelist edge instance.
+     * @return The edge_value of the edge.
+    */
+    template <class _E>
+    //requires(_Choice_edgl_ref<_E>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E>._No_throw) {
+      constexpr _St_ref _Strat_ref = _Choice_edgl_ref<_E>._Strategy;
+      //static_assert(_Choice_edgl_ref<_E>._Strategy == _St_ref::_Tuple_id);
+      //static_assert(same_as<tuple_element<2, _E>, int>);
+      //static_assert(_Choice_edgl_ref<_E>._Strategy == _St_ref::_Tuple_id);
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return __e.edge_value();
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        return edge_value(__e); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_ref::_Tuple_id) {
+        return get<2>(__e);     // first element of tuple/pair
+      } else if constexpr (_Strat_ref == _St_ref::_EDesc_id) {
+        return __e.value;
+      } else {
+        static_assert(_Always_false<_E>, "edge_value(e) or e.edge_value() is not defined");
+      }
+    }
+  };
+} // namespace _Edge_value
+
+inline namespace _Cpos {
+  inline constexpr _Edge_value::_Cpo edge_value;
+}
+
+
+//
+// edgelist concepts
 //
 template <class E> // For exposition only
 concept _source_target_id = requires(E e) {
@@ -280,8 +372,8 @@ concept _index_source_target_id = requires(E e) {
   { source_id(e) } -> integral;
   { target_id(e) } -> same_as<decltype(source_id(e))>;
 };
-template <class E> // For exposition only
-concept has_edge_value = requires(E e) {
+template <class _E> // For exposition only; specialization of edge_value<G>(g,uv) needed
+concept _has_edge_value = requires(_E e) {
   { edge_value(e) };
 };
 
@@ -290,6 +382,7 @@ concept basic_sourced_edgelist = ranges::forward_range<EL> && _source_target_id<
 
 template <class EL> // For exposition only
 concept basic_sourced_index_edgelist = ranges::forward_range<EL> && _index_source_target_id<ranges::range_value_t<EL>>;
+
 
 // non-basic concepts imply edge reference which doesn't make much sense
 

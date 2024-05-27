@@ -23,14 +23,12 @@ TEST_CASE("edgelist tuple test", "[edgelist][tuple]") {
   static_assert(!std::ranges::forward_range<E>);
   //static_assert(_el_value<E>);
   static_assert(_el_tuple_edge<E>);
+
   static_assert(_Target_id::_is_tuple_edge<E>);
   //static_assert(_Target_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Target_id::_Cpo::_St_ref::_Tuple_id);
   static_assert(same_as<decltype(cpo(declval<E>())), int>);
   static_assert(same_as<decltype(target_id(e)), int>);
 
-  static_assert(!std::ranges::forward_range<E>);
-  //static_assert(_el_value<E>);
-  static_assert(_el_tuple_edge<E>);
   static_assert(_Source_id::_is_tuple_edge<E>);
   //static_assert(_Source_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Source_id::_Cpo::_St_ref::_Tuple_id);
   static_assert(same_as<decltype(cpo(declval<E>())), int>);
@@ -38,6 +36,36 @@ TEST_CASE("edgelist tuple test", "[edgelist][tuple]") {
 
   static_assert(_source_target_id<E>);
   static_assert(basic_sourced_edgelist<EL>);
+}
+
+TEST_CASE("edgelist tuple test with value", "[edgelist][tuple]") {
+  using EL = vector<tuple<int, int, double>>;
+  using E  = std::ranges::range_value_t<EL>;
+  _Target_id::_Cpo cpo;
+  E                e;
+  static_assert(same_as<E, tuple<int, int, double>>);
+
+  static_assert(!std::ranges::forward_range<E>);
+  //static_assert(_el_value<E>);
+  static_assert(_el_tuple_edge<E>);
+
+  static_assert(_Target_id::_is_tuple_edge<E>);
+  //static_assert(_Target_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Target_id::_Cpo::_St_ref::_Tuple_id);
+  static_assert(same_as<decltype(cpo(declval<E>())), int>);
+  static_assert(same_as<decltype(target_id(e)), int>);
+
+  static_assert(_Source_id::_is_tuple_edge<E>);
+  //static_assert(_Source_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Source_id::_Cpo::_St_ref::_Tuple_id);
+  static_assert(same_as<decltype(cpo(declval<E>())), int>);
+  static_assert(same_as<decltype(source_id(e)), int>);
+
+  static_assert(_Edge_value::_is_tuple_edge<E>);
+  //static_assert(_Edge_value::_Cpo::_Choice_edgl_ref<E>._Strategy == _Edge_value::_Cpo::_St_ref::_Tuple_id);
+  //static_assert(same_as<decltype(cpo(declval<E>())), double>);
+
+  static_assert(_source_target_id<E>);
+  static_assert(basic_sourced_edgelist<EL>);
+  static_assert(_has_edge_value<E>);
 }
 
 TEST_CASE("edgelist edge_descriptor test", "[edgelist][edge_descriptor]") {
@@ -50,14 +78,12 @@ TEST_CASE("edgelist edge_descriptor test", "[edgelist][edge_descriptor]") {
   static_assert(!std::ranges::forward_range<E>);
   //static_assert(_el_value<E>);
   static_assert(_el_basic_sourced_edge_desc<E>);
+
   static_assert(_Target_id::_is_edge_desc<E>);
   //static_assert(_Target_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Target_id::_Cpo::_St_ref::_Tuple_id);
   static_assert(same_as<decltype(cpo(declval<E>())), int>);
   static_assert(same_as<decltype(target_id(e)), int>);
 
-  static_assert(!std::ranges::forward_range<E>);
-  //static_assert(_el_value<E>);
-  static_assert(_el_basic_sourced_edge_desc<E>);
   static_assert(_Source_id::_is_edge_desc<E>);
   //static_assert(_Source_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Source_id::_Cpo::_St_ref::_Tuple_id);
   static_assert(same_as<decltype(cpo(declval<E>())), int>);
@@ -65,4 +91,32 @@ TEST_CASE("edgelist edge_descriptor test", "[edgelist][edge_descriptor]") {
 
   static_assert(_source_target_id<E>);
   static_assert(basic_sourced_edgelist<EL>);
+}
+
+TEST_CASE("edgelist edge_descriptor test with value", "[edgelist][edge_descriptor]") {
+  using EL = vector<edge_descriptor<int, true, void, double>>;
+  using E  = std::ranges::range_value_t<EL>;
+  _Target_id::_Cpo cpo;
+  E                e;
+  static_assert(same_as<E, edge_descriptor<int, true, void, double>>);
+
+  static_assert(!std::ranges::forward_range<E>);
+  //static_assert(_el_value<E>);
+  static_assert(_el_basic_sourced_edge_desc<E>);
+
+  static_assert(_Target_id::_is_edge_desc<E>);
+  //static_assert(_Target_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Target_id::_Cpo::_St_ref::_Tuple_id);
+  static_assert(same_as<decltype(cpo(declval<E>())), int>);
+  static_assert(same_as<decltype(target_id(e)), int>);
+
+  static_assert(_Source_id::_is_edge_desc<E>);
+  //static_assert(_Source_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Source_id::_Cpo::_St_ref::_Tuple_id);
+  static_assert(same_as<decltype(cpo(declval<E>())), int>);
+  static_assert(same_as<decltype(source_id(e)), int>);
+
+  static_assert(_Edge_value::_is_edge_desc<E>);
+
+  static_assert(_source_target_id<E>);
+  static_assert(basic_sourced_edgelist<EL>);
+  static_assert(_has_edge_value<E>);
 }
