@@ -380,7 +380,7 @@ namespace _Edge_value {
      * @return The edge_value of the edge, when supported.
     */
     template <class _E>
-    //requires(_Choice_edgl_ref<_E>._Strategy != _St_ref::_None)
+    requires(_Choice_edgl_ref<_E>._Strategy != _St_ref::_None)
     [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E>._No_throw) {
       constexpr _St_ref _Strat_ref = _Choice_edgl_ref<_E>._Strategy;
 
@@ -419,7 +419,7 @@ template <class EL>                                                  // For expo
 concept basic_sourced_index_edgelist = basic_sourced_edgelist<EL> && //
                                        requires(ranges::range_value_t<EL> e) {
                                          { source_id(e) } -> integral;
-                                         { target_id(e) } -> integral;
+                                         { target_id(e) } -> integral; // this is redundant, but makes it clear
                                        };
 
 template <class EL>                                    // For exposition only
