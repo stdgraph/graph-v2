@@ -56,33 +56,33 @@ concept _range_of_ranges = ranges::forward_range<_G> && ranges::forward_range<ra
 
 // Edge type for range-of-ranges
 template <_range_of_ranges _G>
-using _rr_edge_t = ranges::range_value_t<ranges::range_value_t<_G>>;
+using _al_edge_t = ranges::range_value_t<ranges::range_value_t<_G>>;
 
 template <class _G>
-concept _rr_simple_id = _range_of_ranges<_G> && integral<_rr_edge_t<_G>>;
+concept _al_simple_id = _range_of_ranges<_G> && integral<_al_edge_t<_G>>;
 
 template <class _G>
-concept _rr_tuple_id = _range_of_ranges<_G> && integral<tuple_element_t<0, _rr_edge_t<_G>>>;
+concept _al_tuple_id = _range_of_ranges<_G> && integral<tuple_element_t<0, _al_edge_t<_G>>>;
 
 
 template <class _G>
-struct _rr_vertex_id {
+struct _al_vertex_id {
   using type = size_t; // default vertex_id is size_t
 };
 
-template <_rr_simple_id _G>
-struct _rr_vertex_id<_G> {
-  using type = _rr_edge_t<_G>; // The target id type is a single integral value, eg. vector<vector<int>>
+template <_al_simple_id _G>
+struct _al_vertex_id<_G> {
+  using type = _al_edge_t<_G>; // The target id type is a single integral value, eg. vector<vector<int>>
 };
 
-template <_rr_tuple_id _G>
-struct _rr_vertex_id<_G> {
+template <_al_tuple_id _G>
+struct _al_vertex_id<_G> {
   using type =
-        tuple_element_t<0, _rr_edge_t<_G>>; // The target id is the first element of a single integral value of a tuple
+        tuple_element_t<0, _al_edge_t<_G>>; // The target id is the first element of a single integral value of a tuple
 };
 
 template <class _G>
-using _rr_vertex_id_t = typename _rr_vertex_id<_G>::type;
+using _al_vertex_id_t = typename _al_vertex_id<_G>::type;
 
 
 // Tags are defined in tag_invoke namespace to avoid conflicts with function names
@@ -316,7 +316,7 @@ namespace _Vertex_id {
     //      b.  e.g. vector<vector<tuple<int,...>>> uses int
     //  3. size_t for the final default to match with type used for index vector & deque
     template <class _G>
-    using _vid_t = _rr_vertex_id_t<_G>;
+    using _vid_t = _al_vertex_id_t<_G>;
 
   public:
     /**
@@ -960,10 +960,10 @@ namespace _Target_id {
   };
 
   template <class _G>
-  concept _Is_basic_id_adj = integral<_rr_edge_t<_G>>; // vertex<vertex<int>>
+  concept _Is_basic_id_adj = integral<_al_edge_t<_G>>; // vertex<vertex<int>>
 
   template <class _G>
-  concept _Is_tuple_id_adj = integral<tuple_element_t<0, _rr_edge_t<_G>>>; // vertex<vertex<tuple<int,...>>>
+  concept _Is_tuple_id_adj = integral<tuple_element_t<0, _al_edge_t<_G>>>; // vertex<vertex<tuple<int,...>>>
 
   class _Cpo {
   private:
