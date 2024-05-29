@@ -31,7 +31,7 @@ TEST_CASE("edgelist tuple test", "[edgelist][tuple]") {
 
   static_assert(!std::ranges::forward_range<E>);
   //static_assert(_el_value<E>);
-  static_assert(_detail::_el_tuple_edge<E>);
+  static_assert(_el_tuple_edge<E>);
 
   static_assert(_Target_id::_is_tuple_edge<E>);
   //static_assert(_Target_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Target_id::_Cpo::_St_ref::_Tuple_id);
@@ -63,7 +63,7 @@ TEST_CASE("edgelist tuple test with value", "[edgelist][tuple]") {
 
   static_assert(!std::ranges::forward_range<E>);
   //static_assert(_el_value<E>);
-  static_assert(_detail::_el_tuple_edge<E>);
+  static_assert(_el_tuple_edge<E>);
 
   static_assert(_Target_id::_is_tuple_edge<E>);
   //static_assert(_Target_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Target_id::_Cpo::_St_ref::_Tuple_id);
@@ -101,7 +101,7 @@ TEST_CASE("edgelist pair test", "[edgelist][tuple]") {
 
   static_assert(!std::ranges::forward_range<E>);
   //static_assert(_el_value<E>);
-  static_assert(_detail::_el_tuple_edge<E>);
+  static_assert(_el_tuple_edge<E>);
 
   static_assert(_Target_id::_is_tuple_edge<E>);
   //static_assert(_Target_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Target_id::_Cpo::_St_ref::_Tuple_id);
@@ -134,7 +134,7 @@ TEST_CASE("edgelist edge_descriptor test", "[edgelist][edge_descriptor]") {
 
   static_assert(!std::ranges::forward_range<E>);
   //static_assert(_el_value<E>);
-  static_assert(_detail::_el_basic_sourced_edge_desc<E>);
+  static_assert(_el_basic_sourced_edge_desc<E>);
 
   static_assert(_Target_id::_is_edge_desc<E>);
   //static_assert(_Target_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Target_id::_Cpo::_St_ref::_Tuple_id);
@@ -167,7 +167,7 @@ TEST_CASE("edgelist edge_descriptor test with value", "[edgelist][edge_descripto
 
   static_assert(!std::ranges::forward_range<E>);
   //static_assert(_el_value<E>);
-  static_assert(_detail::_el_basic_sourced_edge_desc<E>);
+  static_assert(_el_basic_sourced_edge_desc<E>);
 
   static_assert(_Target_id::_is_edge_desc<E>);
   //static_assert(_Target_id::_Cpo::_Choice_edgl_ref<E>._Strategy == _Target_id::_Cpo::_St_ref::_Tuple_id);

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "graph.hpp"
-#include <ranges>
-#include <type_traits>
 
 #ifndef EDGELIST_HPP
 #  define EDGELIST_HPP
@@ -81,42 +79,40 @@
 
 namespace std::graph::edgelist {
 
-namespace _detail {
-  //
-  // An edge type cannot be a range, which distinguishes it from an adjacency list
-  // that is a range-of-ranges.
-  //
-  template <class _E> // For exposition only
-  concept _el_edge = !ranges::range<_E>;
+//
+// An edge type cannot be a range, which distinguishes it from an adjacency list
+// that is a range-of-ranges.
+//
+template <class _E> // For exposition only
+concept _el_edge = !ranges::range<_E>;
 
-  //
-  // Support the use of std containers for edgelist edge definitions
-  //
-  template <class _E>                      // For exposition only
-  concept _el_tuple_edge = _el_edge<_E> && //
-                           same_as<tuple_element_t<0, _E>, tuple_element_t<1, _E>>;
+//
+// Support the use of std containers for edgelist edge definitions
+//
+template <class _E>                      // For exposition only
+concept _el_tuple_edge = _el_edge<_E> && //
+                         same_as<tuple_element_t<0, _E>, tuple_element_t<1, _E>>;
 
-  template <class _E>                                  // For exposition only
-  concept _el_index_tuple_edge = _el_tuple_edge<_E> && //
-                                 integral<tuple_element_t<0, _E>>;
+template <class _E>                                  // For exposition only
+concept _el_index_tuple_edge = _el_tuple_edge<_E> && //
+                               integral<tuple_element_t<0, _E>>;
 
-  //
-  // Suport the use of edge_descriptor for edgelist edge definitions
-  // (Only types and values needed from edge_descriptor are used and there is no
-  // explicit use of edge_descriptor. This is deemed more flexible and no
-  // functionality is compromised for it.)
-  //
-  template <class _E>                                   // For exposition only
-  concept _el_basic_sourced_edge_desc = _el_edge<_E> && //
-                                        same_as<typename _E::source_id_type, decltype(declval<_E>().source_id)> &&
-                                        same_as<typename _E::target_id_type, decltype(declval<_E>().target_id)> &&
-                                        same_as<typename _E::source_id_type, typename _E::target_id_type>;
+//
+// Suport the use of edge_descriptor for edgelist edge definitions
+// (Only types and values needed from edge_descriptor are used and there is no
+// explicit use of edge_descriptor. This is deemed more flexible and no
+// functionality is compromised for it.)
+//
+template <class _E>                                   // For exposition only
+concept _el_basic_sourced_edge_desc = _el_edge<_E> && //
+                                      same_as<typename _E::source_id_type, decltype(declval<_E>().source_id)> &&
+                                      same_as<typename _E::target_id_type, decltype(declval<_E>().target_id)> &&
+                                      same_as<typename _E::source_id_type, typename _E::target_id_type>;
 
-  template <class _E> // For exposition only
-  concept _el_basic_sourced_index_edge_desc =
-        _el_basic_sourced_edge_desc<_E> && integral<typename _E::source_id_type> &&
-        integral<typename _E::target_id_type>;
-} // namespace _detail
+template <class _E> // For exposition only
+concept _el_basic_sourced_index_edge_desc =
+      _el_basic_sourced_edge_desc<_E> && integral<typename _E::source_id_type> && integral<typename _E::target_id_type>;
+
 
 //
 // target_id(g,uv) -> vertex_id_t<E>
@@ -142,10 +138,10 @@ namespace _Target_id {
   };
 
   template <class _E>
-  concept _is_tuple_edge = _detail::_el_tuple_edge<_E>;
+  concept _is_tuple_edge = _el_tuple_edge<_E>;
 
   template <class _E>
-  concept _is_edge_desc = _detail::_el_basic_sourced_edge_desc<_E>;
+  concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
 
   class _Cpo {
   private:
@@ -238,10 +234,10 @@ namespace _Source_id {
                                  };
 
   template <class _E>
-  concept _is_tuple_edge = _detail::_el_tuple_edge<_E>;
+  concept _is_tuple_edge = _el_tuple_edge<_E>;
 
   template <class _E>
-  concept _is_edge_desc = _detail::_el_basic_sourced_edge_desc<_E>;
+  concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
 
   class _Cpo {
   private:
@@ -332,10 +328,10 @@ namespace _Edge_value {
                                  };
 
   template <class _E>
-  concept _is_tuple_edge = _detail::_el_tuple_edge<_E> && (tuple_size_v<_E> >= 3);
+  concept _is_tuple_edge = _el_tuple_edge<_E> && (tuple_size_v<_E> >= 3);
 
   template <class _E>
-  concept _is_edge_desc = _detail::_el_basic_sourced_edge_desc<_E> && requires(_E e) {
+  concept _is_edge_desc = _el_basic_sourced_edge_desc<_E> && requires(_E e) {
     { e.value }; //->same_as<typename _E::value_type>;
   };
 
@@ -434,7 +430,6 @@ struct is_directed : public false_type {}; // specialized for graph container
 
 template <class EL>
 inline constexpr bool is_directed_v = is_directed<EL>::value;
-
 
 
 //
