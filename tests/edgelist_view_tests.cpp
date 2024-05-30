@@ -3,6 +3,7 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/views/edgelist.hpp"
+#include "graph/edgelist.hpp"
 #include "graph/container/compressed_graph.hpp"
 
 using std::ranges::forward_range;
@@ -34,6 +35,9 @@ using std::graph::find_vertex;
 using std::graph::find_vertex_edge;
 
 using std::graph::views::edgelist;
+
+using std::graph::edgelist::basic_sourced_edgelist;
+using std::graph::edgelist::basic_sourced_index_edgelist;
 
 using routes_compressed_graph_type = std::graph::container::compressed_graph<double, std::string, std::string>;
 
@@ -317,5 +321,11 @@ TEST_CASE("edgelist view test", "[csr][edgelist]") {
     auto it8  = std::ranges::begin(elist);
     auto it9  = std::ranges::end(elist);
     auto empt = std::ranges::empty(elist);
+  }
+
+  SECTION("edgelist concepts") {
+    using edgelist_type = decltype(edgelist(g));
+    static_assert(basic_sourced_edgelist<edgelist_type>);
+    static_assert(basic_sourced_index_edgelist<edgelist_type>);
   }
 }
