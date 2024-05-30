@@ -2,6 +2,7 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
+#include "graph/edgelist.hpp"
 #include "graph/views/depth_first_search.hpp"
 #include "graph/container/dynamic_graph.hpp"
 
@@ -47,6 +48,9 @@ using std::graph::views::vertices_depth_first_search;
 using std::graph::edges_depth_first_search_view;
 using std::graph::views::edges_depth_first_search;
 using std::graph::views::sourced_edges_depth_first_search;
+
+using std::graph::edgelist::basic_sourced_edgelist;
+using std::graph::edgelist::basic_sourced_index_edgelist;
 
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
 using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
@@ -113,8 +117,14 @@ TEST_CASE("vertices_depth_first_search_view test", "[dynamic][dfs][vertex]") {
     auto empt = std::ranges::empty(dfs);
   }
 
+  SECTION("edges_breadth_first_search_view edgelist concepts") {
+    using edgelist_type = decltype(std::graph::views::sourced_edges_depth_first_search(g, frankfurt_id));
+    static_assert(basic_sourced_edgelist<edgelist_type>);
+    static_assert(basic_sourced_index_edgelist<edgelist_type>);
+  }
+
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-  SECTION("vertices_depth_first_search_view output") {
+  SECTION("edges_depth_first_search_view output") {
     vertices_depth_first_search_view<G, void> dfs(g, frankfurt_id);
 
     int cnt = 0;

@@ -3,6 +3,7 @@
 #include <ranges>
 #include <tuple>
 #include <vector>
+#include "graph/edgelist.hpp"
 
 namespace std::graph {
 
@@ -128,15 +129,15 @@ auto make_property_edges(M& map, const E& edges) {
 /**
  * Make an edge list indexing back to the original data, e.g., vector<tuple<size_t, size_t, size_t>>
  */
-template <class I = vector<tuple<size_t, size_t, size_t>>, class M, ranges::random_access_range E>
+template <class I = vector<tuple<size_t, size_t, size_t>>, class M, edgelist::basic_sourced_edgelist E>
 auto make_index_edges(M& map, const E& edges) {
 
   auto index_edges = I();
 
   for (size_t i = 0; i < size(edges); ++i) {
 
-    auto left  = std::get<0>(edges[i]);
-    auto right = std::get<1>(edges[i]);
+    auto left  = source_id(edges[i]);
+    auto right = target_id(edges[i]);
 
     index_edges.push_back(std::make_tuple(map[left], map[right], i));
   }
@@ -200,7 +201,7 @@ auto make_property_graph(const V& vertices, const E& edges, bool directed = true
 /**  
  *  Functions for building bipartite graphs
  */
-template <class I = vector<tuple<size_t, size_t>>, ranges::random_access_range V, ranges::random_access_range E>
+template <class I = vector<tuple<size_t, size_t>>, ranges::random_access_range V, edgelist::basic_sourced_edgelist E>
 auto data_to_graph_edge_list(const V& left_vertices, const V& right_vertices, const E& edges) {
 
   auto left_map  = make_index_map(left_vertices);
@@ -210,8 +211,8 @@ auto data_to_graph_edge_list(const V& left_vertices, const V& right_vertices, co
 
   for (size_t i = 0; i < size(edges); ++i) {
 
-    auto left  = std::get<0>(edges[i]);
-    auto right = std::get<1>(edges[i]);
+    auto left  = source_id(edges[i]);
+    auto right = target_id(edges[i]);
 
     index_edges.push_back({left_map[left], right_map[right]});
   }
