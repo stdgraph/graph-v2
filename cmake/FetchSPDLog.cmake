@@ -8,15 +8,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
     GIT_TAG        v1.9.2
 )
-
-FetchContent_GetProperties(spdlog)
-if(NOT spdlog_POPULATED)
-  FetchContent_Populate(
-    spdlog
-  )
-endif()
-
+FetchContent_MakeAvailable(spdlog)
 set(SPDLOG_SOURCE_DIR "${spdlog_SOURCE_DIR}")
 set(SPDLOG_INCLUDE_DIR "${spdlog_INCLUDE_DIR}")
 
-FetchContent_MakeAvailable(spdlog)
