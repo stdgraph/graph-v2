@@ -19,15 +19,14 @@ jobs:
     # https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/
     if: "!contains(github.event.commits[0].message, '[skip ubuntu]')"
     runs-on: ubuntu-latest
+    container: ubuntu:24.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
+      - uses: actions/checkout@v4
 
-      - run: sudo apt update && sudo apt install gcc-11 g++-11 lcov
+      - run: apt-get update && apt-get install -y gcc-13 g++-13 lcov cmake git
         shell: bash
       
       - name: Configure cmake
@@ -36,18 +35,11 @@ jobs:
         run: cmake -B ${{github.workspace}}/build -D ENABLE_COVERAGE=ON
         shell: bash
         env:
-          CC:   gcc-11
-          CXX:  g++-11
+          CC:   gcc-13
+          CXX:  g++-13
         
       - name: Build all applications
         run: cmake --build ${{github.workspace}}/build
 
       - name: Run tests
         run: ctest --test-dir ${{github.workspace}}/build/tests
-
-      - name: Coverage
-        shell: bash
-        run: cd ${{github.workspace}}/build && make coverage
-        
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
