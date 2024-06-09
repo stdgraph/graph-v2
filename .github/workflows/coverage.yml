@@ -19,7 +19,6 @@ jobs:
     # https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/
     if: "!contains(github.event.commits[0].message, '[skip ubuntu]')"
     runs-on: ubuntu-latest
-    container: ubuntu:24.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -43,3 +42,17 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir ${{github.workspace}}/build/tests
+
+      - name: Coverage
+        shell: bash
+        run: |
+          cd ${{github.workspace}}/build
+          lcov --capture --directory . --output-file coverage.info
+          lcov --remove coverage.info '/usr/include/*' '*/tests/*' --output-file coverage.info
+          geninfo --rc geninfo_unexecuted_blocks=1 --ignore-errors gcov,mismatch --output-filename coverage.info
+          genhtml coverage.info --output-directory out
+        
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{github.workspace}}/build/out/index.html
