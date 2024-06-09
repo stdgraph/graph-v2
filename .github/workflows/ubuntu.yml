@@ -46,7 +46,14 @@ jobs:
 
       - name: Coverage
         shell: bash
-        run: cd ${{github.workspace}}/build && make coverage
+        run: |
+          cd ${{github.workspace}}/build
+          lcov --capture --directory . --output-file coverage.info
+          lcov --remove coverage.info '/usr/include/*' '*/tests/*' --output-file coverage.info
+          geninfo --rc geninfo_unexecuted_blocks=1 --ignore-errors gcov,mismatch --output-filename coverage.txt
+          genhtml coverage.info --output-directory out
         
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
+        with:
+          files: ${{github.workspace}}/build/out/index.html
