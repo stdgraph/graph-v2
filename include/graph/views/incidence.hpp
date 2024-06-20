@@ -32,10 +32,10 @@ class incidence_iterator;
 */
 template <adjacency_list G, bool Sourced, class EVF>
 class incidence_iterator
-      : _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
+      : _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)> {
 public:
   using base_type =
-        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
+        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)>;
 
   using graph_type      = remove_reference_t<G>;
   using vertex_type     = vertex_t<graph_type>;
@@ -90,7 +90,7 @@ protected:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (unordered_edge<G, edge_type>) {
+    if constexpr (unordered_edge<G>) {
       if (target_id(*g_, *iter_) != this->source_vertex_id()) {
         value_.shadow_.source_id = source_id(*g_, *iter_);
         value_.shadow_.target_id = target_id(*g_, *iter_);
@@ -140,10 +140,10 @@ private: // member variables
 
 template <adjacency_list G, bool Sourced>
 class incidence_iterator<G, Sourced, void>
-      : public _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
+      : public _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)> {
 public:
   using base_type =
-        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
+        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)>;
 
   using graph_type      = remove_reference_t<G>;
   using vertex_type     = vertex_t<graph_type>;
@@ -196,7 +196,7 @@ public:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (unordered_edge<G, edge_type>) {
+    if constexpr (unordered_edge<G>) {
       static_assert(sourced_adjacency_list<G>);
       if (target_id(*g_, *iter_) != this->source_vertex_id()) {
         value_.shadow_.source_id = source_id(*g_.*iter_);

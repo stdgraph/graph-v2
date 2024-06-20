@@ -73,15 +73,15 @@ namespace std::graph {
  * @tparam G The graph type.
  * @tparam E The edge type.
  */
-template <class G, class E> // For exposition only
+template <class G> // For exposition only
 concept basic_targeted_edge = requires(G&& g, edge_reference_t<G> uv) { target_id(g, uv); };
 
-template <class G, class E> // For exposition only
+template <class G> // For exposition only
 concept basic_sourced_edge = requires(G&& g, edge_reference_t<G> uv) { source_id(g, uv); };
 
-template <class G, class E>                                        // For exposition only
-concept basic_sourced_targeted_edge = basic_targeted_edge<G, E> && //
-                                      basic_sourced_edge<G, E> &&  //
+template <class G>                                              // For exposition only
+concept basic_sourced_targeted_edge = basic_targeted_edge<G> && //
+                                      basic_sourced_edge<G> &&  //
                                       requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
 
 
@@ -94,17 +94,17 @@ concept basic_sourced_targeted_edge = basic_targeted_edge<G, E> && //
  * @tparam G The graph type.
  * @tparam E The edge type.
  */
-template <class G, class E>                          // For exposition only
-concept targeted_edge = basic_targeted_edge<G, E> && //
+template <class G>                                // For exposition only
+concept targeted_edge = basic_targeted_edge<G> && //
                         requires(G&& g, edge_reference_t<G> uv) { target(g, uv); };
 
-template <class G, class E>                        // For exposition only
-concept sourced_edge = basic_sourced_edge<G, E> && //
+template <class G>                              // For exposition only
+concept sourced_edge = basic_sourced_edge<G> && //
                        requires(G&& g, edge_reference_t<G> uv) { source(g, uv); };
 
-template <class G, class E>                            // For exposition only
-concept sourced_targeted_edge = targeted_edge<G, E> && //
-                                sourced_edge<G, E> &&  //
+template <class G>                                  // For exposition only
+concept sourced_targeted_edge = targeted_edge<G> && //
+                                sourced_edge<G> &&  //
                                 requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
 
 
@@ -167,7 +167,7 @@ concept targeted_edge_range = basic_targeted_edge_range<G> && //
 template <class G>                                             // For exposition only
 concept basic_adjacency_list = vertex_range<G> &&              //
                                basic_targeted_edge_range<G> && //
-                               targeted_edge<G, edge_t<G>>;
+                               targeted_edge<G>;
 
 /**
  * @ingroup graph_concepts
@@ -182,7 +182,7 @@ concept basic_adjacency_list = vertex_range<G> &&              //
 template <class G>                                                   // For exposition only
 concept basic_index_adjacency_list = index_vertex_range<G> &&        //
                                      basic_targeted_edge_range<G> && //
-                                     basic_targeted_edge<G, edge_t<G>>;
+                                     basic_targeted_edge<G>;
 /**
  * @ingroup graph_concepts
  * @brief Concept for an adjacency list graph.
@@ -195,7 +195,7 @@ concept basic_index_adjacency_list = index_vertex_range<G> &&        //
 template <class G>                                                     // For exposition only
 concept basic_sourced_adjacency_list = vertex_range<G> &&              //
                                        basic_targeted_edge_range<G> && //
-                                       basic_sourced_targeted_edge<G, edge_t<G>>;
+                                       basic_sourced_targeted_edge<G>;
 
 /**
  * @ingroup graph_concepts
@@ -210,7 +210,7 @@ concept basic_sourced_adjacency_list = vertex_range<G> &&              //
 template <class G>                                                           // For exposition only
 concept basic_sourced_index_adjacency_list = index_vertex_range<G> &&        //
                                              basic_targeted_edge_range<G> && //
-                                             basic_sourced_targeted_edge<G, edge_t<G>>;
+                                             basic_sourced_targeted_edge<G>;
 
 //--------------------------------------------------------------------------------------------
 
@@ -226,7 +226,7 @@ concept basic_sourced_index_adjacency_list = index_vertex_range<G> &&        //
 template <class G>                                 // For exposition only
 concept adjacency_list = vertex_range<G> &&        //
                          targeted_edge_range<G> && //
-                         targeted_edge<G, edge_t<G>>;
+                         targeted_edge<G>;
 
 /**
  * @ingroup graph_concepts
@@ -241,7 +241,7 @@ concept adjacency_list = vertex_range<G> &&        //
 template <class G>                                       // For exposition only
 concept index_adjacency_list = index_vertex_range<G> &&  //
                                targeted_edge_range<G> && //
-                               targeted_edge<G, edge_t<G>>;
+                               targeted_edge<G>;
 
 /**
  * @ingroup graph_concepts
@@ -255,7 +255,7 @@ concept index_adjacency_list = index_vertex_range<G> &&  //
 template <class G>                                         // For exposition only
 concept sourced_adjacency_list = vertex_range<G> &&        //
                                  targeted_edge_range<G> && //
-                                 sourced_targeted_edge<G, edge_t<G>>;
+                                 sourced_targeted_edge<G>;
 
 /**
  * @ingroup graph_concepts
@@ -270,7 +270,7 @@ concept sourced_adjacency_list = vertex_range<G> &&        //
 template <class G>                                               // For exposition only
 concept sourced_index_adjacency_list = index_vertex_range<G> &&  //
                                        targeted_edge_range<G> && //
-                                       sourced_targeted_edge<G, edge_t<G>>;
+                                       sourced_targeted_edge<G>;
 
 //--------------------------------------------------------------------------------------------
 
@@ -284,28 +284,6 @@ concept edgelist_range = ranges::forward_range<ELR> && negation_v<adjacency_list
 //
 // property concepts
 //
-
-/**
- * @brief Type trait to determine if an edge is sourced.
- * 
- * Use @c is_sourced_edge<G,E>::value to deterine if the edge is sourced.
- * 
- * @tparam G The graph type.
- * @tparam E The edge type.
-*/
-template <class G, class E>
-struct is_sourced_edge : public integral_constant<bool, sourced_edge<G, E>> {};
-
-/**
- * @brief Type trait helper to determine if an edge is sourced.
- * 
- * Use @c is_sourced_edge_v<G,E> to deterine if the edge is sourced.
- * 
- * @tparam G The graph type.
- * @tparam E The edge type.
-*/
-template <class G, class E>
-inline constexpr bool is_sourced_edge_v = is_sourced_edge<G, E>::value;
 
 /**
  * @ingroup graph_properties
@@ -367,34 +345,6 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
 
 /**
  * @ingroup graph_properties
- * @brief Override for an edge type where source and target are unordered
- * 
- * For instance, given:
- *  @code
- *      vertex_iterator_t<G> ui = ...;
- *      for(auto&& uv : edges(g,*ui)) ...
- *  @endcode
- *  if(source_id(g,u) != vertex_id(ui)) then target_id(g,u) == vertex_id(ui)
- *
- * Example:
- *  @code
- *  namespace my_namespace {
- *      template<class X>
- *      class my_graph { ... };
- *  }
- *  namespace std::graph {
- *     template<class X>
- *     inline constexpr bool is_undirected_edge_v<edge_t<my_namespace::my_graph<X>>> = true;
- *  }
- *  @endcode
- * 
- * @tparam name E The edge type with unordered source and target
- */
-template <class E>
-inline constexpr bool is_undirected_edge_v = false;
-
-/**
- * @ingroup graph_properties
  * @ brief Specializable to define that a graph type has unordered edges.
  * 
  * Override for a graph type where source_id and target_id are unordered
@@ -406,7 +356,7 @@ inline constexpr bool is_undirected_edge_v = false;
  * where the algorithm came from.
  *
  * If a graph container implementation has a run-time property of ordered or
- * unordered (e.g. it can't be determined at compile-time) then unordered_edge<G,E>
+ * unordered (e.g. it can't be determined at compile-time) then unordered_edge<G>
  * should be true_type. The only consequence is that an additional if is done to
  * check whether source_id or target_id is used for the target in this library.
  * The container implementation can still preserve its implementation of order,
@@ -427,29 +377,17 @@ inline constexpr bool is_undirected_edge_v = false;
  * @tparam G Graph type
  */
 
-template <class E>
+template <class G>
 struct define_unordered_edge : public false_type {}; // specialized for graph container edge
 
-template <class G, class E>
-struct is_unordered_edge : public conjunction<define_unordered_edge<E>, is_sourced_edge<G, E>> {};
-
-template <class G, class E>
-inline constexpr bool is_unordered_edge_v = is_unordered_edge<G, E>::value;
-
-template <class G, class E> // For exposition only
-concept unordered_edge = is_unordered_edge_v<G, E>;
+template <class G>                                   // For exposition only
+concept unordered_edge = basic_sourced_edge<G> && define_unordered_edge<G>::value;
 
 //
 // is_ordered_edge, ordered_edge
 //
-template <class G, class E>
-struct is_ordered_edge : public negation<is_unordered_edge<G, E>> {};
-
-template <class G, class E>
-inline constexpr bool is_ordered_edge_v = is_ordered_edge<G, E>::value;
-
-template <class G, class E> // For exposition only
-concept ordered_edge = is_ordered_edge_v<G, E>;
+template <class G> // For exposition only
+concept ordered_edge = !unordered_edge<G>;
 
 
 //
