@@ -163,7 +163,7 @@ protected:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (unordered_edge<G, edge_type>) {
+    if constexpr (unordered_edge<G>) {
       if (target_id(*g_, *uvi_) != vertex_id(*g_, ui_)) {
         value_.shadow_.source_id = source_id(*g_, *uvi_);
         value_.shadow_.target_id = target_id(*g_, *uvi_);
@@ -260,7 +260,7 @@ public:
 
 public:
   constexpr reference operator*() const {
-    if constexpr (unordered_edge<G, edge_type>) {
+    if constexpr (unordered_edge<G>) {
       if (target_id(*g_, *uvi_) != vertex_id(*g_, ui_)) {
         value_.shadow_.source_id = source_id(*g_, *uvi_);
         value_.shadow_.target_id = target_id(*g_, *uvi_);

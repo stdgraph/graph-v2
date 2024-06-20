@@ -121,12 +121,12 @@ public:
 
 protected:
   constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type) const
-  requires ordered_edge<G, edge_type>
+  requires ordered_edge<G>
   {
     return target_id(*graph_, uv);
   }
   constexpr vertex_id_type real_target_id(edge_reference uv, vertex_id_type src) const
-  requires unordered_edge<G, edge_type>
+  requires unordered_edge<G>
   {
     if (target_id(*graph_, uv) != src)
       return target_id(*graph_, uv);

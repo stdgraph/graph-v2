@@ -35,10 +35,10 @@ class neighbor_iterator;
 */
 template <adjacency_list G, bool Sourced, class VVF>
 class neighbor_iterator
-      : public _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
+      : public _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)> {
 public:
   using base_type =
-        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
+        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)>;
 
   using graph_type            = remove_reference_t<G>;
   using vertex_type           = vertex_t<graph_type>;
@@ -96,7 +96,7 @@ public:
     // const in this functions signature causes target() to always return a const value, which isn't always what we want
     // shadow_vertex_type has correct constness based on the G template parameter
 
-    if constexpr (unordered_edge<G, edge_type>) {
+    if constexpr (unordered_edge<G>) {
       static_assert(sourced_adjacency_list<G>);
       if (target_id(*g_, *iter_) != this->source_vertex_id()) {
         value_.shadow_.source_id = source_id(*g_.*iter_);
@@ -150,10 +150,10 @@ private: // member variables
 
 template <adjacency_list G, bool Sourced>
 class neighbor_iterator<G, Sourced, void>
-      : public _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)> {
+      : public _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)> {
 public:
   using base_type =
-        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G, edge_t<G>>)>;
+        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)>;
 
   using graph_type            = remove_reference_t<G>;
   using vertex_type           = vertex_t<graph_type>;
@@ -209,7 +209,7 @@ public:
     // const in this functions signature causes target() to always return a const value, which isn't always what we want
     // shadow_vertex_type has correct constness based on the G template parameter
 
-    if constexpr (unordered_edge<G, edge_type>) {
+    if constexpr (unordered_edge<G>) {
       static_assert(sourced_adjacency_list<G>);
       if (target_id(*g_, *iter_) != this->source_vertex_id()) {
         value_.shadow_.source_id = source_id(*g_.*iter_);
