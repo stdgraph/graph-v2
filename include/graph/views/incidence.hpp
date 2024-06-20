@@ -31,11 +31,9 @@ class incidence_iterator;
  * @tparam EVF  Edge Value Function type
 */
 template <adjacency_list G, bool Sourced, class EVF>
-class incidence_iterator
-      : _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)> {
+class incidence_iterator : _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)> {
 public:
-  using base_type =
-        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)>;
+  using base_type = _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)>;
 
   using graph_type      = remove_reference_t<G>;
   using vertex_type     = vertex_t<graph_type>;
@@ -142,8 +140,7 @@ template <adjacency_list G, bool Sourced>
 class incidence_iterator<G, Sourced, void>
       : public _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)> {
 public:
-  using base_type =
-        _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)>;
+  using base_type = _detail::_source_vertex<G, ((Sourced && !sourced_adjacency_list<G>) || unordered_edge<G>)>;
 
   using graph_type      = remove_reference_t<G>;
   using vertex_type     = vertex_t<graph_type>;
