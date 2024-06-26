@@ -43,7 +43,6 @@
 // source_id(e)
 // target_id(e)
 // edge_value(e)
-// edge_id(e) (todo)
 //
 // Edge definitions supported without overrides
 // -----------------------------------------------------------------------------
@@ -131,9 +130,6 @@ namespace edgelist {
 
   template <basic_sourced_edgelist EL> // For exposition only
   using edge_value_t = decltype(edge_value(declval<edge_t<edge_range_t<EL>>>()));
-
-  template <basic_sourced_edgelist EL> // For exposition only
-  using edge_id_t = decltype(edge_id(declval<edge_t<edge_range_t<EL>>>()));
 
   template <basic_sourced_edgelist EL> // For exposition only
   using vertex_id_t = decltype(source_id(declval<edge_t<edge_range_t<EL>>>()));
