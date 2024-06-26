@@ -79,10 +79,8 @@ concept basic_targeted_edge = requires(G&& g, edge_reference_t<G> uv) { target_i
 template <class G> // For exposition only
 concept basic_sourced_edge = requires(G&& g, edge_reference_t<G> uv) { source_id(g, uv); };
 
-template <class G>                                              // For exposition only
-concept basic_sourced_targeted_edge = basic_targeted_edge<G> && //
-                                      basic_sourced_edge<G> &&  //
-                                      requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
+template <class G> // For exposition only
+concept basic_sourced_targeted_edge = basic_targeted_edge<G> && basic_sourced_edge<G>;
 
 
 /**
@@ -102,10 +100,8 @@ template <class G>                              // For exposition only
 concept sourced_edge = basic_sourced_edge<G> && //
                        requires(G&& g, edge_reference_t<G> uv) { source(g, uv); };
 
-template <class G>                                  // For exposition only
-concept sourced_targeted_edge = targeted_edge<G> && //
-                                sourced_edge<G> &&  //
-                                requires(G&& g, edge_reference_t<G> uv) { edge_id(g, uv); };
+template <class G> // For exposition only
+concept sourced_targeted_edge = targeted_edge<G> && sourced_edge<G>;
 
 
 /**
@@ -380,7 +376,7 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
 template <class G>
 struct define_unordered_edge : public false_type {}; // specialized for graph container edge
 
-template <class G> // For exposition only
+template <class G>                                   // For exposition only
 concept unordered_edge = basic_sourced_edge<G> && define_unordered_edge<G>::value;
 
 //
