@@ -2,7 +2,6 @@
 
 // (included from graph.hpp)
 #include "graph/graph_descriptors.hpp"
-#include "tag_invoke.hpp"
 
 #ifndef GRAPH_CPO_HPP
 #  define GRAPH_CPO_HPP
@@ -2430,49 +2429,6 @@ namespace _Num_partitions {
 inline namespace _Cpos {
   inline constexpr _Num_partitions::_Cpo num_partitions;
 }
-
-
-// vertices(g,pid) -> range of vertices; graph container must override if it supports bi-partite or
-// multi-partite graph.
-//
-namespace tag_invoke {
-  //TAG_INVOKE_DEF(vertices); // vertices(g) -> [graph vertices] (already defined for vertices(g))
-
-  template <class G>
-  concept _has_vertices_pid_adl = requires(G&& g, partition_id_t<G> pid) {
-    { vertices(g, pid) };
-  };
-} // namespace tag_invoke
-
-/**
- * @brief Get's the range of vertices for a partition in a graph.
- * 
- * Complexity: O(1)
- * 
- * Default implementation: empty range of vertices; the type returned may not be the same
- * as vertex_range_t<G>. The graph container must override if it supports bi-partite
- * or multipartite graphs.
- * 
- * This is a customization point function that may be overriden if graph G supports bi-partite
- * or multi-partite graphs. If it doesn't then an empty range is returned.
- * 
- * @tparam G The graph type.
- * @param g A graph instance.
- * @return The number of partitions in a graph. 0 if G doesn't support partitioning.
-*/
-#  if 0
-template <class G>
-requires tag_invoke::_has_vertices_pid_adl<G>
-auto vertices(G&& g, partition_id_t<G> pid) {
-  if constexpr (tag_invoke::_has_vertices_pid_adl<G>)
-    return tag_invoke::vertices(g, pid);
-  else
-    return vertices(g);
-}
-
-template <class G>
-using partition_vertex_range_t = decltype(vertices(declval<G>(), declval<partition_id_t<G>>()));
-#  endif
 
 
 //
