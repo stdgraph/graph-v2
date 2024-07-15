@@ -85,10 +85,10 @@ void mm_load_file_example() {
   using path           = std::filesystem::path;
   path gap             = "D:\\dev_graph\\data\\GAP";
   path gap_road_mtx    = gap / "GAP-road" / "GAP-road.mtx";       // 599MB
-  path gap_kron_mtx    = gap / "GAP-kron" / "GAP-kron.mtx";       // 43.1GB
   path gap_twitter_mtx = gap / "GAP-twitter" / "GAP-twitter.mtx"; // 29.2GB
-  path gap_urand_mtx   = gap / "GAP-urand" / "GAP-urand.mtx";     // 43.8GB
-  path gap_web_mtx     = gap / "GAP-web" / "GAP-web.mtx";         // 38.1GB
+  path gap_web_mtx     = gap / "GAP-web" / "GAP-web.mtx";         // 38.1GB; sort= 490.4s
+  path gap_kron_mtx    = gap / "GAP-kron" / "GAP-kron.mtx";       // 43.1GB; sort=1261.9s
+  path gap_urand_mtx   = gap / "GAP-urand" / "GAP-urand.mtx";     // 43.8GB; sort=1377.7s
 
   path target_mtx = gap_road_mtx;
 
