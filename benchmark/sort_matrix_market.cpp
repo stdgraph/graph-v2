@@ -1,3 +1,6 @@
+// Copied from fast_matrix_market/examples/sort_matrix_market.cpp
+// Modifiled for integer-only column values to reduce memory use and improve performance on GAP data
+
 // Copyright (C) 2023 Adam Lugowski. All rights reserved.
 // Use of this source code is governed by the BSD 2-clause license found in the LICENSE.txt file.
 // SPDX-License-Identifier: BSD-2-Clause
@@ -8,24 +11,10 @@
 #include <numeric>
 #include <chrono>
 #include <fast_matrix_market/fast_matrix_market.hpp>
+#include <locale>
+#include "timer.hpp"
 
 namespace fmm = fast_matrix_market;
-
-class timer {
-  std::chrono::steady_clock::time_point start_time_ = std::chrono::steady_clock::now();
-  std::string                           name_;
-
-public:
-  timer(const std::string& name) : name_(name) {}
-  ~timer() { std::cout << name_ << " took " << elapsed() << " seconds." << std::endl; }
-
-  void reset() { start_time_ = std::chrono::steady_clock::now(); }
-
-  double elapsed() const {
-    return std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - start_time_)
-          .count();
-  }
-};
 
 template <typename IT, typename VT>
 void sort_file(const std::filesystem::path& in_path, const std::filesystem::path& out_path) {
@@ -92,6 +81,7 @@ void sort_file(const std::filesystem::path& in_path, const std::filesystem::path
 
 
 int main(int argc, char** argv) {
+  std::locale::global(std::locale(""));
   if (argc < 2) {
     std::cout << "Sort the elements of a .mtx file by coordinate (row, column)." << std::endl;
     std::cout << std::endl;

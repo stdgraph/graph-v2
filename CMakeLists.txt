@@ -106,8 +106,10 @@ if(ENABLE_EXAMPLES)
 endif()
 
 if(ENABLE_BENCHMARKING)
+  message(STATUS "Building benchmarks.")
   include(${PROJECT_SOURCE_DIR}/cmake/FetchFastMM.cmake)
   set(BENCHMARK_ROOT_DIR "${CMAKE_SOURCE_DIR}/benchmark/")
+  set(BENCHMARK_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/benchmark/results/")
   add_subdirectory(benchmark)
 endif()
 

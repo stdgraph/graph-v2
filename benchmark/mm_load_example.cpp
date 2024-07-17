@@ -6,44 +6,30 @@
 #include <vector>
 #include <chrono>
 
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable : 4242) // '=': conversion from 'int' to 'char', possible loss of data
+#else
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wshadow"
+#  pragma GCC diagnostic ignored "-Wsign-conversion"
+#  pragma GCC diagnostic ignored "-Wuseless-cast"
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 #include <fast_matrix_market/fast_matrix_market.hpp>
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#else
+#  pragma GCC diagnostic pop
+#endif
+
+#include "timer.hpp"
+#include "util.hpp"
 
 // If you prefer more concise code then you can use this to abbreviate the
 // rather long namespace name. Then just use `fmm::` instead of `fast_matrix_market::`.
 // This is not used below only to make the code simpler to understand at a glance and for easy copy/paste.
 namespace fmm = fast_matrix_market;
-
-/**
- * A simple triplet sparse matrix.
- */
-template <typename IT, typename VT>
-struct triplet_matrix {
-  int64_t         nrows = 0, ncols = 0;
-  std::vector<IT> rows;
-  std::vector<IT> cols;
-  std::vector<VT> vals;
-};
-
-/**
- * A simple dense matrix.
- */
-template <typename VT>
-struct array_matrix {
-  int64_t         nrows = 0, ncols = 0;
-  std::vector<VT> vals;
-};
-
-class timer {
-    std::chrono::steady_clock::time_point start_time_ = std::chrono::steady_clock::now();
-public:
-	void reset() {
-		start_time_ = std::chrono::steady_clock::now();
-	}
-
-	double elapsed() const {
-		return std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - start_time_).count();
-	}
-};
 
 void mm_load_example() {
   // Load a matrix
@@ -106,7 +92,7 @@ void mm_load_file_example() {
     // You may also set header.field = fast_matrix_market::pattern to write a pattern file (only indices, no values).
     // Non-pattern field types (integer, real, complex) are deduced from the template type and cannot be overriden.
 
-    timer t;
+    timer t("Load file");
     fmm::read_matrix_market_triplet(ifs, triplet.nrows, triplet.ncols, triplet.rows, triplet.cols, triplet.vals);
     double elapsed = t.elapsed();
     std::cout << triplet.nrows << " rows loaded in " << elapsed << "s, " << static_cast<double>(triplet.nrows) / elapsed << " rows/s" << std::endl;

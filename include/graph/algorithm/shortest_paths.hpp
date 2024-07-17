@@ -17,6 +17,7 @@
 #include <vector>
 #include <ranges>
 #include <functional>
+#include <algorithm>
 #include <fmt/format.h>
 #include "graph/graph.hpp"
 #include "graph/views/incidence.hpp"
