@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <ranges>
 #include <array>
+#include <cassert>
 
 #ifndef GRAPH_CO_DIJKSTRA_CLRS_HPP
 #  define GRAPH_CO_DIJKSTRA_CLRS_HPP
@@ -130,10 +131,10 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
-  size_t N(num_vertices(g_));
+  id_type N(static_cast<id_type>(num_vertices(g_)));
 
   if ((events & dijkstra_events::initialize_vertex) == dijkstra_events::initialize_vertex) {
-    for (id_type uid = 0; uid < num_vertices(g_); ++uid) {
+    for (id_type uid = 0; uid < static_cast<id_type>(num_vertices(g_)); ++uid) {
       co_yield bfs_value_type{dijkstra_events::initialize_vertex, bfs_vertex_type{uid, *find_vertex(g_, uid)}};
     }
   }

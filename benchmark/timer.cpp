@@ -28,13 +28,14 @@ void timer::set_count(int64_t count, const std::string_view& desc) {
 // the seconds should be displayed with 3 decimal places
 void timer::output_ellapsed() {
   double seconds = elapsed();
-  double min     = trunc(seconds / 60.);
+  double hr      = trunc(seconds / 3600.);
+  double min     = trunc((seconds - hr * 3600.) / 60.);
   double sec     = seconds - min * 60.;
 
   if (!_include_start)
     fmt::print("{}", name_);
-  fmt::print(" took {}m{:.0f}s ({:.3f})", min, sec, seconds);
+  fmt::print(" took {}h{}m{:.0f}s ({:.3f})", hr, min, sec, seconds);
   if (count_ > 0)
-    fmt::print(", {:.0Lf} {}/sec", (count_ / seconds), count_name_);
+    fmt::print(", {:.0Lf} {} at {:.0Lf} {}/sec", count_, count_name_, (count_ / seconds), count_name_);
   fmt::print("\n");
 }

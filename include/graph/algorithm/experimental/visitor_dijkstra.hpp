@@ -152,7 +152,7 @@ void dijkstra_with_visitor(
 
   size_t N(num_vertices(g_));
 
-  for (id_type uid = 0; uid < num_vertices(g_); ++uid) {
+  for (id_type uid = 0; uid < static_cast<id_type>(num_vertices(g_)); ++uid) {
     visitor.on_initialize_vertex({uid, *find_vertex(g_, uid)});
   }
 
