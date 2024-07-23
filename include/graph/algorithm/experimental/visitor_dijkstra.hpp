@@ -150,7 +150,7 @@ void dijkstra_with_visitor(
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
-  size_t N(num_vertices(g_));
+  id_type N(static_cast<id_type>(num_vertices(g_)));
 
   for (id_type uid = 0; uid < static_cast<id_type>(num_vertices(g_)); ++uid) {
     visitor.on_initialize_vertex({uid, *find_vertex(g_, uid)});

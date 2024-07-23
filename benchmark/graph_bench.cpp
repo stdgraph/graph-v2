@@ -18,8 +18,8 @@ int main() {
   std::locale::global(std::locale(""));
   //mm_simple1();
   //mm_load_example();
-  //mm_load_file_example();
-  bench_dijkstra();
+  mm_load_file_example();
+  //bench_dijkstra();
 
   return 0;
 }
