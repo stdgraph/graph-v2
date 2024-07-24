@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <ranges>
 #include <cstdint>
+#include <cassert>
 #include "graph/graph.hpp"
+#include <fmt/format.h>
 
 // NOTES
 //  have public load_edges(...), load_vertices(...), and load()
@@ -231,7 +233,7 @@ public:
   using value_type = void;
   using size_type  = size_t; //VId;
 
-public: // Properties
+public:                      // Properties
   [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
   [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
   [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
@@ -343,7 +345,7 @@ public:
   using value_type = void;
   using size_type  = size_t; //VId;
 
-public: // Properties
+public:                      // Properties
   [[nodiscard]] constexpr size_type size() const noexcept { return 0; }
   [[nodiscard]] constexpr bool      empty() const noexcept { return true; }
   [[nodiscard]] constexpr size_type capacity() const noexcept { return 0; }
@@ -444,8 +446,8 @@ public: // Construction/Destruction
    * @param alloc                Allocator to use for internal containers
   */
   template <ranges::forward_range ERng, ranges::forward_range PartRng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> && //
-                 convertible_to<ranges::range_value_t<PartRng>, VId>
+  //requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> && //
+  //               convertible_to<ranges::range_value_t<PartRng>, VId>
   constexpr compressed_graph_base(const ERng&    erng,
                                   EProj          eprojection         = {},
                                   const PartRng& partition_start_ids = vector<VId>(),
@@ -516,7 +518,7 @@ public: // Construction/Destruction
   }
 
 public:
-public: // Operations
+public:                            // Operations
   void reserve_vertices(size_type count) {
     row_index_.reserve(count + 1); // +1 for terminating row
     row_values_base::reserve(count);
@@ -691,10 +693,18 @@ public: // Operations
     reserve_edges(edge_count);
 
     // Add edges
+    size_t         debug_count = 0;
     vertex_id_type last_uid = 0, max_vid = 0;
     for (auto&& edge_data : erng) {
       auto&& edge = eprojection(edge_data); // compressed_graph requires EV!=void
-      assert(edge.source_id >= last_uid);   // ordered by uid? (requirement)
+      if (edge.source_id < last_uid) {      // ordered by uid? (requirement)
+        std::string msg = fmt::format(
+              "source id of {} on line {} of the data input is not ordered after source id of {} on the previous line",
+              edge.source_id, debug_count, last_uid);
+        fmt::print("\n{}\n", msg);
+        assert(false);
+        throw graph_error(move(msg));
+      }
       row_index_.resize(static_cast<size_t>(edge.source_id) + 1,
                         vertex_type{static_cast<vertex_id_type>(col_index_.size())});
       col_index_.push_back(edge_type{edge.target_id});
@@ -702,6 +712,7 @@ public: // Operations
         static_cast<col_values_base&>(*this).push_back(edge.value);
       last_uid = edge.source_id;
       max_vid  = max(max_vid, edge.target_id);
+      ++debug_count;
     }
 
     // uid and vid may refer to rows that exceed the value evaluated for vertex_count (if any)
@@ -803,13 +814,13 @@ private:                       // Member variables
 private: // CPO properties
   friend constexpr vertices_type vertices(compressed_graph_base& g) {
     if (g.row_index_.empty())
-      return vertices_type(g.row_index_); // really empty
+      return vertices_type(g.row_index_);                                 // really empty
     else
       return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
   friend constexpr const_vertices_type vertices(const compressed_graph_base& g) {
     if (g.row_index_.empty())
-      return const_vertices_type(g.row_index_); // really empty
+      return const_vertices_type(g.row_index_);                                 // really empty
     else
       return const_vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
@@ -826,7 +837,7 @@ private: // CPO properties
   friend constexpr edges_type edges(graph_type& g, vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size());    // in row_index_ bounds?
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
@@ -834,7 +845,7 @@ private: // CPO properties
   friend constexpr const_edges_type edges(const graph_type& g, const vertex_type& u) {
     static_assert(ranges::contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     const vertex_type* u2 = &u + 1;
-    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(u2 - &u) < g.row_index_.size());    // in row_index_ bounds?
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     return const_edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
@@ -1068,17 +1079,20 @@ public: // Construction/Destruction
   constexpr compressed_graph& operator=(compressed_graph&&)      = default;
 
   // edge-only construction
-  template <ranges::forward_range ERng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV>
-  constexpr compressed_graph(const ERng& erng, EProj eprojection = identity(), const Alloc& alloc = Alloc())
-        : base_type(erng, eprojection, alloc) {}
+  template <ranges::forward_range ERng, class EProj = identity, ranges::forward_range PartRng = vector<VId>>
+  requires copyable_edge<invoke_result_t<EProj, ranges::range_value_t<ERng>>, VId, EV>
+  constexpr compressed_graph(const ERng&    erng,
+                             EProj          eprojection         = identity(),
+                             const PartRng& partition_start_ids = vector<VId>(),
+                             const Alloc&   alloc               = Alloc())
+        : base_type(erng, eprojection, partition_start_ids, alloc) {}
 
   // edge and vertex value construction
   template <ranges::forward_range ERng,
             ranges::forward_range VRng,
-            ranges::forward_range PartRng,
-            class EProj = identity,
-            class VProj = identity>
+            class EProj                   = identity,
+            class VProj                   = identity,
+            ranges::forward_range PartRng = vector<VId>>
   requires copyable_edge<invoke_result<EProj, ranges::range_value_t<ERng>>, VId, EV> &&
            copyable_vertex<invoke_result<VProj, ranges::range_value_t<VRng>>, VId, VV> &&
            convertible_to<ranges::range_value_t<PartRng>, VId>
