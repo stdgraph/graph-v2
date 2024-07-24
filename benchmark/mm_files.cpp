@@ -1,7 +1,7 @@
 #include "mm_files.hpp"
 
 using std::filesystem::path;
-
+using std::vector;
 
 path        gap = path(BENCHMARK_DATA_DIR) / "GAP";
 bench_files gap_road(gap, "GAP-road", "GAP-road.mtx", "GAP-road.sorted.mtx", "GAP-road_sources.mtx");
@@ -16,4 +16,4 @@ bench_files g2bench_chesapeake(g2bench, "", "chesapeake.mtx", "chesapeake.sorted
 bench_files g2bench_bips98_606(g2bench, "", "bips98_606.mtx", "bips98_606.sorted.mtx", "sources.mtx");
 // sources.mtx is a generic set of sources that can be used with either g2bench graph
 
-//std::string temp = BENCHMARK_DATA_DIR;
+vector<bench_files> datasets = {gap_road, gap_twitter, gap_web, gap_kron, gap_urand, g2bench_chesapeake, g2bench_bips98_606};

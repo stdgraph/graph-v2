@@ -1,7 +1,24 @@
 #include <iostream>
 #include <vector>
 
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable : 4242) // '=': conversion from 'int' to 'char', possible loss of data
+#  pragma warning(disable : 4701) // potentially uninitialized local variable 'value' used
+#else
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wshadow"
+#  pragma GCC diagnostic ignored "-Wsign-conversion"
+#  pragma GCC diagnostic ignored "-Wuseless-cast"
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 #include <fast_matrix_market/fast_matrix_market.hpp>
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#else
+#  pragma GCC diagnostic pop
+#endif
+
 
 // If you prefer more concise code then you can use this to abbreviate the
 // rather long namespace name. Then just use `fmm::` instead of `fast_matrix_market::`.

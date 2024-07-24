@@ -6,6 +6,7 @@
 #include <vector>
 #include <fmt/format.h>
 
+#include "mm_load.hpp"
 #include "mm_files.hpp"
 
 #include "graph/graph.hpp"
