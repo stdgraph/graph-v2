@@ -60,7 +60,7 @@ option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ON)
 option(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
 option(ENABLE_EXAMPLES "Enable Example Builds" ON)
-option(ENABLE_BENCHMARKING "Enable Benchmark Builds" ON)
+option(ENABLE_BENCHMARKING "Enable Benchmark Builds" OFF)
 
 # Very basic PCH example
 option(ENABLE_PCH "Enable Precompiled Headers" OFF)
@@ -111,6 +111,14 @@ if(ENABLE_BENCHMARKING)
   include(${PROJECT_SOURCE_DIR}/cmake/FetchFastMM.cmake)
   set(BENCHMARK_ROOT_DIR "${CMAKE_SOURCE_DIR}/benchmark/")
   set(BENCHMARK_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/benchmark/results/")
+
+  # This is for Phil's home machine. It needs to be made more general
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(BENCHMARK_DATA_DIR "${CMAKE_SOURCE_DIR}/../data/")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(BENCHMARK_DATA_DIR "/mnt/d/dev_graph/data/")
+  endif()
+
   add_subdirectory(benchmark)
 endif()
 

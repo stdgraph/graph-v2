@@ -58,9 +58,65 @@ void mm_load_example() {
   std::cout << std::endl;
 }
 
+template <typename IT, typename VT>
+void sort_triplet_and_sources(triplet_matrix<IT, VT>& triplet, array_matrix<IT>& sources) {
+  // Already sorted?
+  if (std::ranges::is_sorted(std::views::zip(triplet.rows, triplet.cols))) {
+    fmt::println("The matrix is already sorted.");
+    return;
+  }
+  fmt::println("The matrix is not sorted yet.");
+
+  // Find sort permutation
+  std::vector<std::size_t> perm(triplet.rows.size());
+  {
+    timer sort_time("Sorting");
+
+    std::ranges::iota(perm, 0);
+    std::ranges::sort(perm.begin(), perm.end(), [&](std::size_t i, std::size_t j) {
+      if (triplet.rows[i] != triplet.rows[j])
+        return triplet.rows[i] < triplet.rows[j];
+      if (triplet.cols[i] != triplet.cols[j])
+        return triplet.cols[i] < triplet.cols[j];
+
+      return false;
+    });
+  }
+
+  // Apply permutation
+  {
+    timer permute_time("Apply permutation");
+
+    std::vector<IT> sorted_rows;
+    sorted_rows.reserve(triplet.rows.size());
+    std::transform(perm.begin(), perm.end(), std::back_inserter(sorted_rows), [&](auto i) { return triplet.rows[i]; });
+    swap(sorted_rows, triplet.rows);
+    sorted_rows = std::vector<IT>();
+
+    std::vector<IT> sorted_cols;
+    sorted_cols.reserve(triplet.cols.size());
+    std::transform(perm.begin(), perm.end(), std::back_inserter(sorted_cols), [&](auto i) { return triplet.cols[i]; });
+    swap(sorted_cols, triplet.cols);
+    sorted_cols = std::vector<IT>();
+
+    std::vector<VT> sorted_vals;
+    sorted_vals.reserve(triplet.vals.size());
+    std::transform(perm.begin(), perm.end(), std::back_inserter(sorted_vals), [&](auto i) { return triplet.vals[i]; });
+    swap(sorted_vals, triplet.vals);
+    sorted_vals = std::vector<VT>();
+
+    std::vector<IT> perm_sources;
+    perm_sources.reserve(sources.vals.size());
+    std::transform(sources.vals.begin(), sources.vals.end(), std::back_inserter(perm_sources),
+                   [&](auto i) { return perm[i]; });
+    swap(perm_sources, sources.vals);
+    perm_sources = std::vector<IT>();
+  }
+}
+
 // Dataset: gap_twitter, symmetry_type::general, 1,468,364,884 rows
 //  Deb/Rel parallel_ok num_threads Read        Rows/Sec     LoadSimple  Edges/Sec    LoadCompressed  Edges/Sec
-//  ------- ----------- ----------- ----------- ----------   ---------- -----------   --------------  ----------- 
+//  ------- ----------- ----------- ----------- ----------   ---------- -----------   --------------  -----------
 //  Debug   false       1           6m0s(360)    4,077,499   5m32s(332)   4,077,499   5m49s(348)      4,213,302
 //  Debug   true        2           12m42s(761)  1,927,867   5m13s(313)   4,688,601   5m36s(335)      4,373,910
 //  Release false       1           2m18s(138)  10,619,350   1m24s(83)   17,557,093   1m2s(62)        23,531,613
@@ -68,11 +124,13 @@ void mm_load_example() {
 //  Release true        4           1m20s(79)   18,460,595   1m18s(78)   18,752,507   0m45s(44)       32,708,977
 
 void mm_load_file_example() {
+  const bench_files& bench_target = g2bench_bips98_606;
+  path               target_mtx   = bench_target.mtx_sorted_path; // compressed_path requires a sorted mtx
+  path               sources_mtx  = bench_target.sources_path;
+  fmt::println("Loading data for the '{}' dataset", bench_target.name);
+
   triplet_matrix<int64_t, int64_t> triplet;
   array_matrix<int64_t>            sources;
-  const bench_files&               bench_target = gap_twitter;
-  path                             target_mtx   = bench_target.mtx_sorted_path; // compressed_path requires a sorted mtx
-  path                             sources_mtx  = bench_target.sources_path;
 
   // Read triplet from Matrix Market. Use std::ifstream to read from a file.
   {
@@ -91,7 +149,8 @@ void mm_load_file_example() {
 
       fmm::matrix_market_header header;
       fmm::read_options         options;
-      options.parallel_ok = false;
+      options.generalize_symmetry = true;
+      options.parallel_ok         = false;
       //options.num_threads = 1;
       fmm::read_matrix_market_triplet(ifs, header, triplet.rows, triplet.cols, triplet.vals, options);
       triplet.nrows = header.nrows;
@@ -99,7 +158,7 @@ void mm_load_file_example() {
 
       // compressed_graph requires edges are ordered by source_id.
       // Non-general symmetry means edges are generated in unordered ways and cause an assertion/exception.
-      assert(header.symmetry == fmm::symmetry_type::general);
+      //assert(header.symmetry == fmm::symmetry_type::general);
 
       read_time.set_count(size(triplet.rows), "rows");
     }
@@ -117,7 +176,10 @@ void mm_load_file_example() {
     }
   }
 
-  // Load a simple graph
+  // Sort the triplet & sources, if needed
+  sort_triplet_and_sources(triplet, sources);
+
+  // Load a simple graph: vector<vector<tuple<int64_t, int64_t>>>
   {
     timer load_time("Loading simple graph", true);
 
