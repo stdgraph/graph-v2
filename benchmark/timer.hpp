@@ -11,7 +11,7 @@ class timer {
   bool                                  _include_start = false;
 
 public:
-  timer(const std::string& name, bool include_start = false);
+  explicit timer(const std::string& name, bool include_start = false);
   ~timer();
 
   double elapsed() const; // seconds

@@ -2,6 +2,8 @@
 #include "mm_files.hpp"
 #include "timer.hpp"
 #include <graph/container/compressed_graph.hpp>
+#include <numeric>
+#include <fstream>
 
 #ifdef _MSC_VER
 #  pragma warning(push)
@@ -196,6 +198,11 @@ void load_matrix_market(const bench_files&      bench_target,
 //template <adjacency_list G, integral IT, typename VT>
 //void load_graph(const triplet_matrix<IT, VT>& triplet, G& g);
 
+// This should work for any graph defined with std-based containers that matches the following patterns:
+//  1. std::vector<std::vector<std::tuple<IT, VT, ...>>>
+//  2. std::vector<std::vector<std::pair<IT, VT>>>
+// The inner range must support emplace_back (it can be extended to support insert or push_front also, if needed).
+//
 template <std_adjacency_graph G, integral IT, typename VT>
 void load_graph(const triplet_matrix<IT, VT>& triplet, G& g) {
 

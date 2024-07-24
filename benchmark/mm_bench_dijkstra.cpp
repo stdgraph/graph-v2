@@ -1,26 +1,15 @@
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <fstream>
-#include <numeric>
-#include <vector>
 #include <fmt/format.h>
 
 #include "mm_load.hpp"
-#include "mm_files.hpp"
 
 #include "graph/graph.hpp"
 #include "graph/algorithm/experimental/co_dijkstra.hpp"
 #include "graph/algorithm/experimental/visitor_dijkstra.hpp"
 
-#include "timer.hpp"
-
 namespace fmm = fast_matrix_market;
 using std::string_view;
-using std::filesystem::path;
 using std::vector;
 using std::tuple;
-using std::filesystem::path;
 
 using std::ranges::size;
 using std::cout;
@@ -63,49 +52,12 @@ private:
 void bench_dijkstra() {
   triplet_matrix<int64_t, int64_t> triplet;
   array_matrix<int64_t>            sources;
-  using G = std::vector<std::vector<tuple<int64_t, int64_t>>>;
 
-  const bench_files& bench_target = gap_road;
-  //const bench_files& bench_target = g2bench_bips98_606;
+  load_matrix_market(g2bench_bips98_606, triplet, sources, true); // gap_road, g2bench_bips98_606
 
-  // Read triplet from Matrix Market. Use std::ifstream to read from a file.
-  {
-    timer read_time("Reading matrix data", true);
-
-    // Read the matrix
-    {
-      std::ifstream ifs(bench_target.mtx_path);
-      assert(ifs.is_open());
-      fmm::read_matrix_market_triplet(ifs, triplet.nrows, triplet.ncols, triplet.rows, triplet.cols, triplet.vals);
-      read_time.set_count(size(triplet.rows), "rows");
-    }
-
-    // Read the sources
-    if (bench_target.sources_path.stem().empty()) {
-      // If no sources file is provided, use the first vertex as the source
-      sources.nrows = 1;
-      sources.ncols = 1;
-      sources.vals.push_back(0);
-    } else {
-      std::ifstream ifs(bench_target.sources_path);
-      assert(ifs.is_open());
-      fmm::read_matrix_market_array(ifs, sources.nrows, sources.ncols, sources.vals, fmm::row_major);
-    }
-  }
-
-  // Load the graph
-  G g(triplet.nrows);
-  {
-    timer load_time("Loading graph", true);
-
-    for (size_t i = 0; i < triplet.rows.size(); ++i) {
-      g[triplet.rows[i]].emplace_back(triplet.cols[i], triplet.vals[i]);
-    }
-
-    load_time.set_count(size(triplet.rows), "edges");
-  }
-
-  fmt::println("Graph {} has {:L} vertices and {:L} edges", bench_target.name, size(vertices(g)), size(triplet.rows));
+  using G = vector<vector<tuple<int64_t, int64_t>>>;
+  G g;
+  load_graph(triplet, g);
 
   // Use first source only (temporary)
   sources.ncols = 1;
