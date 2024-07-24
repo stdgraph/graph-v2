@@ -1,6 +1,7 @@
 #pragma once
 #include "mm_files.hpp"
 #include "timer.hpp"
+#include <graph/container/compressed_graph.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning(push)
@@ -20,8 +21,32 @@
 #  pragma GCC diagnostic pop
 #endif
 
+using std::integral;
+using std::convertible_to;
+using std::ranges::forward_range;
+using std::ranges::random_access_range;
+using std::ranges::range_value_t;
+using std::graph::adjacency_list;
+using std::graph::container::compressed_graph;
+
+template <typename T>
+class is_edge_like : public std::false_type {};
+template <typename T>
+inline constexpr bool is_edge_like_v = is_edge_like<T>::value;
+
+template <typename IT, typename VT, typename... Other>
+class is_edge_like<std::tuple<IT, VT, Other...>> : public std::true_type {};
 
 template <typename IT, typename VT>
+class is_edge_like<std::pair<IT, VT>> : public std::true_type {};
+
+template <class G>
+concept std_adjacency_graph = adjacency_list<G> &&               //
+                              random_access_range<G> &&          //
+                              forward_range<range_value_t<G>> && //
+                              is_edge_like_v<range_value_t<range_value_t<G>>>;
+
+template <integral IT, typename VT>
 void load_matrix_market(const bench_files&      bench_target,
                         triplet_matrix<IT, VT>& triplet,
                         array_matrix<IT>&       sources,
@@ -154,16 +179,58 @@ void load_matrix_market(const bench_files&      bench_target,
         ++self_loops;
       }
       if (row_col == last_entry) {
-		//fmt::println("Warning: duplicate entry detected at row {} with row/col of {}/{}", data_row, row, col);
+        //fmt::println("Warning: duplicate entry detected at row {} with row/col of {}/{}", data_row, row, col);
         ++duplicates;
-	  }
+      }
 
       last_entry = row_col;
       ++data_row;
     }
     if (self_loops > 0)
-	  fmt::println("Warning: {} self-loops detected", self_loops);
+      fmt::println("Warning: {} self-loops detected", self_loops);
     if (duplicates > 0)
-        fmt::println("Warning: {} duplicate entries detected", duplicates);
+      fmt::println("Warning: {} duplicate entries detected", duplicates);
   }
+}
+
+//template <adjacency_list G, integral IT, typename VT>
+//void load_graph(const triplet_matrix<IT, VT>& triplet, G& g);
+
+template <std_adjacency_graph G, integral IT, typename VT>
+void load_graph(const triplet_matrix<IT, VT>& triplet, G& g) {
+
+  {
+    timer load_time("Loading the std graph", true);
+
+    g.clear();
+    g.resize(triplet.nrows);
+    for (size_t i = 0; i < triplet.rows.size(); ++i) {
+      g[triplet.rows[i]].emplace_back(triplet.cols[i], triplet.vals[i]);
+    }
+
+    load_time.set_count(size(triplet.rows), "edges");
+  }
+
+  fmt::println("The graph has {:L} vertices and {:L} edges", std::graph::num_vertices(g), std::graph::num_edges(g));
+}
+
+template <typename EV, typename VV, typename GV, integral VId, integral EIndex = VId>
+void load_graph(const triplet_matrix<VId, EV>& triplet, compressed_graph<EV, VV, GV, VId, EIndex>& g) {
+  using G = compressed_graph<EV, VV, GV, VId, EIndex>;
+  {
+    timer load_time("Loading the compressed_graph", true);
+
+    auto zip_view   = std::views::zip(triplet.rows, triplet.cols, triplet.vals);
+    using zip_value = std::ranges::range_value_t<decltype(zip_view)>;
+
+    using edge_desc = std::graph::copyable_edge_t<VId, EV>;
+    auto edge_proj  = [](const zip_value& val) -> edge_desc {
+      return edge_desc{std::get<0>(val), std::get<1>(val), std::get<2>(val)};
+    };
+
+    g.load_edges(zip_view, edge_proj);
+    load_time.set_count(size(triplet.rows), "edges");
+  }
+
+  fmt::println("The graph has {:L} vertices and {:L} edges", std::graph::num_vertices(g), std::graph::num_edges(g));
 }

@@ -117,6 +117,13 @@ void sort_triplet(triplet_matrix<IT, VT>& triplet) {
 //  Release true        2           1m19s(78)   18,625,828
 //  Release true        4           1m20s(79)   18,460,595   1m18s(78)   18,752,507   0m45s(44)       32,708,977
 
+
+template <typename T>
+class is_e_like : public std::false_type {};
+
+template <typename IT, typename VT, typename... Other>
+class is_e_like<std::tuple<IT, VT, Other...>> : public std::true_type {};
+
 void mm_load_file_example() {
 
   triplet_matrix<int64_t, int64_t> triplet;
@@ -126,34 +133,13 @@ void mm_load_file_example() {
 
   // Load a simple graph: vector<vector<tuple<int64_t, int64_t>>>
   {
-    timer load_time("Loading simple graph", true);
-
-    using G = std::vector<std::vector<tuple<int64_t, int64_t>>>;
-    G g(triplet.nrows);
-    for (size_t i = 0; i < triplet.rows.size(); ++i) {
-      g[triplet.rows[i]].emplace_back(triplet.cols[i], triplet.vals[i]);
-    }
-
-    load_time.set_count(size(triplet.rows), "edges");
+    std::vector<std::vector<tuple<int64_t, int64_t>>> g;
+    load_graph(triplet, g);
   }
 
   // Load a compressed_graph
   {
-    timer load_time("Loading compressed_graph", true);
-
-    using G = compressed_graph<int64_t, void, void, int64_t, int64_t>;
-
-    auto zip_view    = std::views::zip(triplet.rows, triplet.cols, triplet.vals);
-    using zip_view_t = decltype(zip_view);
-    using zip_value  = std::ranges::range_value_t<decltype(zip_view)>;
-
-    using edge_desc = edge_descriptor<int64_t, true, void, int64_t>;
-    auto edge_proj  = [](const zip_value& val) -> edge_desc {
-      return edge_desc{std::get<0>(val), std::get<1>(val), std::get<2>(val)};
-    };
-
-    G g(zip_view, edge_proj);
-
-    load_time.set_count(size(triplet.rows), "edges");
+    compressed_graph<int64_t, void, void, int64_t, int64_t> g;
+    load_graph(triplet, g);
   }
 }
