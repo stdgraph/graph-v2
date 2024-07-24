@@ -70,5 +70,5 @@ extern bench_files gap_kron;    // 43.1GB; sort=1261.9s
 extern bench_files gap_urand;   // 43.8GB; sort=1377.7s
 
 
-extern bench_files g2bench_chesapeake;  // 13KB
-extern bench_files g2bench_bips98_606;  //944KB
+extern bench_files g2bench_chesapeake; // 13KB
+extern bench_files g2bench_bips98_606; //944KB

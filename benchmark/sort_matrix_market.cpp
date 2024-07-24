@@ -109,7 +109,8 @@ int main(int argc, char** argv) {
   }
 
   //sort_file<int64_t, std::string>(in_path, out_path);
-  sort_file<int64_t, int64_t>(in_path, out_path); // change value type to int64_t for performance & memory use on GAP data
+  sort_file<int64_t, int64_t>(in_path,
+                              out_path); // change value type to int64_t for performance & memory use on GAP data
 
   return 0;
 }
