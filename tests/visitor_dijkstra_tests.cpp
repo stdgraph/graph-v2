@@ -69,7 +69,7 @@ struct my_dijkstra_visitor : dijkstra_visitor_base<routes_vol_graph_type> {
   my_dijkstra_visitor(routes_vol_graph_type& g, Distances& distances) : base_t(g), distances_(distances) {}
   ~my_dijkstra_visitor() = default;
 
-  //void on_discover_vertex(const base_t::vertex_desc_type& vdesc) noexcept {
+  //void on_discover_vertex(const base_t::vertex_desc_type& vdesc) {
   //  auto&& [uid, u, km] = vdesc;
   //  cout << "[" << uid << "] discover " << vertex_value(graph(), u) << " " << km << "km" << endl;
   //}

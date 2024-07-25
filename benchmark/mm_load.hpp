@@ -90,7 +90,7 @@ void load_matrix_market(const bench_files&      bench_target,
       // Non-general symmetry means edges are generated in unordered ways and cause an assertion/exception.
       //assert(header.symmetry == fmm::symmetry_type::general);
 
-      read_time.set_count(size(triplet.rows), "rows");
+      read_time.set_count(ssize(triplet.rows), "rows");
     }
 
     // Read the sources
@@ -132,7 +132,7 @@ void load_matrix_market(const bench_files&      bench_target,
 
         return false;
       });
-      sort_time.set_count(size(perm), "permutations");
+      sort_time.set_count(ssize(perm), "permutations");
     }
 
     // Reorder edges
@@ -160,20 +160,21 @@ void load_matrix_market(const bench_files&      bench_target,
       swap(sorted_vals, triplet.vals);
       sorted_vals = std::vector<VT>();
 
-      permute_time.set_count(size(triplet.rows), "edges");
+      permute_time.set_count(ssize(triplet.rows), "edges");
     }
   }
 
   // Check for duplicates & self-loops (informational only)
   // Duplicate entries will only be detected if the matrix is sorted.
+  size_t self_loops = 0;
+  size_t duplicates = 0;
+  size_t negative   = 0;
   {
     timer check_time("Checking for duplicates and self-loops", true);
     auto  row_col_view = std::views::zip(triplet.rows, triplet.cols);
     using pair_t       = std::ranges::range_value_t<decltype(row_col_view)>;
     size_t data_row    = 1;
     pair_t last_entry  = {numeric_limits<IT>::max(), numeric_limits<IT>::max()}; // unlikely to be in the data
-    size_t self_loops  = 0;
-    size_t duplicates  = 0;
     for (auto&& row_col : std::views::zip(triplet.rows, triplet.cols)) {
       auto [row, col] = row_col;
       if (row == col) {
@@ -188,11 +189,18 @@ void load_matrix_market(const bench_files&      bench_target,
       last_entry = row_col;
       ++data_row;
     }
-    if (self_loops > 0)
-      fmt::println("Warning: {} self-loops detected", self_loops);
-    if (duplicates > 0)
-      fmt::println("Warning: {} duplicate entries detected", duplicates);
+    for (auto&& val : triplet.vals) {
+	  if (val < 0) {
+		++negative;
+	  }
+	}
   }
+  if (self_loops > 0)
+    fmt::println("Warning: {} self-loops detected", self_loops);
+  if (duplicates > 0)
+    fmt::println("Warning: {} duplicate entries detected", duplicates);
+  if (negative > 0)
+    fmt::println("Warning: {} negative entries detected", negative);
 }
 
 //template <adjacency_list G, integral IT, typename VT>
@@ -205,6 +213,7 @@ void load_matrix_market(const bench_files&      bench_target,
 //
 template <std_adjacency_graph G, integral IT, typename VT>
 void load_graph(const triplet_matrix<IT, VT>& triplet, G& g) {
+  size_t self_loops = 0;
 
   {
     timer load_time("Loading the std graph", true);
@@ -212,18 +221,23 @@ void load_graph(const triplet_matrix<IT, VT>& triplet, G& g) {
     g.clear();
     g.resize(triplet.nrows);
     for (size_t i = 0; i < triplet.rows.size(); ++i) {
-      g[triplet.rows[i]].emplace_back(triplet.cols[i], triplet.vals[i]);
+      if (triplet.rows[i] == triplet.cols[i])
+        ++self_loops;
+      else
+        g[triplet.rows[i]].emplace_back(triplet.cols[i], triplet.vals[i]);
     }
 
     load_time.set_count(size(triplet.rows), "edges");
   }
 
   fmt::println("The graph has {:L} vertices and {:L} edges", std::graph::num_vertices(g), std::graph::num_edges(g));
+  if (self_loops > 0)
+    fmt::println("Warning: {} self-loops skipped", self_loops);
 }
 
 template <typename EV, typename VV, typename GV, integral VId, integral EIndex = VId>
 void load_graph(const triplet_matrix<VId, EV>& triplet, compressed_graph<EV, VV, GV, VId, EIndex>& g) {
-  using G = compressed_graph<EV, VV, GV, VId, EIndex>;
+  //using G = compressed_graph<EV, VV, GV, VId, EIndex>;
   {
     timer load_time("Loading the compressed_graph", true);
 

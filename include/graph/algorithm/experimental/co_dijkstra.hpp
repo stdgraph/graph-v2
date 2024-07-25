@@ -101,16 +101,17 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
       Queue     queue   = Queue()) {
   using id_type         = vertex_id_t<G>;
   using DistanceValue   = ranges::range_value_t<Distances>;
+  using weight_type     = invoke_result_t<WF, edge_reference_t<G>>;
   using bfs_vertex_type = bfs_vertex_value_t<G>;
   using bfs_edge_type   = bfs_edge_value_t<G>;
   using bfs_value_type  = bfs_value_t<dijkstra_events, G>;
 
-  auto relax_target = [&g_, &predecessor, &distances, &weight, &compare, &combine] //
-        (edge_reference_t<G> e, vertex_id_t<G> uid) -> bool {
+  auto relax_target = [&g_, &predecessor, &distances, &compare, &combine] //
+        (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     vertex_id_t<G>      vid = target_id(g_, e);
     const DistanceValue d_u = distances[uid];
     const DistanceValue d_v = distances[vid];
-    const auto          w_e = weight(e);
+    //const auto          w_e = weight(e);
 
     // From BGL; This may no longer apply since the x87 is long gone:
     //
@@ -131,48 +132,57 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
-  id_type N(static_cast<id_type>(num_vertices(g_)));
+  const id_type N(static_cast<id_type>(num_vertices(g_)));
 
   if ((events & dijkstra_events::initialize_vertex) == dijkstra_events::initialize_vertex) {
-    for (id_type uid = 0; uid < static_cast<id_type>(num_vertices(g_)); ++uid) {
+    for (id_type uid = 0; uid < N; ++uid) {
       co_yield bfs_value_type{dijkstra_events::initialize_vertex, bfs_vertex_type{uid, *find_vertex(g_, uid)}};
     }
   }
 
-  //using q_compare = decltype([](const id_type& a, const id_type& b) { return a > b; });
-  //std::priority_queue<id_type, vector<id_type>, q_compare> Q;
-
+  // Seed the queue with the initial vertice(s)
   for (auto seed : seeds) {
-    assert(seed < N && seed >= 0);
+    if (seed >= N || seed < 0) {
+      throw graph_error("co_dijkstra: seed vertex out of range");
+    }
     queue.push(seed);
     distances[seed] = zero; // mark seed as discovered
     dijkstra_yield_vertex(dijkstra_events::discover_vertex, seed);
   }
 
+  // Main loop to process the queue
   while (!queue.empty()) {
     const id_type uid = queue.top();
     queue.pop();
     dijkstra_yield_vertex(dijkstra_events::examine_vertex, uid);
 
-    for (auto&& [vid, uv] : views::incidence(g_, uid)) {
+    for (auto&& [vid, uv, w] : views::incidence(g_, uid, weight)) {
       dijkstra_yield_edge(dijkstra_events::examine_edge, uid, vid, uv);
 
-      if (distances[vid] == infinite) {
-        // tree_edge
-        bool decreased = relax_target(uv, uid);
-        if (decreased) {
-          dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
-        } else {
-          dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
+      // Negative weights are not allowed for Dijkstra's algorithm
+      if constexpr (is_signed_v<weight_type>) {
+        if (w < zero) {
+          throw graph_error("co_dijkstra: negative edge weight");
         }
-        dijkstra_yield_vertex(dijkstra_events::discover_vertex, vid);
-        queue.push(vid);
+      }
+
+      const bool is_neighbor_undiscovered = (distances[vid] == infinite);
+      const bool was_edge_relaxed         = relax_target(uv, uid, w);
+
+      if (is_neighbor_undiscovered) {
+        // tree_edge
+        if (was_edge_relaxed) {
+          dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
+          dijkstra_yield_vertex(dijkstra_events::discover_vertex, vid);
+          queue.push(vid);
+        } else {
+          throw graph_error("co_dijkstra: unexpected state where an edge to a new vertex was not relaxed");
+        }
       } else {
         // non-tree edge
-        bool decreased = relax_target(uv, uid);
-        if (decreased) {
+        if (was_edge_relaxed) {
           dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
-          queue.push(vid);
+          queue.push(vid); // re-enqueue vid to re-evaluate its neighbors with a shorter path
         } else {
           dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
         }

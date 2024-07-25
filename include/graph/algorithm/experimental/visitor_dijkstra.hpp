@@ -54,15 +54,15 @@ public:
   // Visitor Functions
 public:
   // vertex visitor functions
-  constexpr void on_initialize_vertex(const vertex_desc_type& vdesc) noexcept {}
-  constexpr void on_discover_vertex(const vertex_desc_type& vdesc) noexcept {}
-  constexpr void on_examine_vertex(const vertex_desc_type& vdesc) noexcept {}
-  constexpr void on_finish_vertex(const vertex_desc_type& vdesc) noexcept {}
+  constexpr void on_initialize_vertex(const vertex_desc_type& vdesc) {}
+  constexpr void on_discover_vertex(const vertex_desc_type& vdesc) {}
+  constexpr void on_examine_vertex(const vertex_desc_type& vdesc) {}
+  constexpr void on_finish_vertex(const vertex_desc_type& vdesc) {}
 
   // edge visitor functions
-  constexpr void on_examine_edge(const sourced_edge_desc_type& edesc) noexcept {}
-  constexpr void on_edge_relaxed(const sourced_edge_desc_type& edesc) noexcept {}
-  constexpr void on_edge_not_relaxed(const sourced_edge_desc_type& edesc) noexcept {}
+  constexpr void on_examine_edge(const sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_relaxed(const sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_not_relaxed(const sourced_edge_desc_type& edesc) {}
 
   // Data Members
 private:
@@ -123,13 +123,14 @@ void dijkstra_with_visitor(
       Queue     queue   = Queue()) {
   using id_type       = vertex_id_t<G>;
   using DistanceValue = ranges::range_value_t<Distances>;
+  using weight_type   = invoke_result_t<WF, edge_reference_t<G>>;
 
   auto relax_target = [&g_, &predecessor, &distances, &weight, &compare, &combine] //
-        (edge_reference_t<G> e, vertex_id_t<G> uid) -> bool {
+        (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     vertex_id_t<G>      vid = target_id(g_, e);
     const DistanceValue d_u = distances[uid];
     const DistanceValue d_v = distances[vid];
-    const auto          w_e = weight(e);
+    //const auto          w_e = weight(e);
 
     // From BGL; This may no longer apply since the x87 is long gone:
     //
@@ -150,43 +151,56 @@ void dijkstra_with_visitor(
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
-  id_type N(static_cast<id_type>(num_vertices(g_)));
+  const id_type N(static_cast<id_type>(num_vertices(g_)));
 
-  for (id_type uid = 0; uid < static_cast<id_type>(num_vertices(g_)); ++uid) {
+  // (The optimizer removes this loop if on_initialize_vertex() is empty.)
+  for (id_type uid = 0; uid < N; ++uid) {
     visitor.on_initialize_vertex({uid, *find_vertex(g_, uid)});
   }
 
+  // Seed the queue with the initial vertice(s)
   for (auto&& seed : seeds) {
-    assert(seed < N && seed >= 0);
+    if (seed >= N || seed < 0) {
+      throw graph_error("dijkstra_with_visitor: seed vertex out of range");
+    }
     queue.push(seed);
     distances[seed] = zero; // mark seed as discovered
     visitor.on_discover_vertex({seed, *find_vertex(g_, seed)});
   }
 
+  // Main loop to process the queue
   while (!queue.empty()) {
     const id_type uid = queue.top();
     queue.pop();
     visitor.on_examine_vertex({uid, *find_vertex(g_, uid)});
 
-    for (auto&& [vid, uv] : views::incidence(g_, uid)) {
+    for (auto&& [vid, uv, w] : views::incidence(g_, uid, weight)) {
       visitor.on_examine_edge({uid, vid, uv});
 
-      if (distances[vid] == infinite) {
+      // Negative weights are not allowed for Dijkstra's algorithm
+      if constexpr (is_signed_v<weight_type>) {
+		if (w < zero) {
+		  throw graph_error("dijkstra_with_visitor: negative edge weight");
+		}
+	  }
+
+      const bool is_neighbor_undiscovered = (distances[vid] == infinite);
+      const bool was_edge_relaxed         = relax_target(uv, uid, w);
+
+      if (is_neighbor_undiscovered) {
         // tree_edge
-        bool decreased = relax_target(uv, uid);
-        if (decreased) {
+        if (was_edge_relaxed) {
           visitor.on_edge_relaxed({uid, vid, uv});
+          visitor.on_discover_vertex({vid, *find_vertex(g_, vid)});
+          queue.push(vid);
         } else {
-          visitor.on_edge_not_relaxed({uid, vid, uv});
+          throw graph_error("dijkstra_with_visitor: unexpected state where an edge to a new vertex was not relaxed");
         }
-        visitor.on_discover_vertex({vid, *find_vertex(g_, vid)});
-        queue.push(vid);
       } else {
         // non-tree edge
-        bool decreased = relax_target(uv, uid);
-        if (decreased) {
+        if (was_edge_relaxed) {
           visitor.on_edge_relaxed({uid, vid, uv});
-          queue.push(vid);
+          queue.push(vid); // re-enqueue vid to re-evaluate its neighbors with a shorter path
         } else {
           visitor.on_edge_not_relaxed({uid, vid, uv});
         }
@@ -197,7 +211,7 @@ void dijkstra_with_visitor(
     // and another path to this vertex has a lower accumulated weight, we'll process it again.
     // A consequence is that examine_vertex could be call subsequently on the same vertex.
     visitor.on_finish_vertex({uid, *find_vertex(g_, uid)});
-  }
+  } // while(!queue.empty())
 }
 
 template <index_adjacency_list G,
