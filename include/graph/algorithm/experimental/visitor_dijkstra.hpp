@@ -6,6 +6,7 @@
 
 #include <variant>
 #include <ranges>
+#include <fmt/format.h>
 
 namespace std::graph::experimental {
 
@@ -125,25 +126,17 @@ void dijkstra_with_visitor(
   using DistanceValue = ranges::range_value_t<Distances>;
   using weight_type   = invoke_result_t<WF, edge_reference_t<G>>;
 
-  auto relax_target = [&g_, &predecessor, &distances, &weight, &compare, &combine] //
+  auto relax_target = [&g_, &predecessor, &distances, &compare, &combine] //
         (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     vertex_id_t<G>      vid = target_id(g_, e);
     const DistanceValue d_u = distances[uid];
     const DistanceValue d_v = distances[vid];
     //const auto          w_e = weight(e);
 
-    // From BGL; This may no longer apply since the x87 is long gone:
-    //
-    // The seemingly redundant comparisons after the distance assignments are to
-    // ensure that extra floating-point precision in x87 registers does not
-    // lead to relax() returning true when the distance did not actually
-    // change.
     if (compare(combine(d_u, w_e), d_v)) {
-      distances[vid] = combine(d_u, w_e);
-      if (compare(distances[vid], d_v)) {
-        predecessor[vid] = uid;
-        return true;
-      }
+      distances[vid]   = combine(d_u, w_e);
+      predecessor[vid] = uid;
+      return true;
     }
     return false;
   };
@@ -169,9 +162,18 @@ void dijkstra_with_visitor(
   }
 
   // Main loop to process the queue
+#if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
+  size_t pop_cnt = 0, edge_cnt = 0;
+#endif
   while (!queue.empty()) {
     const id_type uid = queue.top();
     queue.pop();
+#if defined(ENABLE_POP_COUNT)
+    ++pop_cnt;
+#endif
+#if defined(ENABLE_EDGE_VISITED_COUNT)
+    edge_cnt += size(edges(g_, uid));
+#endif
     visitor.on_examine_vertex({uid, *find_vertex(g_, uid)});
 
     for (auto&& [vid, uv, w] : views::incidence(g_, uid, weight)) {
@@ -179,10 +181,10 @@ void dijkstra_with_visitor(
 
       // Negative weights are not allowed for Dijkstra's algorithm
       if constexpr (is_signed_v<weight_type>) {
-		if (w < zero) {
-		  throw graph_error("dijkstra_with_visitor: negative edge weight");
-		}
-	  }
+        if (w < zero) {
+          throw graph_error("dijkstra_with_visitor: negative edge weight");
+        }
+      }
 
       const bool is_neighbor_undiscovered = (distances[vid] == infinite);
       const bool was_edge_relaxed         = relax_target(uv, uid, w);
@@ -212,6 +214,10 @@ void dijkstra_with_visitor(
     // A consequence is that examine_vertex could be call subsequently on the same vertex.
     visitor.on_finish_vertex({uid, *find_vertex(g_, uid)});
   } // while(!queue.empty())
+
+#if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
+  fmt::print("dijkstra_with_visitor: pop_cnt = {:L}, edge_cnt = {:L}\n", pop_cnt, edge_cnt);
+#endif
 }
 
 template <index_adjacency_list G,

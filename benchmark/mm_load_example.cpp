@@ -27,12 +27,14 @@ void mm_load_file_example() {
   // Load a simple graph: vector<vector<tuple<int64_t, int64_t>>>
   {
     vector<vector<tuple<int64_t, int64_t>>> g;
-    load_graph(triplet, g);
+    graph_stats stats = load_graph(triplet, g);
+    fmt::println("Graph stats: {}", stats);
   }
 
   // Load a compressed_graph
   {
     compressed_graph<int64_t, void, void, int64_t, int64_t> g;
-    load_graph(triplet, g);
+    graph_stats                                             stats = load_graph(triplet, g);
+    fmt::println("Graph stats: {}", stats);
   }
 }

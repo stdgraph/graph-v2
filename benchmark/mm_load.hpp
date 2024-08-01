@@ -30,6 +30,7 @@ using std::ranges::random_access_range;
 using std::ranges::range_value_t;
 using std::graph::adjacency_list;
 using std::graph::container::compressed_graph;
+namespace fmm = fast_matrix_market;
 
 template <typename T>
 class is_edge_like : public std::false_type {};
@@ -48,6 +49,55 @@ concept std_adjacency_graph = adjacency_list<G> &&               //
                               forward_range<range_value_t<G>> && //
                               is_edge_like_v<range_value_t<range_value_t<G>>>;
 
+// fmt::formatter specialization for fast_matrix_market::object_type
+template <>
+struct fmt::formatter<fmm::object_type> : fmt::formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(fmm::object_type t, FormatContext& ctx) const {
+    return fmt::formatter<std::string_view>::format(fmm::object_map.at(t), ctx);
+  }
+};
+
+// fmt::formatter specialization for fast_matrix_market::symmetry_type
+template <>
+struct fmt::formatter<fmm::symmetry_type> : fmt::formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(fmm::symmetry_type t, FormatContext& ctx) const {
+    return fmt::formatter<std::string_view>::format(fmm::symmetry_map.at(t), ctx);
+  }
+};
+
+// fmt::formatter specialization for fast_matrix_market::field_type
+template <>
+struct fmt::formatter<fmm::field_type> : fmt::formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(fmm::field_type t, FormatContext& ctx) const {
+    return fmt::formatter<std::string_view>::format(fmm::field_map.at(t), ctx);
+  }
+};
+
+// fmt::formatter specialization for fast_matrix_market::format_type
+template <>
+struct fmt::formatter<fmm::format_type> : fmt::formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(fmm::format_type t, FormatContext& ctx) const {
+    return fmt::formatter<std::string_view>::format(fmm::format_map.at(t), ctx);
+  }
+};
+
+// fmt::formatter specialization for fast_matrix_market::matrix_market_header
+template <>
+struct fmt::formatter<fmm::matrix_market_header> : fmt::formatter<std::string> {
+  constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+
+  template <typename FormatContext>
+  auto format(const fmm::matrix_market_header& header, FormatContext& ctx) const {
+    return format_to(ctx.out(), "{} {} {} {} nrows={:L} ncols={:L} vector_length={:L} nnz={:L} header_lines={}",
+                     header.object, header.format, header.field, header.symmetry, header.nrows, header.ncols,
+                     header.vector_length, header.nnz, header.header_line_count);
+  }
+};
+
 template <integral IT, typename VT>
 void load_matrix_market(const bench_files&      bench_target,
                         triplet_matrix<IT, VT>& triplet,
@@ -57,13 +107,14 @@ void load_matrix_market(const bench_files&      bench_target,
   using std::filesystem::path;
   using std::numeric_limits;
 
-  fmt::println("Loading data from the '{}' dataset", bench_target.name);
+  fmt::println("Dataset: {}\n", bench_target.name);
 
   path target_mtx  = bench_target.mtx_path; // compressed_path requires a sorted mtx
   path sources_mtx = bench_target.sources_path;
 
   // Read triplet from Matrix Market. Use std::ifstream to read from a file.
   {
+    fmm::matrix_market_header header;
     {
       timer read_time("Reading matrix data", true);
 
@@ -77,8 +128,7 @@ void load_matrix_market(const bench_files&      bench_target,
       // You may also set header.field = fast_matrix_market::pattern to write a pattern file (only indices, no values).
       // Non-pattern field types (integer, real, complex) are deduced from the template type and cannot be overriden.
 
-      fmm::matrix_market_header header;
-      fmm::read_options         options;
+      fmm::read_options options;
       options.generalize_symmetry = true;
       options.parallel_ok         = false;
       //options.num_threads = 1;
@@ -88,26 +138,50 @@ void load_matrix_market(const bench_files&      bench_target,
 
       // compressed_graph requires edges are ordered by source_id.
       // Non-general symmetry means edges are generated in unordered ways and cause an assertion/exception.
-      //assert(header.symmetry == fmm::symmetry_type::general);
 
       read_time.set_count(ssize(triplet.rows), "rows");
     }
+    fmt::println("Matrix header: {}", header);
 
     // Read the sources
+    header = {};
     if (bench_target.sources_path.stem().empty()) {
       // If no sources file is provided, use the first vertex as the source
-      if (triplet.nrows > 0) {
-        sources.nrows = 1;
-        sources.ncols = 1;
-        sources.vals.push_back(0);
-      }
+      sources.nrows = static_cast<int64_t>(sources.vals.size());
+      sources.ncols = 1;
+      sources.vals.push_back(0);
+      header.object        = fmm::object_type::matrix;
+      header.format        = fmm::format_type::array;
+      header.field         = fmm::field_type::integer;
+      header.symmetry      = fmm::symmetry_type::general;
+      header.ncols         = sources.nrows;
+      header.ncols         = sources.ncols;
+      header.vector_length = sources.nrows;
+      header.nnz           = static_cast<int64_t>(sources.vals.size());
     } else {
       timer         read_time("Reading source data", true);
       std::ifstream ifs(bench_target.sources_path);
       assert(ifs.is_open());
-      fmm::read_matrix_market_array(ifs, sources.nrows, sources.ncols, sources.vals, fmm::row_major);
+      fmm::read_matrix_market_array(ifs, header, sources.vals, fmm::row_major);
+      assert(std::integral<IT>);
+      if (header.field == fmm::field_type::integer) {
+        // OK. No vertex id conversion needed.
+      } else if (header.field == fmm::field_type::real) {
+        // GAP_road has real vertex ids. Convert to integer.
+        //fmt::print("Converting sources to integer\n");
+        ifs.clear();
+        ifs.seekg(0, std::ios::beg);
+        array_matrix<double> dsources;
+        fmm::read_matrix_market_array(ifs, header, dsources.vals, fmm::row_major);
+        sources.vals.clear();
+        std::transform(dsources.vals.begin(), dsources.vals.end(), std::back_inserter(sources.vals),
+                       [](auto val) { return static_cast<IT>(val); });
+      } else {
+        fmt::print("Warning: sources field type is not integer or real: {}\n", header.field);
+      }
       read_time.set_count(sources.nrows, "sources");
     }
+    fmt::println("Sources header: {}", header);
   }
 
   // Sort the triplet & sources, if needed
@@ -172,9 +246,10 @@ void load_matrix_market(const bench_files&      bench_target,
   {
     timer check_time("Checking for duplicates and self-loops", true);
     auto  row_col_view = std::views::zip(triplet.rows, triplet.cols);
-    using pair_t       = std::ranges::range_value_t<decltype(row_col_view)>;
+    using pair_t       = std::pair<IT&, IT&>; //std::ranges::range_value_t<decltype(row_col_view)>;
+    IT     bignum      = numeric_limits<IT>::max();
     size_t data_row    = 1;
-    pair_t last_entry  = {numeric_limits<IT>::max(), numeric_limits<IT>::max()}; // unlikely to be in the data
+    pair_t last_entry  = {bignum, bignum}; // unlikely to be in the data
     for (auto&& row_col : std::views::zip(triplet.rows, triplet.cols)) {
       auto [row, col] = row_col;
       if (row == col) {
@@ -190,10 +265,10 @@ void load_matrix_market(const bench_files&      bench_target,
       ++data_row;
     }
     for (auto&& val : triplet.vals) {
-	  if (val < 0) {
-		++negative;
-	  }
-	}
+      if (val < 0) {
+        ++negative;
+      }
+    }
   }
   if (self_loops > 0)
     fmt::println("Warning: {} self-loops detected", self_loops);
@@ -203,8 +278,40 @@ void load_matrix_market(const bench_files&      bench_target,
     fmt::println("Warning: {} negative entries detected", negative);
 }
 
-//template <adjacency_list G, integral IT, typename VT>
-//void load_graph(const triplet_matrix<IT, VT>& triplet, G& g);
+
+struct graph_stats {
+  size_t vertex_count       = 0;
+  size_t edge_count         = 0;
+  size_t min_degree         = std::numeric_limits<size_t>::max();
+  size_t max_degree         = 0;
+  size_t self_loops_removed = 0;
+
+  template <std::graph::adjacency_list G>
+  graph_stats(const G& g, size_t self_loops = 0)
+        : vertex_count(std::graph::num_vertices(g))
+        , edge_count(std::graph::num_edges(g))
+        , self_loops_removed(self_loops) {
+    for (auto&& u : std::graph::vertices(g)) {
+      min_degree = std::min(min_degree, size(std::graph::edges(g, u)));
+      max_degree = std::max(max_degree, size(std::graph::edges(g, u)));
+    }
+  }
+};
+
+template <>
+struct fmt::formatter<graph_stats> {
+  // Parse format specifications
+  constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+
+  // Format the graph_stats object
+  template <typename FormatContext>
+  auto format(const graph_stats& stats, FormatContext& ctx) const {
+    return fmt::format_to(
+          ctx.out(), "num_vertices={:L}, num_edges={:L}, min_degree={:L}, max_degree={:L}, self_loops_removed={:L}",
+          stats.vertex_count, stats.edge_count, stats.min_degree, stats.max_degree, stats.self_loops_removed);
+  }
+};
+
 
 // This should work for any graph defined with std-based containers that matches the following patterns:
 //  1. std::vector<std::vector<std::tuple<IT, VT, ...>>>
@@ -212,31 +319,32 @@ void load_matrix_market(const bench_files&      bench_target,
 // The inner range must support emplace_back (it can be extended to support insert or push_front also, if needed).
 //
 template <std_adjacency_graph G, integral IT, typename VT>
-void load_graph(const triplet_matrix<IT, VT>& triplet, G& g) {
+[[nodiscard]] graph_stats load_graph(const triplet_matrix<IT, VT>& triplet, G& g) {
   size_t self_loops = 0;
 
   {
     timer load_time("Loading the std graph", true);
+    using edge_type = range_value_t<range_value_t<G>>;
 
     g.clear();
-    g.resize(triplet.nrows);
+    g.resize(static_cast<size_t>(triplet.nrows));
     for (size_t i = 0; i < triplet.rows.size(); ++i) {
       if (triplet.rows[i] == triplet.cols[i])
         ++self_loops;
       else
-        g[triplet.rows[i]].emplace_back(triplet.cols[i], triplet.vals[i]);
+        g[static_cast<size_t>(triplet.rows[i])].emplace_back(
+              edge_type{static_cast<int64_t>(triplet.cols[i]), static_cast<int64_t>(triplet.vals[i])});
     }
 
-    load_time.set_count(size(triplet.rows), "edges");
+    load_time.set_count(ssize(triplet.rows), "edges");
   }
 
-  fmt::println("The graph has {:L} vertices and {:L} edges", std::graph::num_vertices(g), std::graph::num_edges(g));
-  if (self_loops > 0)
-    fmt::println("Warning: {} self-loops skipped", self_loops);
+  return graph_stats(g, self_loops);
 }
 
 template <typename EV, typename VV, typename GV, integral VId, integral EIndex = VId>
-void load_graph(const triplet_matrix<VId, EV>& triplet, compressed_graph<EV, VV, GV, VId, EIndex>& g) {
+[[nodiscard]] graph_stats load_graph(const triplet_matrix<VId, EV>&             triplet,
+                                     compressed_graph<EV, VV, GV, VId, EIndex>& g) {
   //using G = compressed_graph<EV, VV, GV, VId, EIndex>;
   {
     timer load_time("Loading the compressed_graph", true);
@@ -253,5 +361,5 @@ void load_graph(const triplet_matrix<VId, EV>& triplet, compressed_graph<EV, VV,
     load_time.set_count(size(triplet.rows), "edges");
   }
 
-  fmt::println("The graph has {:L} vertices and {:L} edges", std::graph::num_vertices(g), std::graph::num_edges(g));
+  return graph_stats(g, 0);
 }

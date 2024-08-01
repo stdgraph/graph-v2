@@ -113,18 +113,10 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
     const DistanceValue d_v = distances[vid];
     //const auto          w_e = weight(e);
 
-    // From BGL; This may no longer apply since the x87 is long gone:
-    //
-    // The seemingly redundant comparisons after the distance assignments are to
-    // ensure that extra floating-point precision in x87 registers does not
-    // lead to relax() returning true when the distance did not actually
-    // change.
     if (compare(combine(d_u, w_e), d_v)) {
-      distances[vid] = combine(d_u, w_e);
-      if (compare(distances[vid], d_v)) {
-        predecessor[vid] = uid;
-        return true;
-      }
+      distances[vid]   = combine(d_u, w_e);
+      predecessor[vid] = uid;
+      return true;
     }
     return false;
   };
@@ -151,9 +143,18 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
   }
 
   // Main loop to process the queue
+#  if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
+  size_t pop_cnt = 0, edge_cnt = 0;
+#  endif
   while (!queue.empty()) {
     const id_type uid = queue.top();
     queue.pop();
+#  if defined(ENABLE_POP_COUNT)
+    ++pop_cnt;
+#  endif
+#  if defined(ENABLE_EDGE_VISITED_COUNT)
+    edge_cnt += size(edges(g_, uid));
+#  endif
     dijkstra_yield_vertex(dijkstra_events::examine_vertex, uid);
 
     for (auto&& [vid, uv, w] : views::incidence(g_, uid, weight)) {
@@ -194,6 +195,10 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
     // A consequence is that examine_vertex could be call subsequently on the same vertex.
     dijkstra_yield_vertex(dijkstra_events::finish_vertex, uid);
   }
+
+#  if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
+  fmt::print("dijkstra_with_visitor: pop_cnt = {:L}, edge_cnt = {:L}\n", pop_cnt, edge_cnt);
+#  endif
 }
 
 
