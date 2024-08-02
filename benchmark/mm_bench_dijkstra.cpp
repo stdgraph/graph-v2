@@ -139,6 +139,10 @@ void bench_dijkstra_runner() {
     std::string                           name;
     std::function<void(const SourceIds&)> run;
     std::vector<double>                   elapsed; // seconds for each source
+
+    double average_elapsed() const {
+	  return std::accumulate(begin(elapsed), end(elapsed), 0.0) / size(elapsed);
+	}
   };
   std::vector<dijkstra_algo> algos;
 
@@ -187,26 +191,26 @@ void bench_dijkstra_runner() {
           }
         }});
 
-  //algos.emplace_back(dijkstra_algo{"nwgraph_dijkstra", [&g, &sources, &distance_fnc, &distances, &predecessors,
+  //algos.emplace_back(dijkstra_algo{"nwgraph_dijkstra", [&g, &distance_fnc, &distances, &predecessors,
   //                                                      &results](const SourceIds& sources) {
   //                                   auto returned_distances =
-  //                                         nwgraph_dijkstra(g, static_cast<vertex_id_t<G>>(sources[0]), distance_fnc);
+  //                                         nwgraph_dijkstra(g, sources, distance_fnc);
   //                                 }});
 
-  size_t name_max = 0;
+  size_t name_width = 0;
   for (auto& algo : algos)
-    name_max = std::max(name_max, size(algo.name));
+    name_width = std::max(name_width, size(algo.name));
 
-  // Run the algorithm
+  // Run the algorithm on all sources
   try {
-    fmt::println("Benchmarking Dijkstra's Algorithm Using Visitors and Co-routines");
-    fmt::println("Running tests on {} sources individually", size(sources.vals));
-    fmt::println("{} tests are run for each source and the minimum is taken", test_trials);
-    fmt::println("Events included: {}", events);
     fmt::println("================================================================");
+    fmt::println("Benchmarking Dijkstra's Algorithm Using Visitors and Co-routines");
+    fmt::println("Running tests on all {} sources using {} algorithms", size(sources.vals), size(algos));
+    fmt::println("{} tests are run and the minimum is taken", test_trials);
+    fmt::println("Events included: {}", events);
     fmt::println("Benchmark starting at {}\n", current_timestamp());
 
-    fmt::print("{:{}}  {:^11}  {:5}", "Algorithm", name_max, "Source", "Elapsed (s)");
+    fmt::print("{:3}  {:{}}  {:5}", "Obs", "Algorithm", name_width, "Elapsed (s)");
 #if ENABLE_DISCOVER_VERTEX
     fmt::print("  Vertices Discovered");
 #endif
@@ -218,12 +222,63 @@ void bench_dijkstra_runner() {
 #endif
     cout << endl;
 
+    size_t observation = 0;
+    for (dijkstra_algo& algo : algos) {
+
+      double min_elapsed = std::numeric_limits<double>::max(); // seconds
+
+      for (size_t t = 0; t < test_trials; ++t) {
+        results = {};
+        init_shortest_paths(distances, predecessors);
+        simple_timer run_time;
+        algo.run(sources.vals);
+        min_elapsed = std::min(min_elapsed, run_time.elapsed());
+      }
+      algo.elapsed.push_back(min_elapsed);
+      print("{:3}  {:<{}}  {:>11.3f}", ++observation, algo.name, name_width, min_elapsed);
+#if ENABLE_DISCOVER_VERTEX
+      print("  {:>19L}", results.vertices_discovered);
+#endif
+#if ENABLE_EXAMINE_VERTEX
+      print("  {:>17L}", results.vertices_examined);
+#endif
+#if ENABLE_EDGE_RELAXED
+      print("  {:>13L}", results.edges_relaxed);
+#endif
+      cout << endl;
+    }
+  } catch (const std::exception& e) {
+    fmt::print("Exception caught: {}\n", e.what());
+  }
+  cout << endl << endl;
+
+  // Run the algorithm for each source
+  try {
+    fmt::println("================================================================");
+    fmt::println("Benchmarking Dijkstra's Algorithm Using Visitors and Co-routines");
+    fmt::println("Running tests on {} sources individually using {} algorithms", size(sources.vals), size(algos));
+    fmt::println("{} tests are run for each source and the minimum is taken", test_trials);
+    fmt::println("Events included: {}", events);
+    fmt::println("Benchmark starting at {}\n", current_timestamp());
+
+    fmt::print("{:3}  {:{}}  {:^11}  {:5}", "Obs", "Algorithm", name_width, "Source", "Elapsed (s)");
+#if ENABLE_DISCOVER_VERTEX
+    fmt::print("  Vertices Discovered");
+#endif
+#if ENABLE_EXAMINE_VERTEX
+    fmt::print("  Vertices Examined");
+#endif
+#if ENABLE_EDGE_RELAXED
+    fmt::print("  Edges Relaxed");
+#endif
+    cout << endl;
+
+    size_t observation = 0;
     for (dijkstra_algo& algo : algos) {
 
       for (size_t s = 0; s < sources.vals.size(); ++s) {
         const SourceIds one_source  = {sources.vals[s]};
         double          min_elapsed = std::numeric_limits<double>::max(); // seconds
-        //fmt::println("Source vertex: {}", source);
 
         for (size_t t = 0; t < test_trials; ++t) {
           results = {};
@@ -233,7 +288,7 @@ void bench_dijkstra_runner() {
           min_elapsed = std::min(min_elapsed, run_time.elapsed());
         }
         algo.elapsed.push_back(min_elapsed);
-        print("{:<{}}  {:>11L}  {:>11.3f}", algo.name, name_max, one_source[0], min_elapsed);
+        print("{:3}  {:<{}}  {:>11L}  {:>11.3f}", ++observation, algo.name, name_width, one_source[0], min_elapsed);
 #if ENABLE_DISCOVER_VERTEX
         print("  {:>19L}", results.vertices_discovered);
 #endif

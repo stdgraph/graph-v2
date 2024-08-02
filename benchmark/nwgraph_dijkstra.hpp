@@ -2,9 +2,9 @@
 
 
 // from nwgraph with minor refactoring to use graph-v2
-template <adjacency_list Graph, class Weight>
+template <adjacency_list Graph, class Weight, class Sources>
 static auto nwgraph_dijkstra(
-      Graph&& graph, std::graph::vertex_id_t<Graph> source, Weight weight = [](auto& e) -> auto& {
+      Graph&& graph, const Sources& sources, Weight weight = [](auto& e) -> auto& {
         return std::get<1>(e);
       }) {
   using namespace std::graph;
@@ -21,8 +21,10 @@ static auto nwgraph_dijkstra(
   using queue_t  = std::priority_queue<vertex_id_type, std::vector<vertex_id_type>, decltype(compare)>;
   queue_t mq(compare);
 
-  mq.push(source);
-  dist[source] = 0;
+  for (auto&& source : sources) {
+	mq.push(source);
+	dist[source] = 0;
+  }
 
 #if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
   size_t pop_cnt = 0, edge_cnt = 0;
