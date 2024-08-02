@@ -1,5 +1,5 @@
-#define ENABLE_POP_COUNT 1
-#define ENABLE_EDGE_VISITED_COUNT 1
+//#define ENABLE_POP_COUNT 1
+//#define ENABLE_EDGE_VISITED_COUNT 1
 
 #include <fmt/format.h> // for outputting everything else
 #include <format>       // for outputting current timestamp
@@ -158,7 +158,7 @@ auto bench_nwgraph_dijkstra(G& g, const array_matrix<int64_t>& sources, Distance
   std::string desc   = fmt::format("Running {} using {} source(s)", "nwgraph_dijkstra", sources.nrows);
   using Distance     = int64_t;
   using Distances    = std::vector<Distance>;
-  using Predecessors = std::vector<vertex_id_t<G>>;
+  //using Predecessors = std::vector<vertex_id_t<G>>;
 
   //auto distance_fnc = [&g](std::tuple<int64_t, int64_t>& uv) { return std::get<1>(uv); };
 
@@ -212,7 +212,6 @@ void bench_dijkstra_main() {
 
   bool const requires_sort = !std_adjacency_graph<G>;
   load_matrix_market(bench_source, triplet, sources, requires_sort); // gap_road, g2bench_bips98_606, g2bench_chesapeake
-  //fmt::print("\n");
   cout << endl;
 
   G           g;
@@ -226,10 +225,9 @@ void bench_dijkstra_main() {
   sources.vals.erase(sources.vals.begin() + 1, sources.vals.end());
 
   fmt::println("{:L} source(s) will be used", sources.nrows);
-  //fmt::println("");
   cout << endl;
 
-#if 0
+#if 1
   auto distance_fnc = [&g](edge_reference_t<G> uv) -> int64_t { return std::get<1>(edge_value(g, uv)); };
   println("Edge weight function = edge_value(g, uv)");
 #else

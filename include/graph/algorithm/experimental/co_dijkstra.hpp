@@ -82,8 +82,7 @@ template <index_adjacency_list        G,
           ranges::random_access_range Predecessors,
           class Compare    = less<ranges::range_value_t<Distances>>,
           class Combine    = plus<ranges::range_value_t<Distances>>,
-          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
-          _queueable Queue = priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, greater<vertex_id_t<G>>>>
+          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>>
 requires convertible_to<ranges::range_value_t<Seeds>, vertex_id_t<G>> &&        //
          is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
@@ -97,8 +96,7 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
       WF&                   weight =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>(),
-      Queue     queue   = Queue()) {
+      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
   using id_type         = vertex_id_t<G>;
   using DistanceValue   = ranges::range_value_t<Distances>;
   using weight_type     = invoke_result_t<WF, edge_reference_t<G>>;
@@ -125,6 +123,10 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
   const id_type N(static_cast<id_type>(num_vertices(g_)));
+
+  auto qcompare = [&distances](id_type a, id_type b) { return distances[a] > distances[b]; };
+  using Queue   = std::priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, decltype(qcompare)>;
+  Queue queue(qcompare);
 
   if ((events & dijkstra_events::initialize_vertex) == dijkstra_events::initialize_vertex) {
     for (id_type uid = 0; uid < N; ++uid) {

@@ -13,10 +13,14 @@ static auto nwgraph_dijkstra(
   using distance_t = int64_t;
   std::vector<distance_t> dist(num_vertices(graph), std::numeric_limits<distance_t>::max() / 4);
 
-  using queue_t = std::priority_queue<vertex_id_type, std::vector<vertex_id_type>, std::greater<vertex_id_type>>;
-  queue_t mq;
+  //using queue_t = std::priority_queue<vertex_id_type, std::vector<vertex_id_type>, std::greater<vertex_id_type>>;
+  //queue_t mq;
   //auto mq = nw::graph::make_priority_queue<vertex_id_type>(
   //      [&dist](const vertex_id_type& a, vertex_id_type& b) { return dist[a] > dist[b]; });
+  auto compare = [&dist](vertex_id_type& a, vertex_id_type& b) { return dist[a] > dist[b]; };
+  using queue_t  = std::priority_queue<vertex_id_type, std::vector<vertex_id_type>, decltype(compare)>;
+  queue_t mq(compare);
+
   mq.push(source);
   dist[source] = 0;
 

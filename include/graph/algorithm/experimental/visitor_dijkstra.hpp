@@ -99,10 +99,9 @@ template <index_adjacency_list G,
           ranges::input_range         Seeds,
           ranges::random_access_range Distances,
           ranges::random_access_range Predecessors,
-          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
-          class Compare    = less<ranges::range_value_t<Distances>>,
-          class Combine    = plus<ranges::range_value_t<Distances>>,
-          _queueable Queue = priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, greater<vertex_id_t<G>>>>
+          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
+          class Compare = less<ranges::range_value_t<Distances>>,
+          class Combine = plus<ranges::range_value_t<Distances>>>
 requires convertible_to<ranges::range_value_t<Seeds>, vertex_id_t<G>> && //
          is_arithmetic_v<ranges::range_value_t<Distances>> &&            //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
@@ -120,8 +119,7 @@ void dijkstra_with_visitor(
       WF&           weight =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>(),
-      Queue     queue   = Queue()) {
+      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
   using id_type       = vertex_id_t<G>;
   using DistanceValue = ranges::range_value_t<Distances>;
   using weight_type   = invoke_result_t<WF, edge_reference_t<G>>;
@@ -129,13 +127,13 @@ void dijkstra_with_visitor(
   auto relax_target = [&g_, &predecessor, &distances, &compare, &combine] //
         (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     vertex_id_t<G>      vid = target_id(g_, e);
-    const DistanceValue d_u = distances[uid];
-    const DistanceValue d_v = distances[vid];
+    const DistanceValue d_u = distances[static_cast<size_t>(uid)];
+    const DistanceValue d_v = distances[static_cast<size_t>(vid)];
     //const auto          w_e = weight(e);
 
     if (compare(combine(d_u, w_e), d_v)) {
-      distances[vid]   = combine(d_u, w_e);
-      predecessor[vid] = uid;
+      distances[static_cast<size_t>(vid)]   = combine(d_u, w_e);
+      predecessor[static_cast<size_t>(vid)] = uid;
       return true;
     }
     return false;
@@ -145,6 +143,10 @@ void dijkstra_with_visitor(
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
   const id_type N(static_cast<id_type>(num_vertices(g_)));
+
+  auto qcompare = [&distances](id_type a, id_type b) { return distances[a] > distances[b]; };
+  using Queue   = std::priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, decltype(qcompare)>;
+  Queue queue(qcompare);
 
   // (The optimizer removes this loop if on_initialize_vertex() is empty.)
   for (id_type uid = 0; uid < N; ++uid) {
