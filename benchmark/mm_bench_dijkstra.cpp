@@ -29,8 +29,8 @@ using namespace std::graph;
 using namespace std::graph::experimental;
 
 //#define ENABLE_DISCOVER_VERTEX 1
-#define ENABLE_EXAMINE_VERTEX 1
-#define ENABLE_EDGE_RELAXED 1
+//#define ENABLE_EXAMINE_VERTEX 1
+//#define ENABLE_EDGE_RELAXED 1
 
 constexpr const size_t test_trials = 3;
 
@@ -140,13 +140,17 @@ void bench_dijkstra_runner() {
     std::function<void(const SourceIds&)> run;
     std::vector<double>                   elapsed; // seconds for each source
 
-    double average_elapsed() const {
-	  return std::accumulate(begin(elapsed), end(elapsed), 0.0) / size(elapsed);
-	}
+    double total_elapsed() const { return std::accumulate(begin(elapsed), end(elapsed), 0.0); }
+    double average_elapsed() const { return total_elapsed() / size(elapsed); }
   };
   std::vector<dijkstra_algo> algos;
 
   // Add the algorithms
+  algos.emplace_back(dijkstra_algo{"nwgraph_dijkstra",
+                                   [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
+                                     auto returned_distances = nwgraph_dijkstra(g, sources, distance_fnc);
+                                   }});
+
   algos.emplace_back(dijkstra_algo{"visitor_dijkstra",
                                    [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
                                      discover_vertex_visitor<G, Distances> visitor(g, results);
@@ -190,12 +194,6 @@ void bench_dijkstra_runner() {
             }
           }
         }});
-
-  //algos.emplace_back(dijkstra_algo{"nwgraph_dijkstra", [&g, &distance_fnc, &distances, &predecessors,
-  //                                                      &results](const SourceIds& sources) {
-  //                                   auto returned_distances =
-  //                                         nwgraph_dijkstra(g, sources, distance_fnc);
-  //                                 }});
 
   size_t name_width = 0;
   for (auto& algo : algos)
