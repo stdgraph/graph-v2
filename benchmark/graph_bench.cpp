@@ -9,6 +9,7 @@ void mm_simple1();
 void mm_load_example();
 void mm_load_file_example();
 void bench_dijkstra_main();
+void bench_dijkstra_runner();
 
 int main() {
 #ifdef _MSC_VER
@@ -19,7 +20,8 @@ int main() {
   //mm_simple1();
   //mm_load_example();
   //mm_load_file_example();
-  bench_dijkstra_main();
+  //bench_dijkstra_main();
+  bench_dijkstra_runner();
 
   return 0;
 }

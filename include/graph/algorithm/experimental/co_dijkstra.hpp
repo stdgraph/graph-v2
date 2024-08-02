@@ -27,7 +27,7 @@ namespace std::graph::experimental {
       }
 
 #  define dijkstra_yield_edge(event, uid, vid, uv)                                                                     \
-    if ((event & events) != event)                                                                                     \
+    if ((event & events) == event)                                                                                     \
       co_yield bfs_value_type {                                                                                        \
         event, bfs_edge_type { uid, vid, uv }                                                                          \
       }
