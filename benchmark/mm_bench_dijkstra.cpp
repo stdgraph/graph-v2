@@ -14,6 +14,7 @@
 
 namespace fmm = fast_matrix_market;
 using std::string_view;
+using std::string;
 using std::vector;
 using std::tuple;
 
@@ -46,11 +47,12 @@ std::string current_timestamp() {
 }
 
 template <typename Distance>
-void output_vertices_visited(std::vector<Distance>& distances) {
-  size_t visited = std::accumulate(distances.begin(), distances.end(), 0, [](size_t count, auto& dist) {
+size_t vertices_visited(const std::vector<Distance>& distances) {
+  size_t visited = std::accumulate(distances.begin(), distances.end(), 0ULL, [](size_t count, Distance dist) {
     return dist != shortest_path_invalid_distance<Distance>() ? count + 1 : count;
   });
-  fmt::println("{:L} vertices were actually visited", visited);
+  //fmt::println("{:L} vertices were actually visited", visited);
+  return visited;
 }
 
 
@@ -82,17 +84,118 @@ private:
   bench_results& results_;
 };
 
+using vertex_id_type = int64_t;
+using SourceIds      = vector<vertex_id_type>;
+
+struct dijkstra_algo {
+  std::string                           name;
+  std::function<void(const SourceIds&)> run;
+  std::vector<double>                   elapsed;           // seconds for each source
+  double                                all_elapsed = 0.0; // seconds for all sources
+
+  double total_elapsed() const { return std::accumulate(begin(elapsed), end(elapsed), 0.0); }
+  double average_elapsed() const { return total_elapsed() / size(elapsed); }
+};
+std::vector<dijkstra_algo> algos;
+
+
+class output_algo_results {
+
+public:
+  output_algo_results(std::vector<dijkstra_algo>& algos) : algos_(algos) {}
+
+  void output_all_summary() {
+    auto totalSecFnc = [](const dijkstra_algo& algo) { return algo.all_elapsed; };
+    auto avgSecFnc   = [](const dijkstra_algo& algo) { return algo.all_elapsed; };
+    do_output(totalSecFnc, avgSecFnc);
+  }
+  void output_detail_summary() {
+    auto totalSecFnc = [](const dijkstra_algo& algo) { return algo.total_elapsed(); };
+    auto avgSecFnc   = [](const dijkstra_algo& algo) { return algo.average_elapsed(); };
+    do_output(totalSecFnc, avgSecFnc);
+  }
+
+private:
+  template <typename TotalSecFnc, typename AvgSecFnc>
+  void do_output(const TotalSecFnc totalSecFnc, const AvgSecFnc& avgSecFnc) {
+    const size_t         row_cnt    = 5;
+    vector<string>       row_labels = {"Dijkstra:", "Total (sec)", "Average (sec)", "% of Previous", "% of Fastest"};
+    const size_t         col_cnt    = size(algos_) + 1;
+    const vector<string> col_header_formats = {"{:<{}}", "{:>11}", "{:>11}", "{:>11}", "{:>11}"};
+    const string         sec_fmt            = "{:>11.3f} "; // space for '%' gutter
+    const string         pct_fmt            = "{:>11.2f}%";
+    vector<size_t>       col_widths(col_cnt);
+    vector<string>       col_labels;
+
+    vector<vector<string>> outtbl(row_cnt);
+    for (auto& row : outtbl)
+      row.resize(size(algos_) + 1);
+
+    // Evaluate length for column 0 width (row labels)
+    for (auto& label : row_labels)
+      col_widths[0] = std::max(col_widths[0], size(label));
+
+    // Evalulate for remaining columns (uniform width)
+    const size_t digits     = 8;
+    const size_t dec_digits = 3;
+    size_t       col_width  = digits + ((digits - 1) / 3) + 1 + dec_digits; // digits + digits per group + 1 for '.'
+    for (size_t c = 1; c < col_cnt; ++c)
+      col_width = std::max(col_width, size(algos_[c - 1].name));
+    for (size_t c = 1; c < col_cnt; ++c)
+      col_widths[c] = col_width;
+
+    double fastest_sec = std::numeric_limits<double>::max();
+    for (auto& algo : algos)
+      fastest_sec = std::min(fastest_sec, totalSecFnc(algo));
+
+    auto fmt_col_hdr = [&col_width](const string& lbl) { return fmt::format("{:^{}}", lbl, col_width); };
+
+    auto fmt_col_num = [&col_width, &dec_digits](double num) {
+      string nstr = fmt::format("{:.{}Lf}", num, dec_digits);
+      return fmt::format("{:>{}} ", nstr, col_width);
+    };
+    auto fmt_col_pct = [&col_width, &dec_digits](double num) {
+      string nstr = fmt::format("{:.{}Lf}", num, dec_digits);
+      return fmt::format("{:>{}}%", nstr, col_width);
+    };
+
+    // Fill in the row labels
+    for (size_t r = 0; r < row_cnt; ++r)
+      outtbl[r][0] = fmt::format("{:<{}}", row_labels[r], col_widths[0]);
+
+    // Fill in the column values
+    string nstr;
+    for (size_t a = 0, c = 1; a < size(algos); ++a, ++c) {
+      outtbl[0][c] = fmt_col_hdr(algos[a].name);
+
+      size_t prev  = (a == 0) ? a : a - 1;
+      outtbl[1][c] = fmt_col_num(totalSecFnc(algos[a]));                                          // total
+      outtbl[2][c] = fmt_col_num(avgSecFnc(algos[a]));                                            // avg
+      outtbl[3][c] = fmt_col_pct((totalSecFnc(algos[a]) / totalSecFnc(algos[prev]) - 1) * 100.0); // % of previous
+      outtbl[4][c] = fmt_col_pct((totalSecFnc(algos[a]) / fastest_sec - 1) * 100.0);              // % of fastest
+    }
+
+    for (auto& row : outtbl) {
+      for (auto& col : row) {
+        fmt::print("{:<{}}  ", col, col_width);
+      }
+      print("\n");
+    }
+    cout << endl;
+  }
+
+  vector<dijkstra_algo>& algos_;
+  bool                   include_average_ = false;
+};
 
 //-------------------------------------------------------------------------------------------------
 // bench_dijkstra_runner
 //
 void bench_dijkstra_runner() {
-  using vertex_id_type = int64_t;
-  using Distance       = int64_t;
-  using G              = vector<vector<tuple<vertex_id_type, Distance>>>;
-  using Distances      = std::vector<Distance>;
-  using Predecessors   = std::vector<vertex_id_type>;
-  using SourceIds      = vector<vertex_id_type>;
+  using Distance     = int64_t;
+  using G            = vector<vector<tuple<vertex_id_type, Distance>>>;
+  using Distances    = std::vector<Distance>;
+  using Predecessors = std::vector<vertex_id_type>;
 
   bench_files bench_source = gap_road; // gap_road, g2bench_bips98_606, g2bench_chesapeake
   triplet_matrix<vertex_id_type, vertex_id_type> triplet;
@@ -100,7 +203,8 @@ void bench_dijkstra_runner() {
 
   // Read the Matrix Market file
   bool const requires_sort = !std_adjacency_graph<G>;
-  load_matrix_market(bench_source, triplet, sources, requires_sort); // gap_road, g2bench_bips98_606, g2bench_chesapeake
+  load_matrix_market(bench_source, triplet, sources,
+                     requires_sort); // gap_road, g2bench_bips98_606, g2bench_chesapeake
   cout << endl;
 
   // Load the graph
@@ -135,69 +239,63 @@ void bench_dijkstra_runner() {
   if (events.empty())
     events = "(none)";
 
-  struct dijkstra_algo {
-    std::string                           name;
-    std::function<void(const SourceIds&)> run;
-    std::vector<double>                   elapsed; // seconds for each source
-
-    double total_elapsed() const { return std::accumulate(begin(elapsed), end(elapsed), 0.0); }
-    double average_elapsed() const { return total_elapsed() / size(elapsed); }
-  };
-  std::vector<dijkstra_algo> algos;
-
   // Add the algorithms
-  algos.emplace_back(dijkstra_algo{"nwgraph_dijkstra",
-                                   [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
-                                     auto returned_distances = nwgraph_dijkstra(g, sources, distance_fnc);
-                                   }});
+  algos.emplace_back(
+        dijkstra_algo{"nwgraph", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
+                        auto returned_distances = nwgraph_dijkstra(g, sources, distance_fnc);
+                        assert(size(returned_distances) == size(distances));
+                        std::copy(begin(returned_distances), end(returned_distances), begin(distances));
+                        for (auto i = 0; i < size(distances); ++i)
+                          distances[i] = static_cast<Distance>(returned_distances[i]);
+                      }});
 
-  algos.emplace_back(dijkstra_algo{"visitor_dijkstra",
-                                   [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
-                                     discover_vertex_visitor<G, Distances> visitor(g, results);
-                                     dijkstra_with_visitor(g, visitor, sources, predecessors, distances, distance_fnc);
-                                   }});
+  algos.emplace_back(
+        dijkstra_algo{"visitor", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
+                        discover_vertex_visitor<G, Distances> visitor(g, results);
+                        dijkstra_with_visitor(g, visitor, sources, predecessors, distances, distance_fnc);
+                      }});
 
-  algos.emplace_back(dijkstra_algo{
-        "co_dijkstra", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
-          dijkstra_events events = dijkstra_events::none;
+  algos.emplace_back(
+        dijkstra_algo{"coroutine", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
+                        dijkstra_events events = dijkstra_events::none;
 #if ENABLE_DISCOVER_VERTEX
-          events |= dijkstra_events::discover_vertex;
+                        events |= dijkstra_events::discover_vertex;
 #endif
 #if ENABLE_EXAMINE_VERTEX
-          events |= dijkstra_events::examine_vertex;
+                        events |= dijkstra_events::examine_vertex;
 #endif
 #if ENABLE_EDGE_RELAXED
-          events |= dijkstra_events::edge_relaxed;
+                        events |= dijkstra_events::edge_relaxed;
 #endif
-          for (auto bfs = co_dijkstra(g, events, sources, predecessors, distances, distance_fnc); bfs;) {
-            auto&& [event, payload] = bfs();
-            switch (event) {
+                        for (auto bfs = co_dijkstra(g, events, sources, predecessors, distances, distance_fnc); bfs;) {
+                          auto&& [event, payload] = bfs();
+                          switch (event) {
 #if ENABLE_DISCOVER_VERTEX
-            case dijkstra_events::discover_vertex: {
-              auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
-              results.vertices_discovered += 1;
-            } break;
+                          case dijkstra_events::discover_vertex: {
+                            auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
+                            results.vertices_discovered += 1;
+                          } break;
 #endif
 #if ENABLE_EXAMINE_VERTEX
-            case dijkstra_events::examine_vertex: {
-              auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
-              results.vertices_examined += 1;
-            } break;
+                          case dijkstra_events::examine_vertex: {
+                            auto&& [uid, u] = get<bfs_vertex_value_t<G>>(payload); // or get<1>(payload);
+                            results.vertices_examined += 1;
+                          } break;
 #endif
 #if ENABLE_EDGE_RELAXED
-            case dijkstra_events::edge_relaxed: {
-              auto&& [uid, vid, uv] = get<bfs_edge_value_t<G>>(payload); // or get<1>(payload);
-              results.edges_relaxed += 1;
-            } break;
+                          case dijkstra_events::edge_relaxed: {
+                            auto&& [uid, vid, uv] = get<bfs_edge_value_t<G>>(payload); // or get<1>(payload);
+                            results.edges_relaxed += 1;
+                          } break;
 #endif
-            default: break;
-            }
-          }
-        }});
+                          default: break;
+                          }
+                        }
+                      }});
 
-  size_t name_width = 0;
+  size_t algo_name_width = 0;
   for (auto& algo : algos)
-    name_width = std::max(name_width, size(algo.name));
+    algo_name_width = std::max(algo_name_width, size(algo.name));
 
   // Run the algorithm on all sources
   try {
@@ -208,7 +306,7 @@ void bench_dijkstra_runner() {
     fmt::println("Events included: {}", events);
     fmt::println("Benchmark starting at {}\n", current_timestamp());
 
-    fmt::print("{:3}  {:{}}  {:5}", "Obs", "Algorithm", name_width, "Elapsed (s)");
+    fmt::print("{:5}  {:{}}  {:^11}  {:5}", "A.Obs", "Algorithm", algo_name_width, "V.Visited", "Elapsed (s)");
 #if ENABLE_DISCOVER_VERTEX
     fmt::print("  Vertices Discovered");
 #endif
@@ -220,20 +318,23 @@ void bench_dijkstra_runner() {
 #endif
     cout << endl;
 
-    size_t observation = 0;
+    size_t algo_num = 0;
     for (dijkstra_algo& algo : algos) {
 
+      ++algo_num;
+      size_t observation = 0;
       double min_elapsed = std::numeric_limits<double>::max(); // seconds
 
       for (size_t t = 0; t < test_trials; ++t) {
         results = {};
-        init_shortest_paths(distances, predecessors);
+        init_shortest_paths(distances, predecessors); // we want to highlight algorithm time, not setup
         simple_timer run_time;
         algo.run(sources.vals);
         min_elapsed = std::min(min_elapsed, run_time.elapsed());
       }
-      algo.elapsed.push_back(min_elapsed);
-      print("{:3}  {:<{}}  {:>11.3f}", ++observation, algo.name, name_width, min_elapsed);
+      algo.all_elapsed = min_elapsed;
+      size_t visited   = vertices_visited(distances);
+      print("{}.{:03}  {:<{}}  {:11L}  {:>11.3f}", algo_num, ++observation, algo.name, algo_name_width, visited, min_elapsed);
 #if ENABLE_DISCOVER_VERTEX
       print("  {:>19L}", results.vertices_discovered);
 #endif
@@ -245,10 +346,15 @@ void bench_dijkstra_runner() {
 #endif
       cout << endl;
     }
+
+    cout << endl;
+    output_algo_results output(algos);
+    output.output_all_summary();
+    cout << endl;
   } catch (const std::exception& e) {
     fmt::print("Exception caught: {}\n", e.what());
   }
-  cout << endl << endl;
+  cout << endl;
 
   // Run the algorithm for each source
   try {
@@ -259,7 +365,7 @@ void bench_dijkstra_runner() {
     fmt::println("Events included: {}", events);
     fmt::println("Benchmark starting at {}\n", current_timestamp());
 
-    fmt::print("{:3}  {:{}}  {:^11}  {:5}", "Obs", "Algorithm", name_width, "Source", "Elapsed (s)");
+    fmt::print("{:5}  {:{}}  {:^9}  {:^11}  {:5}", "A.Obs", "Algorithm", algo_name_width, "Source", "V.Visited", "Elapsed (s)");
 #if ENABLE_DISCOVER_VERTEX
     fmt::print("  Vertices Discovered");
 #endif
@@ -271,22 +377,26 @@ void bench_dijkstra_runner() {
 #endif
     cout << endl;
 
-    size_t observation = 0;
+    size_t algo_num = 0;
     for (dijkstra_algo& algo : algos) {
 
+      ++algo_num;
+      size_t observation = 0;
       for (size_t s = 0; s < sources.vals.size(); ++s) {
         const SourceIds one_source  = {sources.vals[s]};
         double          min_elapsed = std::numeric_limits<double>::max(); // seconds
 
         for (size_t t = 0; t < test_trials; ++t) {
           results = {};
-          init_shortest_paths(distances, predecessors);
+          init_shortest_paths(distances, predecessors); // we want to highlight algorithm time, not setup
           simple_timer run_time;
           algo.run(one_source);
           min_elapsed = std::min(min_elapsed, run_time.elapsed());
         }
         algo.elapsed.push_back(min_elapsed);
-        print("{:3}  {:<{}}  {:>11L}  {:>11.3f}", ++observation, algo.name, name_width, one_source[0], min_elapsed);
+        size_t visited = vertices_visited(distances);
+        print("{}.{:03}  {:<{}}  {:>9}  {:11L}  {:>11.3f}", algo_num, ++observation, algo.name, algo_name_width,
+              one_source[0], visited, min_elapsed);
 #if ENABLE_DISCOVER_VERTEX
         print("  {:>19L}", results.vertices_discovered);
 #endif
@@ -299,6 +409,11 @@ void bench_dijkstra_runner() {
         cout << endl;
       }
     }
+
+    cout << endl;
+    output_algo_results output(algos);
+    output.output_detail_summary();
+    cout << endl;
   } catch (const std::exception& e) {
     fmt::print("Exception caught: {}\n", e.what());
   }
