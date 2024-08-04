@@ -1,5 +1,19 @@
-//#define ENABLE_POP_COUNT 1
-//#define ENABLE_EDGE_VISITED_COUNT 1
+// Troublshooting values
+//#define ENABLE_POP_COUNT
+//#define ENABLE_EDGE_VISITED_COUNT
+
+#define ENABLE_INLINE_RELAX_TARGET 0 // values 0 or 1 (do not disable)
+//#define ENABLE_EDGE_WEIGHT_ONE
+
+// Optional events
+//#define ENABLE_DISCOVER_VERTEX 1
+//#define ENABLE_EXAMINE_VERTEX 1
+//#define ENABLE_EDGE_RELAXED 1
+
+// Number of trials to run to get the minimum time
+constexpr const size_t test_trials = 3;
+
+
 
 #include <fmt/format.h> // for outputting everything else
 #include <format>       // for outputting current timestamp
@@ -11,6 +25,11 @@
 #include "graph/algorithm/experimental/visitor_dijkstra.hpp"
 #include "nwgraph_dijkstra.hpp"
 #include <algorithm>
+
+#ifdef _MSC_VER
+#  define NOMINMAX
+#include <Windows.h>
+#endif
 
 namespace fmm = fast_matrix_market;
 using std::string_view;
@@ -29,12 +48,6 @@ using fmt::println;
 using namespace std::graph;
 using namespace std::graph::experimental;
 
-//#define ENABLE_DISCOVER_VERTEX 1
-//#define ENABLE_EXAMINE_VERTEX 1
-//#define ENABLE_EDGE_RELAXED 1
-
-constexpr const size_t test_trials = 3;
-
 struct bench_results {
   size_t vertices_discovered = 0;
   size_t vertices_examined   = 0;
@@ -49,7 +62,7 @@ std::string current_timestamp() {
 template <typename Distance>
 size_t vertices_visited(const std::vector<Distance>& distances) {
   size_t visited = std::accumulate(distances.begin(), distances.end(), 0ULL, [](size_t count, Distance dist) {
-    return dist != shortest_path_invalid_distance<Distance>() ? count + 1 : count;
+    return (dist != shortest_path_invalid_distance<Distance>()) ? count + 1 : count;
   });
   //fmt::println("{:L} vertices were actually visited", visited);
   return visited;
@@ -217,12 +230,12 @@ void bench_dijkstra_runner() {
   Predecessors  predecessors(size(vertices(g)));
   bench_results results;
 
-#if 1
-  auto distance_fnc = [&g](edge_reference_t<G> uv) -> int64_t { return std::get<1>(edge_value(g, uv)); };
-  println("Edge weight function = edge_value(g, uv)");
-#else
+#if defined(ENABLE_EDGE_WEIGHT_ONE)
   auto distance_fnc = [&g](edge_reference_t<G> uv) -> int64_t { return 1; };
   println("Edge weight function = 1");
+#else
+  auto distance_fnc = [&g](edge_reference_t<G> uv) -> int64_t { return std::get<1>(edge_value(g, uv)); };
+  println("Edge weight function = edge_value(g, uv)");
 #endif
   cout << endl;
 
@@ -297,6 +310,12 @@ void bench_dijkstra_runner() {
   for (auto& algo : algos)
     algo_name_width = std::max(algo_name_width, size(algo.name));
 
+#ifdef _MSC_VER
+  // Minimize impact from other activity while we're gathering data
+  HANDLE hThread = GetCurrentThread();
+  SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
+#endif
+
   // Run the algorithm on all sources
   try {
     fmt::println("================================================================");
@@ -304,6 +323,7 @@ void bench_dijkstra_runner() {
     fmt::println("Running tests on all {} sources using {} algorithms", size(sources.vals), size(algos));
     fmt::println("{} tests are run and the minimum is taken", test_trials);
     fmt::println("Events included: {}", events);
+    fmt::println("Inline relax_targerts is {}", (ENABLE_INLINE_RELAX_TARGET ? "enabled" : "disabled"));
     fmt::println("Benchmark starting at {}\n", current_timestamp());
 
     fmt::print("{:5}  {:{}}  {:^11}  {:5}", "A.Obs", "Algorithm", algo_name_width, "V.Visited", "Elapsed (s)");
@@ -363,6 +383,7 @@ void bench_dijkstra_runner() {
     fmt::println("Running tests on {} sources individually using {} algorithms", size(sources.vals), size(algos));
     fmt::println("{} tests are run for each source and the minimum is taken", test_trials);
     fmt::println("Events included: {}", events);
+    fmt::println("Inline relax_targerts is {}", (ENABLE_INLINE_RELAX_TARGET ? "enabled" : "disabled"));
     fmt::println("Benchmark starting at {}\n", current_timestamp());
 
     fmt::print("{:5}  {:{}}  {:^9}  {:^11}  {:5}", "A.Obs", "Algorithm", algo_name_width, "Source", "V.Visited", "Elapsed (s)");

@@ -124,6 +124,7 @@ void dijkstra_with_visitor(
   using DistanceValue = ranges::range_value_t<Distances>;
   using weight_type   = invoke_result_t<WF, edge_reference_t<G>>;
 
+#if ENABLE_INLINE_RELAX_TARGET == 0
   auto relax_target = [&g_, &predecessor, &distances, &compare, &combine] //
         (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     vertex_id_t<G>      vid = target_id(g_, e);
@@ -138,6 +139,7 @@ void dijkstra_with_visitor(
     }
     return false;
   };
+#endif
 
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
@@ -188,8 +190,22 @@ void dijkstra_with_visitor(
         }
       }
 
+#if ENABLE_INLINE_RELAX_TARGET
+      const DistanceValue d_u                      = distances[uid];
+      DistanceValue&      d_v                      = distances[vid];
+      const bool          is_neighbor_undiscovered = (d_v == infinite);
+      bool                was_edge_relaxed         = false;
+
+      const DistanceValue d_v_new = combine(d_u, w);
+      if (compare(d_v_new, d_v)) {
+        d_v              = d_v_new;
+        predecessor[vid] = uid;
+        was_edge_relaxed = true;
+      }
+#else
       const bool is_neighbor_undiscovered = (distances[vid] == infinite);
       const bool was_edge_relaxed         = relax_target(uv, uid, w);
+#endif
 
       if (is_neighbor_undiscovered) {
         // tree_edge

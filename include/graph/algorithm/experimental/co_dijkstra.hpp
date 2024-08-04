@@ -80,9 +80,9 @@ template <index_adjacency_list        G,
           ranges::input_range         Seeds,
           ranges::random_access_range Distances,
           ranges::random_access_range Predecessors,
-          class Compare    = less<ranges::range_value_t<Distances>>,
-          class Combine    = plus<ranges::range_value_t<Distances>>,
-          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>>
+          class Compare = less<ranges::range_value_t<Distances>>,
+          class Combine = plus<ranges::range_value_t<Distances>>,
+          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>>
 requires convertible_to<ranges::range_value_t<Seeds>, vertex_id_t<G>> &&        //
          is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
@@ -104,6 +104,7 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
   using bfs_edge_type   = bfs_edge_value_t<G>;
   using bfs_value_type  = bfs_value_t<dijkstra_events, G>;
 
+#  if ENABLE_INLINE_RELAX_TARGET == 0
   auto relax_target = [&g_, &predecessor, &distances, &compare, &combine] //
         (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     vertex_id_t<G>      vid = target_id(g_, e);
@@ -118,6 +119,7 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
     }
     return false;
   };
+#endif
 
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
@@ -169,8 +171,22 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
         }
       }
 
+#  if ENABLE_INLINE_RELAX_TARGET
+      const DistanceValue d_u                      = distances[uid];
+      DistanceValue&      d_v                      = distances[vid];
+      const bool          is_neighbor_undiscovered = (d_v == infinite);
+      bool                was_edge_relaxed         = false;
+
+      const DistanceValue d_v_new = combine(d_u, w);
+      if (compare(d_v_new, d_v)) {
+        d_v              = d_v_new;
+        predecessor[vid] = uid;
+        was_edge_relaxed = true;
+      }
+#  else
       const bool is_neighbor_undiscovered = (distances[vid] == infinite);
       const bool was_edge_relaxed         = relax_target(uv, uid, w);
+#  endif
 
       if (is_neighbor_undiscovered) {
         // tree_edge
