@@ -108,26 +108,30 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
   auto relax_target = [&g_, &predecessor, &distances, &compare, &combine] //
         (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     vertex_id_t<G>      vid = target_id(g_, e);
-    const DistanceValue d_u = distances[uid];
-    const DistanceValue d_v = distances[vid];
+    const DistanceValue d_u = distances[static_cast<size_t>(uid)];
+    const DistanceValue d_v = distances[static_cast<size_t>(vid)];
     //const auto          w_e = weight(e);
 
     if (compare(combine(d_u, w_e), d_v)) {
-      distances[vid]   = combine(d_u, w_e);
-      predecessor[vid] = uid;
+      distances[static_cast<size_t>(vid)] = combine(d_u, w_e);
+#    ifdef ENABLE_PREDECESSORS
+      predecessor[static_cast<size_t>(vid)] = uid;
+#    endif
       return true;
     }
     return false;
   };
-#endif
+#  endif
 
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
   const id_type N(static_cast<id_type>(num_vertices(g_)));
 
-  auto qcompare = [&distances](id_type a, id_type b) { return distances[a] > distances[b]; };
-  using Queue   = std::priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, decltype(qcompare)>;
+  auto qcompare = [&distances](id_type a, id_type b) {
+    return distances[static_cast<size_t>(a)] > distances[static_cast<size_t>(b)];
+  };
+  using Queue = std::priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, decltype(qcompare)>;
   Queue queue(qcompare);
 
   if ((events & dijkstra_events::initialize_vertex) == dijkstra_events::initialize_vertex) {
@@ -142,7 +146,7 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
       throw graph_error("co_dijkstra: seed vertex out of range");
     }
     queue.push(seed);
-    distances[seed] = zero; // mark seed as discovered
+    distances[static_cast<size_t>(seed)] = zero; // mark seed as discovered
     dijkstra_yield_vertex(dijkstra_events::discover_vertex, seed);
   }
 
@@ -179,12 +183,14 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
 
       const DistanceValue d_v_new = combine(d_u, w);
       if (compare(d_v_new, d_v)) {
-        d_v              = d_v_new;
+        d_v = d_v_new;
+#    ifdef ENABLE_PREDECESSORS
         predecessor[vid] = uid;
+#    endif
         was_edge_relaxed = true;
       }
 #  else
-      const bool is_neighbor_undiscovered = (distances[vid] == infinite);
+      const bool is_neighbor_undiscovered = (distances[static_cast<size_t>(vid)] == infinite);
       const bool was_edge_relaxed         = relax_target(uv, uid, w);
 #  endif
 

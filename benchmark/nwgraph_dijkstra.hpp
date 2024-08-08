@@ -17,13 +17,13 @@ static auto nwgraph_dijkstra(
   //queue_t mq;
   //auto mq = nw::graph::make_priority_queue<vertex_id_type>(
   //      [&dist](const vertex_id_type& a, vertex_id_type& b) { return dist[a] > dist[b]; });
-  auto compare = [&dist](vertex_id_type& a, vertex_id_type& b) { return dist[a] > dist[b]; };
+  auto compare = [&dist](vertex_id_type& a, vertex_id_type& b) { return dist[static_cast<size_t>(a)] > dist[static_cast<size_t>(b)]; };
   using queue_t  = std::priority_queue<vertex_id_type, std::vector<vertex_id_type>, decltype(compare)>;
   queue_t mq(compare);
 
   for (auto&& source : sources) {
 	mq.push(source);
-	dist[source] = 0;
+	dist[static_cast<size_t>(source)] = 0;
   }
 
 #if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
@@ -38,13 +38,13 @@ static auto nwgraph_dijkstra(
 #if defined(ENABLE_EDGE_VISITED_COUNT)
     edge_cnt += size(edges(graph, u));
 #endif
-    for (auto&& elt : graph[u]) {
+    for (auto&& elt : graph[static_cast<size_t>(u)]) {
       auto&& v = target_id(graph, elt);
       auto&& w = weight(elt);
 
-      auto tw = dist[u] + w;
-      if (tw < dist[v]) {
-        dist[v] = tw;
+      auto tw = dist[static_cast<size_t>(u)] + w;
+      if (tw < dist[static_cast<size_t>(v)]) {
+        dist[static_cast<size_t>(v)] = tw;
         mq.push(v);
       }
     }

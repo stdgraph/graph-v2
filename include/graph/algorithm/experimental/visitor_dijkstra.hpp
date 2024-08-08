@@ -133,8 +133,10 @@ void dijkstra_with_visitor(
     //const auto          w_e = weight(e);
 
     if (compare(combine(d_u, w_e), d_v)) {
-      distances[static_cast<size_t>(vid)]   = combine(d_u, w_e);
+      distances[static_cast<size_t>(vid)] = combine(d_u, w_e);
+#  ifdef ENABLE_PREDECESSORS
       predecessor[static_cast<size_t>(vid)] = uid;
+#  endif
       return true;
     }
     return false;
@@ -146,7 +148,8 @@ void dijkstra_with_visitor(
 
   const id_type N(static_cast<id_type>(num_vertices(g_)));
 
-  auto qcompare = [&distances](id_type a, id_type b) { return distances[a] > distances[b]; };
+  auto qcompare = [&distances](id_type a, id_type b) { return distances[static_cast<size_t>(a)]> distances[static_cast<size_t>(b)];
+  };
   using Queue   = std::priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, decltype(qcompare)>;
   Queue queue(qcompare);
 
@@ -161,7 +164,7 @@ void dijkstra_with_visitor(
       throw graph_error("dijkstra_with_visitor: seed vertex out of range");
     }
     queue.push(seed);
-    distances[seed] = zero; // mark seed as discovered
+    distances[static_cast<size_t>(seed)] = zero; // mark seed as discovered
     visitor.on_discover_vertex({seed, *find_vertex(g_, seed)});
   }
 
@@ -198,12 +201,14 @@ void dijkstra_with_visitor(
 
       const DistanceValue d_v_new = combine(d_u, w);
       if (compare(d_v_new, d_v)) {
-        d_v              = d_v_new;
+        d_v = d_v_new;
+#  ifdef ENABLE_PREDECESSORS
         predecessor[vid] = uid;
+#  endif
         was_edge_relaxed = true;
       }
 #else
-      const bool is_neighbor_undiscovered = (distances[vid] == infinite);
+      const bool is_neighbor_undiscovered = (distances[static_cast<size_t>(vid)] == infinite);
       const bool was_edge_relaxed         = relax_target(uv, uid, w);
 #endif
 

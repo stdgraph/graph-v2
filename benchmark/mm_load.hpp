@@ -289,7 +289,7 @@ struct graph_stats {
   template <std::graph::adjacency_list G>
   graph_stats(const G& g, size_t self_loops = 0)
         : vertex_count(std::graph::num_vertices(g))
-        , edge_count(std::graph::num_edges(g))
+        , edge_count(static_cast<size_t>(std::graph::num_edges(g)))
         , self_loops_removed(self_loops) {
     for (auto&& u : std::graph::vertices(g)) {
       min_degree = std::min(min_degree, size(std::graph::edges(g, u)));

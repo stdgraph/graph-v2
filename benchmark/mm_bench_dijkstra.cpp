@@ -1,7 +1,9 @@
+#include <cstddef>
 // Troublshooting values
 //#define ENABLE_POP_COUNT
 //#define ENABLE_EDGE_VISITED_COUNT
 
+#define ENABLE_PREDECESSORS
 #define ENABLE_INLINE_RELAX_TARGET 0 // values 0 or 1 (do not disable)
 //#define ENABLE_EDGE_WEIGHT_ONE
 
@@ -11,8 +13,7 @@
 //#define ENABLE_EDGE_RELAXED 1
 
 // Number of trials to run to get the minimum time
-constexpr const size_t test_trials = 3;
-
+constexpr const size_t test_trials = 6;
 
 
 #include <fmt/format.h> // for outputting everything else
@@ -28,7 +29,7 @@ constexpr const size_t test_trials = 3;
 
 #ifdef _MSC_VER
 #  define NOMINMAX
-#include <Windows.h>
+#  include <Windows.h>
 #endif
 
 namespace fmm = fast_matrix_market;
@@ -103,11 +104,11 @@ using SourceIds      = vector<vertex_id_type>;
 struct dijkstra_algo {
   std::string                           name;
   std::function<void(const SourceIds&)> run;
-  std::vector<double>                   elapsed;           // seconds for each source
+  std::vector<double>                   elapsed     = {};  // seconds for each source
   double                                all_elapsed = 0.0; // seconds for all sources
 
   double total_elapsed() const { return std::accumulate(begin(elapsed), end(elapsed), 0.0); }
-  double average_elapsed() const { return total_elapsed() / size(elapsed); }
+  double average_elapsed() const { return total_elapsed() / static_cast<double>(size(elapsed)); }
 };
 std::vector<dijkstra_algo> algos;
 
@@ -115,7 +116,7 @@ std::vector<dijkstra_algo> algos;
 class output_algo_results {
 
 public:
-  output_algo_results(std::vector<dijkstra_algo>& algos) : algos_(algos) {}
+  output_algo_results(std::vector<dijkstra_algo>& algorithms) : algos_(algorithms) {}
 
   void output_all_summary() {
     auto totalSecFnc = [](const dijkstra_algo& algo) { return algo.all_elapsed; };
@@ -210,6 +211,8 @@ void bench_dijkstra_runner() {
   using Distances    = std::vector<Distance>;
   using Predecessors = std::vector<vertex_id_type>;
 
+  timer session_timer("Total session");
+
   bench_files bench_source = gap_road; // gap_road, g2bench_bips98_606, g2bench_chesapeake
   triplet_matrix<vertex_id_type, vertex_id_type> triplet;
   array_matrix<vertex_id_type>                   sources;
@@ -239,37 +242,37 @@ void bench_dijkstra_runner() {
 #endif
   cout << endl;
 
-  std::string events;
+  std::string events_str;
 #if ENABLE_DISCOVER_VERTEX
-  events += "discover_vertex ";
+  events_str += "discover_vertex ";
 #endif
 #if ENABLE_EXAMINE_VERTEX
-  events += "examine_vertex ";
+  events_str += "examine_vertex ";
 #endif
 #if ENABLE_EDGE_RELAXED
   events += "edge_relaxed ";
 #endif
-  if (events.empty())
-    events = "(none)";
+  if (events_str.empty())
+    events_str = "(none)";
 
   // Add the algorithms
   algos.emplace_back(
-        dijkstra_algo{"nwgraph", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
-                        auto returned_distances = nwgraph_dijkstra(g, sources, distance_fnc);
+        dijkstra_algo{"nwgraph", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& srcs) {
+                        auto returned_distances = nwgraph_dijkstra(g, srcs, distance_fnc);
                         assert(size(returned_distances) == size(distances));
                         std::copy(begin(returned_distances), end(returned_distances), begin(distances));
-                        for (auto i = 0; i < size(distances); ++i)
+                        for (size_t i = 0; i < size(distances); ++i)
                           distances[i] = static_cast<Distance>(returned_distances[i]);
                       }});
 
   algos.emplace_back(
-        dijkstra_algo{"visitor", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
+        dijkstra_algo{"visitor", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& srcs) {
                         discover_vertex_visitor<G, Distances> visitor(g, results);
-                        dijkstra_with_visitor(g, visitor, sources, predecessors, distances, distance_fnc);
+                        dijkstra_with_visitor(g, visitor, srcs, predecessors, distances, distance_fnc);
                       }});
 
   algos.emplace_back(
-        dijkstra_algo{"coroutine", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& sources) {
+        dijkstra_algo{"coroutine", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& srcs) {
                         dijkstra_events events = dijkstra_events::none;
 #if ENABLE_DISCOVER_VERTEX
                         events |= dijkstra_events::discover_vertex;
@@ -280,7 +283,7 @@ void bench_dijkstra_runner() {
 #if ENABLE_EDGE_RELAXED
                         events |= dijkstra_events::edge_relaxed;
 #endif
-                        for (auto bfs = co_dijkstra(g, events, sources, predecessors, distances, distance_fnc); bfs;) {
+                        for (auto bfs = co_dijkstra(g, events, srcs, predecessors, distances, distance_fnc); bfs;) {
                           auto&& [event, payload] = bfs();
                           switch (event) {
 #if ENABLE_DISCOVER_VERTEX
@@ -322,8 +325,11 @@ void bench_dijkstra_runner() {
     fmt::println("Benchmarking Dijkstra's Algorithm Using Visitors and Co-routines");
     fmt::println("Running tests on all {} sources using {} algorithms", size(sources.vals), size(algos));
     fmt::println("{} tests are run and the minimum is taken", test_trials);
-    fmt::println("Events included: {}", events);
+    fmt::println("Events included: {}", events_str);
     fmt::println("Inline relax_targerts is {}", (ENABLE_INLINE_RELAX_TARGET ? "enabled" : "disabled"));
+#ifndef ENABLE_PREDECESSORS
+    fmt::println("Predecessors are disabled");
+#endif
     fmt::println("Benchmark starting at {}\n", current_timestamp());
 
     fmt::print("{:5}  {:{}}  {:^11}  {:5}", "A.Obs", "Algorithm", algo_name_width, "V.Visited", "Elapsed (s)");
@@ -354,7 +360,8 @@ void bench_dijkstra_runner() {
       }
       algo.all_elapsed = min_elapsed;
       size_t visited   = vertices_visited(distances);
-      print("{}.{:03}  {:<{}}  {:11L}  {:>11.3f}", algo_num, ++observation, algo.name, algo_name_width, visited, min_elapsed);
+      print("{}.{:03}  {:<{}}  {:11L}  {:>11.3f}", algo_num, ++observation, algo.name, algo_name_width, visited,
+            min_elapsed);
 #if ENABLE_DISCOVER_VERTEX
       print("  {:>19L}", results.vertices_discovered);
 #endif
@@ -382,11 +389,15 @@ void bench_dijkstra_runner() {
     fmt::println("Benchmarking Dijkstra's Algorithm Using Visitors and Co-routines");
     fmt::println("Running tests on {} sources individually using {} algorithms", size(sources.vals), size(algos));
     fmt::println("{} tests are run for each source and the minimum is taken", test_trials);
-    fmt::println("Events included: {}", events);
+    fmt::println("Events included: {}", events_str);
     fmt::println("Inline relax_targerts is {}", (ENABLE_INLINE_RELAX_TARGET ? "enabled" : "disabled"));
+#ifndef ENABLE_PREDECESSORS
+    fmt::println("Predecessors are disabled");
+#endif
     fmt::println("Benchmark starting at {}\n", current_timestamp());
 
-    fmt::print("{:5}  {:{}}  {:^9}  {:^11}  {:5}", "A.Obs", "Algorithm", algo_name_width, "Source", "V.Visited", "Elapsed (s)");
+    fmt::print("{:5}  {:{}}  {:^9}  {:^11}  {:5}", "A.Obs", "Algorithm", algo_name_width, "Source", "V.Visited",
+               "Elapsed (s)");
 #if ENABLE_DISCOVER_VERTEX
     fmt::print("  Vertices Discovered");
 #endif
