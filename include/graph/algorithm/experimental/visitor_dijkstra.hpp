@@ -10,6 +10,37 @@
 
 namespace std::graph::experimental {
 
+/**
+ * @ingroup graph_algorithms
+ * @brief A concept that describes a queueable container. It reflects the capabilities of
+ * std::queue and std::priority_queue.
+ * 
+ * Use of this defines the required capabilities, including those of containers in std and
+ * the caller's domain.
+*/
+template <class Q>
+concept queueable = requires(Q&& q, typename Q::value_type value) {
+  typename Q::value_type;
+  typename Q::size_type;
+  typename Q::reference;
+
+  { q.top() };
+  { q.push(value) };
+  { q.pop() };
+  { q.empty() };
+  { q.size() };
+};
+
+//queueable Q = priority_queue < weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>,
+//          vector<weighted_vertex<G, invoke_result_t<EVF, edge_reference_t<G>>>>, greater < weighted_vertex < G,
+//          invoke_result_t < EVF,
+//          edge_reference_t < G >>>>>>
+
+
+// Notes
+//  shortest paths vs. shortest distances
+//  throw on error
+
 // Design Considerations:
 // 1. The visitor should be a template parameter to the algorithm.
 
@@ -75,6 +106,37 @@ concept _has_overridden_on_initialize_vertex = requires(V obj, typename V::verte
   { &V::on_initialize_vertex } -> same_as<void (V::*)()>;
 };
 
+template <adjacency_list G, ranges::random_access_range Distances>
+class _dijkstra_distance_compare {
+  const Distances& distances_;
+
+public:
+  _dijkstra_distance_compare(const G&, const Distances& distances) : distances_(distances) {}
+  _dijkstra_distance_compare(const Distances& distances) : distances_(distances) {}
+
+  constexpr bool operator()(const vertex_id_t<G>& a, const vertex_id_t<G>& b) const {
+    return distances_[a] > distances_[b];
+  }
+};
+
+template <class G, class Distances>
+using _dijkstra_queue =
+      priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, _dijkstra_distance_compare<G, Distances>>;
+
+using DD = vector<double>;
+DD dd;
+
+using GG = vector<vector<tuple<int, double>>>;
+GG gg;
+
+using CC  = _dijkstra_distance_compare<GG, DD>;
+using PQV = vector<vertex_id_t<GG>>;
+
+priority_queue<vertex_id_t<GG>, vector<vertex_id_t<GG>>, _dijkstra_distance_compare<GG, DD>>
+      pq(CC(gg, dd), vector<vertex_id_t<GG>>());
+
+
+_dijkstra_queue<GG, DD> pq2{CC(gg, dd), vector<vertex_id_t<GG>>()};
 
 /**
  * @brief dijkstra shortest paths
@@ -92,7 +154,7 @@ concept _has_overridden_on_initialize_vertex = requires(V obj, typename V::verte
  * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Compare      Comparison function for Distance values. Defaults to less<DistanceValue>.
  * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanctValue>.
- * @tparam Queue        The queue type. Defaults to a priority_queue with comparator of greater<vertex_id_t<G>>.
+ * @tparam Que          The queue type. Defaults to a priority_queue with comparator of _dijkstra_distance_compare. (demonstration only)
  */
 template <index_adjacency_list G,
           class Visitor,
@@ -101,7 +163,9 @@ template <index_adjacency_list G,
           ranges::random_access_range Predecessors,
           class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
           class Compare = less<ranges::range_value_t<Distances>>,
-          class Combine = plus<ranges::range_value_t<Distances>>>
+          class Combine = plus<ranges::range_value_t<Distances>>,
+          queueable Que = _dijkstra_queue<G, Distances> // not used
+          >
 requires convertible_to<ranges::range_value_t<Seeds>, vertex_id_t<G>> && //
          is_arithmetic_v<ranges::range_value_t<Distances>> &&            //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
@@ -148,9 +212,19 @@ void dijkstra_with_visitor(
 
   const id_type N(static_cast<id_type>(num_vertices(g_)));
 
-  auto qcompare = [&distances](id_type a, id_type b) { return distances[static_cast<size_t>(a)]> distances[static_cast<size_t>(b)];
+  // This demonstrates the use of a template parameter for the queue type. However,
+  // it has problems becuase the comparator requies the graph and distances, which
+  // are not available at the time of the queue's construction. The existing implementation
+  // below should be sufficient for the proposal. If the caller wants to specify their own
+  // queue, they can copy the implementation and use their own queue type.
+  //    Allowing the caller to defined the queue also exposes the internals of the algorithm
+  // and requires that the caller support the same semantics, making it more complex.
+  //Que que = _dijkstra_queue<G, Distances>(_dijkstra_distance_compare(g_, distances), vector<vertex_id_t<G>>());
+
+  auto qcompare = [&distances](id_type a, id_type b) {
+    return distances[static_cast<size_t>(a)] > distances[static_cast<size_t>(b)];
   };
-  using Queue   = std::priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, decltype(qcompare)>;
+  using Queue = std::priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, decltype(qcompare)>;
   Queue queue(qcompare);
 
   // (The optimizer removes this loop if on_initialize_vertex() is empty.)
@@ -209,7 +283,7 @@ void dijkstra_with_visitor(
       }
 #else
       const bool is_neighbor_undiscovered = (distances[static_cast<size_t>(vid)] == infinite);
-      const bool was_edge_relaxed         = relax_target(uv, uid, w);
+      const bool was_edge_relaxed = relax_target(uv, uid, w);
 #endif
 
       if (is_neighbor_undiscovered) {
@@ -247,12 +321,10 @@ template <index_adjacency_list G,
           class Visitor,
           ranges::random_access_range Distances,
           ranges::random_access_range Predecessors,
-          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
-          class Compare    = less<ranges::range_value_t<Distances>>,
-          class Combine    = plus<ranges::range_value_t<Distances>>,
-          _queueable Queue = priority_queue<vertex_id_t<G>,
-                                            vector<vertex_id_t<G>>,
-                                            greater<vertex_id_t<G>>>>
+          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
+          class Compare = less<ranges::range_value_t<Distances>>,
+          class Combine = plus<ranges::range_value_t<Distances>>,
+          queueable Que = _dijkstra_queue<G, Distances>>
 requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
          basic_edge_weight_function<G,
@@ -269,10 +341,9 @@ void dijkstra_with_visitor(
       WF&            weight =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>(),
-      Queue     queue   = Queue()) {
+      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
   dijkstra_with_visitor(g_, forward<Visitor>(visitor), ranges::subrange(&seed, (&seed + 1)), predecessor, distances,
-                        weight, forward<Compare>(compare), forward<Combine>(combine), queue);
+                        weight, forward<Compare>(compare), forward<Combine>(combine));
 }
 
 } // namespace std::graph::experimental
