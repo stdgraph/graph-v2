@@ -213,7 +213,7 @@ void bench_dijkstra_runner() {
 
   timer session_timer("Total session");
 
-  bench_files bench_source = gap_road; // gap_road, g2bench_bips98_606, g2bench_chesapeake
+  bench_files bench_source = g2bench_chesapeake; // gap_road, g2bench_bips98_606, g2bench_chesapeake
   triplet_matrix<vertex_id_type, vertex_id_type> triplet;
   array_matrix<vertex_id_type>                   sources;
 
@@ -268,7 +268,7 @@ void bench_dijkstra_runner() {
   algos.emplace_back(
         dijkstra_algo{"visitor", [&g, &distance_fnc, &distances, &predecessors, &results](const SourceIds& srcs) {
                         discover_vertex_visitor<G, Distances> visitor(g, results);
-                        dijkstra_with_visitor(g, visitor, srcs, predecessors, distances, distance_fnc);
+                        dijkstra_with_visitor(g, srcs, predecessors, distances, distance_fnc, visitor);
                       }});
 
   algos.emplace_back(

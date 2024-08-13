@@ -108,7 +108,7 @@ TEST_CASE("dijstra visitor test", "[dynamic][dijkstra][bfs][vertex][visitor]") {
     my_dijkstra_visitor visitor(g, distances);
     auto                distance_fnc = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
-    dijkstra_with_visitor(g, visitor, seeds, predecessors, distances, distance_fnc);
+    dijkstra_with_visitor(g, seeds, predecessors, distances, distance_fnc, visitor);
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT

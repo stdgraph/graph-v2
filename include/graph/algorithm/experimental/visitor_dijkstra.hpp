@@ -69,7 +69,7 @@ public:
 
   // Construction, Destruction, Assignment
 public:
-  dijkstra_visitor_base(G& g) : g_(g) {}
+  dijkstra_visitor_base(G& g) : g(g) {}
 
   dijkstra_visitor_base()                             = delete;
   dijkstra_visitor_base(const dijkstra_visitor_base&) = default;
@@ -81,7 +81,7 @@ public:
 
   // Property Functions
 public:
-  graph_type& graph() const noexcept { return g_; }
+  graph_type& graph() const noexcept { return g; }
 
   // Visitor Functions
 public:
@@ -98,7 +98,7 @@ public:
 
   // Data Members
 private:
-  reference_wrapper<graph_type> g_;
+  reference_wrapper<graph_type> g;
 };
 
 template <typename V>
@@ -175,23 +175,24 @@ requires convertible_to<ranges::range_value_t<Seeds>, vertex_id_t<G>> && //
                                     Compare,
                                     Combine> //&& dijkstra_visitor<G, Visitor>
 void dijkstra_with_visitor(
-      G&            g_,
-      Visitor&&     visitor,
+      G&            g,
       const Seeds&  seeds,
       Predecessors& predecessor,
       Distances&    distances,
       WF&           weight =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      Visitor&& visitor = dijkstra_visitor_base(),
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
+      Combine&& combine = plus<ranges::range_value_t<Distances>>())
+{
   using id_type       = vertex_id_t<G>;
   using DistanceValue = ranges::range_value_t<Distances>;
   using weight_type   = invoke_result_t<WF, edge_reference_t<G>>;
 
 #if ENABLE_INLINE_RELAX_TARGET == 0
-  auto relax_target = [&g_, &predecessor, &distances, &compare, &combine] //
+  auto relax_target = [&g, &predecessor, &distances, &compare, &combine] //
         (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
-    vertex_id_t<G>      vid = target_id(g_, e);
+    vertex_id_t<G>      vid = target_id(g, e);
     const DistanceValue d_u = distances[static_cast<size_t>(uid)];
     const DistanceValue d_v = distances[static_cast<size_t>(vid)];
     //const auto          w_e = weight(e);
@@ -210,7 +211,7 @@ void dijkstra_with_visitor(
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
-  const id_type N(static_cast<id_type>(num_vertices(g_)));
+  const id_type N(static_cast<id_type>(num_vertices(g)));
 
   // This demonstrates the use of a template parameter for the queue type. However,
   // it has problems becuase the comparator requies the graph and distances, which
@@ -219,7 +220,7 @@ void dijkstra_with_visitor(
   // queue, they can copy the implementation and use their own queue type.
   //    Allowing the caller to defined the queue also exposes the internals of the algorithm
   // and requires that the caller support the same semantics, making it more complex.
-  //Que que = _dijkstra_queue<G, Distances>(_dijkstra_distance_compare(g_, distances), vector<vertex_id_t<G>>());
+  //Que que = _dijkstra_queue<G, Distances>(_dijkstra_distance_compare(g, distances), vector<vertex_id_t<G>>());
 
   auto qcompare = [&distances](id_type a, id_type b) {
     return distances[static_cast<size_t>(a)] > distances[static_cast<size_t>(b)];
@@ -229,7 +230,7 @@ void dijkstra_with_visitor(
 
   // (The optimizer removes this loop if on_initialize_vertex() is empty.)
   for (id_type uid = 0; uid < N; ++uid) {
-    visitor.on_initialize_vertex({uid, *find_vertex(g_, uid)});
+    visitor.on_initialize_vertex({uid, *find_vertex(g, uid)});
   }
 
   // Seed the queue with the initial vertice(s)
@@ -239,7 +240,7 @@ void dijkstra_with_visitor(
     }
     queue.push(seed);
     distances[static_cast<size_t>(seed)] = zero; // mark seed as discovered
-    visitor.on_discover_vertex({seed, *find_vertex(g_, seed)});
+    visitor.on_discover_vertex({seed, *find_vertex(g, seed)});
   }
 
   // Main loop to process the queue
@@ -253,11 +254,11 @@ void dijkstra_with_visitor(
     ++pop_cnt;
 #endif
 #if defined(ENABLE_EDGE_VISITED_COUNT)
-    edge_cnt += size(edges(g_, uid));
+    edge_cnt += size(edges(g, uid));
 #endif
-    visitor.on_examine_vertex({uid, *find_vertex(g_, uid)});
+    visitor.on_examine_vertex({uid, *find_vertex(g, uid)});
 
-    for (auto&& [vid, uv, w] : views::incidence(g_, uid, weight)) {
+    for (auto&& [vid, uv, w] : views::incidence(g, uid, weight)) {
       visitor.on_examine_edge({uid, vid, uv});
 
       // Negative weights are not allowed for Dijkstra's algorithm
@@ -290,7 +291,7 @@ void dijkstra_with_visitor(
         // tree_edge
         if (was_edge_relaxed) {
           visitor.on_edge_relaxed({uid, vid, uv});
-          visitor.on_discover_vertex({vid, *find_vertex(g_, vid)});
+          visitor.on_discover_vertex({vid, *find_vertex(g, vid)});
           queue.push(vid);
         } else {
           throw graph_error("dijkstra_with_visitor: unexpected state where an edge to a new vertex was not relaxed");
@@ -309,7 +310,7 @@ void dijkstra_with_visitor(
     // Note: while we *think* we're done with this vertex, we may not be. If the graph is unbalanced
     // and another path to this vertex has a lower accumulated weight, we'll process it again.
     // A consequence is that examine_vertex could be call subsequently on the same vertex.
-    visitor.on_finish_vertex({uid, *find_vertex(g_, uid)});
+    visitor.on_finish_vertex({uid, *find_vertex(g, uid)});
   } // while(!queue.empty())
 
 #if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
@@ -333,7 +334,7 @@ requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
                                     Compare,
                                     Combine> //&& dijkstra_visitor<G, Visitor>
 void dijkstra_with_visitor(
-      G&             g_,
+      G&             g,
       Visitor&&      visitor,
       vertex_id_t<G> seed,
       Predecessors&  predecessor,
@@ -342,7 +343,7 @@ void dijkstra_with_visitor(
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
       Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
-  dijkstra_with_visitor(g_, forward<Visitor>(visitor), ranges::subrange(&seed, (&seed + 1)), predecessor, distances,
+  dijkstra_with_visitor(g, forward<Visitor>(visitor), ranges::subrange(&seed, (&seed + 1)), predecessor, distances,
                         weight, forward<Compare>(compare), forward<Combine>(combine));
 }
 
