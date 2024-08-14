@@ -18,7 +18,7 @@
 #include <ranges>
 #include <functional>
 #include <algorithm>
-#include <fmt/format.h>
+#include <format>
 #include "graph/graph.hpp"
 #include "graph/views/incidence.hpp"
 
@@ -170,7 +170,7 @@ void dijkstra_shortest_paths(
 
   size_t N(num_vertices(g));
   if (source < 0 || source >= N) {
-    throw out_of_range(fmt::format("source {} is outside the vertices range [{},{})", source, 0, N));
+    throw out_of_range(format("source {} is outside the vertices range [{},{})", source, 0, N));
   }
 
   //std::ranges::fill(distances, numeric_limits<weight_type>::max());
@@ -282,7 +282,7 @@ void dijkstra_shortest_paths(
 
   const size_t N(num_vertices(g));
   if (source < 0 || source >= N) {
-    throw out_of_range(fmt::format("source {} is outside the vertices range [{},{})", source, 0, N));
+    throw out_of_range(format("source {} is outside the vertices range [{},{})", source, 0, N));
   }
 
   //std::ranges::fill(distances, numeric_limits<weight_type>::max());
