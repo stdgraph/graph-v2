@@ -2,7 +2,7 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/algorithm/shortest_paths.hpp"
+#include "graph/algorithm/dijkstra_shortest_paths.hpp"
 #include "graph/container/dynamic_graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include <fmt/format.h>
@@ -57,6 +57,7 @@ using std::graph::shortest_path_invalid_distance;
 using std::graph::init_shortest_paths;
 using std::graph::dijkstra_shortest_paths;
 using std::graph::dijkstra_shortest_distances;
+using std::graph::dijkstra_visitor_base;
 
 using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
@@ -126,12 +127,17 @@ TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments
   Distances    distance(size(vertices(g)));
   Predecessors predecessors(size(vertices(g)));
   init_shortest_paths(distance, predecessors);
-  //auto weight = [](edge_reference_t<G> uv) -> double { return 1.0; };
+  auto weight = [](edge_reference_t<G> uv) -> double { return 1.0; };
+
+#if 0
+  //using V = std::graph::dijkstra_visitor_base<G>;
+  //static_assert(std::graph::dijkstra_visitor<G, V>, "Visitor doesn't match dijkstra_visitor requirements");
+#endif
 
   dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors);
 
   SECTION("types") {
-    auto weight         = [](edge_reference_t<G> uv) -> double { return 1.0; };
+    //auto weight         = [](edge_reference_t<G> uv) -> double { return 1.0; };
     using WF            = decltype(weight);
     using DistanceValue = double;
     using Plus          = invoke_result_t<plus<DistanceValue>, DistanceValue, invoke_result_t<WF, edge_reference_t<G>>>;
@@ -424,9 +430,20 @@ TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segment
   Distances    distance(size(vertices(g)));
   Predecessors predecessors(size(vertices(g)));
   init_shortest_paths(distance, predecessors);
-  //auto weight = [](edge_reference_t<G> uv) -> double { return 1.0; };
+  auto weight  = [](edge_reference_t<G> uv) -> double { return 1.0; };
+  auto visitor = dijkstra_visitor_base<G>();
 
-  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, std::less<Distance>(), std::plus<Distance>());
+#if 0
+  using Visitor = decltype(visitor);
+  auto&                           u       = *find_vertex(g, frankfurt_id);
+  Visitor::vertex_desc_type       u_desc  = {frankfurt_id, u};
+  auto&                           uv      = *begin(edges(g, u));
+  Visitor::sourced_edge_desc_type uv_desc = {frankfurt_id, target_id(g, uv), uv};
+
+  static_assert(std::graph::dijkstra_visitor<G, decltype(visitor)>, "visitor is not a dijkstra_visitor");
+#endif
+  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
+                          std::plus<Distance>());
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("Dijkstra's Shortest Segments output") {
@@ -554,10 +571,11 @@ TEST_CASE("Dijkstra's General Shortest Paths", "[csv][vofl][shortest][paths][dij
   vector<double>         distance(size(vertices(g)));
   vector<vertex_id_t<G>> predecessors(size(vertices(g)));
   init_shortest_paths(distance, predecessors);
-  auto weight = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
+  auto weight  = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
+  auto visitor = dijkstra_visitor_base<G>();
 
-  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, std::less<Distance>(), std::plus<Distance>(),
-                          weight);
+  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
+                          std::plus<Distance>());
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("Dijkstra's Shortest Paths output") {
@@ -681,9 +699,10 @@ TEST_CASE("Dijkstra's General Shortest Distances", "[csv][vofl][shortest][distan
 
   vector<double> distance(size(vertices(g)));
   init_shortest_paths(distance);
-  auto weight = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
+  auto weight  = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
+  auto visitor = dijkstra_visitor_base<G>();
 
   // This test case just tests that these will compile without error. The distances will be the same as before.
-  dijkstra_shortest_distances(g, frankfurt_id, distance, std::less<Distance>(), std::plus<Distance>());
-  dijkstra_shortest_distances(g, frankfurt_id, distance, std::less<Distance>(), std::plus<Distance>(), weight);
+  //dijkstra_shortest_distances(g, frankfurt_id, distance, std::less<Distance>(), std::plus<Distance>());
+  dijkstra_shortest_distances(g, frankfurt_id, distance, weight, visitor, std::less<Distance>(), std::plus<Distance>());
 }
