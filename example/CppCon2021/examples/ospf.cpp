@@ -10,7 +10,7 @@
 #include <list>
 
 //#include "dijkstra.hpp"
-#include "graph/algorithm/shortest_paths.hpp"
+#include "graph/algorithm/dijkstra_shortest_paths.hpp"
 #include "ospf-graph.hpp"
 #include "utilities.hpp"
 
