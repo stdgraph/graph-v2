@@ -67,22 +67,6 @@ public:
   using vertex_desc_type       = vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>;
   using sourced_edge_desc_type = edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>;
 
-  // Construction, Destruction, Assignment
-public:
-  dijkstra_visitor_base(G& g) : g(g) {}
-
-  dijkstra_visitor_base()                             = delete;
-  dijkstra_visitor_base(const dijkstra_visitor_base&) = default;
-  dijkstra_visitor_base(dijkstra_visitor_base&&)      = default;
-  ~dijkstra_visitor_base()                            = default;
-
-  dijkstra_visitor_base& operator=(const dijkstra_visitor_base&) = default;
-  dijkstra_visitor_base& operator=(dijkstra_visitor_base&&)      = default;
-
-  // Property Functions
-public:
-  graph_type& graph() const noexcept { return g; }
-
   // Visitor Functions
 public:
   // vertex visitor functions
@@ -95,10 +79,6 @@ public:
   constexpr void on_examine_edge(const sourced_edge_desc_type& edesc) {}
   constexpr void on_edge_relaxed(const sourced_edge_desc_type& edesc) {}
   constexpr void on_edge_not_relaxed(const sourced_edge_desc_type& edesc) {}
-
-  // Data Members
-private:
-  reference_wrapper<graph_type> g;
 };
 
 template <typename V>
@@ -115,7 +95,7 @@ public:
   _dijkstra_distance_compare(const Distances& distances) : distances_(distances) {}
 
   constexpr bool operator()(const vertex_id_t<G>& a, const vertex_id_t<G>& b) const {
-    return distances_[a] > distances_[b];
+    return distances_[static_cast<size_t>(a)] > distances_[static_cast<size_t>(b)];
   }
 };
 
@@ -181,7 +161,7 @@ void dijkstra_with_visitor(
       Distances&     distances,
       WF&            weight =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
-      Visitor&& visitor = dijkstra_visitor_base(),
+      Visitor&& visitor = dijkstra_visitor_base<G>(),
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
       Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
   using id_type       = vertex_id_t<G>;

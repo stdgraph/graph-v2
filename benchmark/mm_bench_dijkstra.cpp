@@ -79,7 +79,7 @@ template <class G, class Distances>
 struct discover_vertex_visitor : dijkstra_visitor_base<G> {
   using base_t = dijkstra_visitor_base<G>;
 
-  discover_vertex_visitor(G& g, bench_results& results) : base_t(g), results_(results) {}
+  discover_vertex_visitor(G&, bench_results& results) : base_t(), results_(results) {}
   ~discover_vertex_visitor() = default;
 
 #if ENABLE_DISCOVER_VERTEX

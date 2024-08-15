@@ -853,7 +853,7 @@ private: // CPO properties
 
   friend constexpr edges_type edges(graph_type& g, const vertex_id_type uid) {
     assert(static_cast<size_t>(uid + 1) < g.row_index_.size());                      // in row_index_ bounds?
-    assert(static_cast<size_t>(g.row_index_[uid + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
+    assert(static_cast<size_t>(g.row_index_[static_cast<size_t>(uid) + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
                       g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index);
   }

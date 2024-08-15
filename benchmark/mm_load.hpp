@@ -4,6 +4,7 @@
 #include <graph/container/compressed_graph.hpp>
 #include <numeric>
 #include <fstream>
+#include <fmt/format.h>
 
 #ifdef _MSC_VER
 #  pragma warning(push)
@@ -358,7 +359,7 @@ template <typename EV, typename VV, typename GV, integral VId, integral EIndex =
     };
 
     g.load_edges(zip_view, edge_proj);
-    load_time.set_count(size(triplet.rows), "edges");
+    load_time.set_count(ssize(triplet.rows), "edges");
   }
 
   return graph_stats(g, 0);
