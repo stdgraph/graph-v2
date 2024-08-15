@@ -3,6 +3,15 @@
 #include <chrono>
 #include <string>
 
+class simple_timer {
+  std::chrono::steady_clock::time_point start_time_ = std::chrono::steady_clock::now();
+
+public:
+  simple_timer() = default;
+  double elapsed() const; // seconds
+};
+
+
 class timer {
   std::chrono::steady_clock::time_point start_time_ = std::chrono::steady_clock::now();
   std::string                           name_;
@@ -11,7 +20,7 @@ class timer {
   bool                                  _include_start = false;
 
 public:
-  timer(const std::string& name, bool include_start = false);
+  explicit timer(const std::string& name, bool include_start = false);
   ~timer();
 
   double elapsed() const; // seconds

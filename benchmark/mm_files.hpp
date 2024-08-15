@@ -3,25 +3,6 @@
 #include <string_view>
 #include <vector>
 
-#ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable : 4242) // '=': conversion from 'int' to 'char', possible loss of data
-#  pragma warning(disable : 4701) // potentially uninitialized local variable 'value' used
-#else
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wshadow"
-#  pragma GCC diagnostic ignored "-Wsign-conversion"
-#  pragma GCC diagnostic ignored "-Wuseless-cast"
-#  pragma GCC diagnostic ignored "-Wold-style-cast"
-#endif
-#include <fast_matrix_market/fast_matrix_market.hpp>
-#ifdef _MSC_VER
-#  pragma warning(pop)
-#else
-#  pragma GCC diagnostic pop
-#endif
-
-
 /**
  * A simple triplet sparse matrix.
  */
@@ -49,7 +30,8 @@ struct bench_files {
   std::filesystem::path mtx_path;
   std::filesystem::path mtx_sorted_path;
   std::filesystem::path sources_path;
-  std::string           name;
+  std::string           suite; // GAP, g2bench, etc. (last directory of the base_path)
+  std::string           name;  // GAP-road, GAP-twitter, etc. (stem of the mtx_path)
 
   bench_files() = delete;
   bench_files(const std::filesystem::path& base_path,
@@ -60,6 +42,7 @@ struct bench_files {
         : mtx_path(base_path / subpath / mtx_file)
         , mtx_sorted_path(base_path / subpath / mtx_sorted_file)
         , sources_path(base_path / subpath / sources_file)
+        , suite(base_path.filename().string())
         , name(mtx_path.stem().string()) {}
 };
 
@@ -72,3 +55,5 @@ extern bench_files gap_urand;   // 43.8GB; sort=1377.7s
 
 extern bench_files g2bench_chesapeake; // 13KB
 extern bench_files g2bench_bips98_606; //944KB
+
+extern std::vector<bench_files> datasets;

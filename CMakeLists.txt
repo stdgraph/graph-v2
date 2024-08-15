@@ -116,7 +116,7 @@ if(ENABLE_BENCHMARKING)
   if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(BENCHMARK_DATA_DIR "${CMAKE_SOURCE_DIR}/../data/")
   elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(BENCHMARK_DATA_DIR "/mnt/d/dev_graph/data/")
+    set(BENCHMARK_DATA_DIR "/mnt/c/dev_graph/data/")
   endif()
 
   add_subdirectory(benchmark)

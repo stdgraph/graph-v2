@@ -27,7 +27,7 @@ namespace std::graph::experimental {
       }
 
 #  define dijkstra_yield_edge(event, uid, vid, uv)                                                                     \
-    if ((event & events) != event)                                                                                     \
+    if ((event & events) == event)                                                                                     \
       co_yield bfs_value_type {                                                                                        \
         event, bfs_edge_type { uid, vid, uv }                                                                          \
       }
@@ -80,10 +80,9 @@ template <index_adjacency_list        G,
           ranges::input_range         Seeds,
           ranges::random_access_range Distances,
           ranges::random_access_range Predecessors,
-          class Compare    = less<ranges::range_value_t<Distances>>,
-          class Combine    = plus<ranges::range_value_t<Distances>>,
-          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
-          _queueable Queue = priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, greater<vertex_id_t<G>>>>
+          class Compare = less<ranges::range_value_t<Distances>>,
+          class Combine = plus<ranges::range_value_t<Distances>>,
+          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>>
 requires convertible_to<ranges::range_value_t<Seeds>, vertex_id_t<G>> &&        //
          is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
@@ -97,82 +96,118 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
       WF&                   weight =
             [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>(),
-      Queue     queue   = Queue()) {
+      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
   using id_type         = vertex_id_t<G>;
   using DistanceValue   = ranges::range_value_t<Distances>;
+  using weight_type     = invoke_result_t<WF, edge_reference_t<G>>;
   using bfs_vertex_type = bfs_vertex_value_t<G>;
   using bfs_edge_type   = bfs_edge_value_t<G>;
   using bfs_value_type  = bfs_value_t<dijkstra_events, G>;
 
-  auto relax_target = [&g_, &predecessor, &distances, &weight, &compare, &combine] //
-        (edge_reference_t<G> e, vertex_id_t<G> uid) -> bool {
+#  if ENABLE_INLINE_RELAX_TARGET == 0
+  auto relax_target = [&g_, &predecessor, &distances, &compare, &combine] //
+        (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     vertex_id_t<G>      vid = target_id(g_, e);
-    const DistanceValue d_u = distances[uid];
-    const DistanceValue d_v = distances[vid];
-    const auto          w_e = weight(e);
+    const DistanceValue d_u = distances[static_cast<size_t>(uid)];
+    const DistanceValue d_v = distances[static_cast<size_t>(vid)];
+    //const auto          w_e = weight(e);
 
-    // From BGL; This may no longer apply since the x87 is long gone:
-    //
-    // The seemingly redundant comparisons after the distance assignments are to
-    // ensure that extra floating-point precision in x87 registers does not
-    // lead to relax() returning true when the distance did not actually
-    // change.
     if (compare(combine(d_u, w_e), d_v)) {
-      distances[vid] = combine(d_u, w_e);
-      if (compare(distances[vid], d_v)) {
-        predecessor[vid] = uid;
-        return true;
-      }
+      distances[static_cast<size_t>(vid)] = combine(d_u, w_e);
+#    ifdef ENABLE_PREDECESSORS
+      predecessor[static_cast<size_t>(vid)] = uid;
+#    endif
+      return true;
     }
     return false;
   };
+#  endif
 
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
 
-  id_type N(static_cast<id_type>(num_vertices(g_)));
+  const id_type N(static_cast<id_type>(num_vertices(g_)));
+
+  auto qcompare = [&distances](id_type a, id_type b) {
+    return distances[static_cast<size_t>(a)] > distances[static_cast<size_t>(b)];
+  };
+  using Queue = std::priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, decltype(qcompare)>;
+  Queue queue(qcompare);
 
   if ((events & dijkstra_events::initialize_vertex) == dijkstra_events::initialize_vertex) {
-    for (id_type uid = 0; uid < static_cast<id_type>(num_vertices(g_)); ++uid) {
+    for (id_type uid = 0; uid < N; ++uid) {
       co_yield bfs_value_type{dijkstra_events::initialize_vertex, bfs_vertex_type{uid, *find_vertex(g_, uid)}};
     }
   }
 
-  //using q_compare = decltype([](const id_type& a, const id_type& b) { return a > b; });
-  //std::priority_queue<id_type, vector<id_type>, q_compare> Q;
-
+  // Seed the queue with the initial vertice(s)
   for (auto seed : seeds) {
-    assert(seed < N && seed >= 0);
+    if (seed >= N || seed < 0) {
+      throw graph_error("co_dijkstra: seed vertex out of range");
+    }
     queue.push(seed);
-    distances[seed] = zero; // mark seed as discovered
+    distances[static_cast<size_t>(seed)] = zero; // mark seed as discovered
     dijkstra_yield_vertex(dijkstra_events::discover_vertex, seed);
   }
 
+  // Main loop to process the queue
+#  if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
+  size_t pop_cnt = 0, edge_cnt = 0;
+#  endif
   while (!queue.empty()) {
     const id_type uid = queue.top();
     queue.pop();
+#  if defined(ENABLE_POP_COUNT)
+    ++pop_cnt;
+#  endif
+#  if defined(ENABLE_EDGE_VISITED_COUNT)
+    edge_cnt += size(edges(g_, uid));
+#  endif
     dijkstra_yield_vertex(dijkstra_events::examine_vertex, uid);
 
-    for (auto&& [vid, uv] : views::incidence(g_, uid)) {
+    for (auto&& [vid, uv, w] : views::incidence(g_, uid, weight)) {
       dijkstra_yield_edge(dijkstra_events::examine_edge, uid, vid, uv);
 
-      if (distances[vid] == infinite) {
-        // tree_edge
-        bool decreased = relax_target(uv, uid);
-        if (decreased) {
-          dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
-        } else {
-          dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
+      // Negative weights are not allowed for Dijkstra's algorithm
+      if constexpr (is_signed_v<weight_type>) {
+        if (w < zero) {
+          throw graph_error("co_dijkstra: negative edge weight");
         }
-        dijkstra_yield_vertex(dijkstra_events::discover_vertex, vid);
-        queue.push(vid);
+      }
+
+#  if ENABLE_INLINE_RELAX_TARGET
+      const DistanceValue d_u                      = distances[uid];
+      DistanceValue&      d_v                      = distances[vid];
+      const bool          is_neighbor_undiscovered = (d_v == infinite);
+      bool                was_edge_relaxed         = false;
+
+      const DistanceValue d_v_new = combine(d_u, w);
+      if (compare(d_v_new, d_v)) {
+        d_v = d_v_new;
+#    ifdef ENABLE_PREDECESSORS
+        predecessor[vid] = uid;
+#    endif
+        was_edge_relaxed = true;
+      }
+#  else
+      const bool is_neighbor_undiscovered = (distances[static_cast<size_t>(vid)] == infinite);
+      const bool was_edge_relaxed         = relax_target(uv, uid, w);
+#  endif
+
+      if (is_neighbor_undiscovered) {
+        // tree_edge
+        if (was_edge_relaxed) {
+          dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
+          dijkstra_yield_vertex(dijkstra_events::discover_vertex, vid);
+          queue.push(vid);
+        } else {
+          throw graph_error("co_dijkstra: unexpected state where an edge to a new vertex was not relaxed");
+        }
       } else {
         // non-tree edge
-        bool decreased = relax_target(uv, uid);
-        if (decreased) {
+        if (was_edge_relaxed) {
           dijkstra_yield_edge(dijkstra_events::edge_relaxed, uid, vid, uv);
-          queue.push(vid);
+          queue.push(vid); // re-enqueue vid to re-evaluate its neighbors with a shorter path
         } else {
           dijkstra_yield_edge(dijkstra_events::edge_not_relaxed, uid, vid, uv);
         }
@@ -184,6 +219,10 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
     // A consequence is that examine_vertex could be call subsequently on the same vertex.
     dijkstra_yield_vertex(dijkstra_events::finish_vertex, uid);
   }
+
+#  if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
+  fmt::print("dijkstra_with_visitor: pop_cnt = {:L}, edge_cnt = {:L}\n", pop_cnt, edge_cnt);
+#  endif
 }
 
 
