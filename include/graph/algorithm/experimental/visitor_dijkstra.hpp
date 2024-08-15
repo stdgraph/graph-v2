@@ -199,7 +199,7 @@ void dijkstra_with_visitor(
   // queue, they can copy the implementation and use their own queue type.
   //    Allowing the caller to defined the queue also exposes the internals of the algorithm
   // and requires that the caller support the same semantics, making it more complex.
-  // 
+  //
   //Que que = _dijkstra_queue<G, Distances>(_dijkstra_distance_compare(g, distances), vector<vertex_id_t<G>>());
 
   auto qcompare = [&distances](id_type a, id_type b) {
@@ -264,7 +264,7 @@ void dijkstra_with_visitor(
       }
 #else
       const bool is_neighbor_undiscovered = (distances[static_cast<size_t>(vid)] == infinite);
-      const bool was_edge_relaxed = relax_target(uv, uid, w);
+      const bool was_edge_relaxed         = relax_target(uv, uid, w);
 #endif
 
       if (is_neighbor_undiscovered) {

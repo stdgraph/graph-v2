@@ -852,8 +852,9 @@ private: // CPO properties
   }
 
   friend constexpr edges_type edges(graph_type& g, const vertex_id_type uid) {
-    assert(static_cast<size_t>(uid + 1) < g.row_index_.size());                      // in row_index_ bounds?
-    assert(static_cast<size_t>(g.row_index_[static_cast<size_t>(uid) + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
+    assert(static_cast<size_t>(uid + 1) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(g.row_index_[static_cast<size_t>(uid) + 1].index) <=
+           g.col_index_.size()); // in col_index_ bounds?
     return edges_type(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
                       g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index);
   }
@@ -868,7 +869,9 @@ private: // CPO properties
   // target_id(g,uv), target(g,uv)
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.index; }
 
-  friend constexpr vertex_type&       target(graph_type& g, edge_type& uv) noexcept { return g.row_index_[static_cast<size_type>(uv.index)]; }
+  friend constexpr vertex_type& target(graph_type& g, edge_type& uv) noexcept {
+    return g.row_index_[static_cast<size_type>(uv.index)];
+  }
   friend constexpr const vertex_type& target(const graph_type& g, const edge_type& uv) noexcept {
     return g.row_index_[static_cast<size_type>(uv.index)];
   }

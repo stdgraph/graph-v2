@@ -16,4 +16,5 @@ bench_files g2bench_chesapeake(g2bench, "", "chesapeake.mtx", "chesapeake.sorted
 bench_files g2bench_bips98_606(g2bench, "", "bips98_606.mtx", "bips98_606.sorted.mtx", "sources.mtx");
 // sources.mtx is a generic set of sources that can be used with either g2bench graph
 
-vector<bench_files> datasets = {gap_road, gap_twitter, gap_web, gap_kron, gap_urand, g2bench_chesapeake, g2bench_bips98_606};
+vector<bench_files> datasets = {gap_road,  gap_twitter,        gap_web,           gap_kron,
+                                gap_urand, g2bench_chesapeake, g2bench_bips98_606};

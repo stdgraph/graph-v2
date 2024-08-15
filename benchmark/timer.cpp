@@ -7,7 +7,7 @@ using std::endl;
 
 double simple_timer::elapsed() const {
   return std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - start_time_)
-		.count();
+        .count();
 }
 
 timer::timer(const std::string& name, bool include_start) : name_(name), _include_start(include_start) {

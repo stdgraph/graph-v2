@@ -4,9 +4,7 @@
 // from nwgraph with minor refactoring to use graph-v2
 template <adjacency_list Graph, class Weight, class Sources>
 static auto nwgraph_dijkstra(
-      Graph&& graph, const Sources& sources, Weight weight = [](auto& e) -> auto& {
-        return std::get<1>(e);
-      }) {
+      Graph&& graph, const Sources& sources, Weight weight = [](auto& e) -> auto& { return std::get<1>(e); }) {
   using namespace std::graph;
   using vertex_id_type = vertex_id_t<Graph>;
 
@@ -17,13 +15,15 @@ static auto nwgraph_dijkstra(
   //queue_t mq;
   //auto mq = nw::graph::make_priority_queue<vertex_id_type>(
   //      [&dist](const vertex_id_type& a, vertex_id_type& b) { return dist[a] > dist[b]; });
-  auto compare = [&dist](vertex_id_type& a, vertex_id_type& b) { return dist[static_cast<size_t>(a)] > dist[static_cast<size_t>(b)]; };
-  using queue_t  = std::priority_queue<vertex_id_type, std::vector<vertex_id_type>, decltype(compare)>;
+  auto compare = [&dist](vertex_id_type& a, vertex_id_type& b) {
+    return dist[static_cast<size_t>(a)] > dist[static_cast<size_t>(b)];
+  };
+  using queue_t = std::priority_queue<vertex_id_type, std::vector<vertex_id_type>, decltype(compare)>;
   queue_t mq(compare);
 
   for (auto&& source : sources) {
-	mq.push(source);
-	dist[static_cast<size_t>(source)] = 0;
+    mq.push(source);
+    dist[static_cast<size_t>(source)] = 0;
   }
 
 #if defined(ENABLE_POP_COUNT) || defined(ENABLE_EDGE_VISITED_COUNT)
