@@ -153,12 +153,12 @@ bool bellman_ford_shortest_paths(
   for (id_type k = 0; k < N; ++k) {
     bool at_least_one_edge_relaxed = false;
     for (auto&& [uid, vid, uv, w] : views::edgelist(g, weight)) {
-      visitor.examine_edge({uid, vid, uv});
-      if (relax(uv, uid, w)) {
+      visitor.on_examine_edge({uid, vid, uv});
+      if (relax_target(uv, uid, w)) {
         at_least_one_edge_relaxed = true;
-        visitor.edge_relaxed({uid, vid, uv});
+        visitor.on_edge_relaxed({uid, vid, uv});
       } else
-        visitor.edge_not_relaxed({uid, vid, uv});
+        visitor.on_edge_not_relaxed({uid, vid, uv});
     }
     if (!at_least_one_edge_relaxed)
       break;
@@ -166,8 +166,8 @@ bool bellman_ford_shortest_paths(
 
   // Check for negative weight cycles
   for (auto&& [uid, vid, uv, w] : views::edgelist(g, weight)) {
-    if (compare(combine(distance[uid], w), distance[vid])) {
-      visitor.edge_not_minimized({uid, vid, uv});
+    if (compare(combine(distances[uid], w), distances[vid])) {
+      visitor.on_edge_not_minimized({uid, vid, uv});
 
 #  if ENABLE_EVAL_NEG_WEIGHT_CYCLE // for debugging
       // A negative cycle exists; find a vertex on the cycle
@@ -190,7 +190,7 @@ bool bellman_ford_shortest_paths(
 #  endif
       return false;
     } else {
-      visitor.edge_minimized({uid, vid, uv});
+      visitor.on_edge_minimized({uid, vid, uv});
     }
   }
 

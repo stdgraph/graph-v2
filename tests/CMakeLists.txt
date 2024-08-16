@@ -46,6 +46,7 @@ set(UNITTEST_SOURCES
     "edgelist_tests.cpp" 
     "edgelist_view_tests.cpp" 
     "examples_tests.cpp"
+    "bellman_shortest_paths_tests.cpp" 
     "dijkstra_shortest_paths_tests.cpp" 
     "transitive_closure_tests.cpp" 
     "dfs_tests.cpp" 

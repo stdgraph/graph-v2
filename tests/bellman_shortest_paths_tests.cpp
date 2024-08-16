@@ -2,7 +2,7 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
-#include "graph/algorithm/dijkstra_shortest_paths.hpp"
+#include "graph/algorithm/bellman_ford_shortest_paths.hpp"
 #include "graph/container/dynamic_graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include <fmt/format.h>
@@ -55,9 +55,9 @@ using std::graph::views::vertexlist;
 
 using std::graph::shortest_path_invalid_distance;
 using std::graph::init_shortest_paths;
-using std::graph::dijkstra_shortest_paths;
-using std::graph::dijkstra_shortest_distances;
-using std::graph::dijkstra_visitor_base;
+using std::graph::bellman_ford_shortest_paths;
+using std::graph::bellman_ford_shortest_distances;
+using std::graph::bellman_visitor_base;
 
 using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
 using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
@@ -116,7 +116,7 @@ auto to_string(const Predecessors& predecessors) {
   return pred;
 }
 
-TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments][dijkstra][common]") {
+TEST_CASE("Bellman-Ford's Common Shortest Segments", "[csv][vofl][shortest][segments][bellman][common]") {
   init_console();
   using G                     = routes_volf_graph_type;
   auto&&         g            = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -130,11 +130,11 @@ TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments
   auto weight = [](edge_reference_t<G> uv) -> double { return 1.0; };
 
 #if 0
-  //using V = std::graph::dijkstra_visitor_base<G>;
-  //static_assert(std::graph::dijkstra_visitor<G, V>, "Visitor doesn't match dijkstra_visitor requirements");
+  //using V = std::graph::bellman_visitor_base<G>;
+  //static_assert(std::graph::bellman_visitor<G, V>, "Visitor doesn't match bellman_visitor requirements");
 #endif
 
-  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors);
+  bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors);
 
   SECTION("types") {
     //auto weight         = [](edge_reference_t<G> uv) -> double { return 1.0; };
@@ -161,7 +161,7 @@ TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments
   }
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-  SECTION("Dijkstra's Shortest Segments output") {
+  SECTION("Bellman-Ford's Shortest Segments output") {
     cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (source)" << endl;
     for (auto&& [uid, u, city_name] : vertexlist(g, vname)) {
       vertex_reference_t<G> pred = *find_vertex(g, predecessors[uid]);
@@ -184,7 +184,7 @@ TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments
     */
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
-  SECTION("Dijkstra's Shortest Segments generate") {
+  SECTION("Bellman-Ford's Shortest Segments generate") {
     using namespace std::graph;
     using std::cout;
     using std::endl;
@@ -215,7 +215,7 @@ TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments
     cout << indent << "}" << endl; // for
   }
 #elif TEST_OPTION == TEST_OPTION_TEST
-  SECTION("Dijkstra's Shortest Segments test content") {
+  SECTION("Bellman-Ford's Shortest Segments test content") {
 
     for (auto&& [uid, u, city_name] : vertexlist(g, vname)) {
       switch (uid) {
@@ -275,7 +275,7 @@ TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments
 #endif
 }
 
-TEST_CASE("Dijkstra's Common Shortest Paths", "[csv][vofl][shortest][paths][dijkstra][common]") {
+TEST_CASE("Bellman-Ford's Common Shortest Paths", "[csv][vofl][shortest][paths][bellman][common]") {
   init_console();
   using G                     = routes_volf_graph_type;
   auto&&         g            = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -288,10 +288,10 @@ TEST_CASE("Dijkstra's Common Shortest Paths", "[csv][vofl][shortest][paths][dijk
   init_shortest_paths(distance, predecessors);
   auto weight = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
-  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, weight);
+  bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors, weight);
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-  SECTION("Dijkstra's Shortest Paths output") {
+  SECTION("Bellman-Ford's Shortest Paths output") {
     cout << endl << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (source)" << endl;
     for (auto&& [uid, u, city_name] : vertexlist(g, vname)) {
       vertex_reference_t<G> pred = *find_vertex(g, predecessors[uid]);
@@ -314,7 +314,7 @@ TEST_CASE("Dijkstra's Common Shortest Paths", "[csv][vofl][shortest][paths][dijk
     */
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
-  SECTION("Dijkstra's Shortest Paths generate") {
+  SECTION("Bellman-Ford's Shortest Paths generate") {
     using namespace std::graph;
     using std::cout;
     using std::endl;
@@ -402,7 +402,7 @@ TEST_CASE("Dijkstra's Common Shortest Paths", "[csv][vofl][shortest][paths][dijk
 #endif
 }
 
-TEST_CASE("Dijkstra's Common Shortest Distances", "[csv][vofl][shortest][distances][dijkstra][common]") {
+TEST_CASE("Bellman-Ford's Common Shortest Distances", "[csv][vofl][shortest][distances][bellman][common]") {
   init_console();
   using G                     = routes_volf_graph_type;
   auto&&         g            = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -415,11 +415,11 @@ TEST_CASE("Dijkstra's Common Shortest Distances", "[csv][vofl][shortest][distanc
   auto weight = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
   // This test case just tests that these will compile without error. The distances will be the same as before.
-  dijkstra_shortest_distances(g, frankfurt_id, distance);
-  dijkstra_shortest_distances(g, frankfurt_id, distance, weight);
+  bellman_ford_shortest_distances(g, frankfurt_id, distance);
+  bellman_ford_shortest_distances(g, frankfurt_id, distance, weight);
 }
 
-TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segments][dijkstra][general]") {
+TEST_CASE("Bellman-Ford's General Shortest Segments", "[csv][vofl][shortest][segments][bellman][general]") {
   init_console();
   using G                     = routes_volf_graph_type;
   auto&&         g            = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -431,7 +431,7 @@ TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segment
   Predecessors predecessors(size(vertices(g)));
   init_shortest_paths(distance, predecessors);
   auto weight  = [](edge_reference_t<G> uv) -> double { return 1.0; };
-  auto visitor = dijkstra_visitor_base<G>();
+  auto visitor = bellman_visitor_base<G>();
 
 #if 0
   using Visitor = decltype(visitor);
@@ -440,13 +440,13 @@ TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segment
   auto&                           uv      = *begin(edges(g, u));
   Visitor::sourced_edge_desc_type uv_desc = {frankfurt_id, target_id(g, uv), uv};
 
-  static_assert(std::graph::dijkstra_visitor<G, decltype(visitor)>, "visitor is not a dijkstra_visitor");
+  static_assert(std::graph::bellman_visitor<G, decltype(visitor)>, "visitor is not a bellman_visitor");
 #endif
-  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
+  bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
                           std::plus<Distance>());
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-  SECTION("Dijkstra's Shortest Segments output") {
+  SECTION("Bellman-Ford's Shortest Segments output") {
     cout << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (source)" << endl;
     for (auto&& [uid, u, city_name] : vertexlist(g, vname)) {
       vertex_reference_t<G> pred = *find_vertex(g, predecessors[uid]);
@@ -469,7 +469,7 @@ TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segment
     */
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
-  SECTION("Dijkstra's Shortest Segments generate") {
+  SECTION("Bellman-Ford's Shortest Segments generate") {
     using namespace std::graph;
     using std::cout;
     using std::endl;
@@ -500,7 +500,7 @@ TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segment
     cout << indent << "}" << endl; // for
   }
 #elif TEST_OPTION == TEST_OPTION_TEST
-  SECTION("Dijkstra's Shortest Segments test content") {
+  SECTION("Bellman-Ford's Shortest Segments test content") {
 
     for (auto&& [uid, u, city_name] : vertexlist(g, vname)) {
       switch (uid) {
@@ -560,7 +560,7 @@ TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segment
 #endif
 }
 
-TEST_CASE("Dijkstra's General Shortest Paths", "[csv][vofl][shortest][paths][dijkstra][general]") {
+TEST_CASE("Bellman-Ford's General Shortest Paths", "[csv][vofl][shortest][paths][bellman][general]") {
   init_console();
   using G                     = routes_volf_graph_type;
   auto&&         g            = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -572,13 +572,13 @@ TEST_CASE("Dijkstra's General Shortest Paths", "[csv][vofl][shortest][paths][dij
   vector<vertex_id_t<G>> predecessors(size(vertices(g)));
   init_shortest_paths(distance, predecessors);
   auto weight  = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-  auto visitor = dijkstra_visitor_base<G>();
+  auto visitor = bellman_visitor_base<G>();
 
-  dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
+  bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
                           std::plus<Distance>());
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
-  SECTION("Dijkstra's Shortest Paths output") {
+  SECTION("Bellman-Ford's Shortest Paths output") {
     cout << endl << '[' << frankfurt_id << "] " << vertex_value(g, **frankfurt) << " (source)" << endl;
     for (auto&& [uid, u, city_name] : vertexlist(g, vname)) {
       vertex_reference_t<G> pred = *find_vertex(g, predecessors[uid]);
@@ -601,7 +601,7 @@ TEST_CASE("Dijkstra's General Shortest Paths", "[csv][vofl][shortest][paths][dij
     */
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
-  SECTION("Dijkstra's Shortest Paths generate") {
+  SECTION("Bellman-Ford's Shortest Paths generate") {
     using namespace std::graph;
     using std::cout;
     using std::endl;
@@ -689,7 +689,7 @@ TEST_CASE("Dijkstra's General Shortest Paths", "[csv][vofl][shortest][paths][dij
 #endif
 }
 
-TEST_CASE("Dijkstra's General Shortest Distances", "[csv][vofl][shortest][distances][dijkstra][general]") {
+TEST_CASE("Bellman-Ford's General Shortest Distances", "[csv][vofl][shortest][distances][bellman][general]") {
   init_console();
   using G                     = routes_volf_graph_type;
   auto&&         g            = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
@@ -700,9 +700,9 @@ TEST_CASE("Dijkstra's General Shortest Distances", "[csv][vofl][shortest][distan
   vector<double> distance(size(vertices(g)));
   init_shortest_paths(distance);
   auto weight  = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-  auto visitor = dijkstra_visitor_base<G>();
+  auto visitor = bellman_visitor_base<G>();
 
   // This test case just tests that these will compile without error. The distances will be the same as before.
-  //dijkstra_shortest_distances(g, frankfurt_id, distance, std::less<Distance>(), std::plus<Distance>());
-  dijkstra_shortest_distances(g, frankfurt_id, distance, weight, visitor, std::less<Distance>(), std::plus<Distance>());
+  //bellman_ford_shortest_distances(g, frankfurt_id, distance, std::less<Distance>(), std::plus<Distance>());
+  bellman_ford_shortest_distances(g, frankfurt_id, distance, weight, visitor, std::less<Distance>(), std::plus<Distance>());
 }
