@@ -3,6 +3,7 @@
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
 #include "graph/algorithm/dijkstra_shortest_paths.hpp"
+#include "graph/algorithm/bellman_ford_shortest_paths.hpp"
 #include "graph/container/dynamic_graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include <fmt/format.h>
