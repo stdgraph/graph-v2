@@ -146,6 +146,7 @@ bool bellman_ford_shortest_paths(
 
   const id_type N = static_cast<id_type>(num_vertices(g));
 
+  distances[source] = zero;
   if (source >= N || source < 0) {
     throw out_of_range(fmt::format("bellman_fored_shortest_paths: source vertex id of '{}' is out of range", source));
   }
