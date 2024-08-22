@@ -102,8 +102,8 @@ template <index_adjacency_list        G,
           class Combine = plus<ranges::range_value_t<Distances>>>
 requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
-         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine> 
-         // && dijkstra_visitor<G, Visitor>
+         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
+// && dijkstra_visitor<G, Visitor>
 void dijkstra_shortest_paths(
       G&                   g,
       const vertex_id_t<G> source,
@@ -242,7 +242,7 @@ template <index_adjacency_list        G,
           class Combine = plus<ranges::range_value_t<Distances>>>
 requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
-         //&& dijkstra_visitor<G, Visitor>
+//&& dijkstra_visitor<G, Visitor>
 void dijkstra_shortest_distances(
       G&                   g,
       const vertex_id_t<G> source,

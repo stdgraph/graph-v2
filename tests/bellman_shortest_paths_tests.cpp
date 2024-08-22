@@ -443,7 +443,7 @@ TEST_CASE("Bellman-Ford's General Shortest Segments", "[csv][vofl][shortest][seg
   static_assert(std::graph::bellman_visitor<G, decltype(visitor)>, "visitor is not a bellman_visitor");
 #endif
   bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
-                          std::plus<Distance>());
+                              std::plus<Distance>());
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("Bellman-Ford's Shortest Segments output") {
@@ -575,7 +575,7 @@ TEST_CASE("Bellman-Ford's General Shortest Paths", "[csv][vofl][shortest][paths]
   auto visitor = bellman_visitor_base<G>();
 
   bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
-                          std::plus<Distance>());
+                              std::plus<Distance>());
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("Bellman-Ford's Shortest Paths output") {
@@ -704,5 +704,6 @@ TEST_CASE("Bellman-Ford's General Shortest Distances", "[csv][vofl][shortest][di
 
   // This test case just tests that these will compile without error. The distances will be the same as before.
   //bellman_ford_shortest_distances(g, frankfurt_id, distance, std::less<Distance>(), std::plus<Distance>());
-  bellman_ford_shortest_distances(g, frankfurt_id, distance, weight, visitor, std::less<Distance>(), std::plus<Distance>());
+  bellman_ford_shortest_distances(g, frankfurt_id, distance, weight, visitor, std::less<Distance>(),
+                                  std::plus<Distance>());
 }
