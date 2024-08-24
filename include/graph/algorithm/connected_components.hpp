@@ -16,6 +16,9 @@
 
 #include "graph/graph.hpp"
 #include "graph/views/incidence.hpp"
+#include "graph/views/vertexlist.hpp"
+#include "graph/views/depth_first_search.hpp"
+#include <stack>
 
 #ifndef GRAPH_CC_HPP
 #  define GRAPH_CC_HPP
