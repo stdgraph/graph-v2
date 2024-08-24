@@ -42,23 +42,23 @@ TEST_CASE("strongly connected components test", "[strong cc]") {
 
   using G  = routes_vol_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "cc_directed.csv", name_order_policy::alphabetical);
-  G gt;
-  
-  std::vector<std::tuple<vertex_id_t<G>,vertex_id_t<G>,double>> reverse;
-  vertex_id_t<G> vid = 0;
-  for ( auto && u : vertices(g) ) {
-    for ( auto && v : edges(g, u)) {
-      reverse.push_back(std::make_tuple(target_id(g,v), vid, edge_value(g,v)));
+  G      gt;
+
+  std::vector<std::tuple<vertex_id_t<G>, vertex_id_t<G>, double>> reverse;
+  vertex_id_t<G>                                                  vid = 0;
+  for (auto&& u : vertices(g)) {
+    for (auto&& v : edges(g, u)) {
+      reverse.push_back(std::make_tuple(target_id(g, v), vid, edge_value(g, v)));
     }
     ++vid;
   }
-                             
+
 
   using value = std::ranges::range_value_t<decltype(reverse)>;
 
   vertex_id_t<G> N = size(vertices(g));
-  using edge_desc = std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>;
-  auto edge_proj  = [](const value& val) -> edge_desc {
+  using edge_desc  = std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>;
+  auto edge_proj   = [](const value& val) -> edge_desc {
     return edge_desc{std::get<0>(val), std::get<1>(val), std::get<2>(val)};
   };
 
@@ -66,19 +66,19 @@ TEST_CASE("strongly connected components test", "[strong cc]") {
 
   std::vector<size_t> component(size(vertices(g)));
   std::graph::kosaraju(g, gt, component);
-  
-  REQUIRE( *std::ranges::max_element( component ) == 2 );
+
+  REQUIRE(*std::ranges::max_element(component) == 2);
 }
 #endif
 
 TEST_CASE("connected components test", "[cc]") {
   init_console();
-  
+
   using G  = routes_vol_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "cc_undirected.csv", name_order_policy::alphabetical);
 
   std::vector<size_t> component(size(vertices(g)));
   std::graph::connected_components(g, component);
-  
-  REQUIRE( *std::ranges::max_element( component ) == 2 );
+
+  REQUIRE(*std::ranges::max_element(component) == 2);
 }

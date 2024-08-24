@@ -22,41 +22,40 @@
 
 namespace std::graph {
 
-template <adjacency_list G,
-          adjacency_list GT,
+template <adjacency_list              G,
+          adjacency_list              GT,
           ranges::random_access_range Component>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-void kosaraju(G&&            g,        // graph
-              GT&&           g_t,      // graph transpose
-              Component&     component // out: strongly connected component assignment
+void kosaraju(G&&        g,        // graph
+              GT&&       g_t,      // graph transpose
+              Component& component // out: strongly connected component assignment
 
 ) {
-  size_t N(size(vertices(g)));
+  size_t            N(size(vertices(g)));
   std::vector<bool> visited(N, false);
   using CT = typename std::decay<decltype(*component.begin())>::type;
   std::fill(component.begin(), component.end(), std::numeric_limits<CT>::max());
   std::vector<vertex_id_t<G>> order;
-  
+
   for (auto&& [uid, u] : views::vertexlist(g)) {
     if (visited[uid]) {
-        continue;
+      continue;
     }
     visited[uid] = true;
     std::stack<vertex_id_t<G>> active;
     active.push(uid);
     auto dfs = std::graph::views::sourced_edges_depth_first_search(g, uid);
     for (auto&& [vid, wid, vw] : dfs) {
-        while (vid != active.top()) {
-          order.push_back(active.top());
-          active.pop();
-        }
-        if (visited[wid]) {
-          dfs.cancel(cancel_search::cancel_branch);
-        }
-        else {
-          active.push(wid);
-          visited[wid] = true;
-        }
+      while (vid != active.top()) {
+        order.push_back(active.top());
+        active.pop();
+      }
+      if (visited[wid]) {
+        dfs.cancel(cancel_search::cancel_branch);
+      } else {
+        active.push(wid);
+        visited[wid] = true;
+      }
     }
     while (!active.empty()) {
       order.push_back(active.top());
@@ -64,8 +63,8 @@ void kosaraju(G&&            g,        // graph
     }
   }
 
-  size_t cid = 0;
-  std::ranges::reverse_view reverse {order};
+  size_t                    cid = 0;
+  std::ranges::reverse_view reverse{order};
   for (auto& uid : reverse) {
     if (component[uid] == std::numeric_limits<CT>::max()) {
       component[uid] = cid;
@@ -73,8 +72,7 @@ void kosaraju(G&&            g,        // graph
       for (auto&& [vid, v] : dfs) {
         if (component[vid] != std::numeric_limits<CT>::max()) {
           dfs.cancel(cancel_search::cancel_branch);
-        }
-        else {
+        } else {
           component[vid] = cid;
         }
       }
@@ -83,28 +81,28 @@ void kosaraju(G&&            g,        // graph
   }
 }
 
-template <adjacency_list G,
+template <adjacency_list              G,
           ranges::random_access_range Component>
 requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-void connected_components(G&&            g,        // graph
-                          Component&     component // out: connected component assignment
+void connected_components(G&&        g,        // graph
+                          Component& component // out: connected component assignment
 ) {
-  size_t N(size(vertices(g)));
+  size_t            N(size(vertices(g)));
   std::vector<bool> visited(N, false);
   using CT = typename std::decay<decltype(*component.begin())>::type;
   std::fill(component.begin(), component.end(), std::numeric_limits<CT>::max());
-  
+
   CT cid = 0;
   for (auto&& [uid, u] : views::vertexlist(g)) {
     if (visited[uid]) {
       continue;
     }
-    visited[uid] = true;
+    visited[uid]   = true;
     component[uid] = cid;
     vertices_depth_first_search_view<G, void> dfs(g, uid);
     for (auto&& [vid, v] : dfs) {
       component[vid] = cid;
-      visited[vid] = true;
+      visited[vid]   = true;
     }
     ++cid;
   }
