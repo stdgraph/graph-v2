@@ -54,6 +54,7 @@ set(UNITTEST_SOURCES
     "mis_tests.cpp" 
     "mst_tests.cpp"
     "tc_tests.cpp"
+    "cc_tests.cpp"
 )
 
 foreach(SOURCE IN LISTS UNITTEST_SOURCES)

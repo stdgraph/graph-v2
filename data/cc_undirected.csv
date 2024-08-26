@@ -1,0 +1,15 @@
+From,To,Distance
+A,H,1
+H,A,1
+B,C,1
+C,B,1
+B,F,1
+F,B,1
+B,G,1
+G,B,1
+C,F,1
+F,C,1
+D,E,1
+E,D,1
+H,I,1
+I,H,1
