@@ -233,7 +233,7 @@ void dijkstra_shortest_paths(
       Visitor&& visitor = dijkstra_visitor_base<G>(),
       Compare&& compare = less<ranges::range_value_t<Distances>>(),
       Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
-      dijkstra_shortest_paths(g, ranges::subrange(&source, (&source + 1)), distances, predecessor, weight,
+  dijkstra_shortest_paths(g, ranges::subrange(&source, (&source + 1)), distances, predecessor, weight,
                           forward<Visitor>(visitor), forward<Compare>(compare), forward<Combine>(combine));
 }
 
