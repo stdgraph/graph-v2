@@ -103,6 +103,8 @@ template <index_adjacency_list        G,
           class Combine = plus<ranges::range_value_t<Distances>>>
 requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> && //
          is_arithmetic_v<ranges::range_value_t<Distances>> &&              //
+         ranges::sized_range<Distances> &&                                 //
+         ranges::sized_range<Predecessors> &&                              //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 // && dijkstra_visitor<G, Visitor>
@@ -136,6 +138,19 @@ void dijkstra_shortest_paths(
     }
     return false;
   };
+
+  if (size(distances) < size(vertices(g))) {
+    throw out_of_range(
+          fmt::format("dijkstra_shortest_paths: size of distances of {} is less than the number of vertices {}",
+                      size(distances), size(vertices(g))));
+  }
+  if constexpr (!is_same_v<Predecessors, _null_range_type>) {
+    if (size(predecessor) < size(vertices(g))) {
+      throw out_of_range(
+            fmt::format("dijkstra_shortest_paths: size of predecessor of {} is less than the number of vertices {}",
+                        size(predecessor), size(vertices(g))));
+    }
+  }
 
   constexpr auto zero     = shortest_path_zero<distance_type>();
   constexpr auto infinite = shortest_path_invalid_distance<distance_type>();
@@ -176,7 +191,7 @@ void dijkstra_shortest_paths(
       // Negative weights are not allowed for Dijkstra's algorithm
       if constexpr (is_signed_v<weight_type>) {
         if (w < zero) {
-          throw graph_error(
+          throw out_of_range(
                 fmt::format("dijkstra_shortest_paths: invalid negative edge weight of '{}' encountered", w));
         }
       }
@@ -220,6 +235,8 @@ template <index_adjacency_list        G,
           class Compare = less<ranges::range_value_t<Distances>>,
           class Combine = plus<ranges::range_value_t<Distances>>>
 requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
+         ranges::sized_range<Distances> &&                    //
+         ranges::sized_range<Predecessors> &&                 //
          convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 // && dijkstra_visitor<G, Visitor>
@@ -271,6 +288,7 @@ template <index_adjacency_list        G,
           class Compare = less<ranges::range_value_t<Distances>>,
           class Combine = plus<ranges::range_value_t<Distances>>>
 requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> && //
+         ranges::sized_range<Distances> &&                                 //
          is_arithmetic_v<ranges::range_value_t<Distances>> &&              //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 //&& dijkstra_visitor<G, Visitor>
@@ -295,6 +313,7 @@ template <index_adjacency_list        G,
           class Compare = less<ranges::range_value_t<Distances>>,
           class Combine = plus<ranges::range_value_t<Distances>>>
 requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
+         ranges::sized_range<Distances> &&                    //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 //&& dijkstra_visitor<G, Visitor>
 void dijkstra_shortest_distances(

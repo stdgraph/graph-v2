@@ -107,9 +107,11 @@ template <index_adjacency_list        G,
           class Visitor = bellman_visitor_base<G>,
           class Compare = less<ranges::range_value_t<Distances>>,
           class Combine = plus<ranges::range_value_t<Distances>>>
-requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> && //
-         is_arithmetic_v<ranges::range_value_t<Distances>> &&              //
-         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
+requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> &&      //
+         is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
+         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
+         ranges::sized_range<Distances> &&                                      //
+         ranges::sized_range<Predecessors> &&                                   //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 // && bellman_visitor<G, Visitor>
 bool bellman_ford_shortest_paths(
@@ -142,6 +144,20 @@ bool bellman_ford_shortest_paths(
     }
     return false;
   };
+
+  if (size(distances) < size(vertices(g))) {
+    throw out_of_range(
+          fmt::format("bellman_ford_shortest_paths: size of distances is {} is less than the number of vertices {}",
+                      size(distances), size(vertices(g))));
+  }
+
+  if constexpr (!is_same_v<Predecessors, _null_range_type>) {
+    if (size(predecessor) < size(vertices(g))) {
+      throw out_of_range(
+            fmt::format("bellman_ford_shortest_paths: size of predecessor is {} is less than the number of vertices {}",
+                        size(predecessor), size(vertices(g))));
+    }
+  }
 
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
   constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
@@ -210,8 +226,10 @@ template <index_adjacency_list        G,
           class Visitor = bellman_visitor_base<G>,
           class Compare = less<ranges::range_value_t<Distances>>,
           class Combine = plus<ranges::range_value_t<Distances>>>
-requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
-         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> &&
+requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
+         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
+         ranges::sized_range<Distances> &&                                      //
+         ranges::sized_range<Predecessors> &&                                   //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 // && bellman_visitor<G, Visitor>
 bool bellman_ford_shortest_paths(
@@ -267,6 +285,7 @@ template <index_adjacency_list        G,
           class Combine = plus<ranges::range_value_t<Distances>>>
 requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> && //
          is_arithmetic_v<ranges::range_value_t<Distances>> &&              //
+         ranges::sized_range<Distances> &&                                 //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 //&& bellman_visitor<G, Visitor>
 bool bellman_ford_shortest_distances(
@@ -290,6 +309,7 @@ template <index_adjacency_list        G,
           class Compare = less<ranges::range_value_t<Distances>>,
           class Combine = plus<ranges::range_value_t<Distances>>>
 requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
+         ranges::sized_range<Distances> &&                    //
          basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
 //&& bellman_visitor<G, Visitor>
 bool bellman_ford_shortest_distances(

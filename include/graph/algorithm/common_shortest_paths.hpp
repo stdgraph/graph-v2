@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <numeric>
 
 #ifndef GRAPH_COMMON_SHORTEST_PATHS_HPP
 #  define GRAPH_COMMON_SHORTEST_PATHS_HPP
@@ -70,11 +71,7 @@ constexpr void init_shortest_paths(Distances& distances) {
 template <class Distances, class Predecessors>
 constexpr void init_shortest_paths(Distances& distances, Predecessors& predecessors) {
   init_shortest_paths(distances);
-
-  using pred_t = ranges::range_value_t<Predecessors>;
-  pred_t i     = pred_t();
-  for (auto& pred : predecessors)
-    pred = i++;
+  ranges::iota(predecessors, 0);
 }
 
 /**
