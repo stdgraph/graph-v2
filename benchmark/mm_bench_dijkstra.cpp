@@ -63,7 +63,7 @@ std::string current_timestamp() {
 template <typename Distance>
 size_t vertices_visited(const std::vector<Distance>& distances) {
   size_t visited = std::accumulate(distances.begin(), distances.end(), 0ULL, [](size_t count, Distance dist) {
-    return (dist != shortest_path_invalid_distance<Distance>()) ? count + 1 : count;
+    return (dist != shortest_path_infinite_distance<Distance>()) ? count + 1 : count;
   });
   //fmt::println("{:L} vertices were actually visited", visited);
   return visited;

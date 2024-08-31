@@ -53,7 +53,7 @@ using std::graph::edge_reference_t;
 
 using std::graph::views::vertexlist;
 
-using std::graph::shortest_path_invalid_distance;
+using std::graph::shortest_path_infinite_distance;
 using std::graph::init_shortest_paths;
 using std::graph::bellman_ford_shortest_paths;
 using std::graph::bellman_ford_shortest_distances;

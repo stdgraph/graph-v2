@@ -188,7 +188,7 @@ void dijkstra_with_visitor(
 #endif
 
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
-  constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
+  constexpr auto infinite = shortest_path_infinite_distance<DistanceValue>();
 
   const id_type N(static_cast<id_type>(num_vertices(g)));
 

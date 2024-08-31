@@ -153,7 +153,7 @@ void dijkstra_shortest_paths(
   }
 
   constexpr auto zero     = shortest_path_zero<distance_type>();
-  constexpr auto infinite = shortest_path_invalid_distance<distance_type>();
+  constexpr auto infinite = shortest_path_infinite_distance<distance_type>();
 
   const id_type N = static_cast<id_type>(num_vertices(g));
 

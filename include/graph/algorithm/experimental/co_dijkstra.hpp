@@ -124,7 +124,7 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
 #  endif
 
   constexpr auto zero     = shortest_path_zero<DistanceValue>();
-  constexpr auto infinite = shortest_path_invalid_distance<DistanceValue>();
+  constexpr auto infinite = shortest_path_infinite_distance<DistanceValue>();
 
   const id_type N(static_cast<id_type>(num_vertices(g_)));
 

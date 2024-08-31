@@ -7,15 +7,15 @@
 namespace std::graph::experimental {
 /**
  * @ingroup graph_algorithms
- * @brief Returns a value to define an invalid distance used to initialize distance values
+ * @brief Returns a value to define an infinite distance used to initialize distance values
  * in the distance range before one of the shorts paths functions.
  * 
  * @tparam DistanceValue The type of the distance.
  * 
- * @return A unique sentinal value to indicate that a value is invalid, or undefined.
+ * @return A value for an infinite distance.
 */
 template <class DistanceValue>
-constexpr auto shortest_path_invalid_distance() {
+constexpr auto shortest_path_infinite_distance() {
   return numeric_limits<DistanceValue>::max();
 }
 
@@ -34,7 +34,7 @@ constexpr auto shortest_path_zero() {
 
 /**
  * @ingroup graph_algorithms
- * @brief Intializes the distance values to shortest_path_invalid_distance().
+ * @brief Intializes the distance values to shortest_path_infinite_distance().
  * 
  * @tparam Distances The range type of the distances.
  * 
@@ -42,7 +42,7 @@ constexpr auto shortest_path_zero() {
 */
 template <class Distances>
 constexpr void init_shortest_paths(Distances& distances) {
-  ranges::fill(distances, shortest_path_invalid_distance<ranges::range_value_t<Distances>>());
+  ranges::fill(distances, shortest_path_infinite_distance<ranges::range_value_t<Distances>>());
 }
 
 /**

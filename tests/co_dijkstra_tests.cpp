@@ -44,7 +44,7 @@ using std::graph::find_vertex_edge;
 using std::graph::experimental::co_dijkstra;
 using std::graph::experimental::bfs_vertex_value_t;
 using std::graph::experimental::bfs_edge_value_t;
-using std::graph::experimental::shortest_path_invalid_distance;
+using std::graph::experimental::shortest_path_infinite_distance;
 using std::graph::experimental::init_shortest_paths;
 
 using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
