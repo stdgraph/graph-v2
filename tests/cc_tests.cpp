@@ -17,24 +17,24 @@
 using std::cout;
 using std::endl;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_reference_t;
-using std::graph::vertex_iterator_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::edge_t;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_reference_t;
+using graph::vertex_iterator_t;
+using graph::vertex_edge_range_t;
+using graph::edge_t;
 
-using std::graph::vertices;
-using std::graph::edges;
-using std::graph::vertex_value;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::find_vertex;
-using std::graph::vertex_id;
+using graph::vertices;
+using graph::edges;
+using graph::vertex_value;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
+using graph::find_vertex;
+using graph::vertex_id;
 
-using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
-using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
+using routes_vol_graph_traits = graph::container::vol_graph_traits<double, std::string, std::string>;
+using routes_vol_graph_type   = graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
 #if 1
 TEST_CASE("strongly connected components test", "[strong cc]") {
@@ -56,8 +56,8 @@ TEST_CASE("strongly connected components test", "[strong cc]") {
 
   using value = std::ranges::range_value_t<decltype(reverse)>;
 
-  vertex_id_t<G> N = size(vertices(g));
-  using edge_desc  = std::graph::edge_descriptor<vertex_id_t<G>, true, void, double>;
+  vertex_id_t<G> N = static_cast<vertex_id_t<G>>(size(vertices(g)));
+  using edge_desc  = graph::edge_descriptor<vertex_id_t<G>, true, void, double>;
   auto edge_proj   = [](const value& val) -> edge_desc {
     return edge_desc{std::get<0>(val), std::get<1>(val), std::get<2>(val)};
   };
@@ -65,7 +65,7 @@ TEST_CASE("strongly connected components test", "[strong cc]") {
   gt.load_edges(reverse, edge_proj, N);
 
   std::vector<size_t> component(size(vertices(g)));
-  std::graph::kosaraju(g, gt, component);
+  graph::kosaraju(g, gt, component);
 
   REQUIRE(*std::ranges::max_element(component) == 2);
 }
@@ -78,7 +78,7 @@ TEST_CASE("connected components test", "[cc]") {
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "cc_undirected.csv", name_order_policy::alphabetical);
 
   std::vector<size_t> component(size(vertices(g)));
-  std::graph::connected_components(g, component);
+  graph::connected_components(g, component);
 
   REQUIRE(*std::ranges::max_element(component) == 2);
 }

@@ -8,25 +8,25 @@ Graph-V2 API Reference
 Concepts
 --------
 
-.. doxygenconcept:: std::graph::vertex_range
+.. doxygenconcept:: graph::vertex_range
 
-.. doxygenconcept:: std::graph::targeted_edge
+.. doxygenconcept:: graph::targeted_edge
 
-.. doxygenconcept:: std::graph::sourced_edge
+.. doxygenconcept:: graph::sourced_edge
 
-.. doxygenconcept:: std::graph::adjacency_list
+.. doxygenconcept:: graph::adjacency_list
 
-.. doxygenconcept:: std::graph::sourced_adjacency_list
+.. doxygenconcept:: graph::sourced_adjacency_list
 
-.. doxygenconcept:: std::graph::has_degree
+.. doxygenconcept:: graph::has_degree
 
-.. doxygenconcept:: std::graph::has_find_vertex
+.. doxygenconcept:: graph::has_find_vertex
 
-.. doxygenconcept:: std::graph::has_contains_edge
+.. doxygenconcept:: graph::has_contains_edge
 
-.. doxygenconcept:: std::graph::ordered_edge
+.. doxygenconcept:: graph::ordered_edge
 
-.. doxygenconcept:: std::graph::unordered_edge
+.. doxygenconcept:: graph::unordered_edge
 
 
 --------------------------------
@@ -37,13 +37,13 @@ Concepts
 Algorithms
 ----------
 
-.. doxygenfunction:: std::graph::dijkstra_shortest_distances
+.. doxygenfunction:: graph::dijkstra_shortest_distances
 
-.. doxygenfunction:: std::graph::dijkstra_shortest_paths
+.. doxygenfunction:: graph::dijkstra_shortest_paths
 
-.. doxygenfunction:: std::graph::bellman_ford_shortest_distances
+.. doxygenfunction:: graph::bellman_ford_shortest_distances
 
-.. doxygenfunction:: std::graph::bellman_ford_shortest_paths
+.. doxygenfunction:: graph::bellman_ford_shortest_paths
 
 --------------------------------
 

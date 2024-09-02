@@ -2,7 +2,7 @@
 
 #include <coroutine>
 
-namespace std::graph {
+namespace graph {
 
 // A simple generator from https://en.cppreference.com/w/cpp/language/coroutines.
 template <typename T>
@@ -145,4 +145,4 @@ Generator<std::uint64_t> fib_seq_wrap(unsigned n) {
 }
 #endif //0
 
-} // namespace std::graph
+} // namespace graph

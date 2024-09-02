@@ -5,7 +5,7 @@
 #include "graph/views/incidence.hpp"
 #include <vector>
 
-namespace std::graph {
+namespace graph {
 
 template <adjacency_list G>
 struct reaches {
@@ -23,8 +23,8 @@ struct reaches {
  * Warshall's algorithm. Complexity is O(n^3).
  */
 // clang-format off
-template <adjacency_list G, typename OutIter, typename Alloc = allocator<bool>>
-  requires ranges::random_access_range<vertex_range_t<G>> && 
+template <adjacency_list G, typename OutIter, typename Alloc = std::allocator<bool>>
+  requires random_access_range<vertex_range_t<G>> && 
            integral<vertex_id_t<G>> && 
            output_iterator<OutIter, reaches<G>>
            //&& directed<G>
@@ -32,7 +32,7 @@ template <adjacency_list G, typename OutIter, typename Alloc = allocator<bool>>
 constexpr void warshall_transitive_closure(G& g, OutIter result_iter, Alloc alloc = Alloc()) {
   using views::vertexlist;
   using views::incidence;
-  const size_t      V = ranges::size(g);
+  const size_t      V = size(g);
   std::vector<bool> reach(V * V, alloc); // adjacency matrix bitmap
 
   // transform edges into adjacency matrix bitmap
@@ -53,4 +53,4 @@ constexpr void warshall_transitive_closure(G& g, OutIter result_iter, Alloc allo
         *result_iter = {uid, vid};
 }
 
-} // namespace std::graph
+} // namespace graph

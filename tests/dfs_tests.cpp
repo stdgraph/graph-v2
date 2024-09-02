@@ -21,39 +21,39 @@ using std::is_lvalue_reference_v;
 using std::forward_iterator;
 using std::input_iterator;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_value_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::vertex_reference_t;
-using std::graph::edge_t;
-using std::graph::edge_value_t;
-using std::graph::edge_reference_t;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_value_t;
+using graph::vertex_edge_range_t;
+using graph::vertex_reference_t;
+using graph::edge_t;
+using graph::edge_value_t;
+using graph::edge_reference_t;
 
-using std::graph::graph_value;
-using std::graph::vertices;
-using std::graph::edges;
-using std::graph::vertex_id;
-using std::graph::vertex_value;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::degree;
-using std::graph::find_vertex;
-using std::graph::find_vertex_edge;
+using graph::graph_value;
+using graph::vertices;
+using graph::edges;
+using graph::vertex_id;
+using graph::vertex_value;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
+using graph::degree;
+using graph::find_vertex;
+using graph::find_vertex_edge;
 
-using std::graph::vertices_depth_first_search_view;
-using std::graph::views::vertices_depth_first_search;
+using graph::vertices_depth_first_search_view;
+using graph::views::vertices_depth_first_search;
 
-using std::graph::edges_depth_first_search_view;
-using std::graph::views::edges_depth_first_search;
-using std::graph::views::sourced_edges_depth_first_search;
+using graph::edges_depth_first_search_view;
+using graph::views::edges_depth_first_search;
+using graph::views::sourced_edges_depth_first_search;
 
-using std::graph::edgelist::basic_sourced_edgelist;
-using std::graph::edgelist::basic_sourced_index_edgelist;
+using graph::edgelist::basic_sourced_edgelist;
+using graph::edgelist::basic_sourced_index_edgelist;
 
-using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
-using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
+using routes_vol_graph_traits = graph::container::vol_graph_traits<double, std::string, std::string>;
+using routes_vol_graph_type   = graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -118,7 +118,7 @@ TEST_CASE("vertices_depth_first_search_view test", "[dynamic][dfs][vertex]") {
   }
 
   SECTION("edges_breadth_first_search_view edgelist concepts") {
-    using edgelist_type = decltype(std::graph::views::sourced_edges_depth_first_search(g, frankfurt_id));
+    using edgelist_type = decltype(graph::views::sourced_edges_depth_first_search(g, frankfurt_id));
     static_assert(basic_sourced_edgelist<edgelist_type>);
     static_assert(basic_sourced_index_edgelist<edgelist_type>);
   }
@@ -150,7 +150,7 @@ TEST_CASE("vertices_depth_first_search_view test", "[dynamic][dfs][vertex]") {
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("vertices_depth_first_search_view generate content test") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -278,7 +278,7 @@ TEST_CASE("vertices_depth_first_search_view test", "[dynamic][dfs][vertex]") {
     for (auto&& [uid, u] : dfs) {
       ++city_cnt;
       if (uid == 2) // Karlsruhe
-        dfs.cancel(std::graph::cancel_search::cancel_all);
+        dfs.cancel(graph::cancel_search::cancel_all);
     }
     REQUIRE(2 == city_cnt);
   }
@@ -291,7 +291,7 @@ TEST_CASE("vertices_depth_first_search_view test", "[dynamic][dfs][vertex]") {
       //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
       ++city_cnt;
       if (uid == 4) // Wurzburg
-        dfs.cancel(std::graph::cancel_search::cancel_branch);
+        dfs.cancel(graph::cancel_search::cancel_branch);
     }
     REQUIRE(6 == city_cnt);
   }
@@ -369,7 +369,7 @@ TEST_CASE("vertices_depth_first_search test", "[dynamic][dfs][vertex]") {
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("vertices_depth_first_search generate content test") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -496,7 +496,7 @@ TEST_CASE("vertices_depth_first_search test", "[dynamic][dfs][vertex]") {
     for (auto&& [uid, u] : dfs) {
       ++city_cnt;
       if (uid == 2) // Karlsruhe
-        dfs.cancel(std::graph::cancel_search::cancel_all);
+        dfs.cancel(graph::cancel_search::cancel_all);
     }
     REQUIRE(2 == city_cnt);
   }
@@ -509,7 +509,7 @@ TEST_CASE("vertices_depth_first_search test", "[dynamic][dfs][vertex]") {
       //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
       ++city_cnt;
       if (uid == 4) // Wurzburg
-        dfs.cancel(std::graph::cancel_search::cancel_branch);
+        dfs.cancel(graph::cancel_search::cancel_branch);
     }
     REQUIRE(6 == city_cnt);
   }
@@ -585,7 +585,7 @@ TEST_CASE("edges_depth_first_search_view test", "[dynamic][dfs][edge]") {
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("edges_depth_first_search_view generate content test") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -783,7 +783,7 @@ TEST_CASE("edges_depth_first_search_view test", "[dynamic][dfs][edge]") {
     for (auto&& [vid, uv] : dfs) {
       ++city_cnt;
       if (vid == 2) // Karlsruhe
-        dfs.cancel(std::graph::cancel_search::cancel_all);
+        dfs.cancel(graph::cancel_search::cancel_all);
     }
     REQUIRE(2 == city_cnt);
   }
@@ -796,7 +796,7 @@ TEST_CASE("edges_depth_first_search_view test", "[dynamic][dfs][edge]") {
       //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
       ++city_cnt;
       if (vid == 4) // Wurzburg
-        dfs.cancel(std::graph::cancel_search::cancel_branch);
+        dfs.cancel(graph::cancel_search::cancel_branch);
     }
     REQUIRE(6 == city_cnt);
   }
@@ -872,7 +872,7 @@ TEST_CASE("edges_depth_first_search test", "[dynamic][dfs][edge]") {
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("edges_depth_first_search generate content test") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -1070,7 +1070,7 @@ TEST_CASE("edges_depth_first_search test", "[dynamic][dfs][edge]") {
     for (auto&& [vid, uv] : dfs) {
       ++city_cnt;
       if (vid == 2) // Karlsruhe
-        dfs.cancel(std::graph::cancel_search::cancel_all);
+        dfs.cancel(graph::cancel_search::cancel_all);
     }
     REQUIRE(2 == city_cnt);
   }
@@ -1083,7 +1083,7 @@ TEST_CASE("edges_depth_first_search test", "[dynamic][dfs][edge]") {
       //cout << indent << "[" << uid << "] " << vertex_value(g,u) << endl;
       ++city_cnt;
       if (vid == 4) // Wurzburg
-        dfs.cancel(std::graph::cancel_search::cancel_branch);
+        dfs.cancel(graph::cancel_search::cancel_branch);
     }
     REQUIRE(6 == city_cnt);
   }
@@ -1091,7 +1091,7 @@ TEST_CASE("edges_depth_first_search test", "[dynamic][dfs][edge]") {
 
 // This is only to illustrate an idea. I expect it to be deleted after 7/26/22-ish.
 #if 0
-namespace std::graph {
+namespace graph {
 template <class G, class I, class DistanceT>
 requires convertible_to<iter_value_t<I>, vertex_id_t<G>>
 struct shortest_path {
@@ -1141,7 +1141,7 @@ void shortest_paths_example() {
   vector<vector<vertex_id_t<G>>> paths;
   //dijkstra_shortest_paths(g, 1, back_inserter(path));
 }
-} // namespace std::graph
+} // namespace graph
 #endif // 0
 
 TEST_CASE("shortest paths demo", "[dynamic][shortest_paths][vertex]") {}

@@ -46,8 +46,8 @@ using std::endl;
 using fmt::print;
 using fmt::println;
 
-using namespace std::graph;
-using namespace std::graph::experimental;
+using namespace graph;
+using namespace graph::experimental;
 
 struct bench_results {
   size_t vertices_discovered = 0;

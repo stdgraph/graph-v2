@@ -15,7 +15,7 @@
 #ifndef GRAPH_CO_DIJKSTRA_CLRS_HPP
 #  define GRAPH_CO_DIJKSTRA_CLRS_HPP
 
-namespace std::graph::experimental {
+namespace graph::experimental {
 
 
 // Helper macros to keep the visual clutter down in a coroutine. I'd like to investigate using CRTP to avoid them,
@@ -76,29 +76,28 @@ constexpr dijkstra_events operator|(dijkstra_events lhs, dijkstra_events rhs) no
  * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Queue        The queue type. Defaults to a priority_queue.
  */
-template <index_adjacency_list        G,
-          ranges::input_range         Seeds,
-          ranges::random_access_range Distances,
-          ranges::random_access_range Predecessors,
-          class Compare = less<ranges::range_value_t<Distances>>,
-          class Combine = plus<ranges::range_value_t<Distances>>,
-          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>>
-requires convertible_to<ranges::range_value_t<Seeds>, vertex_id_t<G>> &&        //
-         is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
-         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
-         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
+template <index_adjacency_list G,
+          input_range          Seeds,
+          random_access_range  Distances,
+          random_access_range  Predecessors,
+          class Compare = less<range_value_t<Distances>>,
+          class Combine = plus<range_value_t<Distances>>,
+          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>>
+requires convertible_to<range_value_t<Seeds>, vertex_id_t<G>> &&        //
+         is_arithmetic_v<range_value_t<Distances>> &&                   //
+         convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> && //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
       G&                    g_,
       const dijkstra_events events,
       const Seeds&          seeds,
       Predecessors&         predecessor,
       Distances&            distances,
-      WF&                   weight =
-            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
-      Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
+      WF&       weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      Compare&& compare = less<range_value_t<Distances>>(),
+      Combine&& combine = plus<range_value_t<Distances>>()) {
   using id_type         = vertex_id_t<G>;
-  using DistanceValue   = ranges::range_value_t<Distances>;
+  using DistanceValue   = range_value_t<Distances>;
   using weight_type     = invoke_result_t<WF, edge_reference_t<G>>;
   using bfs_vertex_type = bfs_vertex_value_t<G>;
   using bfs_edge_type   = bfs_edge_value_t<G>;
@@ -131,7 +130,7 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
   auto qcompare = [&distances](id_type a, id_type b) {
     return distances[static_cast<size_t>(a)] > distances[static_cast<size_t>(b)];
   };
-  using Queue = std::priority_queue<vertex_id_t<G>, vector<vertex_id_t<G>>, decltype(qcompare)>;
+  using Queue = std::priority_queue<vertex_id_t<G>, std::vector<vertex_id_t<G>>, decltype(qcompare)>;
   Queue queue(qcompare);
 
   if ((events & dijkstra_events::initialize_vertex) == dijkstra_events::initialize_vertex) {
@@ -169,7 +168,7 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
       dijkstra_yield_edge(dijkstra_events::examine_edge, uid, vid, uv);
 
       // Negative weights are not allowed for Dijkstra's algorithm
-      if constexpr (is_signed_v<weight_type>) {
+      if constexpr (std::is_signed_v<weight_type>) {
         if (w < zero) {
           throw graph_error("co_dijkstra: negative edge weight");
         }
@@ -229,35 +228,34 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
 // refinements needed
 // 1. queue is created 2x
 
-template <index_adjacency_list        G,
-          ranges::random_access_range Distances,
-          ranges::random_access_range Predecessors,
-          class Compare    = less<ranges::range_value_t<Distances>>,
-          class Combine    = plus<ranges::range_value_t<Distances>>,
-          class WF         = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
-          _queueable Queue = priority_queue<vertex_id_t<G>,
-                                            vector<vertex_id_t<G>>,
-                                            greater<vertex_id_t<G>>>>
-requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
-         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
-         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
+template <index_adjacency_list G,
+          random_access_range  Distances,
+          random_access_range  Predecessors,
+          class Compare    = less<range_value_t<Distances>>,
+          class Combine    = plus<range_value_t<Distances>>,
+          class WF         = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
+          _queueable Queue = std::priority_queue<vertex_id_t<G>,
+                                                 std::vector<vertex_id_t<G>>,
+                                                 std::greater<vertex_id_t<G>>>>
+requires is_arithmetic_v<range_value_t<Distances>> &&                   //
+         convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> && //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
       G&                    g_,
       const dijkstra_events events,
       vertex_id_t<G>        seed,
       Predecessors&         predecessor,
       Distances&            distances,
-      WF&                   weight =
-            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
-      Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>(),
+      WF&       weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      Compare&& compare = less<range_value_t<Distances>>(),
+      Combine&& combine = plus<range_value_t<Distances>>(),
       Queue     queue   = Queue()) {
-  //ranges::subrange seeds{&seed, (&seed + 1)}; // segfault in gcc-13 when iterating over seeds in called co_dijkstra
-  array<vertex_id_t<G>, 1> seeds{seed};
+  //subrange seeds{&seed, (&seed + 1)}; // segfault in gcc-13 when iterating over seeds in called co_dijkstra
+  std::array<vertex_id_t<G>, 1> seeds{seed};
   return co_dijkstra(g_, events, seeds, predecessor, distances, weight, forward<Compare>(compare),
                      forward<Combine>(combine), queue);
 }
 
-} // namespace std::graph::experimental
+} // namespace graph::experimental
 
 #endif // GRAPH_CO_DIJKSTRA_CLRS_HPP

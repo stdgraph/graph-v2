@@ -5,7 +5,7 @@
 template <adjacency_list Graph, class Weight, class Sources>
 static auto nwgraph_dijkstra(
       Graph&& graph, const Sources& sources, Weight weight = [](auto& e) -> auto& { return std::get<1>(e); }) {
-  using namespace std::graph;
+  using namespace graph;
   using vertex_id_type = vertex_id_t<Graph>;
 
   using distance_t = int64_t;

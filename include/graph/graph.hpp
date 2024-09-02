@@ -57,7 +57,7 @@
 #ifndef GRAPH_HPP
 #  define GRAPH_HPP
 
-namespace std::graph {
+namespace graph {
 
 //
 // graph concepts
@@ -116,17 +116,17 @@ concept sourced_targeted_edge = targeted_edge<G> && sourced_edge<G>;
  * 
  * @tparam G The graph type.
  */
-template <class G>                                                       // (exposition only)
-concept _common_vertex_range = ranges::sized_range<vertex_range_t<G>> && //
+template <class G>                                               // (exposition only)
+concept _common_vertex_range = sized_range<vertex_range_t<G>> && //
                                requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
 
 template <class G>                                                // For exposition only
 concept vertex_range = _common_vertex_range<vertex_range_t<G>> && //
-                       ranges::forward_range<vertex_range_t<G>>;
+                       forward_range<vertex_range_t<G>>;
 
-template <class G>                                                             // For exposition only
-concept index_vertex_range = _common_vertex_range<vertex_range_t<G>> &&        //
-                             ranges::random_access_range<vertex_range_t<G>> && //
+template <class G>                                                      // For exposition only
+concept index_vertex_range = _common_vertex_range<vertex_range_t<G>> && //
+                             random_access_range<vertex_range_t<G>> &&  //
                              integral<vertex_id_t<G>>;
 
 // Will something like this be needed when vertices are in a map? TBD
@@ -140,13 +140,13 @@ concept index_vertex_range = _common_vertex_range<vertex_range_t<G>> &&        /
 */
 template <class G> // For exposition only
 concept basic_targeted_edge_range = requires(G&& g, vertex_id_t<G> uid) {
-  { edges(g, uid) } -> ranges::forward_range;
+  { edges(g, uid) } -> forward_range;
 };
 
 template <class G>                                            // For exposition only
 concept targeted_edge_range = basic_targeted_edge_range<G> && //
                               requires(G&& g, vertex_reference_t<G> u) {
-                                { edges(g, u) } -> ranges::forward_range;
+                                { edges(g, u) } -> forward_range;
                               };
 
 //--------------------------------------------------------------------------------------------
@@ -365,7 +365,7 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
  *      template class< T>
  *      class my_edge { int src_id; int tgt_id; ... };
  *  }
- *  namespace std::graph {
+ *  namespace graph {
  *     template<class T>
  *     struct define_unordered_edge<my_namespace::my_graph<T>, my_namespace::my_edge<T>> : public true_type {};
  *  }
@@ -374,9 +374,9 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
  */
 
 template <class G>
-struct define_unordered_edge : public false_type {}; // specialized for graph container edge
+struct define_unordered_edge : public std::false_type {}; // specialized for graph container edge
 
-template <class G> // For exposition only
+template <class G>                                   // For exposition only
 concept unordered_edge = basic_sourced_edge<G> && define_unordered_edge<G>::value;
 
 //
@@ -389,13 +389,13 @@ concept ordered_edge = !unordered_edge<G>;
 //
 // graph_error
 //
-class graph_error : public runtime_error {
+class graph_error : public std::runtime_error {
 public:
-  explicit graph_error(const string& what_arg) : runtime_error(what_arg) {}
-  explicit graph_error(const char* what_arg) : runtime_error(what_arg) {}
+  explicit graph_error(const std::string& what_arg) : std::runtime_error(what_arg) {}
+  explicit graph_error(const char* what_arg) : std::runtime_error(what_arg) {}
 };
 
 
-} // namespace std::graph
+} // namespace graph
 
 #endif //GRAPH_HPP

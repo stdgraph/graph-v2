@@ -30,37 +30,37 @@ using std::less;
 using std::plus;
 using std::is_arithmetic_v;
 
-using std::graph::index_adjacency_list;
-using std::graph::edge_weight_function;
-using std::graph::basic_edge_weight_function;
+using graph::index_adjacency_list;
+using graph::edge_weight_function;
+using graph::basic_edge_weight_function;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::edge_t;
-using std::graph::edge_value_t;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_edge_range_t;
+using graph::edge_t;
+using graph::edge_value_t;
 
-using std::graph::vertices;
-using std::graph::find_vertex;
-using std::graph::vertex_value;
-using std::graph::edges;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::num_vertices;
-using std::graph::vertex_reference_t;
-using std::graph::edge_reference_t;
+using graph::vertices;
+using graph::find_vertex;
+using graph::vertex_value;
+using graph::edges;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
+using graph::num_vertices;
+using graph::vertex_reference_t;
+using graph::edge_reference_t;
 
-using std::graph::views::vertexlist;
+using graph::views::vertexlist;
 
-using std::graph::shortest_path_infinite_distance;
-using std::graph::init_shortest_paths;
-using std::graph::dijkstra_shortest_paths;
-using std::graph::dijkstra_shortest_distances;
-using std::graph::dijkstra_visitor_base;
+using graph::shortest_path_infinite_distance;
+using graph::init_shortest_paths;
+using graph::dijkstra_shortest_paths;
+using graph::dijkstra_shortest_distances;
+using graph::dijkstra_visitor_base;
 
-using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
-using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
+using routes_volf_graph_traits = graph::container::vofl_graph_traits<double, std::string>;
+using routes_volf_graph_type   = graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -130,8 +130,8 @@ TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments
   auto weight = [](edge_reference_t<G> uv) -> double { return 1.0; };
 
 #if 0
-  //using V = std::graph::dijkstra_visitor_base<G>;
-  //static_assert(std::graph::dijkstra_visitor<G, V>, "Visitor doesn't match dijkstra_visitor requirements");
+  //using V = graph::dijkstra_visitor_base<G>;
+  //static_assert(graph::dijkstra_visitor<G, V>, "Visitor doesn't match dijkstra_visitor requirements");
 #endif
 
   dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors);
@@ -185,7 +185,7 @@ TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("Dijkstra's Shortest Segments generate") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -315,7 +315,7 @@ TEST_CASE("Dijkstra's Common Shortest Paths", "[csv][vofl][shortest][paths][dijk
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("Dijkstra's Shortest Paths generate") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -440,7 +440,7 @@ TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segment
   auto&                           uv      = *begin(edges(g, u));
   Visitor::sourced_edge_desc_type uv_desc = {frankfurt_id, target_id(g, uv), uv};
 
-  static_assert(std::graph::dijkstra_visitor<G, decltype(visitor)>, "visitor is not a dijkstra_visitor");
+  static_assert(graph::dijkstra_visitor<G, decltype(visitor)>, "visitor is not a dijkstra_visitor");
 #endif
   dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
                           std::plus<Distance>());
@@ -470,7 +470,7 @@ TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segment
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("Dijkstra's Shortest Segments generate") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -602,7 +602,7 @@ TEST_CASE("Dijkstra's General Shortest Paths", "[csv][vofl][shortest][paths][dij
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("Dijkstra's Shortest Paths generate") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;

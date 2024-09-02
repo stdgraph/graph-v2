@@ -2,7 +2,7 @@
 
 #include "graph/edgelist.hpp"
 
-namespace std::graph::container {
+namespace graph::container {
 
 template <typename VSourceId, typename VTargetId, typename EV>
 class utility_edgelist {
@@ -44,8 +44,8 @@ public:
     using type = std::conditional_t<(std::numeric_limits<T>::max() > std::numeric_limits<U>::max()), T, U>;
   };
 
-  //VSourceId max_vid() { return std::max(source_max_, target_max_); }
-  VLargeId<VSourceId, VTargetId>::type max_vid() { return std::max(source_max_, target_max_); }
+  //VSourceId max_vid() { return max(source_max_, target_max_); }
+  VLargeId<VSourceId, VTargetId>::type max_vid() { return max(source_max_, target_max_); }
   VSourceId                            max_source() { return source_max_; }
   VTargetId                            max_target() { return target_max_; }
 
@@ -87,4 +87,4 @@ private:
   bool         directed_;
 };
 
-} // namespace std::graph::container
+} // namespace graph::container

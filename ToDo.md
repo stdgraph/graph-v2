@@ -34,8 +34,8 @@
     - [x] cancel() CPO? bfs, dfs: no, member only
     - [x] replace is_undirected_edge_v<G> & undirected_incidence_graph<G> with is_unordered_edge_v<G>
   - [ ] Views
-    - [x] view classes should be in std::graph
-    - [x] view functions should be in std::graph::view
+    - [x] view classes should be in graph
+    - [x] view functions should be in graph::view
     - [ ] add range overloads to appropriate views (DFS, BFS, topo_sort, etc.)
     - [ ] vertexlist
       - [ ] Use VVF&& instead of const VVF&

@@ -21,27 +21,27 @@ using std::ranges::forward_range;
 using std::remove_reference_t;
 using std::is_const_v;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::edge_t;
-using std::graph::edge_reference_t;
-using std::graph::edge_value_t;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_edge_range_t;
+using graph::edge_t;
+using graph::edge_reference_t;
+using graph::edge_value_t;
 
-using std::graph::graph_value;
-using std::graph::vertices;
-using std::graph::edges;
-using std::graph::vertex_id;
-using std::graph::vertex_value;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::degree;
-using std::graph::find_vertex;
-using std::graph::find_vertex_edge;
-using std::graph::num_vertices;
-using std::graph::num_edges;
-using std::graph::has_edge;
+using graph::graph_value;
+using graph::vertices;
+using graph::edges;
+using graph::vertex_id;
+using graph::vertex_value;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
+using graph::degree;
+using graph::find_vertex;
+using graph::find_vertex_edge;
+using graph::num_vertices;
+using graph::num_edges;
+using graph::has_edge;
 
 template <typename EV = void, typename VV = void, typename GV = void, typename VId = uint32_t, bool Sourced = false>
 struct dov_graph_traits {
@@ -51,9 +51,9 @@ struct dov_graph_traits {
   using vertex_id_type                       = VId;
   constexpr inline const static bool sourced = Sourced;
 
-  using edge_type   = std::graph::container::dynamic_edge<EV, VV, GV, VId, Sourced, dov_graph_traits>;
-  using vertex_type = std::graph::container::dynamic_vertex<EV, VV, GV, VId, Sourced, dov_graph_traits>;
-  using graph_type  = std::graph::container::dynamic_graph<EV, VV, GV, VId, Sourced, dov_graph_traits>;
+  using edge_type   = graph::container::dynamic_edge<EV, VV, GV, VId, Sourced, dov_graph_traits>;
+  using vertex_type = graph::container::dynamic_vertex<EV, VV, GV, VId, Sourced, dov_graph_traits>;
+  using graph_type  = graph::container::dynamic_graph<EV, VV, GV, VId, Sourced, dov_graph_traits>;
 
   using vertices_type = std::deque<vertex_type>;
   using edges_type    = std::vector<edge_type>;
@@ -61,7 +61,7 @@ struct dov_graph_traits {
 
 
 using routes_dov_graph_traits = dov_graph_traits<double, std::string, std::string>;
-using routes_dov_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_dov_graph_traits>;
+using routes_dov_graph_type   = graph::container::dynamic_adjacency_graph<routes_dov_graph_traits>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -83,27 +83,27 @@ TEST_CASE("Germany routes CSV+dov dijkstra_clrs", "[csv][dov][germany][dijkstra]
   auto frankfurt_id = find_frankfurt_id(g);
   auto weight       = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
 
-  std::vector<std::graph::vertex_id_t<G>> predecessors(size(g));
+  std::vector<graph::vertex_id_t<G>> predecessors(size(g));
 
   // Remark(Andrew): edge_value_t should be a value
   std::vector<std::remove_reference_t<edge_value_t<G>>> distances(size(g));
 
-  std::graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors);
-  std::graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
+  graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors);
+  graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
 }
 
 TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
   using G = routes_dov_graph_type; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
-  //using init_edge_value = std::graph::views::copyable_edge_t<routes_dov_graph_traits::vertex_id_type,
+  //using init_edge_value = graph::views::copyable_edge_t<routes_dov_graph_traits::vertex_id_type,
   //                                                           routes_dov_graph_traits::edge_value_type>;
 
   // Define the graph. It's the same as the germany routes using source_order_found
   G g = {{0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, {1, 2, 80.0},  {2, 3, 250.0}, {3, 8, 84.0},
          {4, 5, 103.0}, {4, 7, 186.0}, {5, 8, 167.0}, {5, 9, 183.0}, {6, 8, 502.0}};
 
-  using init_vertex_value             = std::graph::copyable_vertex_t<vertex_id_t<G>, std::string>;
+  using init_vertex_value             = graph::copyable_vertex_t<vertex_id_t<G>, std::string>;
   std::vector<std::string_view> names = {"Frankfürt", "Mannheim", "Karlsruhe", "Augsburg", "Würzburg",
                                          "Nürnberg",  "Kassel",   "Erfurt",    "München",  "Stuttgart"};
   g.load_vertices(names, [&names](std::string_view& nm) {
@@ -236,7 +236,7 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
 #else
       static_assert(std::ranges::sized_range<vertex_edge_range_t<G>>); // begin(r), end(r), size(r)?
       if constexpr (std::ranges::sized_range<vertex_edge_range_t<G>>) {
-        REQUIRE(edge_cnt == std::graph::degree(g, u));
+        REQUIRE(edge_cnt == graph::degree(g, u));
       }
 #endif
     }

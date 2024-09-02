@@ -19,12 +19,13 @@
 
 #include <ranges>
 #include <optional>
+#include <stdexcept>
 #include <fmt/format.h>
 
 #ifndef GRAPH_BELLMAN_SHORTEST_PATHS_HPP
 #  define GRAPH_BELLMAN_SHORTEST_PATHS_HPP
 
-namespace std::graph {
+namespace graph {
 
 template <adjacency_list G>
 class bellman_visitor_base {
@@ -83,12 +84,12 @@ concept bellman_visitor = //is_arithmetic<typename Visitor::distance_type> &&
  *                       then there will be no vertex id defined.
  * @param out_cycle      The output iterator that the vertex ids in the cycle are output to.
  */
-template <index_adjacency_list G, ranges::forward_range Predecessors, class OutputIterator>
+template <index_adjacency_list G, forward_range Predecessors, class OutputIterator>
 requires output_iterator<OutputIterator, vertex_id_t<G>>
-void find_negative_cycle(G&                              g,
-                         const Predecessors&             predecessor,
-                         const optional<vertex_id_t<G>>& cycle_vertex_id,
-                         OutputIterator                  out_cycle) {
+void find_negative_cycle(G&                                   g,
+                         const Predecessors&                  predecessor,
+                         const std::optional<vertex_id_t<G>>& cycle_vertex_id,
+                         OutputIterator                       out_cycle) {
   // Does a negative weight cycle exist?
   if (cycle_vertex_id.has_value()) {
     vertex_id_t<G> uid = cycle_vertex_id.value();
@@ -132,35 +133,34 @@ void find_negative_cycle(G&                              g,
  *         If an edge was not minimized, the on_edge_not_minimized event is called and a vertex id
  *         in the negative weight cycle is returned.
  */
-template <index_adjacency_list        G,
-          ranges::input_range         Sources,
-          ranges::random_access_range Distances,
-          ranges::random_access_range Predecessors,
-          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
+template <index_adjacency_list G,
+          input_range          Sources,
+          random_access_range  Distances,
+          random_access_range  Predecessors,
+          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Visitor = bellman_visitor_base<G>,
-          class Compare = less<ranges::range_value_t<Distances>>,
-          class Combine = plus<ranges::range_value_t<Distances>>>
-requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> &&      //
-         is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
-         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
-         ranges::sized_range<Distances> &&                                      //
-         ranges::sized_range<Predecessors> &&                                   //
-         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
+          class Compare = less<range_value_t<Distances>>,
+          class Combine = plus<range_value_t<Distances>>>
+requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&      //
+         is_arithmetic_v<range_value_t<Distances>> &&                   //
+         convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> && //
+         sized_range<Distances> &&                                      //
+         sized_range<Predecessors> &&                                   //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 // && bellman_visitor<G, Visitor>
-[[nodiscard]] optional<vertex_id_t<G>> bellman_ford_shortest_paths(
+[[nodiscard]] std::optional<vertex_id_t<G>> bellman_ford_shortest_paths(
       G&             g,
       const Sources& sources,
       Distances&     distances,
       Predecessors&  predecessor,
-      WF&&           weight =
-            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Visitor&& visitor = bellman_visitor_base<G>(),
-      Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
+      Compare&& compare = less<range_value_t<Distances>>(),
+      Combine&& combine = plus<range_value_t<Distances>>()) {
   using id_type       = vertex_id_t<G>;
-  using DistanceValue = ranges::range_value_t<Distances>;
+  using DistanceValue = range_value_t<Distances>;
   using weight_type   = invoke_result_t<WF, edge_reference_t<G>>;
-  using return_type   = optional<vertex_id_t<G>>;
+  using return_type   = std::optional<vertex_id_t<G>>;
 
   // relxing the target is the function of reducing the distance from the source to the target
   auto relax_target = [&g, &predecessor, &distances, &compare, &combine] //
@@ -180,14 +180,14 @@ requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> &&      
   };
 
   if (size(distances) < size(vertices(g))) {
-    throw out_of_range(
+    throw std::out_of_range(
           fmt::format("bellman_ford_shortest_paths: size of distances is {} is less than the number of vertices {}",
                       size(distances), size(vertices(g))));
   }
 
   if constexpr (!is_same_v<Predecessors, _null_range_type>) {
     if (size(predecessor) < size(vertices(g))) {
-      throw out_of_range(
+      throw std::out_of_range(
             fmt::format("bellman_ford_shortest_paths: size of predecessor is {} is less than the number of vertices {}",
                         size(predecessor), size(vertices(g))));
     }
@@ -201,7 +201,8 @@ requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> &&      
   // Seed the queue with the initial vertice(s)
   for (auto&& source : sources) {
     if (source >= N || source < 0) {
-      throw out_of_range(fmt::format("bellman_ford_shortest_paths: source vertex id '{}' is out of range", source));
+      throw std::out_of_range(
+            fmt::format("bellman_ford_shortest_paths: source vertex id '{}' is out of range", source));
     }
     distances[static_cast<size_t>(source)] = zero; // mark source as discovered
   }
@@ -236,30 +237,29 @@ requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> &&      
   return return_type();
 }
 
-template <index_adjacency_list        G,
-          ranges::random_access_range Distances,
-          ranges::random_access_range Predecessors,
-          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
+template <index_adjacency_list G,
+          random_access_range  Distances,
+          random_access_range  Predecessors,
+          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Visitor = bellman_visitor_base<G>,
-          class Compare = less<ranges::range_value_t<Distances>>,
-          class Combine = plus<ranges::range_value_t<Distances>>>
-requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   //
-         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessors>> && //
-         ranges::sized_range<Distances> &&                                      //
-         ranges::sized_range<Predecessors> &&                                   //
-         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
+          class Compare = less<range_value_t<Distances>>,
+          class Combine = plus<range_value_t<Distances>>>
+requires is_arithmetic_v<range_value_t<Distances>> &&                   //
+         convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> && //
+         sized_range<Distances> &&                                      //
+         sized_range<Predecessors> &&                                   //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 // && bellman_visitor<G, Visitor>
-[[nodiscard]] optional<vertex_id_t<G>> bellman_ford_shortest_paths(
+[[nodiscard]] std::optional<vertex_id_t<G>> bellman_ford_shortest_paths(
       G&                   g,
       const vertex_id_t<G> source,
       Distances&           distances,
       Predecessors&        predecessor,
-      WF&&                 weight =
-            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Visitor&& visitor = bellman_visitor_base<G>(),
-      Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
-  return bellman_ford_shortest_paths(g, ranges::subrange(&source, (&source + 1)), distances, predecessor, weight,
+      Compare&& compare = less<range_value_t<Distances>>(),
+      Combine&& combine = plus<range_value_t<Distances>>()) {
+  return bellman_ford_shortest_paths(g, subrange(&source, (&source + 1)), distances, predecessor, weight,
                                      forward<Visitor>(visitor), forward<Compare>(compare), forward<Combine>(combine));
 }
 
@@ -294,56 +294,54 @@ requires is_arithmetic_v<ranges::range_value_t<Distances>> &&                   
  *         If an edge was not minimized, the on_edge_not_minimized event is called and a vertex id
  *         in the negative weight cycle is returned.
  */
-template <index_adjacency_list        G,
-          ranges::input_range         Sources,
-          ranges::random_access_range Distances,
-          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
+template <index_adjacency_list G,
+          input_range          Sources,
+          random_access_range  Distances,
+          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Visitor = bellman_visitor_base<G>,
-          class Compare = less<ranges::range_value_t<Distances>>,
-          class Combine = plus<ranges::range_value_t<Distances>>>
-requires convertible_to<ranges::range_value_t<Sources>, vertex_id_t<G>> && //
-         is_arithmetic_v<ranges::range_value_t<Distances>> &&              //
-         ranges::sized_range<Distances> &&                                 //
-         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
+          class Compare = less<range_value_t<Distances>>,
+          class Combine = plus<range_value_t<Distances>>>
+requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
+         is_arithmetic_v<range_value_t<Distances>> &&              //
+         sized_range<Distances> &&                                 //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 //&& bellman_visitor<G, Visitor>
-[[nodiscard]] optional<vertex_id_t<G>> bellman_ford_shortest_distances(
+[[nodiscard]] std::optional<vertex_id_t<G>> bellman_ford_shortest_distances(
       G&             g,
       const Sources& sources,
       Distances&     distances,
-      WF&&           weight =
-            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Visitor&& visitor = bellman_visitor_base<G>(),
-      Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
+      Compare&& compare = less<range_value_t<Distances>>(),
+      Combine&& combine = plus<range_value_t<Distances>>()) {
   return bellman_ford_shortest_paths(g, sources, distances, _null_predecessors, forward<WF>(weight),
                                      std::forward<Visitor>(visitor), std::forward<Compare>(compare),
                                      std::forward<Combine>(combine));
 }
 
-template <index_adjacency_list        G,
-          ranges::random_access_range Distances,
-          class WF      = std::function<ranges::range_value_t<Distances>(edge_reference_t<G>)>,
+template <index_adjacency_list G,
+          random_access_range  Distances,
+          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Visitor = bellman_visitor_base<G>,
-          class Compare = less<ranges::range_value_t<Distances>>,
-          class Combine = plus<ranges::range_value_t<Distances>>>
-requires is_arithmetic_v<ranges::range_value_t<Distances>> && //
-         ranges::sized_range<Distances> &&                    //
-         basic_edge_weight_function<G, WF, ranges::range_value_t<Distances>, Compare, Combine>
+          class Compare = less<range_value_t<Distances>>,
+          class Combine = plus<range_value_t<Distances>>>
+requires is_arithmetic_v<range_value_t<Distances>> && //
+         sized_range<Distances> &&                    //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 //&& bellman_visitor<G, Visitor>
-[[nodiscard]] optional<vertex_id_t<G>> bellman_ford_shortest_distances(
+[[nodiscard]] std::optional<vertex_id_t<G>> bellman_ford_shortest_distances(
       G&                   g,
       const vertex_id_t<G> source,
       Distances&           distances,
-      WF&&                 weight =
-            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Visitor&& visitor = bellman_visitor_base<G>(),
-      Compare&& compare = less<ranges::range_value_t<Distances>>(),
-      Combine&& combine = plus<ranges::range_value_t<Distances>>()) {
-  return bellman_ford_shortest_paths(g, ranges::subrange(&source, (&source + 1)), distances, _null_predecessors,
+      Compare&& compare = less<range_value_t<Distances>>(),
+      Combine&& combine = plus<range_value_t<Distances>>()) {
+  return bellman_ford_shortest_paths(g, subrange(&source, (&source + 1)), distances, _null_predecessors,
                                      forward<WF>(weight), std::forward<Visitor>(visitor),
                                      std::forward<Compare>(compare), std::forward<Combine>(combine));
 }
 
-} // namespace std::graph
+} // namespace graph
 
 #endif // GRAPH_BELLMAN_SHORTEST_PATHS_HPP

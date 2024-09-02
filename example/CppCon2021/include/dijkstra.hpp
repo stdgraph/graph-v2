@@ -21,7 +21,7 @@
 #include <vector>
 
 template <adjacency_list                       Graph,
-          std::invocable<inner_value_t<Graph>> WeightFunction =
+          invocable<inner_value_t<Graph>> WeightFunction =
                 std::function<std::tuple_element_t<1, inner_value_t<Graph>>(const inner_value_t<Graph>&)>>
 auto dijkstra(
       const Graph& graph, vertex_id_t<Graph> source, WeightFunction weights = [](const inner_value_t<Graph>& e) {

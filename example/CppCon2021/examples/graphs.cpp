@@ -39,7 +39,7 @@ int main() {
    */
   std::vector<std::vector<size_t>> G(34);
   push_back_plain_fill(karate_index_edge_list, G, false, 0);
-  static_assert(std::graph::adjacency_list<decltype(G)>);
+  static_assert(graph::adjacency_list<decltype(G)>);
 
   std::vector<std::list<std::tuple<size_t>>> H(34);
   push_back_plain_fill(karate_index_edge_list, H, false, 0);
@@ -79,16 +79,16 @@ int main() {
   auto s = make_property_graph(spice_vertices, spice_edges_values);
 
   //bfs_edge_range(n, 1);
-  std::graph::views::edges_breadth_first_search(n, 1);
+  graph::views::edges_breadth_first_search(n, 1);
 
   //bfs_edge_range(o, 1);
-  std::graph::views::edges_breadth_first_search(o, 1);
+  graph::views::edges_breadth_first_search(o, 1);
 
   //bfs_edge_range(p, 1);
-  std::graph::views::edges_breadth_first_search(p, 1);
+  graph::views::edges_breadth_first_search(p, 1);
 
   //bfs_edge_range(q, 0);
-  std::graph::views::edges_breadth_first_search(q, 0);
+  graph::views::edges_breadth_first_search(q, 0);
 
   return 0;
 }
