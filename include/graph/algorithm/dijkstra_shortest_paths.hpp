@@ -1,7 +1,7 @@
 /**
  * @file dijkstra_shortest_paths.hpp
  * 
- * @brief Single-Source Shortest paths and shortest distances algorithms using Dijkstra's algorithm.
+ * @brief Single-Source & multi-source shortest paths & shortest distances algorithms using Dijkstra's algorithm.
  * 
  * @copyright Copyright (c) 2024
  * 
