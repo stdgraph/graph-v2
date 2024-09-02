@@ -20,7 +20,7 @@
 // basic_neighbors(g,uid) is the same as basic_incidence(g,uid). It is retained for
 // symmatry and to avoid confusion.
 //
-namespace std::graph {
+namespace graph {
 
 
 template <adjacency_list G, bool Sourced = false, class VVF = void>
@@ -52,7 +52,7 @@ public:
 
   using iterator_category = forward_iterator_tag;
   using value_type       = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
-  using difference_type  = ranges::range_difference_t<edge_range>;
+  using difference_type  = range_difference_t<edge_range>;
   using pointer          = value_type*;
   using const_pointer    = const value_type*;
   using reference        = value_type&;
@@ -63,7 +63,7 @@ public:
   neighbor_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter, const VVF& value_fn)
         : base_type(vertex_id(g, ui)), g_(&g), iter_(iter), value_fn_(&value_fn) {}
   neighbor_iterator(graph_type& g, vertex_id_type uid, const VVF& value_fn)
-        : base_type(uid), g_(&g), iter_(ranges::begin(edges(g, uid))), value_fn_(&value_fn) {}
+        : base_type(uid), g_(&g), iter_(begin(edges(g, uid))), value_fn_(&value_fn) {}
 
   constexpr neighbor_iterator()                         = default;
   constexpr neighbor_iterator(const neighbor_iterator&) = default;
@@ -120,7 +120,7 @@ public:
       value_.shadow_.target    = const_cast<shadow_vertex_type*>(&target(*g_, *iter_));
     }
     value_.shadow_.value =
-          invoke(*value_fn_, *value_.shadow_.target); // 'value' undeclared identifier (.value not in struct?)
+          std::invoke(*value_fn_, *value_.shadow_.target); // 'value' undeclared identifier (.value not in struct?)
     return value_.value_;
   }
 
@@ -166,7 +166,7 @@ public:
 
   using iterator_category = forward_iterator_tag;
   using value_type       = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
-  using difference_type  = ranges::range_difference_t<edge_range>;
+  using difference_type  = range_difference_t<edge_range>;
   using pointer          = value_type*;
   using const_pointer    = const value_type*;
   using reference        = value_type&;
@@ -192,7 +192,7 @@ protected:
 public:
   neighbor_iterator(graph_type& g, vertex_iterator ui, edge_iterator iter)
         : base_type(vertex_id(g, ui)), g_(&g), iter_(iter) {}
-  neighbor_iterator(graph_type& g, vertex_id_type uid) : base_type(uid), g_(&g), iter_(ranges::begin(edges(g, uid))) {}
+  neighbor_iterator(graph_type& g, vertex_id_type uid) : base_type(uid), g_(&g), iter_(begin(edges(g, uid))) {}
 
   constexpr neighbor_iterator()                         = default;
   constexpr neighbor_iterator(const neighbor_iterator&) = default;
@@ -257,7 +257,7 @@ private: // member variables
 
 
 template <adjacency_list G, bool Sourced, class VVF>
-using neighbors_view = ranges::subrange<neighbor_iterator<G, Sourced, VVF>, vertex_edge_iterator_t<G>>;
+using neighbors_view = subrange<neighbor_iterator<G, Sourced, VVF>, vertex_edge_iterator_t<G>>;
 
 
 namespace views {
@@ -297,7 +297,7 @@ namespace views {
 
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-        static_assert(is_lvalue_reference_v<_G>);
+        static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_id_ADL<_G>) {
           return {_St_id::_Non_member,
                   noexcept(_Fake_copy_init(neighbors(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
@@ -305,7 +305,7 @@ namespace views {
           return {_St_id::_Auto_eval,
                   noexcept(_Fake_copy_init(neighbors_view<_G, false, void>(
                         neighbor_iterator<_G, false, void>(declval<_G>(), declval<vertex_id_t<_G>>()),
-                        ranges::end(edges(declval<_G>(), declval<vertex_id_t<_G>>())))))};
+                        end(edges(declval<_G>(), declval<vertex_id_t<_G>>())))))};
         } else {
           return {_St_id::_None};
         }
@@ -316,7 +316,7 @@ namespace views {
 
       template <class _G, class VVF>
       [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id_vvf() noexcept {
-        static_assert(is_lvalue_reference_v<_G>);
+        static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_id_vvf_ADL<_G, VVF>) {
           return {_St_id::_Non_member, noexcept(_Fake_copy_init(neighbors(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                                           declval<VVF>())))}; // intentional ADL
@@ -324,7 +324,7 @@ namespace views {
           return {_St_id::_Auto_eval,
                   noexcept(_Fake_copy_init(neighbors_view<_G, false, VVF>(
                         neighbor_iterator<_G, false, VVF>(declval<_G>(), declval<vertex_id_t<_G>>(), declval<VVF>()),
-                        ranges::end(edges(declval<_G>(), declval<vertex_id_t<_G>>())))))};
+                        end(edges(declval<_G>(), declval<vertex_id_t<_G>>())))))};
         } else {
           return {_St_id::_None};
         }
@@ -341,7 +341,7 @@ namespace views {
        * 
        * Default implementation: 
        *      neighbors_view<_G, false, void>(neighbor_iterator<_G, false, void>(__g, uid),
-       *                                      ranges::end(edges(__g, uid)));
+       *                                      end(edges(__g, uid)));
        * 
        * @tparam G The graph type.
        * @param g A graph instance.
@@ -358,8 +358,7 @@ namespace views {
           return neighbors(__g, uid); // intentional ADL
         } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
           // default impl
-          return neighbors_view<_G, false, void>(neighbor_iterator<_G, false, void>(__g, uid),
-                                                 ranges::end(edges(__g, uid)));
+          return neighbors_view<_G, false, void>(neighbor_iterator<_G, false, void>(__g, uid), end(edges(__g, uid)));
         } else {
           static_assert(_Always_false<_G>,
                         "neighbors(g,uid) is not defined and the default implementation cannot be evaluated");
@@ -373,7 +372,7 @@ namespace views {
        * 
        * Default implementation: 
        *      neighbors_view<_G, false, void>(neighbor_iterator<_G, false, void>(__g, uid),
-       *                                      ranges::end(edges(__g, uid)));
+       *                                      end(edges(__g, uid)));
        * 
        * @tparam G The graph type.
        * @param g A graph instance.
@@ -390,8 +389,7 @@ namespace views {
           return neighbors(__g, uid); // intentional ADL
         } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
           // default impl
-          return neighbors_view<_G, false, VVF>(neighbor_iterator<_G, false, VVF>(__g, uid, vvf),
-                                                ranges::end(edges(__g, uid)));
+          return neighbors_view<_G, false, VVF>(neighbor_iterator<_G, false, VVF>(__g, uid, vvf), end(edges(__g, uid)));
         } else {
           static_assert(_Always_false<_G>,
                         "neighbors(g,uid,vvf) is not defined and the default implementation cannot be evaluated");
@@ -405,4 +403,4 @@ namespace views {
   }
 
 } // namespace views
-} // namespace std::graph
+} // namespace graph

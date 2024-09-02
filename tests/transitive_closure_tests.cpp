@@ -25,21 +25,21 @@ using std::ranges::forward_range;
 using std::remove_reference_t;
 using std::is_const_v;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::edge_t;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_edge_range_t;
+using graph::edge_t;
 
-using std::graph::vertices;
-using std::graph::edges;
-using std::graph::vertex_value;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
+using graph::vertices;
+using graph::edges;
+using graph::vertex_value;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
 
 
-using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
-using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
+using routes_volf_graph_traits = graph::container::vofl_graph_traits<double, std::string>;
+using routes_volf_graph_type   = graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -57,6 +57,6 @@ TEST_CASE("Warshall's Algorithm", "[csv][vofl][transitive_closure][warshall]") {
   using G  = routes_volf_graph_type;
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
-  std::vector<std::graph::reaches<G>> reaches;
-  std::graph::warshall_transitive_closure(g, std::back_inserter(reaches));
+  std::vector<graph::reaches<G>> reaches;
+  graph::warshall_transitive_closure(g, std::back_inserter(reaches));
 }

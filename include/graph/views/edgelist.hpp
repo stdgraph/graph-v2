@@ -34,14 +34,14 @@
 //           for([uid, vid]        : basic_edgelist(g,uid))
 //
 
-namespace std::graph {
+namespace graph {
 
 template <adjacency_list G, class EVF = void>
 class edgelist_iterator;
 
 #ifdef ENABLE_EDGELIST_RANGE
 //template <edgelist_range ELR, class Proj = identity>
-//requires requires(ranges::iterator_t<ELR> i, Proj&& proj) {
+//requires requires(iterator_t<ELR> i, Proj&& proj) {
 //  { proj(*i) };
 //}
 //class edgelist_range_iterator;
@@ -67,9 +67,9 @@ protected:
    * @param uvi Current edge
   */
   constexpr void find_non_empty_vertex(G& g, vertex_iterator& ui, edge_iterator& uvi) noexcept {
-    for (; ui != ranges::end(vertices(g)); ++ui) {
-      if (!ranges::empty(edges(g, *ui))) {
-        uvi = ranges::begin(edges(g, *ui));
+    for (; ui != end(vertices(g)); ++ui) {
+      if (!empty(edges(g, *ui))) {
+        uvi = begin(edges(g, *ui));
         return;
       }
     }
@@ -85,9 +85,9 @@ protected:
    * @param uvi Current edge
   */
   constexpr void find_next_edge(G& g, vertex_iterator& ui, edge_iterator& uvi) noexcept {
-    assert(ui != ranges::end(vertices(g)));
-    assert(uvi != ranges::end(edges(g, *ui)));
-    if (++uvi != ranges::end(edges(g, *ui)))
+    assert(ui != end(vertices(g)));
+    assert(uvi != end(edges(g, *ui)));
+    if (++uvi != end(edges(g, *ui)))
       return;
     ++ui;
     find_non_empty_vertex(g, ui, uvi);
@@ -119,7 +119,7 @@ public:
 
   using iterator_category = forward_iterator_tag;
   using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
-  using difference_type   = ranges::range_difference_t<edge_range>;
+  using difference_type   = range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
   using reference         = value_type&;
@@ -129,7 +129,7 @@ public:
 public:
   edgelist_iterator(graph_type& g, vertex_iterator ui, const EVF& value_fn)
         : base_type(), g_(&g), ui_(ui), uvi_(), value_fn_(&value_fn) {}
-  edgelist_iterator(graph_type& g, const EVF& value_fn) : edgelist_iterator(g, ranges::begin(vertices(g)), value_fn) {
+  edgelist_iterator(graph_type& g, const EVF& value_fn) : edgelist_iterator(g, begin(vertices(g)), value_fn) {
     this->find_non_empty_vertex(*g_, ui_, uvi_);
   }
 
@@ -174,7 +174,7 @@ public:
       value_.shadow_.edge  = &*uvi_;
       value_.shadow_.value = invoke(*value_fn_, *uvi_);
     } else {
-      value_.shadow_ = {vertex_id(*g_, ui_), target_id(*g_, *uvi_), &*uvi_, invoke(*value_fn_, *uvi_)};
+      value_.shadow_ = {vertex_id(*g_, ui_), target_id(*g_, *uvi_), &*uvi_, std::invoke(*value_fn_, *uvi_)};
     }
     return value_.value_;
   }
@@ -221,7 +221,7 @@ public:
 
   using iterator_category = forward_iterator_tag;
   using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
-  using difference_type   = ranges::range_difference_t<edge_range>;
+  using difference_type   = range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
   using reference         = value_type&;
@@ -248,7 +248,7 @@ public:
   edgelist_iterator(graph_type& g, vertex_iterator ui) : base_type(), g_(&g), ui_(ui), uvi_() {
     this->find_non_empty_vertex(*g_, ui_, uvi_);
   }
-  edgelist_iterator(graph_type& g) : edgelist_iterator(g, ranges::begin(vertices(g))) {}
+  edgelist_iterator(graph_type& g) : edgelist_iterator(g, begin(vertices(g))) {}
 
   constexpr edgelist_iterator()                         = default;
   constexpr edgelist_iterator(const edgelist_iterator&) = default;
@@ -306,15 +306,15 @@ private: // member variables
 */
 #if 0
 template <edgelist_range ELR, class Proj>
-//requires requires(ranges::iterator_t<ELR> i, Proj&& proj) {
+//requires requires(iterator_t<ELR> i, Proj&& proj) {
 //  { proj(*i)->target_id };
 //}
 class edgelist_range_iterator {
 public:
   using edge_range          = ELR;
-  using edge_iterator       = ranges::iterator_t<edge_range>;
-  using edge_type           = ranges::range_value_t<edge_range>;
-  using edge_reference_type = ranges::range_reference_t<edge_range>;
+  using edge_iterator       = iterator_t<edge_range>;
+  using edge_type           = range_value_t<edge_range>;
+  using edge_reference_type = range_reference_t<edge_range>;
   using value_type          = invoke_result_t<Proj, edge_reference_type>;
 
   using vertex_id_type =
@@ -322,7 +322,7 @@ public:
 
   using iterator_category = forward_iterator_tag;
 
-  using difference_type  = ranges::range_difference_t<edge_range>;
+  using difference_type  = range_difference_t<edge_range>;
   using pointer          = value_type*;
   using const_pointer    = const value_type*;
   using reference        = value_type&;
@@ -333,7 +333,7 @@ public:
   edgelist_range_iterator(edge_range& elr, edge_iterator uvi, Proj&& proj_fn) //
         : uvi_(uvi), proj_fn_(proj_fn) {}
   edgelist_range_iterator(edge_range& elr, Proj&& proj_fn)
-        : edgelist_range_iterator(elr, ranges::begin(vertices(elr)), forward<Proj>(proj_fn)) {}
+        : edgelist_range_iterator(elr, begin(vertices(elr)), forward<Proj>(proj_fn)) {}
 
   constexpr edgelist_range_iterator()                               = default;
   constexpr edgelist_range_iterator(const edgelist_range_iterator&) = default;
@@ -370,10 +370,10 @@ private: // member variables
 
 
 template <adjacency_list G, class EVF>
-using edgelist_view = ranges::subrange<edgelist_iterator<G, EVF>, vertex_iterator_t<G>>;
+using edgelist_view = subrange<edgelist_iterator<G, EVF>, vertex_iterator_t<G>>;
 
 //template <edgelist_range ELR, class Proj>
-//using edgelist_view = ranges::subrange<edgelist_iterator<ELR, Proj>, vertex_iterator_t<ELR>>;
+//using edgelist_view = subrange<edgelist_iterator<ELR, Proj>, vertex_iterator_t<ELR>>;
 
 namespace views {
 
@@ -392,7 +392,7 @@ namespace views {
 #endif                                     // ^^^ workaround ^^^
 
     template <class _G>
-    concept _Has_adjlist_all_ADL = adjacency_list<_G> //
+    concept _Has_adjlist_all_ADL = adjacency_list<_G>                       //
                                    && requires(_G&& __g) {
                                         { _Fake_copy_init(edgelist(__g)) }; // intentional ADL
                                       };
@@ -402,14 +402,14 @@ namespace views {
     template <class _G, class EVF>
     concept _Has_adjlist_all_evf_ADL = adjacency_list<_G> && invocable<EVF, edge_reference_t<_G>> //
                                        && requires(_G&& __g, EVF evf) {
-                                            { _Fake_copy_init(edgelist(__g, evf)) }; // intentional ADL
+                                            { _Fake_copy_init(edgelist(__g, evf)) };              // intentional ADL
                                           };
     template <class _G, class EVF>
     concept _Can_adjlist_all_evf_eval = adjacency_list<_G> && invocable<EVF, edge_reference_t<_G>>;
 
 
     template <class _G>
-    concept _Has_adjlist_idrng_ADL = adjacency_list<_G> //
+    concept _Has_adjlist_idrng_ADL = adjacency_list<_G>                                 //
                                      && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid) {
                                           { _Fake_copy_init(edgelist(__g, uid, vid)) }; // intentional ADL
                                         };
@@ -417,8 +417,8 @@ namespace views {
     concept _Can_adjlist_idrng_eval = adjacency_list<_G>;
 
     template <class _G, class EVF>
-    concept _Has_adjlist_idrng_evf_ADL = adjacency_list<_G>                      //
-                                         && invocable<EVF, edge_reference_t<_G>> //
+    concept _Has_adjlist_idrng_evf_ADL = adjacency_list<_G>                                      //
+                                         && invocable<EVF, edge_reference_t<_G>>                 //
                                          && requires(_G&& __g, vertex_id_t<_G> uid, vertex_id_t<_G> vid, EVF evf) {
                                               { _Fake_copy_init(edgelist(__g, uid, vid, evf)) }; // intentional ADL
                                             };
@@ -429,10 +429,10 @@ namespace views {
 #ifdef ENABLE_EDGELIST_RANGE
     template <class ELR, class class Proj>
     concept _Has_edgelist_all_proj_ADL = edgelist_range<ELR> //
-                                         && invocable<Proj, ranges::range_value_t<ELR>>;
+                                         && invocable<Proj, range_value_t<ELR>>;
     template <class ELR, class Proj>
     concept _Can_edgelist_all_proj_eval = edgelist_range<ELR> //
-                                          && invocable<Proj, ranges::range_value_t<ELR>>;
+                                          && invocable<Proj, range_value_t<ELR>>;
 #endif
 
     class _Cpo {
@@ -444,7 +444,7 @@ namespace views {
       // edgelist(g)
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_all> _Choose_all() noexcept {
-        static_assert(is_lvalue_reference_v<_G>);
+        static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_adjlist_all_ADL<_G>) {
           return {_St_adjlist_all::_Non_member, noexcept(_Fake_copy_init(edgelist(declval<_G>())))}; // intentional ADL
         } else if constexpr (_Can_adjlist_all_eval<_G>) {
@@ -460,12 +460,12 @@ namespace views {
       // edgelist(g,evf)
       template <class _G, class EVF>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_all> _Choose_all_evf() noexcept {
-        static_assert(is_lvalue_reference_v<_G>);
+        static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_adjlist_all_evf_ADL<_G, EVF>) {
           return {_St_adjlist_all::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<EVF>())))}; // intentional ADL
         } else if constexpr (_Can_adjlist_all_evf_eval<_G, EVF>) {
-          return {_St_adjlist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
+          return {_St_adjlist_all::_Auto_eval, noexcept(true)};                        // default impl (revisit)
         } else {
           return {_St_adjlist_all::_None};
         }
@@ -478,13 +478,13 @@ namespace views {
       // edgelist(g,uid,vid)
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_idrng> _Choose_idrng() noexcept {
-        static_assert(is_lvalue_reference_v<_G>);
+        static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_adjlist_idrng_ADL<_G>) {
           return {_St_adjlist_idrng::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                     declval<vertex_id_t<_G>>())))}; // intentional ADL
         } else if constexpr (_Can_adjlist_idrng_eval<_G>) {
-          return {_St_adjlist_idrng::_Auto_eval, noexcept(true)}; // default impl (revisit)
+          return {_St_adjlist_idrng::_Auto_eval, noexcept(true)};                   // default impl (revisit)
         } else {
           return {_St_adjlist_idrng::_None};
         }
@@ -496,7 +496,7 @@ namespace views {
       // edgelist(g,uid,vid,evf)
       template <class _G, class EVF>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_idrng> _Choose_idrng_evf() noexcept {
-        static_assert(is_lvalue_reference_v<_G>);
+        static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_adjlist_idrng_evf_ADL<_G, EVF>) {
           return {_St_adjlist_idrng::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -515,12 +515,12 @@ namespace views {
       // edgelist(elr,proj)
       template <class ELR, class Proj>
       [[nodiscard]] static consteval _Choice_t<_St_edgelist_all> _Choose_elr_proj() noexcept {
-        static_assert(is_lvalue_reference_v<ELR>);
+        static_assert(std::is_lvalue_reference_v<ELR>);
         if constexpr (_Has_edgelist_all_proj_ADL<ELR, Proj>) {
           return {_St_edgelist_all::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<ELR>(), declval<Proj>())))}; // intentional ADL
         } else if constexpr (_Can_edgelist_all_proj_eval<ELR, Proj>) {
-          return {_St_edgelist_all::_Auto_eval, noexcept(true)}; // default impl (revisit)
+          return {_St_edgelist_all::_Auto_eval, noexcept(true)};                         // default impl (revisit)
         } else {
           return {_St_edgelist_all::_None};
         }
@@ -539,7 +539,7 @@ namespace views {
      * 
      * Default implementation: 
      *  using iterator_type = edgelist_iterator<G, void>;
-     *  edgelist_view<G, void>(iterator_type(g), ranges::end(vertices(g)));
+     *  edgelist_view<G, void>(iterator_type(g), end(vertices(g)));
      * 
      * @tparam G The graph type.
      * @param g A graph instance.
@@ -555,7 +555,7 @@ namespace views {
           return edgelist(__g); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
           using iterator_type = edgelist_iterator<_G, void>;
-          return edgelist_view<_G, void>(iterator_type(__g), ranges::end(vertices(__g))); // default impl
+          return edgelist_view<_G, void>(iterator_type(__g), end(vertices(__g))); // default impl
         } else {
           static_assert(_Always_false<_G>,
                         "edgelist(g) is not defined and the default implementation cannot be evaluated");
@@ -570,7 +570,7 @@ namespace views {
      * 
      * Default implementation: 
      *  using iterator_type = edgelist_iterator<G, void>;
-     *  edgelist_view<G, void>(iterator_type(g), ranges::end(vertices(g)));
+     *  edgelist_view<G, void>(iterator_type(g), end(vertices(g)));
      * 
      * @tparam G The graph type.
      * @param g A graph instance.
@@ -587,7 +587,7 @@ namespace views {
           return edgelist(__g); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
           using iterator_type = edgelist_iterator<_G, EVF>;
-          return edgelist_view<_G, EVF>(iterator_type(__g, evf), ranges::end(vertices(__g)));
+          return edgelist_view<_G, EVF>(iterator_type(__g, evf), end(vertices(__g)));
         } else {
           static_assert(_Always_false<_G>,
                         "edgelist(g,evf) is not defined and the default implementation cannot be evaluated");
@@ -602,7 +602,7 @@ namespace views {
      * 
      * Default implementation: 
      *  using iterator_type = edgelist_iterator<G, void>;
-     *  edgelist_view<G, void>(iterator_type(__g), ranges::end(vertices(__g)));
+     *  edgelist_view<G, void>(iterator_type(__g), end(vertices(__g)));
      * 
      * @tparam G The graph type.
      * @param __g A graph instance.
@@ -634,7 +634,7 @@ namespace views {
      * 
      * Default implementation: 
      *  using iterator_type = edgelist_iterator<_G, void>;
-     *  edgelist_view<_G, void>(iterator_type(g), ranges::end(vertices(g)));
+     *  edgelist_view<_G, void>(iterator_type(g), end(vertices(g)));
      * 
      * @tparam _G The graph type.
      * @param g A graph instance.
@@ -652,7 +652,7 @@ namespace views {
           return edgelist(__g); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_idrng::_Auto_eval) {
           using iterator_type = edgelist_iterator<_G, EVF>;
-          return edgelist_view<_G, void>(iterator_type(__g, evf), ranges::end(vertices(__g))); // default impl
+          return edgelist_view<_G, void>(iterator_type(__g, evf), end(vertices(__g))); // default impl
         } else {
           static_assert(_Always_false<_G>,
                         "edgelist(g,uid,vid,evf) is not defined and the default implementation cannot be evaluated");
@@ -693,7 +693,7 @@ namespace views {
           return edgelist(elr); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
           //using iterator_type = edgelist_iterator<ELR, Proj>;
-          //return edgelist_view<ELR, Proj>(iterator_type(elr, proj), ranges::end(vertices(elr)));
+          //return edgelist_view<ELR, Proj>(iterator_type(elr, proj), end(vertices(elr)));
           return 1; // bogus; must implement
         } else {
           static_assert(_Always_false<ELR>,
@@ -703,11 +703,11 @@ namespace views {
 #endif //ENABLE_EDGELIST_RANGE
 
     }; // class _Cpo
-  } // namespace _Edgelist
+  }    // namespace _Edgelist
 
   inline namespace _Cpos {
     inline constexpr _Edgelist::_Cpo edgelist;
   }
 
 } // namespace views
-} // namespace std::graph
+} // namespace graph

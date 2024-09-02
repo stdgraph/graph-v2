@@ -12,30 +12,30 @@ using std::is_lvalue_reference_v;
 using std::forward_iterator;
 using std::input_iterator;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_value_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::vertex_reference_t;
-using std::graph::edge_t;
-using std::graph::edge_value_t;
-using std::graph::edge_reference_t;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_value_t;
+using graph::vertex_edge_range_t;
+using graph::vertex_reference_t;
+using graph::edge_t;
+using graph::edge_value_t;
+using graph::edge_reference_t;
 
-using std::graph::graph_value;
-using std::graph::vertices;
-using std::graph::edges;
-using std::graph::vertex_id;
-using std::graph::vertex_value;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::degree;
-using std::graph::find_vertex;
-using std::graph::find_vertex_edge;
+using graph::graph_value;
+using graph::vertices;
+using graph::edges;
+using graph::vertex_id;
+using graph::vertex_value;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
+using graph::degree;
+using graph::find_vertex;
+using graph::find_vertex_edge;
 
-using std::graph::views::incidence;
+using graph::views::incidence;
 
-using routes_compressed_graph_type = std::graph::container::compressed_graph<double, std::string, std::string>;
+using routes_compressed_graph_type = graph::container::compressed_graph<double, std::string, std::string>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -70,8 +70,8 @@ TEST_CASE("incidence test", "[csr][incidence]") {
     vertex_reference_t<G> u   = **frankfurt;
     vertex_id_t<G>        uid = frankfurt_id;
 
-    std::graph::incidence_iterator<G> i0; // default construction
-    std::graph::incidence_iterator<G> i1(g, uid);
+    graph::incidence_iterator<G> i0; // default construction
+    graph::incidence_iterator<G> i1(g, uid);
     static_assert(std::forward_iterator<decltype(i1)>, "incidence_iterator must be a forward_iterator");
     static_assert(std::is_move_assignable_v<decltype(i0)>, "incidence_iterator must be move_assignable");
     static_assert(std::is_copy_assignable_v<decltype(i0)>, "incidence_iterator must be copy_assignable");
@@ -88,11 +88,11 @@ TEST_CASE("incidence test", "[csr][incidence]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::incidence_iterator<G> i2(g, uid);
+    graph::incidence_iterator<G> i2(g, uid);
     {
       auto&& [vid, uv] = *i2;
       static_assert(is_const_v<decltype(vid)>, "vertex id must be const");
-      static_assert(is_lvalue_reference_v<decltype(uv)>, "edge must be lvalue reference");
+      static_assert(std::is_lvalue_reference_v<decltype(uv)>, "edge must be lvalue reference");
       static_assert(!is_const_v<remove_reference_t<decltype(uv)>>, "edge must be non-const");
       REQUIRE(vid == 1);
     }
@@ -104,8 +104,8 @@ TEST_CASE("incidence test", "[csr][incidence]") {
     }
 
     static_assert(std::input_or_output_iterator<decltype(i1)>);
-    using _It = std::graph::incidence_iterator<G>;
-    using _Se = std::graph::vertex_iterator_t<G>;
+    using _It = graph::incidence_iterator<G>;
+    using _Se = graph::vertex_iterator_t<G>;
     bool yy   = std::sentinel_for<_Se, _It>;
     bool xx   = std::sized_sentinel_for<_Se, _It>;
     static_assert(std::sized_sentinel_for<_Se, _It> == false);
@@ -115,7 +115,7 @@ TEST_CASE("incidence test", "[csr][incidence]") {
     auto evf  = [&g](edge_t<G>& uv) -> double& { return edge_value(g, uv); };
     using EVF = decltype(evf);
 
-    std::graph::incidence_iterator<G, false, EVF> i3(g, uid, evf);
+    graph::incidence_iterator<G, false, EVF> i3(g, uid, evf);
     {
       // The following asserts are used to isolate problem with failing input_or_output_iterator concept for incidence_iterator
       static_assert(std::movable<decltype(i3)>, "incidence_iterator<G,EVF> is NOT movable");
@@ -135,7 +135,7 @@ TEST_CASE("incidence test", "[csr][incidence]") {
       REQUIRE(km == 217.0);
     }
 
-    //std::graph::views::incidence_iterator<const G> j0;
+    //graph::views::incidence_iterator<const G> j0;
     //j0 = i0;
     //i0 == j0;
   }
@@ -148,8 +148,8 @@ TEST_CASE("incidence test", "[csr][incidence]") {
     vertex_reference_t<G> u   = **frankfurt;
     vertex_id_t<G>        uid = frankfurt_id;
 
-    //std::graph::views::incidence_iterator<G2> i0; // default construction
-    std::graph::incidence_iterator<G2, false> i1(g2, uid);
+    //graph::views::incidence_iterator<G2> i0; // default construction
+    graph::incidence_iterator<G2, false> i1(g2, uid);
     static_assert(std::forward_iterator<decltype(i1)>, "incidence_iterator must be a forward_iterator");
     {
       auto&& [vid, uv] = *i1;
@@ -158,7 +158,7 @@ TEST_CASE("incidence test", "[csr][incidence]") {
       static_assert(is_const_v<remove_reference_t<decltype(uv2)>>, "edge must be const");
 
       static_assert(is_const_v<decltype(vid)>, "id must be const");
-      static_assert(is_lvalue_reference_v<decltype(uv)>, "edge must be lvalue reference");
+      static_assert(std::is_lvalue_reference_v<decltype(uv)>, "edge must be lvalue reference");
       static_assert(is_const_v<remove_reference_t<decltype(uv)>>, "edge must be const");
       REQUIRE(vid == 1);
     }
@@ -169,7 +169,7 @@ TEST_CASE("incidence test", "[csr][incidence]") {
       REQUIRE(i1b == i1);
     }
 
-    std::graph::incidence_iterator<G2, false> i2(g2, uid);
+    graph::incidence_iterator<G2, false> i2(g2, uid);
     {
       auto&& [vid, uv] = *i2;
       static_assert(is_const_v<decltype(vid)>, "id must be const");
@@ -185,7 +185,7 @@ TEST_CASE("incidence test", "[csr][incidence]") {
 
     auto evf  = [&g2](edge_reference_t<G2> uv) -> const double& { return edge_value(g2, uv); };
     using EVF = decltype(evf);
-    std::graph::incidence_iterator<G2, false, EVF> i3(g2, uid, evf);
+    graph::incidence_iterator<G2, false, EVF> i3(g2, uid, evf);
     {
       auto&& [vid, uv, km] = *i3;
       REQUIRE(vid == 1);
@@ -201,11 +201,11 @@ TEST_CASE("incidence test", "[csr][incidence]") {
   SECTION("non-const incidence") {
     vertex_reference_t<G> u   = **frankfurt;
     vertex_id_t<G>        uid = frankfurt_id;
-    using view_t              = decltype(std::graph::views::incidence(g, uid));
+    using view_t              = decltype(graph::views::incidence(g, uid));
     static_assert(forward_range<view_t>, "incidence(g) is not a forward_range");
     size_t cnt = 0;
     for (auto&& [vid, uv] :
-         std::graph::views::incidence(g, uid)) { // edge_descriptor<vertex_id_t<G>, false, edge_t<G>, void>
+         graph::views::incidence(g, uid)) { // edge_descriptor<vertex_id_t<G>, false, edge_t<G>, void>
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
@@ -217,10 +217,10 @@ TEST_CASE("incidence test", "[csr][incidence]") {
     vertex_reference_t<G> u   = **frankfurt;
     vertex_id_t<G>        uid = frankfurt_id;
 
-    using view_t = decltype(std::graph::views::incidence(g2, uid));
+    using view_t = decltype(graph::views::incidence(g2, uid));
     static_assert(forward_range<view_t>, "incidence(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [vid, uv] : std::graph::views::incidence(g2, uid)) {
+    for (auto&& [vid, uv] : graph::views::incidence(g2, uid)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));
@@ -232,7 +232,7 @@ TEST_CASE("incidence test", "[csr][incidence]") {
     vertex_id_t<G>        uid     = frankfurt_id;
     size_t                cnt     = 0;
     auto                  edge_fn = [&g](edge_reference_t<G> uv) -> double& { return edge_value(g, uv); };
-    for (auto&& [vid, uv, val] : std::graph::views::incidence(g, uid, edge_fn)) {
+    for (auto&& [vid, uv, val] : graph::views::incidence(g, uid, edge_fn)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));
@@ -245,7 +245,7 @@ TEST_CASE("incidence test", "[csr][incidence]") {
     vertex_id_t<G>        uid     = frankfurt_id;
     auto                  edge_fn = [&g2](edge_reference_t<G2> uv) -> const double& { return edge_value(g2, uv); };
     size_t                cnt     = 0;
-    for (auto&& [vid, uv, val] : std::graph::views::incidence(g2, uid, edge_fn)) {
+    for (auto&& [vid, uv, val] : graph::views::incidence(g2, uid, edge_fn)) {
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g2, u)));

@@ -1,6 +1,8 @@
 #pragma once
+#include <concepts>
+#include "detail/graph_using.hpp"
 
-namespace std::graph {
+namespace graph {
 //
 // vertex_descriptor
 // for(auto&& [uid, u]        : vertexlist(g))
@@ -278,13 +280,13 @@ using copyable_neighbor_t = neighbor_descriptor<VId, true, void, VV>; // {source
 // view concepts
 //
 template <class T, class VId, class VV = void> // For exposition only
-concept copyable_vertex = convertible_to<T, copyable_vertex_t<VId, VV>>;
+concept copyable_vertex = std::convertible_to<T, copyable_vertex_t<VId, VV>>;
 
 template <class T, class VId, class EV = void> // For exposition only
-concept copyable_edge = convertible_to<T, copyable_edge_t<VId, EV>>;
+concept copyable_edge = std::convertible_to<T, copyable_edge_t<VId, EV>>;
 
 template <class T, class VId, class EV = void> // For exposition only
-concept copyable_neighbor = convertible_to<T, copyable_neighbor_t<VId, EV>>;
+concept copyable_neighbor = std::convertible_to<T, copyable_neighbor_t<VId, EV>>;
 
 //
 // is_sourced<G>
@@ -296,4 +298,4 @@ inline constexpr bool is_sourced_v<edge_descriptor<VId, true, V, VV>> = true;
 template <class VId, class V, class VV>
 inline constexpr bool is_sourced_v<neighbor_descriptor<VId, true, V, VV>> = true;
 
-} // namespace std::graph
+} // namespace graph

@@ -19,7 +19,7 @@
 #ifndef GRAPH_MIS_HPP
 #  define GRAPH_MIS_HPP
 
-namespace std::graph {
+namespace graph {
 
 /**
  * @ingroup graph_algorithms
@@ -36,9 +36,7 @@ namespace std::graph {
  */
 
 template <adjacency_list G, class Iter>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-         std::output_iterator<Iter, vertex_id_t<G>>
-
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> && output_iterator<Iter, vertex_id_t<G>>
 void maximal_independent_set(G&&            g,       // graph
                              Iter           mis,     // out: maximal independent set
                              vertex_id_t<G> seed = 0 // seed vtx
@@ -63,6 +61,6 @@ void maximal_independent_set(G&&            g,       // graph
   }
 }
 
-} // namespace std::graph
+} // namespace graph
 
 #endif //GRAPH_MIS_HPP

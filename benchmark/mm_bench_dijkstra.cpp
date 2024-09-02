@@ -46,8 +46,8 @@ using std::endl;
 using fmt::print;
 using fmt::println;
 
-using namespace std::graph;
-using namespace std::graph::experimental;
+using namespace graph;
+using namespace graph::experimental;
 
 struct bench_results {
   size_t vertices_discovered = 0;
@@ -63,7 +63,7 @@ std::string current_timestamp() {
 template <typename Distance>
 size_t vertices_visited(const std::vector<Distance>& distances) {
   size_t visited = std::accumulate(distances.begin(), distances.end(), 0ULL, [](size_t count, Distance dist) {
-    return (dist != shortest_path_invalid_distance<Distance>()) ? count + 1 : count;
+    return (dist != shortest_path_infinite_distance<Distance>()) ? count + 1 : count;
   });
   //fmt::println("{:L} vertices were actually visited", visited);
   return visited;

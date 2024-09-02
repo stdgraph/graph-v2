@@ -20,33 +20,33 @@ using std::is_lvalue_reference_v;
 using std::forward_iterator;
 using std::input_iterator;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_value_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::vertex_reference_t;
-using std::graph::edge_t;
-using std::graph::edge_value_t;
-using std::graph::edge_reference_t;
-using std::graph::experimental::bfs_events;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_value_t;
+using graph::vertex_edge_range_t;
+using graph::vertex_reference_t;
+using graph::edge_t;
+using graph::edge_value_t;
+using graph::edge_reference_t;
+using graph::experimental::bfs_events;
 
-using std::graph::graph_value;
-using std::graph::vertices;
-using std::graph::edges;
-using std::graph::vertex_id;
-using std::graph::vertex_value;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::degree;
-using std::graph::find_vertex;
-using std::graph::find_vertex_edge;
-using std::graph::experimental::co_bfs;
-using std::graph::experimental::bfs_vertex_value_t;
-using std::graph::experimental::bfs_edge_value_t;
+using graph::graph_value;
+using graph::vertices;
+using graph::edges;
+using graph::vertex_id;
+using graph::vertex_value;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
+using graph::degree;
+using graph::find_vertex;
+using graph::find_vertex_edge;
+using graph::experimental::co_bfs;
+using graph::experimental::bfs_vertex_value_t;
+using graph::experimental::bfs_edge_value_t;
 
-using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
-using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
+using routes_vol_graph_traits = graph::container::vol_graph_traits<double, std::string, std::string>;
+using routes_vol_graph_type   = graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
 
 template <typename G>
@@ -159,7 +159,7 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("vertices_breadth_first_search_view generate content test") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -270,9 +270,9 @@ TEST_CASE("co_bfs test", "[dynamic][bfs][vertex][coroutine]") {
 }
 
 #if 0
-using std::graph::fibonacci_sequence;
-using std::graph::fib_seq;
-using std::graph::fib_seq_wrap;
+using graph::fibonacci_sequence;
+using graph::fib_seq;
+using graph::fib_seq_wrap;
 
 TEST_CASE("co fib test", "[fibonacci][coroutine]") {
   try {

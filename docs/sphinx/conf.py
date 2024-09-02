@@ -92,7 +92,7 @@ html_theme_path = [ "_themes" ]
 #html_theme = 'sphinx13'
 html_theme = 'sphinx_rtd_theme'
 # html_theme = 'sphinx_book_theme'
-html_title = "std::graph Documentation"
+html_title = "graph Documentation"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -114,7 +114,7 @@ html_theme_options = {
 
 # -- Options for the C++ Domain ----------------------------------------------
 
-cpp_index_common_prefix = ['std::', 'std::graph::']
+cpp_index_common_prefix = ['std::', 'graph::']
 
 
 # -- Options for Breathe -----------------------------------------------------

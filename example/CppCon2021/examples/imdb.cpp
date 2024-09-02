@@ -44,8 +44,8 @@ int main() {
   std::vector<size_t> together_in(L.size());
 
   //for (auto&& [u, v, k] : bfs_edge_range(L, kevin_bacon)) {
-  auto kprop = [&L](auto&& e) { return std::get<1>(std::graph::edge_value(L, e)); };
-  for (auto&& [u, v, uv, k] : std::graph::views::sourced_edges_breadth_first_search(L, kevin_bacon, kprop)) {
+  auto kprop = [&L](auto&& e) { return std::get<1>(graph::edge_value(L, e)); };
+  for (auto&& [u, v, uv, k] : graph::views::sourced_edges_breadth_first_search(L, kevin_bacon, kprop)) {
     distance[v]    = distance[u] + 1;
     parents[v]     = u;
     together_in[v] = k;

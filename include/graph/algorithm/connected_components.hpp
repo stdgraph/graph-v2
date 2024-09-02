@@ -24,12 +24,12 @@
 #ifndef GRAPH_CC_HPP
 #  define GRAPH_CC_HPP
 
-namespace std::graph {
+namespace graph {
 
-template <adjacency_list              G,
-          adjacency_list              GT,
-          ranges::random_access_range Component>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+template <adjacency_list      G,
+          adjacency_list      GT,
+          random_access_range Component>
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 void kosaraju(G&&        g,        // graph
               GT&&       g_t,      // graph transpose
               Component& component // out: strongly connected component assignment
@@ -48,7 +48,7 @@ void kosaraju(G&&        g,        // graph
     visited[uid] = true;
     std::stack<vertex_id_t<G>> active;
     active.push(uid);
-    auto dfs = std::graph::views::sourced_edges_depth_first_search(g, uid);
+    auto dfs = graph::views::sourced_edges_depth_first_search(g, uid);
     for (auto&& [vid, wid, vw] : dfs) {
       while (vid != active.top()) {
         order.push_back(active.top());
@@ -85,9 +85,9 @@ void kosaraju(G&&        g,        // graph
   }
 }
 
-template <adjacency_list              G,
-          ranges::random_access_range Component>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+template <adjacency_list      G,
+          random_access_range Component>
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 void connected_components(G&&        g,        // graph
                           Component& component // out: connected component assignment
 ) {
@@ -112,6 +112,6 @@ void connected_components(G&&        g,        // graph
   }
 }
 
-} // namespace std::graph
+} // namespace graph
 
 #endif //GRAPH_CC_HPP

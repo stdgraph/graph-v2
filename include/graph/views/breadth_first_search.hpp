@@ -38,7 +38,7 @@
 #if !defined(GRAPH_BFS_HPP)
 #  define GRAPH_BFS_HPP
 
-namespace std::graph {
+namespace graph {
 
 
 /*template <adjacency_list G>
@@ -47,7 +47,7 @@ struct bfs_element {
 };*/
 
 template <index_adjacency_list G, class Alloc>
-class bfs_base : public ranges::view_base {
+class bfs_base : public std::ranges::view_base {
 public:
   using graph_type       = remove_reference_t<G>;
   using vertex_type      = vertex_t<G>;
@@ -60,30 +60,30 @@ public:
 
 private:
   using graph_ref_type = reference_wrapper<graph_type>;
-  using Queue          = queue<vertex_id_t<G>>;
+  using Queue          = std::queue<vertex_id_t<G>>;
   //using queue_elem     = bfs_element<graph_type>;
   using queue_elem = vertex_id_type;
 
-  using parent_alloc = typename allocator_traits<typename Queue::container_type::allocator_type>::template rebind_alloc<
-        vertex_id_type>;
+  using parent_alloc = typename std::allocator_traits<
+        typename Queue::container_type::allocator_type>::template rebind_alloc<vertex_id_type>;
 
 public:
   bfs_base(graph_type& g, vertex_id_type seed, const Alloc& alloc)
-        : graph_(&g), Q_(alloc), colors_(ranges::size(vertices(g)), white, alloc) {
-    if (seed < ranges::size(vertices(*graph_)) && !ranges::empty(edges(*graph_, seed))) {
-      uv_ = ranges::begin(edges(*graph_, seed));
+        : graph_(&g), Q_(alloc), colors_(std::ranges::size(vertices(g)), white, alloc) {
+    if (seed < std::ranges::size(vertices(*graph_)) && !std::ranges::empty(edges(*graph_, seed))) {
+      uv_ = begin(edges(*graph_, seed));
       Q_.push(queue_elem{seed});
       colors_[seed] = gray;
     }
   }
 
   template <class VKR>
-  requires ranges::input_range<VKR> && convertible_to<ranges::range_value_t<VKR>, vertex_id_t<G>>
-  bfs_base(graph_type& g, const VKR& seeds = 0) : graph_(&g), colors_(ranges::size(vertices(g)), white) {
+  requires input_range<VKR> && convertible_to<range_value_t<VKR>, vertex_id_t<G>>
+  bfs_base(graph_type& g, const VKR& seeds = 0) : graph_(&g), colors_(std::ranges::size(vertices(g)), white) {
     for (auto&& [seed] : seeds) {
-      if (seed < ranges::size(vertices(*graph_)) && !ranges::empty(edges(*graph_, seed))) {
+      if (seed < std::ranges::size(vertices(*graph_)) && !std::ranges::empty(edges(*graph_, seed))) {
         if (Q_.empty()) {
-          uv_ = ranges::begin(edges(*graph_, seed));
+          uv_ = begin(edges(*graph_, seed));
         }
         Q_.push(queue_elem{seed});
         colors_[seed] = gray;
@@ -92,8 +92,8 @@ public:
     // advance uv_ to the first edge to be visited in case seeds adjacent to first seed
     while (!Q_.empty()) {
       auto          u_id = Q_.front();
-      edge_iterator uvi  = find_unvisited(u_id, ranges::begin(edges(*graph_, u_id)));
-      if (uvi != ranges::end(edges(*graph_, u_id))) {
+      edge_iterator uvi  = find_unvisited(u_id, begin(edges(*graph_, u_id)));
+      if (uvi != end(edges(*graph_, u_id))) {
         uv_ = uvi;
         break;
       } else {
@@ -135,9 +135,8 @@ protected:
   }
 
   constexpr vertex_edge_iterator_t<G> find_unvisited(vertex_id_t<G> uid, vertex_edge_iterator_t<G> first) {
-    return ranges::find_if(first, ranges::end(edges(*graph_, uid)), [this, uid](edge_reference uv) -> bool {
-      return colors_[real_target_id(uv, uid)] == white;
-    });
+    return find_if(first, end(edges(*graph_, uid)),
+                   [this, uid](edge_reference uv) -> bool { return colors_[real_target_id(uv, uid)] == white; });
   }
 
   void advance() {
@@ -163,13 +162,13 @@ protected:
     }
 
     // visited all neighbors of u, or cancelled u
-    if (uv_ == ranges::end(edges(*graph_, u_id))) {
+    if (uv_ == end(edges(*graph_, u_id))) {
       colors_[u_id] = black; // finished with u
       Q_.pop();
       while (!Q_.empty()) {
         u_id = Q_.front();
-        uv_  = find_unvisited(u_id, ranges::begin(edges(*graph_, u_id)));
-        if (uv_ != ranges::end(edges(*graph_, u_id))) {
+        uv_  = find_unvisited(u_id, begin(edges(*graph_, u_id)));
+        if (uv_ != end(edges(*graph_, u_id))) {
           break;
         } else {
           Q_.pop();
@@ -183,7 +182,7 @@ protected:
   graph_type*               graph_ = nullptr;
   Queue                     Q_;
   vertex_edge_iterator_t<G> uv_;
-  vector<three_colors>      colors_;
+  std::vector<three_colors> colors_;
   cancel_search             cancel_ = cancel_search::continue_search;
 };
 
@@ -194,8 +193,8 @@ protected:
  * @tparam VVF   Vertex Value Function type
  * @tparam Alloc Allocator type
 */
-template <adjacency_list G, class VVF = void, class Alloc = allocator<bool>>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+template <adjacency_list G, class VVF = void, class Alloc = std::allocator<bool>>
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertices_breadth_first_search_view : public bfs_base<G, Alloc> {
 public:
   using base_type        = bfs_base<G, Alloc>;
@@ -210,7 +209,7 @@ public:
   using bfs_range_type   = vertices_breadth_first_search_view<graph_type, VVF, Alloc>;
 
   using vertex_value_func = remove_reference_t<VVF>;
-  using vertex_value_type = invoke_result_t<VVF, vertex_reference>;
+  using vertex_value_type = std::invoke_result_t<VVF, vertex_reference>;
 
 public:
   vertices_breadth_first_search_view(graph_type&    g,
@@ -219,7 +218,7 @@ public:
                                      const Alloc&   alloc = Alloc())
         : base_type(g, seed, alloc), value_fn_(&value_fn) {}
   template <class VKR>
-  requires ranges::input_range<VKR> && convertible_to<ranges::range_value_t<VKR>, vertex_id_t<G>>
+  requires input_range<VKR> && convertible_to<range_value_t<VKR>, vertex_id_t<G>>
   vertices_breadth_first_search_view(graph_type&  graph,
                                      const VKR&   seeds,
                                      const VVF&   value_fn,
@@ -242,15 +241,15 @@ public:
 
   class iterator {
   public:
-    using iterator_category = input_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
     using value_type        = vertex_descriptor<const vertex_id_type, vertex_type&, vertex_value_type>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
     using pointer           = value_type*;
     using const_pointer     = value_type*;
-    using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
-    using difference_type   = ranges::range_difference_t<vertex_range_t<graph_type>>;
+    using size_type         = range_size_t<vertex_range_t<graph_type>>;
+    using difference_type   = range_difference_t<vertex_range_t<graph_type>>;
 
   private:
     // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
@@ -323,7 +322,7 @@ private:
 
 
 template <adjacency_list G, class Alloc>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertices_breadth_first_search_view<G, void, Alloc> : public bfs_base<G, Alloc> {
 public:
   using base_type        = bfs_base<G, Alloc>;
@@ -341,7 +340,7 @@ public:
   vertices_breadth_first_search_view(graph_type& g, vertex_id_type seed, const Alloc& alloc = Alloc())
         : base_type(g, seed, alloc) {}
   template <class VKR>
-  requires ranges::forward_range<VKR> && convertible_to<ranges::range_value_t<VKR>, vertex_id_t<G>>
+  requires forward_range<VKR> && convertible_to<range_value_t<VKR>, vertex_id_t<G>>
   vertices_breadth_first_search_view(graph_type& g, const VKR& seeds, const Alloc& alloc = Alloc())
         : base_type(g, seeds, alloc) {}
 
@@ -361,15 +360,15 @@ public:
 
   class iterator {
   public:
-    using iterator_category = input_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
     using value_type        = vertex_descriptor<const vertex_id_type, vertex_type&, void>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
     using pointer           = value_type*;
     using const_pointer     = value_type*;
-    using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
-    using difference_type   = ranges::range_difference_t<vertex_range_t<graph_type>>;
+    using size_type         = range_size_t<vertex_range_t<graph_type>>;
+    using difference_type   = range_difference_t<vertex_range_t<graph_type>>;
 
   private:
     // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
@@ -444,8 +443,8 @@ public:
  * @tparam Sourced Does the graph support @c source_id()?
  * @tparam Alloc   Allocator type
 */
-template <adjacency_list G, class EVF = void, bool Sourced = false, class Alloc = allocator<bool>>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+template <adjacency_list G, class EVF = void, bool Sourced = false, class Alloc = std::allocator<bool>>
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class edges_breadth_first_search_view : public bfs_base<G, Alloc> {
 public:
   using base_type           = bfs_base<G, Alloc>;
@@ -456,13 +455,13 @@ public:
   using bfs_range_type      = edges_breadth_first_search_view<G, EVF, Sourced, Alloc>;
 
   using edge_value_func = remove_reference_t<EVF>;
-  using edge_value_type = invoke_result_t<EVF, edge_reference_type>;
+  using edge_value_type = std::invoke_result_t<EVF, edge_reference_type>;
 
 public:
   edges_breadth_first_search_view(G& g, vertex_id_type seed, const EVF& value_fn, const Alloc& alloc = Alloc())
         : base_type(g, seed, alloc), value_fn_(&value_fn) {}
   template <class VKR>
-  requires ranges::forward_range<VKR> && convertible_to<ranges::range_value_t<VKR>, vertex_id_t<G>>
+  requires forward_range<VKR> && convertible_to<range_value_t<VKR>, vertex_id_t<G>>
   edges_breadth_first_search_view(G& graph, const VKR& seeds, const EVF& value_fn, const Alloc& alloc = Alloc())
         : base_type(graph, seeds, alloc), value_fn_(&value_fn) {}
 
@@ -481,15 +480,15 @@ public:
 
   class iterator {
   public:
-    using iterator_category = input_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
     using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
     using pointer           = value_type*;
     using const_pointer     = value_type*;
-    using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
-    using difference_type   = ranges::range_difference_t<vertex_range_t<graph_type>>;
+    using size_type         = range_size_t<vertex_range_t<graph_type>>;
+    using difference_type   = range_difference_t<vertex_range_t<graph_type>>;
 
   private:
     // avoid difficulty in undefined vertex reference value in value_type
@@ -563,7 +562,7 @@ private:
 };
 
 template <adjacency_list G, bool Sourced, class Alloc>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class edges_breadth_first_search_view<G, void, Sourced, Alloc> : public bfs_base<G, Alloc> {
 public:
   using base_type           = bfs_base<G, Alloc>;
@@ -577,7 +576,7 @@ public:
   edges_breadth_first_search_view(G& g, vertex_id_type seed, const Alloc& alloc = Alloc())
         : base_type(g, seed, alloc) {}
   template <class VKR>
-  requires ranges::forward_range<VKR> && convertible_to<ranges::range_value_t<VKR>, vertex_id_t<G>>
+  requires forward_range<VKR> && convertible_to<range_value_t<VKR>, vertex_id_t<G>>
   edges_breadth_first_search_view(G& g, const VKR& seeds, const Alloc& alloc()) : base_type(g, seeds, alloc) {}
 
   edges_breadth_first_search_view()                                       = default;
@@ -595,15 +594,15 @@ public:
 
   class iterator {
   public:
-    using iterator_category = input_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
     using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, void>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
     using pointer           = value_type*;
     using const_pointer     = value_type*;
-    using size_type         = ranges::range_size_t<vertex_range_t<graph_type>>;
-    using difference_type   = ranges::range_difference_t<vertex_range_t<graph_type>>;
+    using size_type         = range_size_t<vertex_range_t<graph_type>>;
+    using difference_type   = range_difference_t<vertex_range_t<graph_type>>;
 
   private:
     // avoid difficulty in undefined vertex reference value in value_type
@@ -685,7 +684,7 @@ namespace views {
 #  endif                                           // ^^^ workaround ^^^
 
     template <class _G, class _Alloc>
-    concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+    concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                                               //
                            && requires(_G&& __g, const vertex_id_t<_G>& uid, _Alloc alloc) {
                                 { _Fake_copy_init(vertices_breadth_first_search(__g, uid, alloc)) }; // intentional ADL
                               };
@@ -718,7 +717,7 @@ namespace views {
 
       template <class _G, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-        //static_assert(is_lvalue_reference_v<_G>);
+        //static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_ADL<_G, _Alloc>) {
           return {_St_ref::_Non_member,
                   noexcept(_Fake_copy_init(vertices_breadth_first_search(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -736,7 +735,7 @@ namespace views {
 
       template <class _G, class _VVF, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref_vvf> _Choose_ref_vvf() noexcept {
-        //static_assert(is_lvalue_reference_v<_G>);
+        //static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_vvf_ADL<_G, _VVF, _Alloc>) {
           return {_St_ref_vvf::_Non_member, noexcept(_Fake_copy_init(vertices_breadth_first_search(
                                                   declval<_G>(), declval<vertex_id_t<_G>>(), declval<_VVF>(),
@@ -765,14 +764,14 @@ namespace views {
      * @param seed   The vertex id to start the search.
      * @return A forward range for the breadth first search.
     */
-      template <class _G, class _Alloc = allocator<bool>>
+      template <class _G, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref<_G&, _Alloc>._Strategy != _St_ref::_None)
       [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& seed, _Alloc alloc = _Alloc()) const
             noexcept(_Choice_ref<_G&, _Alloc>._No_throw) {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return vertices_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return vertices_breadth_first_search(__g, seed, alloc);                // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return vertices_breadth_first_search_view<_G, void>(__g, seed, alloc); // default impl
         } else {
@@ -797,7 +796,7 @@ namespace views {
      * 
      * @return A forward range for the breadth first search.
     */
-      template <class _G, class _VVF, class _Alloc = allocator<bool>>
+      template <class _G, class _VVF, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref_vvf<_G&, _VVF, _Alloc>._Strategy != _St_ref_vvf::_None)
       [[nodiscard]] constexpr auto
       operator()(_G&& __g, const vertex_id_t<_G>& seed, _VVF&& vvf, _Alloc alloc = _Alloc()) const
@@ -805,7 +804,7 @@ namespace views {
         constexpr _St_ref_vvf _Strat_ref_vvf = _Choice_ref_vvf<_G&, _VVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_vvf == _St_ref_vvf::_Non_member) {
-          return vertices_breadth_first_search(__g, seed, vvf, alloc); // intentional ADL
+          return vertices_breadth_first_search(__g, seed, vvf, alloc);                // intentional ADL
         } else if constexpr (_Strat_ref_vvf == _St_ref_vvf::_Auto_eval) {
           return vertices_breadth_first_search_view<_G, _VVF>(__g, seed, vvf, alloc); // default impl
         } else {
@@ -834,7 +833,7 @@ namespace views {
 #  endif                                        // ^^^ workaround ^^^
 
     template <class _G, class _Alloc>
-    concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+    concept _Has_ref_ADL = _Has_class_or_enum_type<_G>                                            //
                            && requires(_G&& __g, const vertex_id_t<_G>& uid, _Alloc alloc) {
                                 { _Fake_copy_init(edges_breadth_first_search(__g, uid, alloc)) }; // intentional ADL
                               };
@@ -867,7 +866,7 @@ namespace views {
 
       template <class _G, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-        //static_assert(is_lvalue_reference_v<_G>);
+        //static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_ADL<_G, _Alloc>) {
           return {_St_ref::_Non_member,
                   noexcept(_Fake_copy_init(edges_breadth_first_search(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -885,7 +884,7 @@ namespace views {
 
       template <class _G, class _EVF, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref_evf> _Choose_ref_evf() noexcept {
-        //static_assert(is_lvalue_reference_v<_G>);
+        //static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_evf_ADL<_G, _EVF, _Alloc>) {
           return {_St_ref_evf::_Non_member, noexcept(_Fake_copy_init(edges_breadth_first_search(
                                                   declval<_G>(), declval<vertex_id_t<_G>>(), declval<_EVF>(),
@@ -916,14 +915,14 @@ namespace views {
      * 
      * @return A forward range for the breadth first search.
     */
-      template <class _G, class _Alloc = allocator<bool>>
+      template <class _G, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref<_G&, _Alloc>._Strategy != _St_ref::_None)
       [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& seed, _Alloc alloc = _Alloc()) const
             noexcept(_Choice_ref<_G&, _Alloc>._No_throw) {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return edges_breadth_first_search(__g, seed, alloc);                       // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return edges_breadth_first_search_view<_G, void, false>(__g, seed, alloc); // default impl
         } else {
@@ -948,7 +947,7 @@ namespace views {
      * 
      * @return A forward range for the breadth first search.
     */
-      template <class _G, class _EVF, class _Alloc = allocator<bool>>
+      template <class _G, class _EVF, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy != _St_ref_evf::_None)
       [[nodiscard]] constexpr auto
       operator()(_G&& __g, const vertex_id_t<_G>& seed, _EVF&& evf, _Alloc alloc = _Alloc()) const
@@ -956,7 +955,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return edges_breadth_first_search(__g, seed, alloc);                            // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_breadth_first_search_view<_G, _EVF, false>(__g, seed, evf, alloc); // default impl
         } else {
@@ -1020,7 +1019,7 @@ namespace views {
 
       template <class _G, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-        //static_assert(is_lvalue_reference_v<_G>);
+        //static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_ADL<_G, _Alloc>) {
           return {_St_ref::_Non_member,
                   noexcept(_Fake_copy_init(sourced_edges_breadth_first_search(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -1038,7 +1037,7 @@ namespace views {
 
       template <class _G, class _EVF, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref_evf> _Choose_ref_evf() noexcept {
-        //static_assert(is_lvalue_reference_v<_G>);
+        //static_assert(std::is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_evf_ADL<_G, _EVF, _Alloc>) {
           return {_St_ref_evf::_Non_member, noexcept(_Fake_copy_init(sourced_edges_breadth_first_search(
                                                   declval<_G>(), declval<vertex_id_t<_G>>(), declval<_EVF>(),
@@ -1069,14 +1068,14 @@ namespace views {
      * 
      * @return A forward range for the breadth first search.
     */
-      template <class _G, class _Alloc = allocator<bool>>
+      template <class _G, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref<_G&, _Alloc>._Strategy != _St_ref::_None)
       [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& seed, _Alloc alloc = _Alloc()) const
             noexcept(_Choice_ref<_G&, _Alloc>._No_throw) {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return sourced_edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return sourced_edges_breadth_first_search(__g, seed, alloc);              // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return edges_breadth_first_search_view<_G, void, true>(__g, seed, alloc); // default impl
         } else {
@@ -1101,7 +1100,7 @@ namespace views {
      * 
      * @return A forward range for the breadth first search.
     */
-      template <class _G, class _EVF, class _Alloc = allocator<bool>>
+      template <class _G, class _EVF, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy != _St_ref_evf::_None)
       [[nodiscard]] constexpr auto
       operator()(_G&& __g, const vertex_id_t<_G>& seed, _EVF&& evf, _Alloc alloc = _Alloc()) const
@@ -1109,7 +1108,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return sourced_edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return sourced_edges_breadth_first_search(__g, seed, alloc);                   // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_breadth_first_search_view<_G, _EVF, true>(__g, seed, evf, alloc); // default impl
         } else {
@@ -1127,6 +1126,6 @@ namespace views {
   }
 
 } // namespace views
-} // namespace std::graph
+} // namespace graph
 
 #endif // GRAPH_BFS_HPP

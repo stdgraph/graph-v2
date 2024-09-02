@@ -5,11 +5,11 @@
 #include <queue>
 #include <algorithm>
 
-namespace std::graph {
+namespace graph {
 
 template <class G, class F>
 concept edge_weight_function = // e.g. weight(uv)
-      copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
+      std::copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
 
 
 //edge_weight_function<G, WF> &&
@@ -18,18 +18,14 @@ concept edge_weight_function = // e.g. weight(uv)
 
 template <class G, class WF, class Distance, class Compare, class Combine>
 concept basic_edge_weight_function2 = // e.g. weight(uv)
-      is_arithmetic_v<ranges::range_value_t<Distance>> &&
-      strict_weak_order<Compare, ranges::range_value_t<Distance>, ranges::range_value_t<Distance>> &&
-      assignable_from<ranges::range_reference_t<Distance>, invoke_result_t<Combine, invoke_result_t<WF, edge_t<G>>>>;
+      is_arithmetic_v<range_value_t<Distance>> &&
+      std::strict_weak_order<Compare, range_value_t<Distance>, range_value_t<Distance>> &&
+      std::assignable_from<range_reference_t<Distance>, invoke_result_t<Combine, invoke_result_t<WF, edge_t<G>>>>;
 
 template <class G, class WF, class Distance>
 concept edge_weight_function2 = // e.g. weight(uv)
       is_arithmetic_v<invoke_result_t<WF, edge_t<G>>> &&
-      basic_edge_weight_function2<G,
-                                  WF,
-                                  Distance,
-                                  less<ranges::range_value_t<Distance>>,
-                                  plus<ranges::range_value_t<Distance>>>;
+      basic_edge_weight_function2<G, WF, Distance, less<range_value_t<Distance>>, plus<range_value_t<Distance>>>;
 
 
 class null_range_type : public std::vector<size_t> {
@@ -84,22 +80,21 @@ constexpr auto print_types(Ts...) {
  *        The edge weight function must not throw an exception.
  *        The edge weight function must not modify the graph, the edge, or the vertex (nor any of their associated data).
  */
-template <adjacency_list              G,
-          ranges::random_access_range Distance,
-          ranges::random_access_range Predecessor,
-          class WF = std::function<ranges::range_value_t<Distance>(edge_reference_t<G>)>>
-requires ranges::random_access_range<vertex_range_t<G>> &&                     //
-         integral<vertex_id_t<G>> &&                                           //
-         is_arithmetic_v<ranges::range_value_t<Distance>> &&                   //
-         convertible_to<vertex_id_t<G>, ranges::range_value_t<Predecessor>> && //
+template <adjacency_list      G,
+          random_access_range Distance,
+          random_access_range Predecessor,
+          class WF = std::function<range_value_t<Distance>(edge_reference_t<G>)>>
+requires random_access_range<vertex_range_t<G>> &&                     //
+         integral<vertex_id_t<G>> &&                                   //
+         is_arithmetic_v<range_value_t<Distance>> &&                   //
+         convertible_to<vertex_id_t<G>, range_value_t<Predecessor>> && //
          edge_weight_function<G, WF>
 void dijkstra_clrs(
       G&&            g,           // graph
       vertex_id_t<G> seed,        // starting vertex_id
       Distance&      distance,    // out: distance[uid] of uid from seed
       Predecessor&   predecessor, // out: predecessor[uid] of uid in path
-      WF&&           weight =
-            [](edge_reference_t<G> uv) { return ranges::range_value_t<Distance>(1); }) // default weight(uv) -> 1
+      WF&& weight = [](edge_reference_t<G> uv) { return range_value_t<Distance>(1); }) // default weight(uv) -> 1
 {
   using id_type     = vertex_id_t<G>;
   using weight_type = invoke_result_t<WF, edge_reference_t<G>>;
@@ -109,7 +104,7 @@ void dijkstra_clrs(
   size_t N(size(vertices(g))); // Question(Andrew): Do we want a num_vertices(g) CPO?
   assert(seed < N && seed >= 0);
 
-  std::ranges::fill(distance, numeric_limits<weight_type>::max());
+  std::ranges::fill(distance, std::numeric_limits<weight_type>::max());
   distance[seed] = 0;
 
   struct weighted_vertex {
@@ -120,7 +115,7 @@ void dijkstra_clrs(
   // Remark(Andrew):  We may want to make this parameterizable as different types of heaps give different performance
   // But std::priority_queue is probably reasonable for now
   using q_compare = decltype([](const weighted_vertex& a, const weighted_vertex& b) { return a.weight > b.weight; });
-  std::priority_queue<weighted_vertex, vector<weighted_vertex>, q_compare> Q;
+  std::priority_queue<weighted_vertex, std::vector<weighted_vertex>, q_compare> Q;
 
   // Remark(Andrew):  CLRS puts all vertices in the queue to start but standard practice seems to be to enqueue source
   Q.push({seed, distance[seed]});
@@ -142,4 +137,4 @@ void dijkstra_clrs(
   }
 }
 
-} // namespace std::graph
+} // namespace graph

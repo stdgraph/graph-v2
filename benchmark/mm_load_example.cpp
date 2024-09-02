@@ -6,7 +6,7 @@
 using std::tuple;
 using std::vector;
 
-using namespace std::graph::container;
+using namespace graph::container;
 
 // Dataset: gap_twitter, symmetry_type::general, 1,468,364,884 rows
 //  Deb/Rel parallel_ok num_threads Read        Rows/Sec     LoadSimple  Edges/Sec    LoadCompressed  Edges/Sec

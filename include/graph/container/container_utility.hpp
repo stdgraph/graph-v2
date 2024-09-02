@@ -3,7 +3,7 @@
 #ifndef CONTAINER_UTILITY_HPP
 #  define CONTAINER_UTILITY_HPP
 
-namespace std::graph::container {
+namespace graph::container {
 
 
 //--------------------------------------------------------------------------------------------------
@@ -82,8 +82,8 @@ constexpr auto push_or_insert(C& container) {
 template <class C, class K>
 requires has_array_operator<C, K>
 constexpr auto assign_or_insert(C& container) {
-  if constexpr (ranges::random_access_range<C>) {
-    static_assert(ranges::sized_range<C>, "random_access container is assumed to have size()");
+  if constexpr (random_access_range<C>) {
+    static_assert(sized_range<C>, "random_access container is assumed to have size()");
     return [&container](const K& id, typename C::value_type&& value) {
       typename C::size_type k = static_cast<typename C::size_type>(id);
       assert(k < container.size());
@@ -99,7 +99,7 @@ constexpr auto assign_or_insert(C& container) {
 // ERng is a forward_range because it is traversed twice; once to get the max vertex_id
 // and a second time to load the edges.
 template <class ERng, class EIdFnc, class EValueFnc>
-concept edge_value_extractor = ranges::forward_range<ERng> && invocable<EIdFnc, typename ERng::value_type> &&
+concept edge_value_extractor = forward_range<ERng> && invocable<EIdFnc, typename ERng::value_type> &&
                                invocable<EValueFnc, typename ERng::value_type>;
 
 namespace detail {
@@ -120,9 +120,9 @@ namespace detail {
 
   template <class T>
   struct graph_value_needs_wrap
-        : integral_constant<bool,
-                            is_scalar<T>::value || is_array<T>::value || is_union<T>::value || is_reference<T>::value> {
-  };
+        : std::integral_constant<bool,
+                                 std::is_scalar<T>::value || std::is_array<T>::value || std::is_union<T>::value ||
+                                       std::is_reference<T>::value> {};
 
   template <class T>
   constexpr auto user_value(T& v) -> T& {
@@ -149,15 +149,15 @@ struct weight_value {
 };
 
 struct name_value {
-  string name;
+  std::string name;
 
   name_value()                             = default;
   name_value(const name_value&)            = default;
   name_value& operator=(const name_value&) = default;
-  name_value(const string& s) : name(s) {}
-  name_value(string&& s) : name(std::move(s)) {}
+  name_value(const std::string& s) : name(s) {}
+  name_value(std::string&& s) : name(std::move(s)) {}
 };
 
-} // namespace std::graph::container
+} // namespace graph::container
 
 #endif //CONTAINER_UTILITY_HPP

@@ -1,16 +1,17 @@
 #pragma once
 
 #include <algorithm>
+#include <numeric>
 
 #ifndef GRAPH_COMMON_SHORTEST_PATHS_HPP
 #  define GRAPH_COMMON_SHORTEST_PATHS_HPP
 
-namespace std::graph {
+namespace graph {
 template <class G, class WF, class DistanceValue, class Compare, class Combine> // For exposition only
 concept basic_edge_weight_function =                                            // e.g. weight(uv)
-      is_arithmetic_v<DistanceValue> && strict_weak_order<Compare, DistanceValue, DistanceValue> &&
-      assignable_from<add_lvalue_reference_t<DistanceValue>,
-                      invoke_result_t<Combine, DistanceValue, invoke_result_t<WF, edge_reference_t<G>>>>;
+      is_arithmetic_v<DistanceValue> && std::strict_weak_order<Compare, DistanceValue, DistanceValue> &&
+      std::assignable_from<std::add_lvalue_reference_t<DistanceValue>,
+                           invoke_result_t<Combine, DistanceValue, invoke_result_t<WF, edge_reference_t<G>>>>;
 
 template <class G, class WF, class DistanceValue> // For exposition only
 concept edge_weight_function =                    // e.g. weight(uv)
@@ -19,16 +20,16 @@ concept edge_weight_function =                    // e.g. weight(uv)
 
 /**
  * @ingroup graph_algorithms
- * @brief Returns a value to define an invalid distance used to initialize distance values
+ * @brief Returns a value to define an infinite distance used to initialize distance values
  * in the distance range before one of the shorts paths functions.
  * 
  * @tparam DistanceValue The type of the distance.
  * 
- * @return A unique sentinal value to indicate that a value is invalid, or undefined.
+ * @return A unique sentinal value for an infinite distance.
 */
 template <class DistanceValue>
-constexpr auto shortest_path_invalid_distance() {
-  return numeric_limits<DistanceValue>::max();
+constexpr auto shortest_path_infinite_distance() {
+  return std::numeric_limits<DistanceValue>::max();
 }
 
 /**
@@ -46,7 +47,7 @@ constexpr auto shortest_path_zero() {
 
 /**
  * @ingroup graph_algorithms
- * @brief Intializes the distance values to shortest_path_invalid_distance().
+ * @brief Intializes the distance values to shortest_path_infinite_distance().
  * 
  * @tparam Distances The range type of the distances.
  * 
@@ -54,7 +55,7 @@ constexpr auto shortest_path_zero() {
 */
 template <class Distances>
 constexpr void init_shortest_paths(Distances& distances) {
-  ranges::fill(distances, shortest_path_invalid_distance<ranges::range_value_t<Distances>>());
+  std::ranges::fill(distances, shortest_path_infinite_distance<range_value_t<Distances>>());
 }
 
 /**
@@ -70,11 +71,7 @@ constexpr void init_shortest_paths(Distances& distances) {
 template <class Distances, class Predecessors>
 constexpr void init_shortest_paths(Distances& distances, Predecessors& predecessors) {
   init_shortest_paths(distances);
-
-  using pred_t = ranges::range_value_t<Predecessors>;
-  pred_t i     = pred_t();
-  for (auto& pred : predecessors)
-    pred = i++;
+  iota(predecessors.begin(), predecessors.end(), 0);
 }
 
 /**
@@ -106,6 +103,6 @@ public:
 
 inline static _null_range_type _null_predecessors;
 
-} // namespace std::graph
+} // namespace graph
 
 #endif // GRAPH_COMMON_SHORTEST_PATHS_HPP

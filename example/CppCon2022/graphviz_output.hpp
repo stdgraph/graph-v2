@@ -31,7 +31,7 @@ void output_routes_graphviz(
       const directedness dir,
       std::string_view   bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
 ) {
-  using namespace std::graph;
+  using namespace graph;
   using namespace std::literals;
   std::string   fn(filename);
   std::ofstream of(fn);
@@ -74,7 +74,7 @@ void output_routes_graphviz_adjlist(
       std::string_view filename,
       std::string_view bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
 ) {
-  using namespace std::graph;
+  using namespace graph;
   using namespace std::literals;
   std::string   fn(filename);
   std::ofstream of(fn);
@@ -110,11 +110,11 @@ template <class G>
 void output_routes_graphviz_dfs_vertices(
       G&                         g,
       std::string_view           filename,
-      std::graph::vertex_id_t<G> seed,
+      graph::vertex_id_t<G> seed,
       std::string_view bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
 ) {
-  using namespace std::graph;
-  using namespace std::graph::views;
+  using namespace graph;
+  using namespace graph::views;
   using namespace std::literals;
   std::string   fn(filename);
   std::ofstream of(fn);
@@ -141,7 +141,7 @@ void output_routes_graphviz_dfs_vertices(
   visited[seed] = true;
 
   // output descendents
-  for (auto&& [uid, vid, uv] : std::graph::views::sourced_edges_depth_first_search(g, seed)) {
+  for (auto&& [uid, vid, uv] : graph::views::sourced_edges_depth_first_search(g, seed)) {
     // Output newly discovered vertex
     if (!visited[vid]) {
       //of << "  " << vid << " [shape=Mrecord, label=\"{<f0>" << vid << "|<f1>" << vertex_value(g, *find_vertex(g, uid))

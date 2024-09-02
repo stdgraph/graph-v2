@@ -15,7 +15,7 @@
 #ifndef GRAPH_CO_BFS_HPP
 #  define GRAPH_CO_BFS_HPP
 
-namespace std::graph::experimental {
+namespace graph::experimental {
 
 // These events duplicate boost::graph's BFSVisitorConcept
 enum class bfs_events {
@@ -64,7 +64,7 @@ Generator<bfs_value_t<bfs_events, G>> co_bfs(G&&            g,    // graph
   size_t N(num_vertices(g));
   assert(seed < N && seed >= 0);
 
-  vector<three_colors> color(N, three_colors::white);
+  std::vector<three_colors> color(N, three_colors::white);
 
   if ((events & bfs_events::initialize_vertex) != bfs_events::none) {
     for (id_type uid = 0; uid < num_vertices(g); ++uid) {
@@ -75,7 +75,7 @@ Generator<bfs_value_t<bfs_events, G>> co_bfs(G&&            g,    // graph
   yield_vertex(bfs_events::discover_vertex, seed);
 
   using q_compare = decltype([](const id_type& a, const id_type& b) { return a > b; });
-  std::priority_queue<id_type, vector<id_type>, q_compare> Q;
+  std::priority_queue<id_type, std::vector<id_type>, q_compare> Q;
 
   // Remark(Andrew):  CLRS puts all vertices in the queue to start but standard practice seems to be to enqueue source
   Q.push(seed);
@@ -130,6 +130,6 @@ enum event_visitor_enum {
   on_edge_not_minimized_num
 };
 
-} // namespace std::graph::experimental
+} // namespace graph::experimental
 
 #endif // GRAPH_CO_BFS_HPP
