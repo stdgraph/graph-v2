@@ -151,7 +151,7 @@ auto make_index_edges(M& map, const E& edges) {
  */
 template <std::ranges::random_access_range V,
           std::ranges::random_access_range E,
-          graph::basic_adjacency_list Graph = std::vector<std::vector<size_t>>>
+          graph::basic_adjacency_list      Graph = std::vector<std::vector<size_t>>>
 auto make_plain_graph(const V& vertices, const E& edges, bool directed = true, size_t idx = 0) {
   auto vertex_map  = make_index_map(vertices);
   auto index_edges = make_plain_edges(vertex_map, edges);
@@ -167,7 +167,7 @@ auto make_plain_graph(const V& vertices, const E& edges, bool directed = true, s
  */
 template <std::ranges::random_access_range V,
           std::ranges::random_access_range E,
-          graph::basic_adjacency_list Graph = std::vector<std::vector<std::tuple<size_t, size_t>>>>
+          graph::basic_adjacency_list      Graph = std::vector<std::vector<std::tuple<size_t, size_t>>>>
 auto make_index_graph(const V& vertices, const E& edges, bool directed = true, size_t idx = 0) {
 
   auto vertex_map  = make_index_map(vertices);
@@ -185,7 +185,7 @@ auto make_index_graph(const V& vertices, const E& edges, bool directed = true, s
  */
 template <std::ranges::random_access_range V,
           std::ranges::forward_range       E,
-          graph::basic_adjacency_list Graph =
+          graph::basic_adjacency_list      Graph =
                 std::vector<std::vector<decltype(std::tuple_cat(std::make_tuple(size_t{}), props(*(begin(E{})))))>>>
 auto make_property_graph(const V& vertices, const E& edges, bool directed = true, size_t idx = 0) {
 
@@ -226,7 +226,7 @@ auto data_to_graph_edge_list(const V& left_vertices, const V& right_vertices, co
 template <std::ranges::random_access_range V1,
           std::ranges::random_access_range V2,
           std::ranges::random_access_range E,
-          graph::basic_adjacency_list Graph =
+          graph::basic_adjacency_list      Graph =
                 std::vector<std::vector<decltype(std::tuple_cat(std::make_tuple(size_t{}), props(*(begin(E{})))))>>>
 auto make_plain_bipartite_graph(const V1& left_vertices, const V2& right_vertices, const E& edges, size_t idx = 0) {
 
@@ -273,7 +273,7 @@ auto make_bipartite_graph(const V& left_vertices, const V& right_vertices, const
 
 template <std::ranges::random_access_range V,
           std::ranges::random_access_range E,
-          graph::basic_adjacency_list Graph =
+          graph::basic_adjacency_list      Graph =
                 std::vector<std::vector<decltype(std::tuple_cat(std::make_tuple(size_t{}), props(*(begin(E{})))))>>>
 auto make_bipartite_graphs(const V& left_vertices, const V& right_vertices, const E& edges) {
 

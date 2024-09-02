@@ -105,8 +105,8 @@ public:
   using edge_type         = std::ranges::range_value_t<edges_range>;    //
   using vertex_id_type    = std::remove_cv_t<std::tuple_element_t<0, to_tuple_t<edge_type>>>;
   using edge_value_type   = std::conditional_t<(std::tuple_size_v<to_tuple_t<edge_type>> <= 1),
-                                             void,
-                                             std::tuple_element_t<1, to_tuple_t<edge_type>>>;
+                                               void,
+                                               std::tuple_element_t<1, to_tuple_t<edge_type>>>;
   using vertex_value_type = std::ranges::range_value_t<VVR>;
 
 public:

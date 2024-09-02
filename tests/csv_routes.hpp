@@ -178,7 +178,7 @@ std::optional<graph::vertex_iterator_t<G>> find_city(G&& g, std::string_view cit
   return std::optional<graph::vertex_iterator_t<G>>();
 #else
   auto vertex_to_name = [&g](graph::vertex_reference_t<G> u) { return graph::vertex_value<G>(g, u); };
-  auto it = std::ranges::lower_bound(graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
+  auto it    = std::ranges::lower_bound(graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
   bool atEnd = (it == end(graph::vertices(g)));
   auto id    = it - begin(graph::vertices(g));
   if (it != end(graph::vertices(g)) && graph::vertex_value(g, *it) == city_name)
@@ -198,8 +198,7 @@ graph::vertex_id_t<G> find_city_id(G&& g, std::string_view city_name) {
   if (it != end(graph::vertices(g)) && graph::vertex_value(g, *it) != city_name)
     it = end(graph::vertices(g));
 #endif
-  return static_cast<graph::vertex_id_t<G>>(it -
-                                                 begin(graph::vertices(g))); // == size(vertices(g)) if not found
+  return static_cast<graph::vertex_id_t<G>>(it - begin(graph::vertices(g))); // == size(vertices(g)) if not found
 }
 
 /**
@@ -574,8 +573,8 @@ void output_routes_graphviz_adjlist(
 
 template <class G>
 void output_routes_graphviz_dfs_vertices(
-      const G&                   g,
-      std::string_view           filename,
+      const G&              g,
+      std::string_view      filename,
       graph::vertex_id_t<G> seed,
       std::string_view bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
 ) {

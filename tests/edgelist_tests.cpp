@@ -31,7 +31,7 @@ TEST_CASE("edgelist tuple test", "[edgelist][tuple]") {
   }
 
   graph::_Target_id::_Cpo cpo;
-  E                            e;
+  E                       e;
   static_assert(same_as<E, tuple<int, int>>);
 
   static_assert(!std::ranges::forward_range<E>);
@@ -63,7 +63,7 @@ TEST_CASE("edgelist tuple test with value", "[edgelist][tuple]") {
   }
 
   graph::_Target_id::_Cpo cpo;
-  E                            e;
+  E                       e;
   static_assert(same_as<E, tuple<int, int, double>>);
 
   static_assert(!std::ranges::forward_range<E>);
@@ -101,7 +101,7 @@ TEST_CASE("edgelist pair test", "[edgelist][tuple]") {
   }
 
   graph::_Target_id::_Cpo cpo;
-  E                            e;
+  E                       e;
   static_assert(same_as<E, pair<int, int>>);
 
   static_assert(!std::ranges::forward_range<E>);
@@ -134,7 +134,7 @@ TEST_CASE("edgelist edge_descriptor test", "[edgelist][edge_descriptor]") {
   }
 
   graph::_Target_id::_Cpo cpo;
-  E                            e;
+  E                       e;
   static_assert(same_as<E, edge_descriptor<int, true, void, void>>);
 
   static_assert(!std::ranges::forward_range<E>);
@@ -167,7 +167,7 @@ TEST_CASE("edgelist edge_descriptor test with value", "[edgelist][edge_descripto
   }
 
   graph::_Target_id::_Cpo cpo;
-  E                            e;
+  E                       e;
   static_assert(same_as<E, edge_descriptor<int, true, void, double>>);
 
   static_assert(!std::ranges::forward_range<E>);

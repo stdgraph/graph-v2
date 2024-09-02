@@ -98,16 +98,16 @@ inline void init_dfs(Distances& distances, Predecessors& predecessors) {
  */
 
 // C++
-inline void
-depth_first_search(const Graph& g, const Source& source, Distances& distances, Predecessors& predecessors) {}
+inline void depth_first_search(const Graph& g, const Source& source, Distances& distances, Predecessors& predecessors) {
+}
 
 // C
 inline void depth_first_search(const Graph*  g,
-                                 const Source  source,
-                                 const size_t  distances_len,
-                                 Distances*    distances,
-                                 const size_t  predecessors_len,
-                                 Predecessors* predecessors) {}
+                               const Source  source,
+                               const size_t  distances_len,
+                               Distances*    distances,
+                               const size_t  predecessors_len,
+                               Predecessors* predecessors) {}
 
 
 } // namespace graph

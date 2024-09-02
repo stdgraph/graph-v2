@@ -108,8 +108,8 @@ void output_routes_graphviz_adjlist(
 
 template <class G>
 void output_routes_graphviz_dfs_vertices(
-      G&                         g,
-      std::string_view           filename,
+      G&                    g,
+      std::string_view      filename,
       graph::vertex_id_t<G> seed,
       std::string_view bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
 ) {
