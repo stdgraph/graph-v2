@@ -82,7 +82,7 @@ template <index_adjacency_list G,
           random_access_range  Predecessors,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>,
-          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>>
+          class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>>
 requires convertible_to<range_value_t<Seeds>, vertex_id_t<G>> &&        //
          is_arithmetic_v<range_value_t<Distances>> &&                   //
          convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> && //
@@ -168,7 +168,7 @@ Generator<bfs_value_t<dijkstra_events, G>> co_dijkstra(
       dijkstra_yield_edge(dijkstra_events::examine_edge, uid, vid, uv);
 
       // Negative weights are not allowed for Dijkstra's algorithm
-      if constexpr (std::is_signed_v<weight_type>) {
+      if constexpr (is_signed_v<weight_type>) {
         if (w < zero) {
           throw graph_error("co_dijkstra: negative edge weight");
         }
@@ -233,10 +233,10 @@ template <index_adjacency_list G,
           random_access_range  Predecessors,
           class Compare    = less<range_value_t<Distances>>,
           class Combine    = plus<range_value_t<Distances>>,
-          class WF         = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
+          class WF         = function<range_value_t<Distances>(edge_reference_t<G>)>,
           _queueable Queue = std::priority_queue<vertex_id_t<G>,
                                                  std::vector<vertex_id_t<G>>,
-                                                 std::greater<vertex_id_t<G>>>>
+                                                 greater<vertex_id_t<G>>>>
 requires is_arithmetic_v<range_value_t<Distances>> &&                   //
          convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> && //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>

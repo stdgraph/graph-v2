@@ -3,6 +3,8 @@
 #include <concepts>
 #include <ranges>
 #include <tuple>
+#include <functional>
+#include <optional>
 
 namespace graph {
 // Containers are not included to avoid potential conflicts: vector, list, string, etc.
@@ -14,14 +16,28 @@ using std::tuple_element_t;
 using std::tuple_size_v;
 using std::reference_wrapper;
 using std::forward_iterator_tag;
+using std::declval;
+
+// functional types
 using std::plus;
 using std::less;
-using std::declval;
+using std::greater;
+using std::identity;
+using std::function;
+using std::invoke;
+
+// optional types
+using std::optional;
 
 // type traits
 using std::is_arithmetic_v;
 using std::is_convertible_v;
 using std::is_same_v;
+using std::is_invocable_v;
+using std::is_arithmetic_v;
+using std::is_void_v;
+using std::is_lvalue_reference_v;
+using std::is_signed_v;
 
 using std::remove_cv_t;
 using std::remove_const_t;
@@ -29,15 +45,15 @@ using std::remove_volatile_t;
 using std::remove_reference_t;
 using std::remove_pointer_t;
 using std::remove_cvref_t;
-using std::is_arithmetic_v;
-using std::is_void_v;
+using std::invoke_result_t;
+
+using std::false_type;
+using std::true_type;
 
 // concepts
 using std::same_as;
 using std::convertible_to;
 using std::integral;
-using std::invoke_result;
-using std::invoke_result_t;
 using std::invocable;
 using std::regular_invocable;
 
@@ -61,7 +77,6 @@ using std::random_access_iterator;
 using std::contiguous_iterator;
 
 // range types
-using std::identity;
 using std::ranges::subrange;
 
 using std::ranges::iterator_t;

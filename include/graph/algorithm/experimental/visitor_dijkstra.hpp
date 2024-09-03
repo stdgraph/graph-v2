@@ -141,7 +141,7 @@ template <index_adjacency_list G,
           input_range         Sources,
           random_access_range Distances,
           random_access_range Predecessors,
-          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
+          class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>
           //queueable Que = _dijkstra_queue<G, Distances> // not used
@@ -241,7 +241,7 @@ void dijkstra_with_visitor(
       visitor.on_examine_edge({uid, vid, uv});
 
       // Negative weights are not allowed for Dijkstra's algorithm
-      if constexpr (std::is_signed_v<weight_type>) {
+      if constexpr (is_signed_v<weight_type>) {
         if (w < zero) {
           throw graph_error("dijkstra_with_visitor: negative edge weight");
         }
@@ -303,7 +303,7 @@ template <index_adjacency_list G,
           class Visitor,
           random_access_range Distances,
           random_access_range Predecessors,
-          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
+          class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>,
           queueable Que = _dijkstra_queue<G, Distances>>

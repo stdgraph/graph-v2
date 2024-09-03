@@ -47,7 +47,7 @@ namespace graph::container {
  * @return A @c pair<VId,size_t> with the max vertex id used and the number of edges scanned.
 */
 template <class VId, class EV, forward_range ERng, class EProj = identity>
-requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV>
+requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV>
 constexpr auto max_vertex_id(const ERng& erng, const EProj& eprojection) {
   size_t edge_count = 0;
   VId    max_id     = 0;
@@ -167,7 +167,7 @@ public: // Operations
   constexpr void swap(csr_row_values& other) noexcept { swap(v_, other.v_); }
 
   template <forward_range VRng, class VProj = identity>
-  //requires views::copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV>
+  //requires views::copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV>
   constexpr void load_row_values(const VRng& vrng, VProj projection, size_type vertex_count) {
     if constexpr (sized_range<VRng>)
       vertex_count = max(vertex_count, size(vrng));
@@ -185,7 +185,7 @@ public: // Operations
   }
 
   template <forward_range VRng, class VProj = identity>
-  //requires views::copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV>
+  //requires views::copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV>
   constexpr void load_row_values(VRng&& vrng, VProj projection, size_type vertex_count) {
     if constexpr (sized_range<VRng>)
       vertex_count = max(vertex_count, std::ranges::size(vrng));
@@ -446,7 +446,7 @@ public: // Construction/Destruction
    * @param alloc                Allocator to use for internal containers
   */
   template <forward_range ERng, forward_range PartRng, class EProj = identity>
-  //requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> && //
+  //requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> && //
   //               convertible_to<range_value_t<PartRng>, VId>
   constexpr compressed_graph_base(const ERng&    erng,
                                   EProj          eprojection         = {},
@@ -485,8 +485,8 @@ public: // Construction/Destruction
             class EProj = identity,
             class VProj = identity>
   requires convertible_to<range_value_t<PartRng>, VId>
-  //requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> &&
-  //      copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV>
+  //requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
+  //      copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV>
   constexpr compressed_graph_base(const ERng&    erng,
                                   const VRng&    vrng,
                                   EProj          eprojection = {}, // eproj(eval) -> {source_id,target_id [,value]}
@@ -553,7 +553,7 @@ public:                            // Operations
    * @param  vprojection    Projection function for @c vrng values
   */
   template <forward_range VRng, class VProj = identity>
-  //requires views::copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV>
+  //requires views::copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV>
   constexpr void load_vertices(const VRng& vrng, VProj vprojection, size_type vertex_count = 0) {
     row_values_base::load_row_values(vrng, vprojection, max(vertex_count, size(vrng)));
   }
@@ -572,7 +572,7 @@ public:                            // Operations
    * @param vprojection Projection function for @c vrng values
   */
   template <forward_range VRng, class VProj = identity>
-  //requires views::copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV>
+  //requires views::copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV>
   constexpr void load_vertices(VRng& vrng, VProj vprojection = {}, size_type vertex_count = 0) {
     row_values_base::load_row_values(vrng, vprojection, max(vertex_count, size(vrng)));
   }
@@ -617,7 +617,7 @@ public:                            // Operations
    *                     edge range.
   */
   template <class ERng, class EProj = identity>
-  //requires views::copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV>
+  //requires views::copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV>
   constexpr void load_edges(ERng&& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
     // should only be loading into an empty graph
     assert(row_index_.empty() && col_index_.empty() && static_cast<col_values_base&>(*this).empty());
@@ -631,8 +631,8 @@ public:                            // Operations
     // We can get the last vertex id from the list because erng is required to be ordered by
     // the source id. It's possible a target_id could have a larger id also, which is taken
     // care of at the end of this function.
-    vertex_count = max(vertex_count,
-                            static_cast<size_type>(last_erng_id(erng, eprojection) + 1)); // +1 for zero-based index
+    vertex_count =
+          max(vertex_count, static_cast<size_type>(last_erng_id(erng, eprojection) + 1)); // +1 for zero-based index
     reserve_vertices(vertex_count);
 
     // Eval number of input rows and reserve space for the edges, if possible
@@ -669,7 +669,7 @@ public:                            // Operations
 
   // The only diff with this and ERng&& is v_.push_back vs. v_.emplace_back
   template <class ERng, class EProj = identity>
-  //requires views::copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV>
+  //requires views::copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV>
   constexpr void
   load_edges(const ERng& erng, EProj eprojection = {}, size_type vertex_count = 0, size_type edge_count = 0) {
     // should only be loading into an empty graph
@@ -684,8 +684,8 @@ public:                            // Operations
     // We can get the last vertex id from the list because erng is required to be ordered by
     // the source id. It's possible a target_id could have a larger id also, which is taken
     // care of at the end of this function.
-    vertex_count = max(vertex_count,
-                            static_cast<size_type>(last_erng_id(erng, eprojection) + 1)); // +1 for zero-based index
+    vertex_count =
+          max(vertex_count, static_cast<size_type>(last_erng_id(erng, eprojection) + 1)); // +1 for zero-based index
     reserve_vertices(vertex_count);
 
     // Eval number of input rows and reserve space for the edges, if possible
@@ -752,8 +752,8 @@ public:                            // Operations
             class EProj = identity,
             class VProj = identity>
   requires convertible_to<range_value_t<PartRng>, VId>
-  //requires views::copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> &&
-  //      views::copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV>
+  //requires views::copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
+  //      views::copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV>
   constexpr void load(const ERng& erng, const VRng& vrng, EProj eprojection = {}, VProj vprojection = {}) {
     load_edges(erng, eprojection);
     load_vertices(vrng, vprojection); // load the values
@@ -951,7 +951,7 @@ public: // Construction/Destruction
   // compressed_graph(gv&&, erng, eprojection, alloc)
 
   template <forward_range ERng, forward_range PartRng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> &&
+  requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
            convertible_to<range_value_t<PartRng>, VId>
   constexpr compressed_graph(const ERng&    erng,
                              EProj          eprojection,
@@ -960,7 +960,7 @@ public: // Construction/Destruction
         : base_type(erng, eprojection, partition_start_ids, alloc) {}
 
   template <forward_range ERng, forward_range PartRng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> &&
+  requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
                  convertible_to<range_value_t<PartRng>, VId>
   constexpr compressed_graph(const graph_value_type& value,
                              const ERng&             erng,
@@ -970,7 +970,7 @@ public: // Construction/Destruction
         : base_type(erng, eprojection, partition_start_ids, alloc), value_(value) {}
 
   template <forward_range ERng, forward_range PartRng, class EProj = identity>
-  requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> &&
+  requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
                  convertible_to<range_value_t<PartRng>, VId>
   constexpr compressed_graph(graph_value_type&& value,
                              const ERng&        erng,
@@ -988,8 +988,8 @@ public: // Construction/Destruction
             forward_range PartRng,
             class EProj = identity,
             class VProj = identity>
-  requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> &&
-           copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV> &&
+  requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
+           copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV> &&
            convertible_to<range_value_t<PartRng>, VId>
   constexpr compressed_graph(const ERng&    erng,
                              const VRng&    vrng,
@@ -1004,8 +1004,8 @@ public: // Construction/Destruction
             forward_range PartRng,
             class EProj = identity,
             class VProj = identity>
-  requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> &&
-                 copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV> &&
+  requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
+                 copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV> &&
                  convertible_to<range_value_t<PartRng>, VId>
   constexpr compressed_graph(const graph_value_type& value,
                              const ERng&             erng,
@@ -1021,8 +1021,8 @@ public: // Construction/Destruction
             forward_range PartRng,
             class EProj = identity,
             class VProj = identity>
-  requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> &&
-                 copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV> &&
+  requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
+                 copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV> &&
                  convertible_to<range_value_t<PartRng>, VId>
   constexpr compressed_graph(graph_value_type&& value,
                              const ERng&        erng,
@@ -1095,8 +1095,8 @@ public: // Construction/Destruction
             class EProj           = identity,
             class VProj           = identity,
             forward_range PartRng = std::vector<VId>>
-  requires copyable_edge<invoke_result<EProj, range_value_t<ERng>>, VId, EV> &&
-           copyable_vertex<invoke_result<VProj, range_value_t<VRng>>, VId, VV> &&
+  requires copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
+           copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV> &&
            convertible_to<range_value_t<PartRng>, VId>
   constexpr compressed_graph(const ERng&    erng,
                              const VRng&    vrng,

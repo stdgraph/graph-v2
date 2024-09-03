@@ -209,7 +209,7 @@ public:
   using bfs_range_type   = vertices_breadth_first_search_view<graph_type, VVF, Alloc>;
 
   using vertex_value_func = remove_reference_t<VVF>;
-  using vertex_value_type = std::invoke_result_t<VVF, vertex_reference>;
+  using vertex_value_type = invoke_result_t<VVF, vertex_reference>;
 
 public:
   vertices_breadth_first_search_view(graph_type&    g,
@@ -455,7 +455,7 @@ public:
   using bfs_range_type      = edges_breadth_first_search_view<G, EVF, Sourced, Alloc>;
 
   using edge_value_func = remove_reference_t<EVF>;
-  using edge_value_type = std::invoke_result_t<EVF, edge_reference_type>;
+  using edge_value_type = invoke_result_t<EVF, edge_reference_type>;
 
 public:
   edges_breadth_first_search_view(G& g, vertex_id_type seed, const EVF& value_fn, const Alloc& alloc = Alloc())
@@ -717,7 +717,7 @@ namespace views {
 
       template <class _G, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-        //static_assert(std::is_lvalue_reference_v<_G>);
+        //static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_ADL<_G, _Alloc>) {
           return {_St_ref::_Non_member,
                   noexcept(_Fake_copy_init(vertices_breadth_first_search(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -735,7 +735,7 @@ namespace views {
 
       template <class _G, class _VVF, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref_vvf> _Choose_ref_vvf() noexcept {
-        //static_assert(std::is_lvalue_reference_v<_G>);
+        //static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_vvf_ADL<_G, _VVF, _Alloc>) {
           return {_St_ref_vvf::_Non_member, noexcept(_Fake_copy_init(vertices_breadth_first_search(
                                                   declval<_G>(), declval<vertex_id_t<_G>>(), declval<_VVF>(),
@@ -866,7 +866,7 @@ namespace views {
 
       template <class _G, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-        //static_assert(std::is_lvalue_reference_v<_G>);
+        //static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_ADL<_G, _Alloc>) {
           return {_St_ref::_Non_member,
                   noexcept(_Fake_copy_init(edges_breadth_first_search(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -884,7 +884,7 @@ namespace views {
 
       template <class _G, class _EVF, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref_evf> _Choose_ref_evf() noexcept {
-        //static_assert(std::is_lvalue_reference_v<_G>);
+        //static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_evf_ADL<_G, _EVF, _Alloc>) {
           return {_St_ref_evf::_Non_member, noexcept(_Fake_copy_init(edges_breadth_first_search(
                                                   declval<_G>(), declval<vertex_id_t<_G>>(), declval<_EVF>(),
@@ -1019,7 +1019,7 @@ namespace views {
 
       template <class _G, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-        //static_assert(std::is_lvalue_reference_v<_G>);
+        //static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_ADL<_G, _Alloc>) {
           return {_St_ref::_Non_member,
                   noexcept(_Fake_copy_init(sourced_edges_breadth_first_search(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -1037,7 +1037,7 @@ namespace views {
 
       template <class _G, class _EVF, class _Alloc>
       [[nodiscard]] static consteval _Choice_t<_St_ref_evf> _Choose_ref_evf() noexcept {
-        //static_assert(std::is_lvalue_reference_v<_G>);
+        //static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_ref_evf_ADL<_G, _EVF, _Alloc>) {
           return {_St_ref_evf::_Non_member, noexcept(_Fake_copy_init(sourced_edges_breadth_first_search(
                                                   declval<_G>(), declval<vertex_id_t<_G>>(), declval<_EVF>(),
