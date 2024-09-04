@@ -20,7 +20,7 @@
 #include <tuple>
 #include <vector>
 
-template <adjacency_list                       Graph,
+template <adjacency_list                  Graph,
           invocable<inner_value_t<Graph>> WeightFunction =
                 std::function<std::tuple_element_t<1, inner_value_t<Graph>>(const inner_value_t<Graph>&)>>
 auto dijkstra(

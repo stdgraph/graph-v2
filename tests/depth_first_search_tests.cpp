@@ -4,10 +4,10 @@
 #include "graph/container/dynamic_graph.hpp"
 #include <iostream>
 
-#  define TEST_OPTION_OUTPUT (1)
-#  define TEST_OPTION_GEN (2)
-#  define TEST_OPTION_TEST (3)
-#  define TEST_OPTION TEST_OPTION_TEST
+#define TEST_OPTION_OUTPUT (1)
+#define TEST_OPTION_GEN (2)
+#define TEST_OPTION_TEST (3)
+#define TEST_OPTION TEST_OPTION_TEST
 
 using std::cout;
 using std::endl;
@@ -29,19 +29,18 @@ TEST_CASE("depth_first_search algorithm test", "[bfs][single-source][algorithm]"
     REQUIRE(1 + 1 == 2);
   }
 
-#  if TEST_OPTION == TEST_OPTION_OUTPUT
+#if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("dfs algo output") {
     // output graph
     cout << "graph" << endl;
   }
-#  elif TEST_OPTION == TEST_OPTION_GEN
+#elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("dfs algo test generation") {
     // generate test code
   }
-#  elif TEST_OPTION == TEST_OPTION_TEST
+#elif TEST_OPTION == TEST_OPTION_TEST
   SECTION("dfs algo test") {
     // production test code
   }
-#  endif // TEST_OPTION
+#endif // TEST_OPTION
 } // TEST_CASE "depth_first_search algorithm test"
-

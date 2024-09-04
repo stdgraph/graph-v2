@@ -103,8 +103,8 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
   vertex_reference_t<G> frankfurt    = *find_vertex(g, frankfurt_id);
 
   cout << "Traverse the vertices & outgoing edges" << endl;
-  for (auto&& [uid, u] : vertexlist(g)) {                           // [id,vertex&]
-    cout << city_id(g, uid) << endl;                                // city name [id]
+  for (auto&& [uid, u] : vertexlist(g)) {                      // [id,vertex&]
+    cout << city_id(g, uid) << endl;                           // city name [id]
     for (auto&& [vid, uv] : graph::views::incidence(g, uid)) { // [target_id,edge&]
       cout << "   --> " << city_id(g, vid) << endl;
       // "--> "target city" [target_id]
