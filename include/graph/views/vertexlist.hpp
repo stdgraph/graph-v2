@@ -38,7 +38,7 @@ public:
   using vertex_type           = vertex_t<graph_type>;
   using vertex_reference_type = range_reference_t<vertex_range_type>;
   using vertex_value_func     = VVF;
-  using vertex_value_type     = std::invoke_result_t<VVF, vertex_type&>;
+  using vertex_value_type     = invoke_result_t<VVF, vertex_type&>;
 
   using iterator_category = forward_iterator_tag;
   using value_type        = vertex_descriptor<const vertex_id_t<graph_type>, vertex_reference_type, vertex_value_type>;
@@ -82,7 +82,7 @@ public:
   constexpr reference operator*() const {
     value_.shadow_.vertex = &*iter_;
     if constexpr (!is_void_v<vertex_value_type>)
-      value_.shadow_.value = std::invoke(*this->value_fn_, *iter_);
+      value_.shadow_.value = invoke(*this->value_fn_, *iter_);
     return value_.value_;
   }
 
@@ -249,7 +249,7 @@ namespace views {
       // all
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_all> _Choose_all() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
 
         if constexpr (_Has_all_ADL<_G>) {
           return {_St_all::_Non_member, noexcept(_Fake_copy_init(vertexlist(declval<_G>())))}; // intentional ADL
@@ -266,7 +266,7 @@ namespace views {
 
       template <class _G, class VVF>
       [[nodiscard]] static consteval _Choice_t<_St_all> _Choose_vvf_all() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
 
         if constexpr (_Has_all_vvf_ADL<_G, VVF>) {
           return {_St_all::_Non_member,
@@ -287,7 +287,7 @@ namespace views {
       // rng
       template <class _G, class Rng>
       [[nodiscard]] static consteval _Choice_t<_St_rng> _Choose_rng() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
 
         if constexpr (_Has_rng_ADL<_G, Rng>) {
           return {_St_rng::_Non_member,
@@ -308,7 +308,7 @@ namespace views {
 
       template <class _G, class Rng, class VVF>
       [[nodiscard]] static consteval _Choice_t<_St_rng> _Choose_vvf_rng() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
 
         if constexpr (_Has_rng_vvf_ADL<_G, Rng, VVF>) {
           return {_St_rng::_Non_member, noexcept(_Fake_copy_init(vertexlist(declval<_G>(), declval<Rng>(),

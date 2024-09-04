@@ -174,7 +174,7 @@ public:
       value_.shadow_.edge  = &*uvi_;
       value_.shadow_.value = invoke(*value_fn_, *uvi_);
     } else {
-      value_.shadow_ = {vertex_id(*g_, ui_), target_id(*g_, *uvi_), &*uvi_, std::invoke(*value_fn_, *uvi_)};
+      value_.shadow_ = {vertex_id(*g_, ui_), target_id(*g_, *uvi_), &*uvi_, invoke(*value_fn_, *uvi_)};
     }
     return value_.value_;
   }
@@ -444,7 +444,7 @@ namespace views {
       // edgelist(g)
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_all> _Choose_all() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_adjlist_all_ADL<_G>) {
           return {_St_adjlist_all::_Non_member, noexcept(_Fake_copy_init(edgelist(declval<_G>())))}; // intentional ADL
         } else if constexpr (_Can_adjlist_all_eval<_G>) {
@@ -460,7 +460,7 @@ namespace views {
       // edgelist(g,evf)
       template <class _G, class EVF>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_all> _Choose_all_evf() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_adjlist_all_evf_ADL<_G, EVF>) {
           return {_St_adjlist_all::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<EVF>())))}; // intentional ADL
@@ -478,7 +478,7 @@ namespace views {
       // edgelist(g,uid,vid)
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_idrng> _Choose_idrng() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_adjlist_idrng_ADL<_G>) {
           return {_St_adjlist_idrng::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -496,7 +496,7 @@ namespace views {
       // edgelist(g,uid,vid,evf)
       template <class _G, class EVF>
       [[nodiscard]] static consteval _Choice_t<_St_adjlist_idrng> _Choose_idrng_evf() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_adjlist_idrng_evf_ADL<_G, EVF>) {
           return {_St_adjlist_idrng::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -515,7 +515,7 @@ namespace views {
       // edgelist(elr,proj)
       template <class ELR, class Proj>
       [[nodiscard]] static consteval _Choice_t<_St_edgelist_all> _Choose_elr_proj() noexcept {
-        static_assert(std::is_lvalue_reference_v<ELR>);
+        static_assert(is_lvalue_reference_v<ELR>);
         if constexpr (_Has_edgelist_all_proj_ADL<ELR, Proj>) {
           return {_St_edgelist_all::_Non_member,
                   noexcept(_Fake_copy_init(edgelist(declval<ELR>(), declval<Proj>())))}; // intentional ADL

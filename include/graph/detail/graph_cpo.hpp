@@ -160,7 +160,7 @@ using graph_reference_t = std::add_lvalue_reference<G>;
  * @tparam G The graph type
  */
 template <class G>
-struct define_adjacency_matrix : public std::false_type {}; // specialized for graph container
+struct define_adjacency_matrix : public false_type {}; // specialized for graph container
 
 template <class G>
 struct is_adjacency_matrix : public define_adjacency_matrix<G> {};
@@ -206,7 +206,7 @@ namespace _Vertices {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().vertices()))};
       } else if constexpr (_Has_ref_ADL<_G>) {
@@ -316,7 +316,7 @@ namespace _Vertex_id {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member,
                 noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>()->vertex_id(declval<_G>())))};
@@ -491,7 +491,7 @@ namespace _Find_vertex {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St> _Choose() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_member<_G>) {
         return {_St::_Member, noexcept(_Fake_copy_init(declval<_G>().find_vertex(declval<vertex_id_t<_G>>())))};
       } else if constexpr (_Has_ADL<_G>) {
@@ -592,7 +592,7 @@ namespace _Edges {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_id_ADL<_G>) {
         return {_St_id::_Non_member,
                 noexcept(_Fake_copy_init(edges(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
@@ -609,7 +609,7 @@ namespace _Edges {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().edges(declval<_G>())))};
       } else if constexpr (_Has_ref_ADL<_G>) {
@@ -753,7 +753,7 @@ namespace _NumEdges {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().num_edges()))};
       } else if constexpr (_Has_ref_ADL<_G>) {
@@ -862,7 +862,7 @@ namespace _Target_id {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_adjl_ref> _Choose_adjl_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
 
       if constexpr (_Has_adjl_ref_member<_G>) {
         return {_St_adjl_ref::_Member,
@@ -891,7 +891,7 @@ namespace _Target_id {
 
     template <class _E>
     [[nodiscard]] static consteval _Choice_t<_St_edgl_ref> _Choose_edgl_ref() noexcept {
-      //static_assert(std::is_lvalue_reference_v<_E>);
+      //static_assert(is_lvalue_reference_v<_E>);
 
       if constexpr (_Has_edgl_ref_member<_E>) {
         return {_St_edgl_ref::_Member, noexcept(_Fake_copy_init(declval<_E&>().target_id()))};
@@ -1051,7 +1051,7 @@ namespace _Source_id {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_adjl_ref> _Choose_adjl_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_adjl_ref_member<_G>) {
         return {_St_adjl_ref::_Member,
                 noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().source_id(declval<_G>())))};
@@ -1071,7 +1071,7 @@ namespace _Source_id {
 
     template <class _E>
     [[nodiscard]] static consteval _Choice_t<_St_edgl_ref> _Choose_edgl_ref() noexcept {
-      //static_assert(std::is_lvalue_reference_v<_E>);
+      //static_assert(is_lvalue_reference_v<_E>);
       if constexpr (_Has_edgl_ref_member<_E>) {
         return {_St_edgl_ref::_Member, noexcept(_Fake_copy_init(declval<_E>().source_id()))};
       } else if constexpr (_Has_edgl_ref_ADL<_E>) {
@@ -1197,7 +1197,7 @@ namespace _Target {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
 
       if constexpr (_Has_ref_ADL<_G>) {
         return {_St_ref::_Non_member,
@@ -1280,7 +1280,7 @@ namespace _Source {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_ADL<_G>) {
         return {_St_ref::_Non_member,
                 noexcept(_Fake_copy_init(source(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
@@ -1385,7 +1385,7 @@ namespace _Find_vertex_edge {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().find_vertex_edge(
                                         declval<_G>(), declval<vertex_id_t<_G>>())))};
@@ -1408,7 +1408,7 @@ namespace _Find_vertex_edge {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_id_ADL<_G>) {
         return {_St_id::_Non_member,
                 noexcept(_Fake_copy_init(find_vertex_edge(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -1527,7 +1527,7 @@ namespace _Contains_edge {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_ADL<_G>) {
         return {_St_ref::_Non_member,
                 noexcept(_Fake_copy_init(contains_edge(declval<_G>(), declval<vertex_id_t<_G>>(),
@@ -1632,7 +1632,7 @@ namespace _Partition_id {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_id_ADL<_G>) {
         return {_St_id::_Non_member,
                 noexcept(_Fake_copy_init(partition_id(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
@@ -1648,7 +1648,7 @@ namespace _Partition_id {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member,
                 noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().partition_id(declval<_G>())))};
@@ -1778,7 +1778,7 @@ namespace _NumVertices {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().num_vertices()))};
       } else if constexpr (_Has_ref_ADL<_G>) {
@@ -1795,7 +1795,7 @@ namespace _NumVertices {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_id_ADL<_G>) {
         return {
               _St_id::_Non_member,
@@ -1920,7 +1920,7 @@ namespace _Degree {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_id_ADL<_G>) {
         return {_St_id::_Non_member,
                 noexcept(_Fake_copy_init(degree(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
@@ -1937,7 +1937,7 @@ namespace _Degree {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().degree(declval<_G>())))};
       } else if constexpr (_Has_ref_ADL<_G>) {
@@ -1976,7 +1976,7 @@ namespace _Degree {
       if constexpr (_Strat_ref == _St_ref::_Member) {
         return u.degree(__g);
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        return degree(__g, u); // intentional ADL
+        return degree(__g, u);              // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return size(edges(__g, u)); // default impl
       } else {
@@ -2004,7 +2004,7 @@ namespace _Degree {
       constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
 
       if constexpr (_Strat_id == _St_id::_Non_member) {
-        return degree(__g, uid); // intentional ADL
+        return degree(__g, uid);              // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
         return size(edges(__g, uid)); // default impl
       } else {
@@ -2048,7 +2048,7 @@ namespace _Vertex_value {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().vertex_value(
                                         declval<graph_reference_t<_G>>())))};
@@ -2151,7 +2151,7 @@ namespace _Edge_value {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_adjl_ref> _Choose_adjl_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_adjl_ref_member<_G>) {
         return {
               _St_adjl_ref::_Member,
@@ -2175,7 +2175,7 @@ namespace _Edge_value {
 
     template <class _E>
     [[nodiscard]] static consteval _Choice_t<_St_edgl_ref> _Choose_edgl_ref() noexcept {
-      //static_assert(std::is_lvalue_reference_v<_E>);
+      //static_assert(is_lvalue_reference_v<_E>);
       if constexpr (_Has_edgl_ref_member<_E>) {
         return {_St_edgl_ref::_Member, noexcept(_Fake_copy_init(declval<_E>().edge_value()))};
       } else if constexpr (_Has_edgl_ref_ADL<_E>) {
@@ -2308,7 +2308,7 @@ namespace _Graph_value {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<graph_reference_t<_G>>().graph_value()))};
       } else if constexpr (_Has_ref_ADL<_G>) {
@@ -2385,7 +2385,7 @@ namespace _Num_partitions {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().num_partitions()))};
       } else if constexpr (_Has_ref_ADL<_G>) {
@@ -2484,7 +2484,7 @@ namespace _HasEdge {
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(std::is_lvalue_reference_v<_G>);
+      static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_ref_member<_G>) {
         return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().has_edge()))};
       } else if constexpr (_Has_ref_ADL<_G>) {
@@ -2502,7 +2502,7 @@ namespace _HasEdge {
 
     //template <class _G>
     //[[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-    //  static_assert(std::is_lvalue_reference_v<_G>);
+    //  static_assert(is_lvalue_reference_v<_G>);
     //  if constexpr (_Has_id_ADL<_G>) {
     //    return {
     //          _St_id::_Non_member,

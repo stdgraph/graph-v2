@@ -120,7 +120,7 @@ public:
       value_.shadow_.target    = const_cast<shadow_vertex_type*>(&target(*g_, *iter_));
     }
     value_.shadow_.value =
-          std::invoke(*value_fn_, *value_.shadow_.target); // 'value' undeclared identifier (.value not in struct?)
+          invoke(*value_fn_, *value_.shadow_.target); // 'value' undeclared identifier (.value not in struct?)
     return value_.value_;
   }
 
@@ -297,7 +297,7 @@ namespace views {
 
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_id_ADL<_G>) {
           return {_St_id::_Non_member,
                   noexcept(_Fake_copy_init(neighbors(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
@@ -316,7 +316,7 @@ namespace views {
 
       template <class _G, class VVF>
       [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id_vvf() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_id_vvf_ADL<_G, VVF>) {
           return {_St_id::_Non_member, noexcept(_Fake_copy_init(neighbors(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                                           declval<VVF>())))}; // intentional ADL

@@ -83,7 +83,7 @@ constexpr auto print_types(Ts...) {
 template <adjacency_list      G,
           random_access_range Distance,
           random_access_range Predecessor,
-          class WF = std::function<range_value_t<Distance>(edge_reference_t<G>)>>
+          class WF = function<range_value_t<Distance>(edge_reference_t<G>)>>
 requires random_access_range<vertex_range_t<G>> &&                     //
          integral<vertex_id_t<G>> &&                                   //
          is_arithmetic_v<range_value_t<Distance>> &&                   //

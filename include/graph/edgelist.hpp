@@ -107,7 +107,7 @@ namespace edgelist {
                            };
 
   template <class EL>
-  struct is_directed : public std::false_type {}; // specialized for graph container
+  struct is_directed : public false_type {}; // specialized for graph container
 
   template <class EL>
   inline constexpr bool is_directed_v = is_directed<EL>::value;

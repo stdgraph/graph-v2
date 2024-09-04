@@ -374,7 +374,7 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
  */
 
 template <class G>
-struct define_unordered_edge : public std::false_type {}; // specialized for graph container edge
+struct define_unordered_edge : public false_type {}; // specialized for graph container edge
 
 template <class G> // For exposition only
 concept unordered_edge = basic_sourced_edge<G> && define_unordered_edge<G>::value;

@@ -37,15 +37,15 @@ public:
   // Visitor Functions
 public:
   // vertex visitor functions
-  constexpr void on_initialize_vertex(vertex_desc_type&& vdesc) {}
-  constexpr void on_discover_vertex(vertex_desc_type&& vdesc) {}
-  constexpr void on_examine_vertex(vertex_desc_type&& vdesc) {}
-  constexpr void on_finish_vertex(vertex_desc_type&& vdesc) {}
+  constexpr void on_initialize_vertex(const vertex_desc_type& vdesc) {}
+  constexpr void on_discover_vertex(const vertex_desc_type& vdesc) {}
+  constexpr void on_examine_vertex(const vertex_desc_type& vdesc) {}
+  constexpr void on_finish_vertex(const vertex_desc_type& vdesc) {}
 
   // edge visitor functions
-  constexpr void on_examine_edge(sourced_edge_desc_type&& edesc) {}
-  constexpr void on_edge_relaxed(sourced_edge_desc_type&& edesc) {}
-  constexpr void on_edge_not_relaxed(sourced_edge_desc_type&& edesc) {}
+  constexpr void on_examine_edge(const sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_relaxed(const sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_not_relaxed(const sourced_edge_desc_type& edesc) {}
 };
 
 template <class G, class Visitor>
@@ -97,7 +97,7 @@ template <index_adjacency_list G,
           input_range          Sources,
           random_access_range  Distances,
           random_access_range  Predecessors,
-          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
+          class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Visitor = dijkstra_visitor_base<G>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
@@ -188,7 +188,7 @@ void dijkstra_shortest_paths(
       visitor.on_examine_edge({uid, vid, uv});
 
       // Negative weights are not allowed for Dijkstra's algorithm
-      if constexpr (std::is_signed_v<weight_type>) {
+      if constexpr (is_signed_v<weight_type>) {
         if (w < zero) {
           throw std::out_of_range(
                 fmt::format("dijkstra_shortest_paths: invalid negative edge weight of '{}' encountered", w));
@@ -230,7 +230,7 @@ void dijkstra_shortest_paths(
 template <index_adjacency_list G,
           random_access_range  Distances,
           random_access_range  Predecessors,
-          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
+          class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Visitor = dijkstra_visitor_base<G>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
@@ -282,7 +282,7 @@ void dijkstra_shortest_paths(
 template <index_adjacency_list G,
           input_range          Sources,
           random_access_range  Distances,
-          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
+          class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Visitor = dijkstra_visitor_base<G>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
@@ -299,14 +299,13 @@ void dijkstra_shortest_distances(
       Visitor&& visitor = dijkstra_visitor_base<G>(),
       Compare&& compare = less<range_value_t<Distances>>(),
       Combine&& combine = plus<range_value_t<Distances>>()) {
-  dijkstra_shortest_paths(g, sources, distances, _null_predecessors, forward<WF>(weight),
-                          std::forward<Visitor>(visitor), std::forward<Compare>(compare),
-                          std::forward<Combine>(combine));
+  dijkstra_shortest_paths(g, sources, distances, _null_predecessors, forward<WF>(weight), forward<Visitor>(visitor),
+                          forward<Compare>(compare), forward<Combine>(combine));
 }
 
 template <index_adjacency_list G,
           random_access_range  Distances,
-          class WF      = std::function<range_value_t<Distances>(edge_reference_t<G>)>,
+          class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
           class Visitor = dijkstra_visitor_base<G>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
@@ -323,8 +322,7 @@ void dijkstra_shortest_distances(
       Compare&& compare = less<range_value_t<Distances>>(),
       Combine&& combine = plus<range_value_t<Distances>>()) {
   dijkstra_shortest_paths(g, subrange(&source, (&source + 1)), distances, _null_predecessors, forward<WF>(weight),
-                          std::forward<Visitor>(visitor), std::forward<Compare>(compare),
-                          std::forward<Combine>(combine));
+                          forward<Visitor>(visitor), forward<Compare>(compare), forward<Combine>(combine));
 }
 
 } // namespace graph

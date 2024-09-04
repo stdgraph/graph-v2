@@ -44,7 +44,7 @@ public:
   using edge_iterator       = vertex_edge_iterator_t<graph_type>;
   using edge_type           = edge_t<graph_type>;
   using edge_reference_type = edge_reference_t<graph_type>;
-  using edge_value_type     = std::invoke_result_t<EVF, edge_reference_type>;
+  using edge_value_type     = invoke_result_t<EVF, edge_reference_type>;
 
   using iterator_category = forward_iterator_tag;
   using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
@@ -108,7 +108,7 @@ public:
       value_.shadow_.target_id = target_id(*g_, *iter_);
     }
     value_.shadow_.edge  = &*iter_;
-    value_.shadow_.value = std::invoke(*value_fn_, *iter_);
+    value_.shadow_.value = invoke(*value_fn_, *iter_);
     return value_.value_;
   }
 
@@ -275,7 +275,7 @@ namespace views {
 
       template <class _G>
       [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_id_ADL<_G>) {
           return {_St_id::_Non_member,
                   noexcept(_Fake_copy_init(incidence(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
@@ -294,7 +294,7 @@ namespace views {
 
       template <class _G, class EVF>
       [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id_evf() noexcept {
-        static_assert(std::is_lvalue_reference_v<_G>);
+        static_assert(is_lvalue_reference_v<_G>);
         if constexpr (_Has_id_evf_ADL<_G, EVF>) {
           return {_St_id::_Non_member, noexcept(_Fake_copy_init(incidence(declval<_G>(), declval<vertex_id_t<_G>>(),
                                                                           declval<EVF>())))}; // intentional ADL
