@@ -1976,7 +1976,7 @@ namespace _Degree {
       if constexpr (_Strat_ref == _St_ref::_Member) {
         return u.degree(__g);
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        return degree(__g, u);              // intentional ADL
+        return degree(__g, u); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return size(edges(__g, u)); // default impl
       } else {
@@ -2004,7 +2004,7 @@ namespace _Degree {
       constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
 
       if constexpr (_Strat_id == _St_id::_Non_member) {
-        return degree(__g, uid);              // intentional ADL
+        return degree(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
         return size(edges(__g, uid)); // default impl
       } else {
