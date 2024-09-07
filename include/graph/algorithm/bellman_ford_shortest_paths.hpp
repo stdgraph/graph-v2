@@ -143,7 +143,7 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&      //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 // && bellman_visitor<G, Visitor>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_paths(
-      G&             g,
+      G&&            g,
       const Sources& sources,
       Distances&     distances,
       Predecessors&  predecessor,
@@ -245,7 +245,7 @@ requires is_arithmetic_v<range_value_t<Distances>> &&                   //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 // && bellman_visitor<G, Visitor>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_paths(
-      G&                   g,
+      G&&                  g,
       const vertex_id_t<G> source,
       Distances&           distances,
       Predecessors&        predecessor,
@@ -301,7 +301,7 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 //&& bellman_visitor<G, Visitor>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_distances(
-      G&             g,
+      G&&            g,
       const Sources& sources,
       Distances&     distances,
       WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
@@ -323,7 +323,7 @@ requires is_arithmetic_v<range_value_t<Distances>> && //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 //&& bellman_visitor<G, Visitor>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_distances(
-      G&                   g,
+      G&&                  g,
       const vertex_id_t<G> source,
       Distances&           distances,
       WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
