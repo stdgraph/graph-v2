@@ -46,15 +46,10 @@ public:
 };
 
 template <class G, class Visitor>
-concept bellman_visitor = //is_arithmetic<typename Visitor::distance_type> &&
-      requires(Visitor& v, Visitor::vertex_desc_type& vdesc, Visitor::sourced_edge_desc_type& edesc) {
-        //typename Visitor::distance_type;
-
-        //{ v.on_initialize_vertex(vdesc) };
-        //{ v.on_discover_vertex(vdesc) };
-        //{ v.on_examine_vertex(vdesc) };
-        //{ v.on_finish_vertex(vdesc) };
-
+concept bellman_visitor =
+      requires(Visitor&                                             v,
+               remove_reference_t<Visitor>::vertex_desc_type&       vdesc,
+               remove_reference_t<Visitor>::sourced_edge_desc_type& edesc) {
         { v.on_examine_edge(edesc) };
         { v.on_edge_relaxed(edesc) };
         { v.on_edge_not_relaxed(edesc) };
@@ -135,13 +130,13 @@ template <index_adjacency_list G,
           class Visitor = bellman_visitor_base<G>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
-requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&      //
-         is_arithmetic_v<range_value_t<Distances>> &&                   //
-         convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> && //
-         sized_range<Distances> &&                                      //
-         sized_range<Predecessors> &&                                   //
-         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
-// && bellman_visitor<G, Visitor>
+requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&                        //
+         is_arithmetic_v<range_value_t<Distances>> &&                                     //
+         convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> &&                   //
+         sized_range<Distances> &&                                                        //
+         sized_range<Predecessors> &&                                                     //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine> && //
+         bellman_visitor<G, Visitor>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_paths(
       G&&            g,
       const Sources& sources,
@@ -238,12 +233,12 @@ template <index_adjacency_list G,
           class Visitor = bellman_visitor_base<G>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
-requires is_arithmetic_v<range_value_t<Distances>> &&                   //
-         convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> && //
-         sized_range<Distances> &&                                      //
-         sized_range<Predecessors> &&                                   //
-         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
-// && bellman_visitor<G, Visitor>
+requires is_arithmetic_v<range_value_t<Distances>> &&                                     //
+         convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> &&                   //
+         sized_range<Distances> &&                                                        //
+         sized_range<Predecessors> &&                                                     //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine> && //
+         bellman_visitor<G, Visitor>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_paths(
       G&&                  g,
       const vertex_id_t<G> source,
@@ -295,11 +290,11 @@ template <index_adjacency_list G,
           class Visitor = bellman_visitor_base<G>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
-requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
-         is_arithmetic_v<range_value_t<Distances>> &&              //
-         sized_range<Distances> &&                                 //
-         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
-//&& bellman_visitor<G, Visitor>
+requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&                        //
+         is_arithmetic_v<range_value_t<Distances>> &&                                     //
+         sized_range<Distances> &&                                                        //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine> && //
+         bellman_visitor<G, Visitor>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_distances(
       G&&            g,
       const Sources& sources,
@@ -318,10 +313,10 @@ template <index_adjacency_list G,
           class Visitor = bellman_visitor_base<G>,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
-requires is_arithmetic_v<range_value_t<Distances>> && //
-         sized_range<Distances> &&                    //
-         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
-//&& bellman_visitor<G, Visitor>
+requires is_arithmetic_v<range_value_t<Distances>> &&                                     //
+         sized_range<Distances> &&                                                        //
+         basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine> && //
+         bellman_visitor<G, Visitor>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_distances(
       G&&                  g,
       const vertex_id_t<G> source,

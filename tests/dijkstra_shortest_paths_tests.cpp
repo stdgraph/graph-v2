@@ -116,6 +116,19 @@ auto to_string(const Predecessors& predecessors) {
   return pred;
 }
 
+TEST_CASE("Visitor Concept") {
+  using G                    = routes_volf_graph_type;
+  auto&&                g    = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  vertex_id_t<G>        u_id = 0;
+  vertex_reference_t<G> u    = *find_vertex(g, u_id);
+
+  using Visitor = graph::dijkstra_visitor_base<G>;
+  using VDesc   = Visitor::vertex_desc_type;
+  //Visitor visitor;
+  VDesc u_desc{u_id, u};
+  static_assert(graph::dijkstra_visitor<G, Visitor>);
+}
+
 TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments][dijkstra][common]") {
   init_console();
   using G                     = routes_volf_graph_type;
