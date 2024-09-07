@@ -108,7 +108,7 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
          convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> &&
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 // && dijkstra_visitor<G, Visitor>
-void dijkstra_shortest_paths(
+constexpr void dijkstra_shortest_paths(
       G&             g,
       const Sources& sources,
       Distances&     distances,
@@ -240,7 +240,7 @@ requires is_arithmetic_v<range_value_t<Distances>> && //
          convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> &&
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 // && dijkstra_visitor<G, Visitor>
-void dijkstra_shortest_paths(
+constexpr void dijkstra_shortest_paths(
       G&                   g,
       const vertex_id_t<G> source,
       Distances&           distances,
@@ -291,7 +291,7 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
          is_arithmetic_v<range_value_t<Distances>> &&              //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 //&& dijkstra_visitor<G, Visitor>
-void dijkstra_shortest_distances(
+constexpr void dijkstra_shortest_distances(
       G&             g,
       const Sources& sources,
       Distances&     distances,
@@ -313,7 +313,7 @@ requires is_arithmetic_v<range_value_t<Distances>> && //
          sized_range<Distances> &&                    //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 //&& dijkstra_visitor<G, Visitor>
-void dijkstra_shortest_distances(
+constexpr void dijkstra_shortest_distances(
       G&                   g,
       const vertex_id_t<G> source,
       Distances&           distances,

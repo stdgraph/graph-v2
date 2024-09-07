@@ -142,7 +142,7 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&      //
          sized_range<Predecessors> &&                                   //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 // && bellman_visitor<G, Visitor>
-[[nodiscard]] optional<vertex_id_t<G>> bellman_ford_shortest_paths(
+[[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_paths(
       G&             g,
       const Sources& sources,
       Distances&     distances,
@@ -244,7 +244,7 @@ requires is_arithmetic_v<range_value_t<Distances>> &&                   //
          sized_range<Predecessors> &&                                   //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 // && bellman_visitor<G, Visitor>
-[[nodiscard]] optional<vertex_id_t<G>> bellman_ford_shortest_paths(
+[[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_paths(
       G&                   g,
       const vertex_id_t<G> source,
       Distances&           distances,
@@ -300,7 +300,7 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
          sized_range<Distances> &&                                 //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 //&& bellman_visitor<G, Visitor>
-[[nodiscard]] optional<vertex_id_t<G>> bellman_ford_shortest_distances(
+[[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_distances(
       G&             g,
       const Sources& sources,
       Distances&     distances,
@@ -322,7 +322,7 @@ requires is_arithmetic_v<range_value_t<Distances>> && //
          sized_range<Distances> &&                    //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 //&& bellman_visitor<G, Visitor>
-[[nodiscard]] optional<vertex_id_t<G>> bellman_ford_shortest_distances(
+[[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_distances(
       G&                   g,
       const vertex_id_t<G> source,
       Distances&           distances,
