@@ -41,7 +41,6 @@ using graph::edge_value;
 using graph::degree;
 using graph::find_vertex;
 using graph::find_vertex_edge;
-using graph::experimental::dijkstra_visitor_base;
 using graph::experimental::dijkstra_with_visitor;
 using graph::experimental::init_shortest_paths;
 
@@ -62,7 +61,7 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
-struct my_dijkstra_visitor : dijkstra_visitor_base<routes_vol_graph_type> {
+struct my_dijkstra_visitor : graph::experimental::dijkstra_visitor_base<routes_vol_graph_type> {
   using G      = routes_vol_graph_type;
   using base_t = dijkstra_visitor_base<G>;
 

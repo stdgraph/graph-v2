@@ -77,53 +77,57 @@ constexpr void init_shortest_paths(Distances& distances, Predecessors& predecess
 //
 // Visitor concepts and classes
 //
+
+// Vertex visitor concepts
 template <class G, class Visitor>
 concept has_on_initialize_vertex = //
-      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>& vdesc) {
+      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void> vdesc) {
         { v.on_initialize_vertex(vdesc) };
       };
 template <class G, class Visitor>
 concept has_on_discover_vertex = //
-      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>& vdesc) {
+      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void> vdesc) {
         { v.on_discover_vertex(vdesc) };
       };
 template <class G, class Visitor>
 concept has_on_examine_vertex = //
-      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>& vdesc) {
+      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void> vdesc) {
         { v.on_examine_vertex(vdesc) };
       };
 template <class G, class Visitor>
 concept has_on_finish_vertex = //
-      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>& vdesc) {
+      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void> vdesc) {
         { v.on_finish_vertex(vdesc) };
       };
 
+// Edge visitor concepts
 template <class G, class Visitor>
 concept has_on_examine_edge = //
-      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void> edesc) {
         { v.on_examine_edge(edesc) };
       };
 template <class G, class Visitor>
 concept has_on_edge_relaxed = //
-      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void> edesc) {
         { v.on_edge_relaxed(edesc) };
       };
 template <class G, class Visitor>
 concept has_on_edge_not_relaxed = //
-      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void> edesc) {
         { v.on_edge_not_relaxed(edesc) };
       };
 template <class G, class Visitor>
 concept has_on_edge_minimized = //
-      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void> edesc) {
         { v.on_edge_minimized(edesc) };
       };
 template <class G, class Visitor>
 concept has_on_edge_not_minimized =
-      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void> edesc) {
         { v.on_edge_not_minimized(edesc) };
       };
 
+// Visitor structs and classes
 struct empty_visitor {};
 
 /**

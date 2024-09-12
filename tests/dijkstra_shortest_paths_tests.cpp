@@ -30,48 +30,8 @@ using std::less;
 using std::plus;
 using std::is_arithmetic_v;
 
-using graph::index_adjacency_list;
-using graph::edge_weight_function;
-using graph::basic_edge_weight_function;
-
-using graph::vertex_t;
-using graph::vertex_id_t;
-using graph::vertex_edge_range_t;
-using graph::edge_t;
-using graph::edge_value_t;
-
-using graph::vertices;
-using graph::find_vertex;
-using graph::vertex_value;
-using graph::edges;
-using graph::target_id;
-using graph::target;
-using graph::edge_value;
-using graph::num_vertices;
-using graph::vertex_reference_t;
-using graph::edge_reference_t;
-
+using namespace graph;
 using graph::views::vertexlist;
-
-using graph::shortest_path_infinite_distance;
-using graph::init_shortest_paths;
-using graph::dijkstra_shortest_paths;
-using graph::dijkstra_shortest_distances;
-
-using graph::vertex_descriptor;
-using graph::edge_descriptor;
-
-using graph::empty_visitor;
-using graph::has_on_initialize_vertex;
-using graph::has_on_discover_vertex;
-using graph::has_on_examine_vertex;
-using graph::has_on_finish_vertex;
-
-using graph::has_on_examine_edge;
-using graph::has_on_edge_relaxed;
-using graph::has_on_edge_not_relaxed;
-using graph::has_on_edge_minimized;
-using graph::has_on_edge_not_minimized;
 
 using routes_volf_graph_traits = graph::container::vofl_graph_traits<double, std::string>;
 using routes_volf_graph_type   = graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;

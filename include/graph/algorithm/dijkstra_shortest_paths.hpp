@@ -76,7 +76,7 @@ constexpr void dijkstra_shortest_paths(
       Distances&     distances,
       Predecessors&  predecessor,
       WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
-      Visitor&& visitor = empty_visitor,
+      Visitor&& visitor = empty_visitor(),
       Compare&& compare = less<range_value_t<Distances>>(),
       Combine&& combine = plus<range_value_t<Distances>>()) {
   using id_type       = vertex_id_t<G>;
