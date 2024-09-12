@@ -90,7 +90,7 @@ auto to_string(const Predecessors& predecessors) {
   return pred;
 }
 
-template<typename G>
+template <typename G>
 using visited_vertex_t = vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>;
 template <typename G>
 using visited_edge_t = edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>;

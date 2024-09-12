@@ -233,8 +233,7 @@ requires is_arithmetic_v<range_value_t<Distances>> &&                   //
       Compare&& compare = less<range_value_t<Distances>>(),
       Combine&& combine = plus<range_value_t<Distances>>()) {
   return bellman_ford_shortest_paths(g, subrange(&source, (&source + 1)), distances, predecessor, weight,
-                                     forward<Visitor>(visitor), forward<Compare>(compare),
-                                     forward<Combine>(combine));
+                                     forward<Visitor>(visitor), forward<Compare>(compare), forward<Combine>(combine));
 }
 
 
@@ -288,8 +287,7 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
       Compare&& compare = less<range_value_t<Distances>>(),
       Combine&& combine = plus<range_value_t<Distances>>()) {
   return bellman_ford_shortest_paths(g, sources, distances, _null_predecessors, forward<WF>(weight),
-                                     forward<Visitor>(visitor), forward<Compare>(compare),
-                                     forward<Combine>(combine));
+                                     forward<Visitor>(visitor), forward<Compare>(compare), forward<Combine>(combine));
 }
 
 template <index_adjacency_list G,
