@@ -74,13 +74,67 @@ constexpr void init_shortest_paths(Distances& distances, Predecessors& predecess
   iota(predecessors.begin(), predecessors.end(), 0);
 }
 
+//
+// Visitor concepts and classes
+//
+template <class G, class Visitor>
+concept has_on_initialize_vertex = //
+      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>& vdesc) {
+        { v.on_initialize_vertex(vdesc) };
+      };
+template <class G, class Visitor>
+concept has_on_discover_vertex = //
+      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>& vdesc) {
+        { v.on_discover_vertex(vdesc) };
+      };
+template <class G, class Visitor>
+concept has_on_examine_vertex = //
+      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>& vdesc) {
+        { v.on_examine_vertex(vdesc) };
+      };
+template <class G, class Visitor>
+concept has_on_finish_vertex = //
+      requires(Visitor& v, vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>& vdesc) {
+        { v.on_finish_vertex(vdesc) };
+      };
+
+template <class G, class Visitor>
+concept has_on_examine_edge = //
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+        { v.on_examine_edge(edesc) };
+      };
+template <class G, class Visitor>
+concept has_on_edge_relaxed = //
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+        { v.on_edge_relaxed(edesc) };
+      };
+template <class G, class Visitor>
+concept has_on_edge_not_relaxed = //
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+        { v.on_edge_not_relaxed(edesc) };
+      };
+template <class G, class Visitor>
+concept has_on_edge_minimized = //
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+        { v.on_edge_minimized(edesc) };
+      };
+template <class G, class Visitor>
+concept has_on_edge_not_minimized =
+      requires(Visitor& v, edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>& edesc) {
+        { v.on_edge_not_minimized(edesc) };
+      };
+
+struct empty_visitor {};
+
 /**
  * @brief An always-empty random_access_range.
  * 
  * A unique range type that can be used at compile time to determine if predecessors need to
  * be evaluated.
  * 
- * This is not in the P1709 proposal. It's a quick hack to allow us to implement quickly.
+ * This is not in the P1709 proposal. It's an implementation detail that allows us to have
+ * a single implementation for the Dijkstra and Bellman-Ford shortest paths algorithms that 
+ * can be used by other overloads.
 */
 class _null_range_type : public std::vector<size_t> {
   using T         = size_t;
