@@ -46,16 +46,15 @@ public:
 };
 
 template <class G, class Visitor>
-concept bellman_visitor =
-      requires(Visitor&                                             v,
-               remove_reference_t<Visitor>::vertex_desc_type&       vdesc,
-               remove_reference_t<Visitor>::sourced_edge_desc_type& edesc) {
-        { v.on_examine_edge(edesc) };
-        { v.on_edge_relaxed(edesc) };
-        { v.on_edge_not_relaxed(edesc) };
-        { v.on_edge_minimized(edesc) };
-        { v.on_edge_not_minimized(edesc) };
-      };
+concept bellman_visitor = requires(Visitor&                                             v,
+                                   remove_reference_t<Visitor>::vertex_desc_type&       vdesc,
+                                   remove_reference_t<Visitor>::sourced_edge_desc_type& edesc) {
+  { v.on_examine_edge(edesc) };
+  { v.on_edge_relaxed(edesc) };
+  { v.on_edge_not_relaxed(edesc) };
+  { v.on_edge_minimized(edesc) };
+  { v.on_edge_not_minimized(edesc) };
+};
 
 /**
  * @brief Get the vertex ids in a negative weight cycle.
@@ -196,8 +195,9 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&              
     distances[static_cast<size_t>(source)] = zero; // mark source as discovered
   }
 
+  bool at_least_one_edge_relaxed = false;
   for (id_type k = 0; k < N; ++k) {
-    bool at_least_one_edge_relaxed = false;
+    at_least_one_edge_relaxed = false;
     for (auto&& [uid, vid, uv, w] : views::edgelist(g, weight)) {
       visitor.on_examine_edge({uid, vid, uv});
       if (relax_target(uv, uid, w)) {
@@ -211,15 +211,17 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&              
   }
 
   // Check for negative weight cycles
-  for (auto&& [uid, vid, uv, w] : views::edgelist(g, weight)) {
-    if (compare(combine(distances[uid], w), distances[vid])) {
-      visitor.on_edge_not_minimized({uid, vid, uv});
-      if constexpr (!is_same_v<Predecessors, _null_range_type>) {
-        predecessor[vid] = uid; // close the cycle
+  if (at_least_one_edge_relaxed) {
+    for (auto&& [uid, vid, uv, w] : views::edgelist(g, weight)) {
+      if (compare(combine(distances[uid], w), distances[vid])) {
+        visitor.on_edge_not_minimized({uid, vid, uv});
+        if constexpr (!is_same_v<Predecessors, _null_range_type>) {
+          predecessor[vid] = uid; // close the cycle
+        }
+        return return_type(uid);
+      } else {
+        visitor.on_edge_minimized({uid, vid, uv});
       }
-      return return_type(uid);
-    } else {
-      visitor.on_edge_minimized({uid, vid, uv});
     }
   }
 
