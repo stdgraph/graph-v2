@@ -30,34 +30,8 @@ using std::less;
 using std::plus;
 using std::is_arithmetic_v;
 
-using graph::index_adjacency_list;
-using graph::edge_weight_function;
-using graph::basic_edge_weight_function;
-
-using graph::vertex_t;
-using graph::vertex_id_t;
-using graph::vertex_edge_range_t;
-using graph::edge_t;
-using graph::edge_value_t;
-
-using graph::vertices;
-using graph::find_vertex;
-using graph::vertex_value;
-using graph::edges;
-using graph::target_id;
-using graph::target;
-using graph::edge_value;
-using graph::num_vertices;
-using graph::vertex_reference_t;
-using graph::edge_reference_t;
-
+using namespace graph;
 using graph::views::vertexlist;
-
-using graph::shortest_path_infinite_distance;
-using graph::init_shortest_paths;
-using graph::dijkstra_shortest_paths;
-using graph::dijkstra_shortest_distances;
-using graph::dijkstra_visitor_base;
 
 using routes_volf_graph_traits = graph::container::vofl_graph_traits<double, std::string>;
 using routes_volf_graph_type   = graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
@@ -116,6 +90,58 @@ auto to_string(const Predecessors& predecessors) {
   return pred;
 }
 
+template<typename G>
+using visited_vertex_t = vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>;
+template <typename G>
+using visited_edge_t = edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>;
+
+template <index_adjacency_list G>
+class empty_dijkstra_visitor {
+  // Types
+public:
+  using graph_type             = G;
+  using vertex_desc_type       = visited_vertex_t<G>;
+  using sourced_edge_desc_type = visited_edge_t<G>;
+
+  // Visitor Functions
+public:
+  empty_dijkstra_visitor() = default;
+
+  // vertex visitor functions
+  constexpr void on_initialize_vertex(vertex_desc_type& vdesc) {}
+  constexpr void on_discover_vertex(vertex_desc_type& vdesc) {}
+  constexpr void on_examine_vertex(vertex_desc_type& vdesc) {}
+  constexpr void on_finish_vertex(vertex_desc_type& vdesc) {}
+
+  // edge visitor functions
+  constexpr void on_examine_edge(sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_relaxed(sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_not_relaxed(sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_minimized(sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_not_minimized(sourced_edge_desc_type& edesc) {}
+};
+
+TEST_CASE("Visitor Concept") {
+  using G                    = routes_volf_graph_type;
+  auto&&                g    = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  vertex_id_t<G>        u_id = 0;
+  vertex_reference_t<G> u    = *find_vertex(g, u_id);
+
+  using Visitor = empty_dijkstra_visitor<G>;
+  using VDesc   = Visitor::vertex_desc_type;
+  //Visitor visitor;
+  VDesc u_desc{u_id, u};
+  static_assert(has_on_initialize_vertex<G, Visitor>);
+  static_assert(has_on_discover_vertex<G, Visitor>);
+  static_assert(has_on_examine_vertex<G, Visitor>);
+  static_assert(has_on_finish_vertex<G, Visitor>);
+  static_assert(has_on_examine_edge<G, Visitor>);
+  static_assert(has_on_edge_relaxed<G, Visitor>);
+  static_assert(has_on_edge_not_relaxed<G, Visitor>);
+  static_assert(has_on_edge_minimized<G, Visitor>);
+  static_assert(has_on_edge_not_minimized<G, Visitor>);
+}
+
 TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments][dijkstra][common]") {
   init_console();
   using G                     = routes_volf_graph_type;
@@ -130,7 +156,7 @@ TEST_CASE("Dijkstra's Common Shortest Segments", "[csv][vofl][shortest][segments
   auto weight = [](edge_reference_t<G> uv) -> double { return 1.0; };
 
 #if 0
-  //using V = graph::dijkstra_visitor_base<G>;
+  //using V = graph::empty_visitor;
   //static_assert(graph::dijkstra_visitor<G, V>, "Visitor doesn't match dijkstra_visitor requirements");
 #endif
 
@@ -431,7 +457,7 @@ TEST_CASE("Dijkstra's General Shortest Segments", "[csv][vofl][shortest][segment
   Predecessors predecessors(size(vertices(g)));
   init_shortest_paths(distance, predecessors);
   auto weight  = [](edge_reference_t<G> uv) -> double { return 1.0; };
-  auto visitor = dijkstra_visitor_base<G>();
+  auto visitor = empty_visitor();
 
 #if 0
   using Visitor = decltype(visitor);
@@ -572,7 +598,7 @@ TEST_CASE("Dijkstra's General Shortest Paths", "[csv][vofl][shortest][paths][dij
   vector<vertex_id_t<G>> predecessors(size(vertices(g)));
   init_shortest_paths(distance, predecessors);
   auto weight  = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-  auto visitor = dijkstra_visitor_base<G>();
+  auto visitor = empty_visitor();
 
   dijkstra_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
                           std::plus<Distance>());
@@ -700,7 +726,7 @@ TEST_CASE("Dijkstra's General Shortest Distances", "[csv][vofl][shortest][distan
   vector<double> distance(size(vertices(g)));
   init_shortest_paths(distance);
   auto weight  = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-  auto visitor = dijkstra_visitor_base<G>();
+  auto visitor = empty_visitor();
 
   // This test case just tests that these will compile without error. The distances will be the same as before.
   //dijkstra_shortest_distances(g, frankfurt_id, distance, std::less<Distance>(), std::plus<Distance>());

@@ -26,43 +26,6 @@
 
 namespace graph {
 
-template <adjacency_list G>
-class dijkstra_visitor_base {
-  // Types
-public:
-  using graph_type             = G;
-  using vertex_desc_type       = vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>;
-  using sourced_edge_desc_type = edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>;
-
-  // Visitor Functions
-public:
-  // vertex visitor functions
-  constexpr void on_initialize_vertex(const vertex_desc_type& vdesc) {}
-  constexpr void on_discover_vertex(const vertex_desc_type& vdesc) {}
-  constexpr void on_examine_vertex(const vertex_desc_type& vdesc) {}
-  constexpr void on_finish_vertex(const vertex_desc_type& vdesc) {}
-
-  // edge visitor functions
-  constexpr void on_examine_edge(const sourced_edge_desc_type& edesc) {}
-  constexpr void on_edge_relaxed(const sourced_edge_desc_type& edesc) {}
-  constexpr void on_edge_not_relaxed(const sourced_edge_desc_type& edesc) {}
-};
-
-template <class G, class Visitor>
-concept dijkstra_visitor = //is_arithmetic<typename Visitor::distance_type> &&
-      requires(Visitor& v, Visitor::vertex_desc_type& vdesc, Visitor::sourced_edge_desc_type& edesc) {
-        //typename Visitor::distance_type;
-
-        { v.on_initialize_vertex(vdesc) };
-        { v.on_discover_vertex(vdesc) };
-        { v.on_examine_vertex(vdesc) };
-        { v.on_finish_vertex(vdesc) };
-
-        { v.on_examine_edge(edesc) };
-        { v.on_edge_relaxed(edesc) };
-        { v.on_edge_not_relaxed(edesc) };
-      };
-
 /**
  * @brief Dijkstra's single-source shortest paths algorithm with a visitor.
  * 
@@ -98,7 +61,7 @@ template <index_adjacency_list G,
           random_access_range  Distances,
           random_access_range  Predecessors,
           class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
-          class Visitor = dijkstra_visitor_base<G>,
+          class Visitor = empty_visitor,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
 requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
@@ -107,14 +70,13 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
          sized_range<Predecessors> &&                              //
          convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> &&
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
-// && dijkstra_visitor<G, Visitor>
-void dijkstra_shortest_paths(
-      G&             g,
+constexpr void dijkstra_shortest_paths(
+      G&&            g,
       const Sources& sources,
       Distances&     distances,
       Predecessors&  predecessor,
       WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
-      Visitor&& visitor = dijkstra_visitor_base<G>(),
+      Visitor&& visitor = empty_visitor(),
       Compare&& compare = less<range_value_t<Distances>>(),
       Combine&& combine = plus<range_value_t<Distances>>()) {
   using id_type       = vertex_id_t<G>;
@@ -163,8 +125,10 @@ void dijkstra_shortest_paths(
   Queue queue(qcompare);
 
   // (The optimizer removes this loop if on_initialize_vertex() is empty.)
-  for (id_type uid = 0; uid < N; ++uid) {
-    visitor.on_initialize_vertex({uid, *find_vertex(g, uid)});
+  if constexpr (has_on_initialize_vertex<G, Visitor>) {
+    for (id_type uid = 0; uid < N; ++uid) {
+      visitor.on_initialize_vertex({uid, *find_vertex(g, uid)});
+    }
   }
 
   // Seed the queue with the initial vertice(s)
@@ -174,18 +138,24 @@ void dijkstra_shortest_paths(
     }
     queue.push(source);
     distances[static_cast<size_t>(source)] = zero; // mark source as discovered
-    visitor.on_discover_vertex({source, *find_vertex(g, source)});
+    if constexpr (has_on_discover_vertex<G, Visitor>) {
+      visitor.on_discover_vertex({source, *find_vertex(g, source)});
+    }
   }
 
   // Main loop to process the queue
   while (!queue.empty()) {
     const id_type uid = queue.top();
     queue.pop();
-    visitor.on_examine_vertex({uid, *find_vertex(g, uid)});
+    if constexpr (has_on_examine_vertex<G, Visitor>) {
+      visitor.on_examine_vertex({uid, *find_vertex(g, uid)});
+    }
 
     // Process all outgoing edges from the current vertex
     for (auto&& [vid, uv, w] : views::incidence(g, uid, weight)) {
-      visitor.on_examine_edge({uid, vid, uv});
+      if constexpr (has_on_examine_edge<G, Visitor>) {
+        visitor.on_examine_edge({uid, vid, uv});
+      }
 
       // Negative weights are not allowed for Dijkstra's algorithm
       if constexpr (is_signed_v<weight_type>) {
@@ -201,8 +171,12 @@ void dijkstra_shortest_paths(
       if (is_neighbor_undiscovered) {
         // tree_edge
         if (was_edge_relaxed) {
-          visitor.on_edge_relaxed({uid, vid, uv});
-          visitor.on_discover_vertex({vid, *find_vertex(g, vid)});
+          if constexpr (has_on_edge_relaxed<G, Visitor>) {
+            visitor.on_edge_relaxed({uid, vid, uv});
+          }
+          if constexpr (has_on_discover_vertex<G, Visitor>) {
+            visitor.on_discover_vertex({vid, *find_vertex(g, vid)});
+          }
           queue.push(vid);
         } else {
           // This is an indicator of a bug in the algorithm and should be investigated.
@@ -212,10 +186,14 @@ void dijkstra_shortest_paths(
       } else {
         // non-tree edge
         if (was_edge_relaxed) {
-          visitor.on_edge_relaxed({uid, vid, uv});
+          if constexpr (has_on_edge_relaxed<G, Visitor>) {
+            visitor.on_edge_relaxed({uid, vid, uv});
+          }
           queue.push(vid); // re-enqueue vid to re-evaluate its neighbors with a shorter path
         } else {
-          visitor.on_edge_not_relaxed({uid, vid, uv});
+          if constexpr (has_on_edge_not_relaxed<G, Visitor>) {
+            visitor.on_edge_not_relaxed({uid, vid, uv});
+          }
         }
       }
     }
@@ -223,7 +201,9 @@ void dijkstra_shortest_paths(
     // Note: while we *think* we're done with this vertex, we may not be. If the graph is unbalanced
     // and another path to this vertex has a lower accumulated weight, we'll process it again.
     // A consequence is that examine_vertex could be called twice (or more) on the same vertex.
-    visitor.on_finish_vertex({uid, *find_vertex(g, uid)});
+    if constexpr (has_on_finish_vertex<G, Visitor>) {
+      visitor.on_finish_vertex({uid, *find_vertex(g, uid)});
+    }
   } // while(!queue.empty())
 }
 
@@ -231,7 +211,7 @@ template <index_adjacency_list G,
           random_access_range  Distances,
           random_access_range  Predecessors,
           class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
-          class Visitor = dijkstra_visitor_base<G>,
+          class Visitor = empty_visitor,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
 requires is_arithmetic_v<range_value_t<Distances>> && //
@@ -239,14 +219,13 @@ requires is_arithmetic_v<range_value_t<Distances>> && //
          sized_range<Predecessors> &&                 //
          convertible_to<vertex_id_t<G>, range_value_t<Predecessors>> &&
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
-// && dijkstra_visitor<G, Visitor>
-void dijkstra_shortest_paths(
-      G&                   g,
+constexpr void dijkstra_shortest_paths(
+      G&&                  g,
       const vertex_id_t<G> source,
       Distances&           distances,
       Predecessors&        predecessor,
       WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
-      Visitor&& visitor = dijkstra_visitor_base<G>(),
+      Visitor&& visitor = empty_visitor(),
       Compare&& compare = less<range_value_t<Distances>>(),
       Combine&& combine = plus<range_value_t<Distances>>()) {
   dijkstra_shortest_paths(g, subrange(&source, (&source + 1)), distances, predecessor, weight,
@@ -283,20 +262,19 @@ template <index_adjacency_list G,
           input_range          Sources,
           random_access_range  Distances,
           class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
-          class Visitor = dijkstra_visitor_base<G>,
+          class Visitor = empty_visitor,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
 requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
          sized_range<Distances> &&                                 //
          is_arithmetic_v<range_value_t<Distances>> &&              //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
-//&& dijkstra_visitor<G, Visitor>
-void dijkstra_shortest_distances(
-      G&             g,
+constexpr void dijkstra_shortest_distances(
+      G&&            g,
       const Sources& sources,
       Distances&     distances,
       WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
-      Visitor&& visitor = dijkstra_visitor_base<G>(),
+      Visitor&& visitor = empty_visitor(),
       Compare&& compare = less<range_value_t<Distances>>(),
       Combine&& combine = plus<range_value_t<Distances>>()) {
   dijkstra_shortest_paths(g, sources, distances, _null_predecessors, forward<WF>(weight), forward<Visitor>(visitor),
@@ -306,19 +284,18 @@ void dijkstra_shortest_distances(
 template <index_adjacency_list G,
           random_access_range  Distances,
           class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
-          class Visitor = dijkstra_visitor_base<G>,
+          class Visitor = empty_visitor,
           class Compare = less<range_value_t<Distances>>,
           class Combine = plus<range_value_t<Distances>>>
 requires is_arithmetic_v<range_value_t<Distances>> && //
          sized_range<Distances> &&                    //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
-//&& dijkstra_visitor<G, Visitor>
-void dijkstra_shortest_distances(
-      G&                   g,
+constexpr void dijkstra_shortest_distances(
+      G&&                  g,
       const vertex_id_t<G> source,
       Distances&           distances,
       WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
-      Visitor&& visitor = dijkstra_visitor_base<G>(),
+      Visitor&& visitor = empty_visitor(),
       Compare&& compare = less<range_value_t<Distances>>(),
       Combine&& combine = plus<range_value_t<Distances>>()) {
   dijkstra_shortest_paths(g, subrange(&source, (&source + 1)), distances, _null_predecessors, forward<WF>(weight),
