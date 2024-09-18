@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <graph/detail/graph_using.hpp>
 
 #ifndef GRAPH_COMMON_SHORTEST_PATHS_HPP
 #  define GRAPH_COMMON_SHORTEST_PATHS_HPP
