@@ -17,6 +17,8 @@ using std::tuple_size_v;
 using std::reference_wrapper;
 using std::forward_iterator_tag;
 using std::declval;
+using std::allocator;
+using std::allocator_traits;
 
 // functional types
 using std::plus;
