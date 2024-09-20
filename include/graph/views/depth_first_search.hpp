@@ -662,7 +662,7 @@ namespace views {
                                };
 
     template <class _G, class _VVF, class _Alloc>
-    concept _Has_ref_vvf_ADL = _HasClassOrEnumType<_G>                //
+    concept _Has_ref_vvf_ADL = _HasClassOrEnumType<_G>                    //
                                && invocable<_VVF, vertex_reference_t<_G>> //
                                && requires(_G&& __g, const vertex_id_t<_G>& uid, _VVF vvf, _Alloc alloc) {
                                     {
@@ -744,8 +744,8 @@ namespace views {
           return vertices_depth_first_search_view<_G, void>(__g, seed, alloc); // default impl
         } else {
           static_assert(_AlwaysFalse<_G>, "The default implementation of "
-                                           "vertices_depth_first_search(g,seed,alloc) cannot be evaluated and "
-                                           "there is no override defined for the graph.");
+                                          "vertices_depth_first_search(g,seed,alloc) cannot be evaluated and "
+                                          "there is no override defined for the graph.");
         }
       }
 
@@ -777,8 +777,8 @@ namespace views {
           return vertices_depth_first_search_view<_G, _VVF>(__g, seed, vvf, alloc); // default impl
         } else {
           static_assert(_AlwaysFalse<_G>, "The default implementation of "
-                                           "vertices_depth_first_search(g,seed,vvf,alloc) cannot be evaluated and "
-                                           "there is no override defined for the graph.");
+                                          "vertices_depth_first_search(g,seed,vvf,alloc) cannot be evaluated and "
+                                          "there is no override defined for the graph.");
         }
       }
     };
@@ -812,7 +812,7 @@ namespace views {
                                };
 
     template <class _G, class _EVF, class _Alloc>
-    concept _Has_ref_evf_ADL = _HasClassOrEnumType<_G>              //
+    concept _Has_ref_evf_ADL = _HasClassOrEnumType<_G>                  //
                                && invocable<_EVF, edge_reference_t<_G>> //
                                && requires(_G&& __g, const vertex_id_t<_G>& uid, _EVF evf, _Alloc alloc) {
                                     {
@@ -895,8 +895,8 @@ namespace views {
           return edges_depth_first_search_view<_G, void, false>(__g, seed, alloc); // default impl
         } else {
           static_assert(_AlwaysFalse<_G>, "The default implementation of "
-                                           "edges_depth_first_search(g,seed,alloc) cannot be evaluated and "
-                                           "there is no override defined for the graph.");
+                                          "edges_depth_first_search(g,seed,alloc) cannot be evaluated and "
+                                          "there is no override defined for the graph.");
         }
       }
 
@@ -928,8 +928,8 @@ namespace views {
           return edges_depth_first_search_view<_G, _EVF, false>(__g, seed, evf, alloc); // default impl
         } else {
           static_assert(_AlwaysFalse<_G>, "The default implementation of "
-                                           "edges_depth_first_search(g,seed,evf,alloc) cannot be evaluated and "
-                                           "there is no override defined for the graph.");
+                                          "edges_depth_first_search(g,seed,evf,alloc) cannot be evaluated and "
+                                          "there is no override defined for the graph.");
         }
       }
     };
@@ -965,7 +965,7 @@ namespace views {
                                };
 
     template <class _G, class _EVF, class _Alloc>
-    concept _Has_ref_evf_ADL = _HasClassOrEnumType<_G>              //
+    concept _Has_ref_evf_ADL = _HasClassOrEnumType<_G>                  //
                                && invocable<_EVF, edge_reference_t<_G>> //
                                && requires(_G&& __g, const vertex_id_t<_G>& uid, _EVF evf, _Alloc alloc) {
                                     {
@@ -1048,8 +1048,8 @@ namespace views {
           return edges_depth_first_search_view<_G, void, true>(__g, seed, alloc); // default impl
         } else {
           static_assert(_AlwaysFalse<_G>, "The default implementation of "
-                                           "sourced_edges_depth_first_search(g,seed,alloc) cannot be evaluated and "
-                                           "there is no override defined for the graph.");
+                                          "sourced_edges_depth_first_search(g,seed,alloc) cannot be evaluated and "
+                                          "there is no override defined for the graph.");
         }
       }
 
@@ -1082,8 +1082,8 @@ namespace views {
           return edges_depth_first_search_view<_G, _EVF, true>(__g, seed, evf, alloc); // default impl
         } else {
           static_assert(_AlwaysFalse<_G>, "The default implementation of "
-                                           "sourced_edges_depth_first_search(g,seed,evf,alloc) cannot be evaluated and "
-                                           "there is no override defined for the graph.");
+                                          "sourced_edges_depth_first_search(g,seed,evf,alloc) cannot be evaluated and "
+                                          "there is no override defined for the graph.");
         }
       }
     };

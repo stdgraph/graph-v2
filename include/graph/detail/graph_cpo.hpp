@@ -189,7 +189,7 @@ namespace _Vertices {
                               { _Fake_copy_init(__g.vertices()) };
                             };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                  //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(vertices(__g)) }; // intentional ADL
                             };
@@ -241,7 +241,7 @@ namespace _Vertices {
         return __g.vertices();
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         //static_assert(is_reference_v<decltype(vertices(__g))>);
-        return vertices(__g);         // intentional ADL
+        return vertices(__g); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return std::forward<_G>(__g); // intentional ADL
       } else {
@@ -300,7 +300,7 @@ namespace _Vertex_id {
     { _Fake_copy_init(ui->vertex_id(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                       //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_iterator_t<_G> ui) {
                               { _Fake_copy_init(vertex_id(__g, ui)) }; // intentional ADL
                             };
@@ -477,7 +477,7 @@ namespace _Find_vertex {
   };
 
   template <class _G>
-  concept _Has_ADL = _HasClassOrEnumType<_G>                          //
+  concept _Has_ADL = _HasClassOrEnumType<_G> //
                      && requires(_G&& __g, const vertex_id_t<_G>& uid) {
                           { _Fake_copy_init(find_vertex(__g, uid)) }; // intentional ADL
                         };
@@ -564,7 +564,7 @@ namespace _Edges {
     { _Fake_copy_init(u.edges(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                  //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_reference_t<_G>& u) {
                               { _Fake_copy_init(edges(__g, u)) }; // intentional ADL
                             };
@@ -572,7 +572,7 @@ namespace _Edges {
   concept _Can_ref_eval = _HasClassOrEnumType<_G> && forward_range<vertex_t<_G>>;
 
   template <class _G>
-  concept _Has_id_ADL = _HasClassOrEnumType<_G>                    //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, const vertex_id_t<_G>& uid) {
                              { _Fake_copy_init(edges(__g, uid)) }; // intentional ADL
                            };
@@ -647,7 +647,7 @@ namespace _Edges {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return edges(__g, u); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return u;             // default impl
+        return u; // default impl
       } else {
         static_assert(_AlwaysFalse<_G>, "edges(g,u) is not defined and the default implementation cannot be evaluated");
       }
@@ -672,7 +672,7 @@ namespace _Edges {
       constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
 
       if constexpr (_Strat_id == _St_id::_Non_member) {
-        return edges(__g, uid);        // intentional ADL
+        return edges(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
         return *find_vertex(__g, uid); // default impl
       } else {
@@ -732,7 +732,7 @@ namespace _NumEdges {
     { _Fake_copy_init(__g.num_edges()) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                   //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(num_edges(__g)) }; // intentional ADL
                             };
@@ -1020,7 +1020,7 @@ namespace _Source_id {
     { _Fake_copy_init(uv.source_id(__g)) };
   };
   template <class _G>
-  concept _Has_adjl_ref_ADL = _HasClassOrEnumType<_G>                       //
+  concept _Has_adjl_ref_ADL = _HasClassOrEnumType<_G> //
                               && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                                    { _Fake_copy_init(source_id(__g, uv)) }; // intentional ADL
                                  };
@@ -1030,7 +1030,7 @@ namespace _Source_id {
     { _Fake_copy_init(__e.source_id()) };
   };
   template <class _E>
-  concept _Has_edgl_ref_ADL = _HasClassOrEnumType<_E>                   //
+  concept _Has_edgl_ref_ADL = _HasClassOrEnumType<_E> //
                               && requires(_E&& __e) {
                                    { _Fake_copy_init(source_id(__e)) }; // intentional ADL
                                  };
@@ -1139,7 +1139,7 @@ namespace _Source_id {
       } else if constexpr (_Strat_ref == _St_edgl_ref::_Non_member) {
         return source_id(__e); // intentional ADL
       } else if constexpr (_Strat_ref == _St_edgl_ref::_Tuple_id) {
-        return get<1>(__e);    // first element of tuple/pair
+        return get<1>(__e); // first element of tuple/pair
       } else if constexpr (_Strat_ref == _St_edgl_ref::_EDesc_id) {
         return __e.source_id;
       } else {
@@ -1176,7 +1176,7 @@ namespace _Target {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                    //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                               { _Fake_copy_init(target(__g, uv)) }; // intentional ADL
                             };
@@ -1260,7 +1260,7 @@ namespace _Source {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                    //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                               { _Fake_copy_init(source(__g, uv)) }; // intentional ADL
                             };
@@ -1353,7 +1353,7 @@ namespace _Find_vertex_edge {
   };
 
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                                  //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, vertex_reference_t<_G> u, const vertex_id_t<_G>& vid) {
                               { _Fake_copy_init(find_vertex_edge(__g, u, vid)) }; // intentional ADL
                             };
@@ -1364,7 +1364,7 @@ namespace _Find_vertex_edge {
   };
 
   template <class _G>
-  concept _Has_id_ADL = _HasClassOrEnumType<_G>                                    //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, vertex_id_t<_G> uid, const vertex_id_t<_G>& vid) {
                              { _Fake_copy_init(find_vertex_edge(__g, uid, vid)) }; // intentional ADL
                            };
@@ -1501,7 +1501,7 @@ namespace _Contains_edge {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                                 //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_id_t<_G>& uid, const vertex_id_t<_G>& vid) {
                               { _Fake_copy_init(contains_edge(__g, uid, vid)) }; // intentional ADL
                             };
@@ -1600,7 +1600,7 @@ namespace _Partition_id {
     { _Fake_copy_init(u.partition_id(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                         //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_reference_t<_G>& u) {
                               { _Fake_copy_init(partition_id(__g, u)) }; // intentional ADL
                             };
@@ -1611,7 +1611,7 @@ namespace _Partition_id {
                              };
 
   template <class _G>
-  concept _Has_id_ADL = _HasClassOrEnumType<_G>                           //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, const vertex_id_t<_G>& uid) {
                              { _Fake_copy_init(partition_id(__g, uid)) }; // intentional ADL
                            };
@@ -1633,7 +1633,7 @@ namespace _Partition_id {
         return {_St_id::_Non_member,
                 noexcept(_Fake_copy_init(partition_id(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
       } else if constexpr (_Can_id_eval<_G>) {
-        return {_St_id::_Auto_eval, noexcept(_Fake_copy_init(vertex_id_t<_G>(0)))};                  // default impl
+        return {_St_id::_Auto_eval, noexcept(_Fake_copy_init(vertex_id_t<_G>(0)))}; // default impl
       } else {
         return {_St_id::_None};
       }
@@ -1685,7 +1685,7 @@ namespace _Partition_id {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return partition_id(__g, u); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return vertex_id_t<_G>{0};   // default impl
+        return vertex_id_t<_G>{0}; // default impl
       } else {
         static_assert(_AlwaysFalse<_G>,
                       "partition_id(g,u) is not defined and the default implementation cannot be evaluated");
@@ -1713,7 +1713,7 @@ namespace _Partition_id {
       if constexpr (_Strat_id == _St_id::_Non_member) {
         return partition_id(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
-        return vertex_id_t<_G>{0};     // default impl
+        return vertex_id_t<_G>{0}; // default impl
       } else {
         static_assert(_AlwaysFalse<_G>,
                       "partition_id(g,uid) is not defined and the default implementation cannot be evaluated");
@@ -1746,7 +1746,7 @@ namespace _NumVertices {
     { _Fake_copy_init(__g.num_vertices(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                      //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(num_vertices(__g)) }; // intentional ADL
                             };
@@ -1757,7 +1757,7 @@ namespace _NumVertices {
                              };
 
   template <class _G>
-  concept _Has_id_ADL = _HasClassOrEnumType<_G>                           //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, partition_id_t<_G> pid) {
                              { _Fake_copy_init(num_vertices(__g, pid)) }; // intentional ADL
                            };
@@ -1829,7 +1829,7 @@ namespace _NumVertices {
       static_assert(_Strat_id == _St_id::_Auto_eval);
 
       if constexpr (_Strat_id == _St_id::_Non_member) {
-        return num_vertices(__g, pid);   // intentional ADL
+        return num_vertices(__g, pid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
         return size(vertices(__g, pid)); // default impl
       } else {
@@ -1857,7 +1857,7 @@ namespace _NumVertices {
       if constexpr (_Strat_id == _St_ref::_Member) {
         return __g.num_vertices();
       } else if constexpr (_Strat_id == _St_ref::_Non_member) {
-        return num_vertices(__g);   // intentional ADL
+        return num_vertices(__g); // intentional ADL
       } else if constexpr (_Strat_id == _St_ref::_Auto_eval) {
         return size(vertices(__g)); // default impl
       } else {
@@ -1888,7 +1888,7 @@ namespace _Degree {
     { _Fake_copy_init(u.degree(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                   //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_reference_t<_G>& u) {
                               { _Fake_copy_init(degree(__g, u)) }; // intentional ADL
                             };
@@ -1899,7 +1899,7 @@ namespace _Degree {
                              };
 
   template <class _G>
-  concept _Has_id_ADL = _HasClassOrEnumType<_G>                     //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, const vertex_id_t<_G>& uid) {
                              { _Fake_copy_init(degree(__g, uid)) }; // intentional ADL
                            };
@@ -1972,7 +1972,7 @@ namespace _Degree {
       if constexpr (_Strat_ref == _St_ref::_Member) {
         return u.degree(__g);
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        return degree(__g, u);      // intentional ADL
+        return degree(__g, u); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return size(edges(__g, u)); // default impl
       } else {
@@ -2000,7 +2000,7 @@ namespace _Degree {
       constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
 
       if constexpr (_Strat_id == _St_id::_Non_member) {
-        return degree(__g, uid);      // intentional ADL
+        return degree(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
         return size(edges(__g, uid)); // default impl
       } else {
@@ -2033,7 +2033,7 @@ namespace _Vertex_value {
     { _Fake_copy_init(u.vertex_value(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                         //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, vertex_reference_t<_G> u) {
                               { _Fake_copy_init(vertex_value(__g, u)) }; // intentional ADL
                             };
@@ -2113,7 +2113,7 @@ namespace _Edge_value {
     { _Fake_copy_init(uv.edge_value(__g)) };
   };
   template <class _G>
-  concept _Has_adjl_ref_ADL = _HasClassOrEnumType<_G>                        //
+  concept _Has_adjl_ref_ADL = _HasClassOrEnumType<_G> //
                               && requires(_G&& __g, edge_reference_t<_G> uv) {
                                    { _Fake_copy_init(edge_value(__g, uv)) }; // intentional ADL
                                  };
@@ -2128,7 +2128,7 @@ namespace _Edge_value {
     { _Fake_copy_init(__e.edge_value()) };
   };
   template <class _E>
-  concept _Has_edgl_ref_ADL = _HasClassOrEnumType<_E>                    //
+  concept _Has_edgl_ref_ADL = _HasClassOrEnumType<_E> //
                               && requires(_E&& __e) {
                                    { _Fake_copy_init(edge_value(__e)) }; // intentional ADL
                                  };
@@ -2217,7 +2217,7 @@ namespace _Edge_value {
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Non_member) {
         return edge_value(__g, uv); // intentional ADL
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Auto_eval) {
-        return uv;                  // intentional ADL
+        return uv; // intentional ADL
       } else {
         static_assert(_AlwaysFalse<_G>, "edge_value(g,uv) must be defined for the graph");
       }
@@ -2246,7 +2246,7 @@ namespace _Edge_value {
       } else if constexpr (_Strat_ref == _St_edgl_ref::_Non_member) {
         return edge_value(__e); // intentional ADL
       } else if constexpr (_Strat_ref == _St_edgl_ref::_Tuple_id) {
-        return get<2>(__e);     // first element of tuple/pair
+        return get<2>(__e); // first element of tuple/pair
       } else if constexpr (_Strat_ref == _St_edgl_ref::_EDesc_id) {
         return __e.value;
       } else {
@@ -2293,7 +2293,7 @@ namespace _Graph_value {
     { _Fake_copy_init(__g.graph_value()) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                     //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(graph_value(__g)) }; // intentional ADL
                             };
@@ -2365,7 +2365,7 @@ namespace _Num_partitions {
     { _Fake_copy_init(__g.num_partitions()) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                        //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(num_partitions(__g)) }; // intentional ADL
                             };
@@ -2419,7 +2419,7 @@ namespace _Num_partitions {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return num_partitions(__g); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return vertex_id_t<_G>(1);  // default impl
+        return vertex_id_t<_G>(1); // default impl
       } else {
         static_assert(_AlwaysFalse<_G>,
                       "num_partitions(g) is not defined and the default implementation cannot be evaluated");
@@ -2449,7 +2449,7 @@ namespace _HasEdge {
     { _Fake_copy_init(__g.has_edge()) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G>                  //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(has_edge(__g)) }; // intentional ADL
                             };
