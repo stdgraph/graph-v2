@@ -338,7 +338,7 @@ namespace views {
           // default impl
           return incidence_view<_G, false, void>(incidence_iterator<_G, false, void>(__g, uid), end(edges(__g, uid)));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "incidence(g,uid) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -370,7 +370,7 @@ namespace views {
           return incidence_view<_G, false, EVF>(incidence_iterator<_G, false, EVF>(__g, uid, evf),
                                                 end(edges(__g, uid)));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "incidence(g,uid,evf) is not defined and the default implementation cannot be evaluated");
         }
       }

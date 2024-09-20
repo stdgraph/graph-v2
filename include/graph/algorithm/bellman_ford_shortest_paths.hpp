@@ -224,10 +224,10 @@ requires is_arithmetic_v<range_value_t<Distances>> &&                   //
          sized_range<Predecessors> &&                                   //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_paths(
-      G&&                  g,
-      const vertex_id_t<G> source,
-      Distances&           distances,
-      Predecessors&        predecessor,
+      G&&            g,
+      vertex_id_t<G> source,
+      Distances&     distances,
+      Predecessors&  predecessor,
       WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Visitor&& visitor = empty_visitor(),
       Compare&& compare = less<range_value_t<Distances>>(),
@@ -300,9 +300,9 @@ requires is_arithmetic_v<range_value_t<Distances>> && //
          sized_range<Distances> &&                    //
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 [[nodiscard]] constexpr optional<vertex_id_t<G>> bellman_ford_shortest_distances(
-      G&&                  g,
-      const vertex_id_t<G> source,
-      Distances&           distances,
+      G&&            g,
+      vertex_id_t<G> source,
+      Distances&     distances,
       WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
       Visitor&& visitor = empty_visitor(),
       Compare&& compare = less<range_value_t<Distances>>(),

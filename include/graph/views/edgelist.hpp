@@ -557,7 +557,7 @@ namespace views {
           using iterator_type = edgelist_iterator<_G, void>;
           return edgelist_view<_G, void>(iterator_type(__g), end(vertices(__g))); // default impl
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "edgelist(g) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -589,7 +589,7 @@ namespace views {
           using iterator_type = edgelist_iterator<_G, EVF>;
           return edgelist_view<_G, EVF>(iterator_type(__g, evf), end(vertices(__g)));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "edgelist(g,evf) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -621,7 +621,7 @@ namespace views {
           using iterator_type = edgelist_iterator<_G, void>;
           return edgelist_view<_G, void>(iterator_type(__g, find_vertex(__g, first)), find_vertex(__g, last));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "edgelist(g,uid,vid) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -654,7 +654,7 @@ namespace views {
           using iterator_type = edgelist_iterator<_G, EVF>;
           return edgelist_view<_G, void>(iterator_type(__g, evf), end(vertices(__g))); // default impl
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "edgelist(g,uid,vid,evf) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -696,7 +696,7 @@ namespace views {
           //return edgelist_view<ELR, Proj>(iterator_type(elr, proj), end(vertices(elr)));
           return 1; // bogus; must implement
         } else {
-          static_assert(_Always_false<ELR>,
+          static_assert(_AlwaysFalse<ELR>,
                         "edgelist(elr,proj) is not defined and the default implementation cannot be evaluated");
         }
       }

@@ -349,7 +349,7 @@ namespace views {
         } else if constexpr (_Strat_all == _St_all::_Auto_eval) {
           return vertexlist_view<_G, void>(vertices(forward<_G>(__g)));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -369,7 +369,7 @@ namespace views {
           auto last           = end(vertices(forward<_G>(__g)));
           return view_type(iterator_type(forward<_G>(__g), vvf, first), last);
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g,vvf) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -401,7 +401,7 @@ namespace views {
           auto first_id       = static_cast<vertex_id_t<_G>>(first - begin(vertices(__g)));
           return view_type(iterator_type(first, first_id), last);
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g,vr) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -422,7 +422,7 @@ namespace views {
           auto first_id       = static_cast<vertex_id_t<_G>>(first - begin(vertices(__g)));
           return view_type(iterator_type(forward<_G>(__g), vvf, first, first_id), last);
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g,vr,vvf) is not defined and the default implementation cannot be evaluated");
         }
       }

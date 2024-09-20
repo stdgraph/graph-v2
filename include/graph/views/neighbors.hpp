@@ -360,7 +360,7 @@ namespace views {
           // default impl
           return neighbors_view<_G, false, void>(neighbor_iterator<_G, false, void>(__g, uid), end(edges(__g, uid)));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "neighbors(g,uid) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -391,7 +391,7 @@ namespace views {
           // default impl
           return neighbors_view<_G, false, VVF>(neighbor_iterator<_G, false, VVF>(__g, uid, vvf), end(edges(__g, uid)));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "neighbors(g,uid,vvf) is not defined and the default implementation cannot be evaluated");
         }
       }
