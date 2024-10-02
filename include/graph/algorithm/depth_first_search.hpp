@@ -85,7 +85,7 @@ inline void init_dfs(Distances& distances) {
 inline void init_dfs(Distances& distances, Predecessors& predecessors) {
   init_dfs(distances);
   for (size_t i = 0; i < predecessors.size(); ++i) {
-    predecessors[i] = i;
+    predecessors[i] = static_cast<range_value_t<Predecessors>>(i);
   }
 }
 
