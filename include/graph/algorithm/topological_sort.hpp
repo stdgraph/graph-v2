@@ -85,7 +85,7 @@ inline void init_topological_sort(Distances& distances) {
 inline void init_topological_sort(Distances& distances, Predecessors& predecessors) {
   init_topological_sort(distances);
   for (size_t i = 0; i < predecessors.size(); ++i) {
-    predecessors[i] = i;
+    predecessors[i] = static_cast<range_value_t<Predecessors>>(i);
   }
 }
 

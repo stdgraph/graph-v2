@@ -85,7 +85,7 @@ inline void init_bfs(Distances& distances) {
 inline void init_bfs(Distances& distances, Predecessors& predecessors) {
   init_bfs(distances);
   for (size_t i = 0; i < predecessors.size(); ++i) {
-    predecessors[i] = i;
+    predecessors[i] = static_cast<range_value_t<Predecessors>>(i);
   }
 }
 
