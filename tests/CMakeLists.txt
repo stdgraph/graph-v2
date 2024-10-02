@@ -60,6 +60,7 @@ set(UNITTEST_SOURCES
     "tc_tests.cpp"
     "cc_tests.cpp"
 
+    "identifier_tests.cpp"
     "tests.cpp"
 )
 
