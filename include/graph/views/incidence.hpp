@@ -312,7 +312,7 @@ namespace views {
       static constexpr _Choice_t<_St_id> _Choice_id_evf = _Choose_id_evf<_G, EVF>();
 
     public:
-    /**
+      /**
      * @brief Get the outgoing incidence edges of a vertex id.
      * 
      * Complexity: O(n)
@@ -343,7 +343,7 @@ namespace views {
         }
       }
 
-    /**
+      /**
      * @brief Get the outgoing incidence edges of a vertex id and include an edge value in the result.
      * 
      * Complexity: O(n)
