@@ -8,32 +8,38 @@
 #  include <type_traits>
 
 namespace graph::detail {
-// Type traits
-using std::conditional_t;
-using std::declval;
-
-// Concepts
-using std::integral;
-using std::ranges::sized_range;
-using std::contiguous_iterator;
-using std::random_access_iterator;
-using std::bidirectional_iterator;
-using std::forward_iterator;
+// Range concepts & types
 using std::ranges::contiguous_range;
 using std::ranges::random_access_range;
 using std::ranges::bidirectional_range;
 using std::ranges::forward_range;
+using std::ranges::sized_range;
 
-// Iterator types
-using std::iterator_traits;
-using std::contiguous_iterator_tag;
-
-// Range types
 using std::ranges::range_size_t;
 using std::ranges::range_value_t;
 using std::ranges::range_difference_t;
 using std::ranges::iterator_t;
+
 using std::ranges::subrange;
+
+// Iterator concepts & types
+using std::contiguous_iterator;
+using std::random_access_iterator;
+using std::bidirectional_iterator;
+using std::forward_iterator;
+
+using std::contiguous_iterator_tag;
+
+using std::iter_difference_t;
+using std::iter_value_t;
+using std::iter_reference_t;
+
+
+// Other concepts and types
+using std::integral;
+
+using std::conditional_t;
+using std::declval;
 
 
 /**
@@ -59,14 +65,12 @@ class identifier_iterator {
 public:
   using inner_iterator = I;
 
-  using difference_type   = typename iterator_traits<inner_iterator>::difference_type;
+  using difference_type   = iter_difference_t<inner_iterator>;
   using value_type        = conditional_t<contiguous_iterator<inner_iterator>, difference_type, inner_iterator>;
   using pointer           = std::add_pointer_t<std::add_const_t<value_type>>;
   using reference         = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
-  using iterator_category = typename iterator_traits<inner_iterator>::iterator_category;
-  using iterator_concept  = conditional_t<contiguous_iterator<I>,
-                                         contiguous_iterator_tag,
-                                         typename iterator_traits<inner_iterator>::iterator_category>;
+  using iterator_category = typename inner_iterator::iterator_category;
+  using iterator_concept  = conditional_t<contiguous_iterator<I>, contiguous_iterator_tag, iterator_category>;
 
   identifier_iterator() = default;
   explicit identifier_iterator(value_type identifier) : identifier_(identifier) {}
@@ -246,15 +250,14 @@ template <typename T>
 using _ident_t = _ident_type<T>::type;
 
 
-
 template <forward_range C>
 class identifier_view {
 public:
   //using size_type       = range_size_t<C>;
   using value_type      = identifier_value_t<range_value_t<C>>;
   using difference_type = range_difference_t<C>;
-  using id_type         = difference_type; // e.g. vertex_id_t
-  using identifier_type = conditional_t<contiguous_range<C>, range_size_t<C>, iterator_t<C>>; // _ident_t<C>; //  
+  using id_type         = difference_type;                                                    // e.g. vertex_id_t
+  using identifier_type = conditional_t<contiguous_range<C>, range_size_t<C>, iterator_t<C>>; // _ident_t<C>; //
   using iterator        = identifier_iterator<iterator_t<C>>;
 
   identifier_view() = default;
