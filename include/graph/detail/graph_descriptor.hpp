@@ -43,7 +43,7 @@ using std::declval;
 
 
 /**
- * @brief An iterator that uses an identifier (integral index or iterator) for a container.
+ * @brief An iterator that uses a descriptor (integral index or iterator) for a container.
  * 
  * An integral index is used for contiguous containers, while an iterator is used for other containers.
  * 
@@ -61,48 +61,49 @@ using std::declval;
  * @tparam I Iterator type of the underlying container.
  */
 template <forward_iterator I>
-class identifier_iterator {
+class descriptor_iterator {
 public:
   using inner_iterator = I;
-  using this_type      = identifier_iterator<inner_iterator>;
+  using this_type      = descriptor_iterator<inner_iterator>;
 
   using difference_type   = iter_difference_t<inner_iterator>;
   using value_type        = conditional_t<contiguous_iterator<inner_iterator>, difference_type, inner_iterator>;
   using pointer           = std::add_pointer_t<std::add_const_t<value_type>>;
   using reference         = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
-  using iterator_category = std::forward_iterator_tag; // conditional_t<bidirectional_iterator<inner_iterator>, std::bidirectional_iterator_tag, std::forward_iterator_tag>;
-  using iterator_concept  = iterator_category;
+  using iterator_category = std::
+        forward_iterator_tag; // conditional_t<bidirectional_iterator<inner_iterator>, std::bidirectional_iterator_tag, std::forward_iterator_tag>;
+  using iterator_concept = iterator_category;
 
-  identifier_iterator() = default;
-  explicit identifier_iterator(value_type identifier) : identifier_(identifier) {}
+  descriptor_iterator() = default;
+  explicit descriptor_iterator(value_type descriptor) : descriptor_(descriptor) {}
   // copy & move constructors and assignment operators are default
 
   //
   // dereference
   //
-  reference operator*() const { return identifier_; }
-  pointer   operator->() const { return &identifier_; }
+  reference operator*() const { return descriptor_; }
+  pointer   operator->() const { return &descriptor_; }
 
   //
   // operators ++, +=, +
   //
-  identifier_iterator& operator++() {
-    ++identifier_;
+  descriptor_iterator& operator++() {
+    ++descriptor_;
     return *this;
   }
-  identifier_iterator operator++(int) {
-    identifier_iterator tmp = *this;
-    ++identifier_;
+  descriptor_iterator operator++(int) {
+    descriptor_iterator tmp = *this;
+    ++descriptor_;
     return tmp;
   }
 
   //
   // operators ==, !=
   //
-  auto operator==(const identifier_iterator& rhs) const { return identifier_ == rhs.identifier_; }
+  auto operator==(const descriptor_iterator& rhs) const { return descriptor_ == rhs.descriptor_; }
 
 private:
-  value_type identifier_ = value_type(); // integral index or iterator, depending on container type
+  value_type descriptor_ = value_type(); // integral index or iterator, depending on container type
 };
 
 template <typename T>
@@ -117,19 +118,19 @@ inline constexpr bool is_tuple_like_v = is_tuple_like<Args...>::value;
 
 
 template <class T>
-struct identifier_value {
+struct descriptor_value {
   using type = T;
 };
 template <class T, class U>
-struct identifier_value<std::pair<T, U>> {
+struct descriptor_value<std::pair<T, U>> {
   using type = U;
 };
 template <class T, class U, class... Args>
-struct identifier_value<std::tuple<T, U, Args...>> {
+struct descriptor_value<std::tuple<T, U, Args...>> {
   using type = U;
 };
 template <class T>
-using identifier_value_t = typename identifier_value<T>::type;
+using descriptor_value_t = typename descriptor_value<T>::type;
 
 
 // Helper to detect if T has a member function named size
@@ -177,17 +178,17 @@ using _ident_t = _ident_type<T>::type;
 
 
 template <forward_range C>
-class identifier_view {
+class descriptor_view {
 public:
   //using size_type       = range_size_t<C>;
-  using value_type      = identifier_value_t<range_value_t<C>>;
+  using value_type      = descriptor_value_t<range_value_t<C>>;
   using difference_type = range_difference_t<C>;
   using id_type         = difference_type;                    // e.g. vertex_id_t
-  using iterator        = identifier_iterator<iterator_t<C>>; //
-  using identifier_type = iter_value_t<iterator>;             // integral index or iterator, depending on container type
+  using iterator        = descriptor_iterator<iterator_t<C>>; //
+  using descriptor_type = iter_value_t<iterator>;             // integral index or iterator, depending on container type
 
-  identifier_view() = default;
-  explicit identifier_view(C& c) : c_(c) {}
+  descriptor_view() = default;
+  explicit descriptor_view(C& c) : c_(c) {}
 
   auto size() const
   requires sized_range<C>
@@ -210,8 +211,8 @@ public:
     }
   }
 
-  // Helper function to get the id of an identifier. Actual implementation in vertex_id(g, ident)
-  id_type id(identifier_type ident) const {
+  // Helper function to get the id of an descriptor. Actual implementation in vertex_id(g, ident)
+  id_type id(descriptor_type ident) const {
     if constexpr (contiguous_range<C>) {
       return ident;
     } else if constexpr (random_access_range<C>) {
@@ -226,7 +227,7 @@ public:
     }
   }
 
-  // Helper function to find an identifier by vertex id. Actual implementation in find_vertex(g, id).
+  // Helper function to find an descriptor by vertex id. Actual implementation in find_vertex(g, id).
   iterator find(id_type id) const {
     if constexpr (contiguous_range<C>) {
       return iterator(id);
