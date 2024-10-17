@@ -6,10 +6,9 @@
 #include <list>         // bidirectional
 #include <forward_list> // forward
 
-#include "graph/detail/graph_descriptor.hpp"
+#include "graph/views/descriptor.hpp"
 
 using namespace graph;
-using namespace graph::detail;
 
 using std::move;
 using std::conditional_t;
@@ -607,7 +606,7 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
   using Iterator              = descriptor_iterator<iterator_t<Container>>;
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {1, 2, 3, 4, 5};
-  auto            descriptors = descriptor_view(v);
+  auto            descriptors = descriptor_view_old(v);
   difference_type i           = 0;
 
   SECTION("descriptor std for") {
@@ -634,7 +633,7 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
   using Iterator              = descriptor_iterator<iterator_t<Container>>;
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {1, 2, 3, 4, 5};
-  auto            descriptors = descriptor_view(v);
+  auto            descriptors = descriptor_view_old(v);
   difference_type i           = 0;
 
   SECTION("descriptor std for") {
@@ -664,12 +663,12 @@ TEMPLATE_TEST_CASE("All simple values",
                    (list<int>),
                    (const list<int>)) {
   using Container             = TestType;
-  using IdentifierView        = descriptor_view<Container>;
+  using IdentifierView        = descriptor_view_old<Container>;
   using Iterator              = descriptor_iterator<iterator_t<Container>>;
   using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {1, 2, 3, 4, 5};
-  auto            descriptors = descriptor_view(v);
+  auto            descriptors = descriptor_view_old(v);
   difference_type i           = 0;
 
   SECTION("descriptor std for") {
@@ -698,12 +697,12 @@ TEMPLATE_TEST_CASE("All simple values",
 
 TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (const map<int, int>)) {
   using Container             = TestType;
-  using IdentifierView        = descriptor_view<Container>;
+  using IdentifierView        = descriptor_view_old<Container>;
   using Iterator              = descriptor_iterator<iterator_t<Container>>;
   using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
-  auto            descriptors = descriptor_view(v);
+  auto            descriptors = descriptor_view_old(v);
   difference_type i           = 0;
 
   SECTION("descriptor std for") {
@@ -730,12 +729,12 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
 
 //TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
 //  using Container             = TestType;
-//  using IdentifierView        = descriptor_view<Container>;
+//  using IdentifierView        = descriptor_view_old<Container>;
 //  using Iterator              = descriptor_iterator<iterator_t<Container>>;
 //  using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
 //  using difference_type       = typename iterator_traits<Iterator>::difference_type;
 //  Container       v           = {5, 4, 3, 2, 1};
-//  auto            descriptors = descriptor_view(v);
+//  auto            descriptors = descriptor_view_old(v);
 //  difference_type i           = 0;
 //
 //  SECTION("descriptor std for") {
@@ -765,7 +764,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
 TEST_CASE("example") {
   using G  = vector<int>;
   G    g   = {1, 2, 3, 4, 5};
-  auto V = descriptor_view(g);
+  auto V = descriptor_view_old(g);
 
   for (auto&& uid : V) {
     auto id = vertex_id(g, uid);
@@ -792,7 +791,7 @@ for (auto&& u : vertices(a)) {
   }
 }
 
-// for(auto&& u : descriptor_view(a))
+// for(auto&& u : descriptor_view_old(a))
 for (auto&& u : vertices(a)) {
   // u is a vertex descriptor/descriptor = index/iterator = graph_traits<G>::vertex_info
   for (auto&& uv : edges(a,u)) {
@@ -804,7 +803,7 @@ for (auto&& u : vertices(a)) {
 
 template <typename G>
 auto vertices(const G& g) {
-  return descriptor_view(g);
+  return descriptor_view_old(g);
 }
 
 
