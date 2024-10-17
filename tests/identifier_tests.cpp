@@ -89,9 +89,8 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
                             typename iterator_traits<iterator_t<Container>>::difference_type>); // integral index
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category,
-                            typename iterator_traits<iterator_t<Container>>::iterator_category>);
-    static_assert(is_same_v<typename Iterator::iterator_concept, typename iterator_t<Container>::iterator_concept>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
+    static_assert(is_same_v<typename Iterator::iterator_concept, std::forward_iterator_tag>);
   }
 
   SECTION("contiguous iterator concept") {
@@ -99,9 +98,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
     //static_assert(is_same_v<difference_type, decltype(declval<Iterator>() - declval<Iterator>())>);
     //static_assert(sized_sentinel_for<Iterator, Iterator>);
     static_assert(forward_iterator<Iterator>);
-    static_assert(bidirectional_iterator<Iterator>);
-    static_assert(random_access_iterator<Iterator>);
-    static_assert(contiguous_iterator<Iterator>);
+    //static_assert(bidirectional_iterator<Iterator>);
+    //static_assert(random_access_iterator<Iterator>);
+    //static_assert(contiguous_iterator<Iterator>);
   }
 
   SECTION("construction") {
@@ -137,23 +136,23 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
     REQUIRE(*it == 2);
     REQUIRE(*(++it) == 3);
     REQUIRE(*it == 3);
-    REQUIRE(*(it + 2) == 5);
-    REQUIRE(*(2 + it) == 5);
-    REQUIRE(*(it += 2) == 5);
-    REQUIRE(*it == 5);
+    //REQUIRE(*(it + 2) == 5);
+    //REQUIRE(*(2 + it) == 5);
+    //REQUIRE(*(it += 2) == 5);
+    //REQUIRE(*it == 5);
   }
 
-  SECTION("decrement and subtract") {
-    Iterator it(5);
-    REQUIRE(*it == 5);
-    REQUIRE(*(it--) == 5);
-    REQUIRE(*it == 4);
-    REQUIRE(*(--it) == 3);
-    REQUIRE(*it == 3);
-    REQUIRE(*(it - 2) == 1);
-    REQUIRE(*(it -= 2) == 1);
-    REQUIRE(*it == 1);
-  }
+  //SECTION("decrement and subtract") {
+  //  Iterator it(5);
+  //  REQUIRE(*it == 5);
+  //  REQUIRE(*(it--) == 5);
+  //  REQUIRE(*it == 4);
+  //  REQUIRE(*(--it) == 3);
+  //  REQUIRE(*it == 3);
+  //  REQUIRE(*(it - 2) == 1);
+  //  REQUIRE(*(it -= 2) == 1);
+  //  REQUIRE(*it == 1);
+  //}
 
   SECTION("compare equality") {
     Iterator it(1);
@@ -167,17 +166,17 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
     REQUIRE(it2 != it1);
   }
 
-  SECTION("compare relative") {
-    Iterator it(1);
-    Iterator it1(1);
-    Iterator it2(2);
-    REQUIRE(it == it1);
-    REQUIRE(it != it2);
-    REQUIRE(it < it2);
-    REQUIRE(it <= it2);
-    REQUIRE(it2 > it);
-    REQUIRE(it2 >= it);
-  }
+  //SECTION("compare relative") {
+  //  Iterator it(1);
+  //  Iterator it1(1);
+  //  Iterator it2(2);
+  //  REQUIRE(it == it1);
+  //  REQUIRE(it != it2);
+  //  REQUIRE(it < it2);
+  //  REQUIRE(it <= it2);
+  //  REQUIRE(it2 > it);
+  //  REQUIRE(it2 >= it);
+  //}
 
   // operator[] is not tested because it will return a reference to a non-existing element for contiguous_iterator
 }
@@ -199,8 +198,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
     static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, iterator_t<Container>>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category,
-                            typename iterator_traits<iterator_t<Container>>::iterator_category>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
     //static_assert(is_same_v<typename Iterator::iterator_concept, typename iterator_t<Container>::iterator_concept>); // not contiguous
   }
 
@@ -209,117 +207,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
     //static_assert(is_same_v<difference_type, decltype(declval<Iterator>() - declval<Iterator>())>);
     //static_assert(sized_sentinel_for<Iterator, Iterator>);
     static_assert(forward_iterator<Iterator>);
-    static_assert(bidirectional_iterator<Iterator>);
-    static_assert(random_access_iterator<Iterator>);
-    //static_assert(contiguous_iterator<Iterator>);
-  }
-
-  SECTION("construction") {
-    Iterator it;
-    Iterator it0(advance(begin(v), 0));
-    Iterator it1(advance(begin(v), 1));
-    //REQUIRE(*it == 0);
-    REQUIRE(*it0 == advance(begin(v), 0));
-    REQUIRE(*it1 == advance(begin(v), 1));
-  }
-  SECTION("copy") {
-    Iterator it(advance(begin(v), 1));
-    Iterator it1(it);
-    Iterator it2;
-    it2 = it1;
-    REQUIRE(*it1 == advance(begin(v), 1));
-    REQUIRE(*it2 == advance(begin(v), 1));
-  }
-
-  SECTION("move") {
-    Iterator it(advance(begin(v), 1));
-    Iterator it1(move(it));
-    Iterator it2;
-    it2 = move(it1);
-    REQUIRE(*it1 == advance(begin(v), 1));
-    REQUIRE(*it2 == advance(begin(v), 1));
-  }
-
-  SECTION("increment and add") {
-    Iterator it(advance(begin(v), 1));
-    REQUIRE(*it == advance(begin(v), 1));
-    REQUIRE(*(it++) == advance(begin(v), 1));
-    REQUIRE(*it == advance(begin(v), 2));
-    REQUIRE(*(++it) == advance(begin(v), 3));
-    REQUIRE(*it == advance(begin(v), 3));
-    REQUIRE(*(it + 2) == advance(begin(v), 5));
-    REQUIRE(*(2 + it) == advance(begin(v), 5));
-    REQUIRE(*(it += 2) == advance(begin(v), 5));
-    REQUIRE(*it == advance(begin(v), 5));
-  }
-
-  SECTION("decrement and subtract") {
-    Iterator it(advance(begin(v), 5));
-    REQUIRE(*it == advance(begin(v), 5));
-    REQUIRE(*(it--) == advance(begin(v), 5));
-    REQUIRE(*it == advance(begin(v), 4));
-    REQUIRE(*(--it) == advance(begin(v), 3));
-    REQUIRE(*it == advance(begin(v), 3));
-    REQUIRE(*(it - 2) == advance(begin(v), 1));
-    REQUIRE(*(it -= 2) == advance(begin(v), 1));
-    REQUIRE(*it == advance(begin(v), 1));
-  }
-
-  SECTION("compare equality") {
-    Iterator it(advance(begin(v), 1));
-    Iterator it1(advance(begin(v), 1));
-    Iterator it2(advance(begin(v), 2));
-    REQUIRE(it == it1);
-    REQUIRE(it != it2);
-    REQUIRE(it1 == it);
-    REQUIRE(it1 != it2);
-    REQUIRE(it2 != it);
-    REQUIRE(it2 != it1);
-  }
-
-  SECTION("compare relative") {
-    Iterator it(advance(begin(v), 1));
-    Iterator it1(advance(begin(v), 1));
-    Iterator it2(advance(begin(v), 2));
-    REQUIRE(it == it1);
-    REQUIRE(it != it2);
-    REQUIRE(it < it2);
-    REQUIRE(it <= it2);
-    REQUIRE(it2 > it);
-    REQUIRE(it2 >= it);
-  }
-
-  // operator[] is not tested because it will return a reference to a non-existing element for contiguous_iterator
-}
-
-TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>",
-                   "[identifier]",
-                   (map<int, int>),
-                   (const map<int, int>)) {
-  using Container       = TestType;
-  using Iterator        = identifier_iterator<iterator_t<Container>>;
-  using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container v           = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
-
-  SECTION("iterator traits") {
-    using value_type = typename iterator_traits<Iterator>::value_type;
-
-    static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
-                            typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, iterator_t<Container>>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category,
-                            typename iterator_traits<iterator_t<Container>>::iterator_category>);
-    //static_assert(is_same_v<typename Iterator::iterator_concept, typename iterator_t<Container>::iterator_concept>); // not contiguous
-  }
-
-  SECTION("bidirectional iterator concept") {
-    //static_assert(sentinel_for<Iterator, Iterator>);
-    //static_assert(is_same_v<difference_type, decltype(declval<Iterator>() - declval<Iterator>())>);
-    //static_assert(sized_sentinel_for<Iterator, Iterator>);
-    static_assert(forward_iterator<Iterator>);
-    static_assert(bidirectional_iterator<Iterator>);
+    //static_assert(bidirectional_iterator<Iterator>);
     //static_assert(random_access_iterator<Iterator>);
     //static_assert(contiguous_iterator<Iterator>);
   }
@@ -363,17 +251,126 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
     //REQUIRE(*it == advance(begin(v), 5));
   }
 
-  SECTION("decrement and subtract") {
-    Iterator it(advance(begin(v), 5));
-    REQUIRE(*it == advance(begin(v), 5));
-    REQUIRE(*(it--) == advance(begin(v), 5));
-    REQUIRE(*it == advance(begin(v), 4));
-    REQUIRE(*(--it) == advance(begin(v), 3));
-    REQUIRE(*it == advance(begin(v), 3));
-    //REQUIRE(*(it - 2) == advance(begin(v), 1));
-    //REQUIRE(*(it -= 2) == advance(begin(v), 1));
-    //REQUIRE(*it == advance(begin(v), 1));
+  //SECTION("decrement and subtract") {
+  //  Iterator it(advance(begin(v), 5));
+  //  REQUIRE(*it == advance(begin(v), 5));
+  //  REQUIRE(*(it--) == advance(begin(v), 5));
+  //  REQUIRE(*it == advance(begin(v), 4));
+  //  REQUIRE(*(--it) == advance(begin(v), 3));
+  //  REQUIRE(*it == advance(begin(v), 3));
+  //  REQUIRE(*(it - 2) == advance(begin(v), 1));
+  //  REQUIRE(*(it -= 2) == advance(begin(v), 1));
+  //  REQUIRE(*it == advance(begin(v), 1));
+  //}
+
+  SECTION("compare equality") {
+    Iterator it(advance(begin(v), 1));
+    Iterator it1(advance(begin(v), 1));
+    Iterator it2(advance(begin(v), 2));
+    REQUIRE(it == it1);
+    REQUIRE(it != it2);
+    REQUIRE(it1 == it);
+    REQUIRE(it1 != it2);
+    REQUIRE(it2 != it);
+    REQUIRE(it2 != it1);
   }
+
+  //SECTION("compare relative") {
+  //  Iterator it(advance(begin(v), 1));
+  //  Iterator it1(advance(begin(v), 1));
+  //  Iterator it2(advance(begin(v), 2));
+  //  REQUIRE(it == it1);
+  //  REQUIRE(it != it2);
+  //  REQUIRE(it < it2);
+  //  REQUIRE(it <= it2);
+  //  REQUIRE(it2 > it);
+  //  REQUIRE(it2 >= it);
+  //}
+
+  // operator[] is not tested because it will return a reference to a non-existing element for contiguous_iterator
+}
+
+TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>",
+                   "[identifier]",
+                   (map<int, int>),
+                   (const map<int, int>)) {
+  using Container       = TestType;
+  using Iterator        = identifier_iterator<iterator_t<Container>>;
+  using difference_type = typename iterator_traits<Iterator>::difference_type;
+  Container v           = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
+
+  SECTION("iterator traits") {
+    using value_type = typename iterator_traits<Iterator>::value_type;
+
+    static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
+                            typename iterator_traits<iterator_t<Container>>::difference_type>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, iterator_t<Container>>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
+    //static_assert(is_same_v<typename Iterator::iterator_concept, typename iterator_t<Container>::iterator_concept>); // not contiguous
+  }
+
+  SECTION("forward iterator concept") {
+    //static_assert(sentinel_for<Iterator, Iterator>);
+    //static_assert(is_same_v<difference_type, decltype(declval<Iterator>() - declval<Iterator>())>);
+    //static_assert(sized_sentinel_for<Iterator, Iterator>);
+    static_assert(forward_iterator<Iterator>);
+    //static_assert(bidirectional_iterator<Iterator>);
+    //static_assert(random_access_iterator<Iterator>);
+    //static_assert(contiguous_iterator<Iterator>);
+  }
+
+  SECTION("construction") {
+    Iterator it;
+    Iterator it0(advance(begin(v), 0));
+    Iterator it1(advance(begin(v), 1));
+    //REQUIRE(*it == 0);
+    REQUIRE(*it0 == advance(begin(v), 0));
+    REQUIRE(*it1 == advance(begin(v), 1));
+  }
+  SECTION("copy") {
+    Iterator it(advance(begin(v), 1));
+    Iterator it1(it);
+    Iterator it2;
+    it2 = it1;
+    REQUIRE(*it1 == advance(begin(v), 1));
+    REQUIRE(*it2 == advance(begin(v), 1));
+  }
+
+  SECTION("move") {
+    Iterator it(advance(begin(v), 1));
+    Iterator it1(move(it));
+    Iterator it2;
+    it2 = move(it1);
+    REQUIRE(*it1 == advance(begin(v), 1));
+    REQUIRE(*it2 == advance(begin(v), 1));
+  }
+
+  SECTION("increment and add") {
+    Iterator it(advance(begin(v), 1));
+    REQUIRE(*it == advance(begin(v), 1));
+    REQUIRE(*(it++) == advance(begin(v), 1));
+    REQUIRE(*it == advance(begin(v), 2));
+    REQUIRE(*(++it) == advance(begin(v), 3));
+    REQUIRE(*it == advance(begin(v), 3));
+    //REQUIRE(*(it + 2) == advance(begin(v), 5));
+    //REQUIRE(*(2 + it) == advance(begin(v), 5));
+    //REQUIRE(*(it += 2) == advance(begin(v), 5));
+    //REQUIRE(*it == advance(begin(v), 5));
+  }
+
+  //SECTION("decrement and subtract") {
+  //  Iterator it(advance(begin(v), 5));
+  //  REQUIRE(*it == advance(begin(v), 5));
+  //  REQUIRE(*(it--) == advance(begin(v), 5));
+  //  REQUIRE(*it == advance(begin(v), 4));
+  //  REQUIRE(*(--it) == advance(begin(v), 3));
+  //  REQUIRE(*it == advance(begin(v), 3));
+  //  //REQUIRE(*(it - 2) == advance(begin(v), 1));
+  //  //REQUIRE(*(it -= 2) == advance(begin(v), 1));
+  //  //REQUIRE(*it == advance(begin(v), 1));
+  //}
 
   SECTION("compare equality") {
     Iterator it(advance(begin(v), 1));
@@ -419,17 +416,16 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
     static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, iterator_t<Container>>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category,
-                            typename iterator_traits<iterator_t<Container>>::iterator_category>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
     //static_assert(is_same_v<typename Iterator::iterator_concept, typename iterator_t<Container>::iterator_concept>); // not contiguous
   }
 
-  SECTION("bidirectional iterator concept") {
+  SECTION("forward iterator concept") {
     //static_assert(sentinel_for<Iterator, Iterator>);
     //static_assert(is_same_v<difference_type, decltype(declval<Iterator>() - declval<Iterator>())>);
     //static_assert(sized_sentinel_for<Iterator, Iterator>);
     static_assert(forward_iterator<Iterator>);
-    static_assert(bidirectional_iterator<Iterator>);
+    //static_assert(bidirectional_iterator<Iterator>);
     //static_assert(random_access_iterator<Iterator>);
     //static_assert(contiguous_iterator<Iterator>);
   }
@@ -473,17 +469,17 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
     //REQUIRE(*it == advance(begin(v), 5));
   }
 
-  SECTION("decrement and subtract") {
-    Iterator it(advance(begin(v), 5));
-    REQUIRE(*it == advance(begin(v), 5));
-    REQUIRE(*(it--) == advance(begin(v), 5));
-    REQUIRE(*it == advance(begin(v), 4));
-    REQUIRE(*(--it) == advance(begin(v), 3));
-    REQUIRE(*it == advance(begin(v), 3));
-    //REQUIRE(*(it - 2) == advance(begin(v), 1));
-    //REQUIRE(*(it -= 2) == advance(begin(v), 1));
-    //REQUIRE(*it == advance(begin(v), 1));
-  }
+  //SECTION("decrement and subtract") {
+  //  Iterator it(advance(begin(v), 5));
+  //  REQUIRE(*it == advance(begin(v), 5));
+  //  REQUIRE(*(it--) == advance(begin(v), 5));
+  //  REQUIRE(*it == advance(begin(v), 4));
+  //  REQUIRE(*(--it) == advance(begin(v), 3));
+  //  REQUIRE(*it == advance(begin(v), 3));
+  //  //REQUIRE(*(it - 2) == advance(begin(v), 1));
+  //  //REQUIRE(*(it -= 2) == advance(begin(v), 1));
+  //  //REQUIRE(*it == advance(begin(v), 1));
+  //}
 
   SECTION("compare equality") {
     Iterator it(advance(begin(v), 1));
@@ -635,7 +631,7 @@ TEMPLATE_TEST_CASE("continuous identifier range vector<int>", "[identifier]", (v
     for (auto it = begin(identifiers); it != end(identifiers); ++it) {
       difference_type identifier = *it;
       REQUIRE(identifier == i);
-      REQUIRE(identifiers[identifier] == identifier + 1);
+      //REQUIRE(identifiers[identifier] == identifier + 1);
       REQUIRE(identifiers.id(identifier) == i);
       ++i;
     }
@@ -644,7 +640,7 @@ TEMPLATE_TEST_CASE("continuous identifier range vector<int>", "[identifier]", (v
   SECTION("identifier range for") {
     for (difference_type identifier : identifiers) {
       REQUIRE(identifier == i);
-      REQUIRE(identifiers[identifier] == identifier + 1);
+      //REQUIRE(identifiers[identifier] == identifier + 1);
       ++i;
     }
   }
@@ -660,16 +656,16 @@ TEMPLATE_TEST_CASE("bidirectional identifier range list<int>", "[identifier]", (
 
   SECTION("identifier std for") {
     for (auto it = begin(identifiers); it != end(identifiers); ++it) {
-      auto       identifier = *it;
-      const int& value      = identifiers[identifier];
-      REQUIRE(identifiers[identifier] == i + 1);
+      auto identifier = *it;
+      //const int& value      = identifiers[identifier];
+      //REQUIRE(identifiers[identifier] == i + 1);
       ++i;
     }
   }
 
   SECTION("identifier range for") {
     for (auto identifier : identifiers) {
-      REQUIRE(identifiers[identifier] == i + 1);
+      //REQUIRE(identifiers[identifier] == i + 1);
       ++i;
     }
   }
@@ -697,7 +693,7 @@ TEMPLATE_TEST_CASE("All simple values",
     // for(auto it = begin(vertices(g)); it != end(vertices(g)); ++it)
     for (auto it = begin(identifiers); it != end(identifiers); ++it) {
       identifier_type identifier = *it; // identifier is integral or iterator
-      REQUIRE(identifiers[identifier] == i + 1);
+      //REQUIRE(identifiers[identifier] == i + 1);
       if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
         REQUIRE(identifiers.id(identifier) == i); // e.g. vertex_id(identifier)
       }
@@ -708,7 +704,7 @@ TEMPLATE_TEST_CASE("All simple values",
   SECTION("identifier range for") {
     // for(auto identifier : vertices(g)) // identifier is integral or iterator
     for (identifier_type identifier : identifiers) {
-      REQUIRE(identifiers[identifier] == i + 1);
+      //REQUIRE(identifiers[identifier] == i + 1);
       if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
         REQUIRE(identifiers.id(identifier) == i); // e.g. vertex_id(identifier) == i
       }
@@ -730,7 +726,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[identifier]", (map<int, int>), (
   SECTION("identifier std for") {
     for (auto it = begin(identifiers); it != end(identifiers); ++it) {
       identifier_type identifier = *it;
-      REQUIRE(identifiers[identifier] == i + 1);
+      //REQUIRE(identifiers[identifier] == i + 1);
       if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
         REQUIRE(identifiers.id(identifier) == i);
       }
@@ -740,7 +736,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[identifier]", (map<int, int>), (
 
   SECTION("identifier range for") {
     for (identifier_type identifier : identifiers) {
-      REQUIRE(identifiers[identifier] == i + 1);
+      //REQUIRE(identifiers[identifier] == i + 1);
       if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
         REQUIRE(identifiers.id(identifier) == i);
       }
@@ -780,3 +776,53 @@ TEMPLATE_TEST_CASE("All map-like containers", "[identifier]", (map<int, int>), (
 //    }
 //  }
 //}
+
+
+#if 0
+TEST_CASE("example") {
+  using G  = vector<int>;
+  G    g   = {1, 2, 3, 4, 5};
+  auto V = identifier_view(g);
+
+  for (auto&& uid : V) {
+    auto id = vertex_id(g, uid);
+    for (auto&& uv : edges(g,uid)) {
+    }
+  }
+}
+auto a = std::vector<std::vector<int>>;
+auto b = std::map<int,std::vector<int>>;
+
+for (auto u = begin(a); u != end(a); ++u) {
+  // u is an vector<vector<int>>::iterator
+  // *u is a vector<int>
+  for (auto v = begin(*u); v != end(*u); ++v) {
+    // v is a vector<int>::iterator
+    // *v is an int
+  }
+}
+
+for (auto&& u : vertices(a)) {
+  // u is a vector<int>&
+  for (auto&& v : edges(g,u)) {
+    // v is an int&
+  }
+}
+
+// for(auto&& u : identifier_view(a))
+for (auto&& u : vertices(a)) {
+  // u is a vertex identifier/descriptor = index/iterator = graph_traits<G>::vertex_descriptor
+  for (auto&& uv : edges(a,u)) {
+    // uv is an edge identifier/descriptor = index/iterator = graph_traits<G>::edge_descriptor
+    auto&& uu = source(g, uv);
+    //uu is graph_traits<G>::vertex_descriptor
+  }
+}
+
+template <typename G>
+auto vertices(const G& g) {
+  return identifier_view(g);
+}
+
+
+#endif // 0

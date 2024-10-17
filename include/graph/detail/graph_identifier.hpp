@@ -64,16 +64,18 @@ template <forward_iterator I>
 class identifier_iterator {
 public:
   using inner_iterator = I;
+  using this_type      = identifier_iterator<inner_iterator>;
 
   using difference_type   = iter_difference_t<inner_iterator>;
   using value_type        = conditional_t<contiguous_iterator<inner_iterator>, difference_type, inner_iterator>;
   using pointer           = std::add_pointer_t<std::add_const_t<value_type>>;
   using reference         = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
-  using iterator_category = typename inner_iterator::iterator_category;
-  using iterator_concept  = conditional_t<contiguous_iterator<I>, contiguous_iterator_tag, iterator_category>;
+  using iterator_category = std::forward_iterator_tag; // conditional_t<bidirectional_iterator<inner_iterator>, std::bidirectional_iterator_tag, std::forward_iterator_tag>;
+  using iterator_concept  = iterator_category;
 
   identifier_iterator() = default;
   explicit identifier_iterator(value_type identifier) : identifier_(identifier) {}
+  // copy & move constructors and assignment operators are default
 
   //
   // dereference
@@ -93,87 +95,11 @@ public:
     ++identifier_;
     return tmp;
   }
-  identifier_iterator& operator+=(difference_type rhs)
-  requires random_access_iterator<inner_iterator>
-  {
-    identifier_ += rhs;
-    return *this;
-  }
-  identifier_iterator operator+(difference_type rhs) const
-  requires random_access_iterator<inner_iterator>
-  {
-    identifier_iterator tmp = *this;
-    tmp += rhs;
-    return tmp;
-  }
-  friend identifier_iterator operator+(difference_type lhs, identifier_iterator rhs)
-  requires random_access_iterator<inner_iterator>
-  {
-    return rhs + lhs;
-  }
 
   //
-  // operators --, -=, -
-  //
-  identifier_iterator& operator--()
-  requires bidirectional_iterator<inner_iterator>
-  {
-    --identifier_;
-    return *this;
-  }
-  identifier_iterator operator--(int)
-  requires bidirectional_iterator<inner_iterator>
-  {
-    identifier_iterator tmp = *this;
-    --identifier_;
-    return tmp;
-  }
-  identifier_iterator& operator-=(difference_type rhs)
-  requires random_access_iterator<inner_iterator>
-  {
-    identifier_ -= rhs;
-    return *this;
-  }
-  identifier_iterator operator-(difference_type rhs) const
-  requires random_access_iterator<inner_iterator>
-  {
-    identifier_iterator tmp = *this;
-    tmp -= rhs;
-    return tmp;
-  }
-  difference_type operator-(identifier_iterator rhs) const
-  requires random_access_iterator<inner_iterator>
-  {
-    return identifier_ - rhs.identifier_;
-  }
-
-  //
-  // operators ==, <=>
+  // operators ==, !=
   //
   auto operator==(const identifier_iterator& rhs) const { return identifier_ == rhs.identifier_; }
-
-  auto operator<=>(const identifier_iterator& rhs) const
-  requires random_access_iterator<inner_iterator>
-  {
-    return identifier_ <=> rhs.identifier_;
-  }
-
-  //
-  // operator []
-  //
-  // This is added to satisfy the random_access_iterator concept but it should not be used.
-  //
-  reference operator[](difference_type n) const
-  requires random_access_iterator<inner_iterator>
-  {
-    if constexpr (std::is_integral_v<value_type>) {
-      assert(false); // this should not be used
-      // this will dereference the integral index as if it were an iterator and likely cause a crash
-      return *(*this + n);
-    } else {
-      return *(*this + n);
-    }
-  }
 
 private:
   value_type identifier_ = value_type(); // integral index or iterator, depending on container type
@@ -256,9 +182,9 @@ public:
   //using size_type       = range_size_t<C>;
   using value_type      = identifier_value_t<range_value_t<C>>;
   using difference_type = range_difference_t<C>;
-  using id_type         = difference_type;                                                    // e.g. vertex_id_t
-  using identifier_type = conditional_t<contiguous_range<C>, range_size_t<C>, iterator_t<C>>; // _ident_t<C>; //
-  using iterator        = identifier_iterator<iterator_t<C>>;
+  using id_type         = difference_type;                    // e.g. vertex_id_t
+  using iterator        = identifier_iterator<iterator_t<C>>; //
+  using identifier_type = iter_value_t<iterator>;             // integral index or iterator, depending on container type
 
   identifier_view() = default;
   explicit identifier_view(C& c) : c_(c) {}
@@ -267,25 +193,6 @@ public:
   requires sized_range<C>
   {
     return std::ranges::size(c_);
-  }
-
-  //value_type& operator[](identifier_type i) {
-  //  if constexpr (contiguous_range<C>) {
-  //    return c_[i];
-  //  } else if constexpr (random_access_range<C>) {
-  //    return *i;
-  //  } else {
-  //    return i->second; // map
-  //  }
-  //}
-  const value_type& operator[](identifier_type i) const {
-    if constexpr (contiguous_range<C>) {
-      return c_[i];
-    } else if constexpr (is_tuple_like_v<range_value_t<C>>) {
-      return i->second; // map
-    } else {
-      return *i;
-    }
   }
 
   auto begin() const {
@@ -303,6 +210,7 @@ public:
     }
   }
 
+  // Helper function to get the id of an identifier. Actual implementation in vertex_id(g, ident)
   id_type id(identifier_type ident) const {
     if constexpr (contiguous_range<C>) {
       return ident;
@@ -318,6 +226,7 @@ public:
     }
   }
 
+  // Helper function to find an identifier by vertex id. Actual implementation in find_vertex(g, id).
   iterator find(id_type id) const {
     if constexpr (contiguous_range<C>) {
       return iterator(id);
