@@ -2,21 +2,21 @@
 #include "graph/graph.hpp"
 
 //
-// edgelist(g)     -> edge_descriptor<VId,true,E,void> -> {source_id, target_id, edge&}
-// edgelist(g,evf) -> edge_descriptor<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
+// edgelist(g)     -> edge_info<VId,true,E,void> -> {source_id, target_id, edge&}
+// edgelist(g,evf) -> edge_info<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
 //
-// edgelist(g,uid)     -> edge_descriptor<VId,true,E,void> -> {source_id, target_id, edge&}
-// edgelist(g,uid,evf) -> edge_descriptor<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
+// edgelist(g,uid)     -> edge_info<VId,true,E,void> -> {source_id, target_id, edge&}
+// edgelist(g,uid,evf) -> edge_info<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
 //
-// edgelist(elr,proj)  -> edge_descriptor<VId,true,E,void>  -> {source_id, target_id, edge&},        where VId is defined by proj and E is range_value_t<ELR>&
-// edgelist(elr,proj)  -> edge_descriptor<VId,true,E,Value> -> {source_id, target_id, edge&, Value}, where VId and Value defined by proj and E is range_value_t<ELR>&
+// edgelist(elr,proj)  -> edge_info<VId,true,E,void>  -> {source_id, target_id, edge&},        where VId is defined by proj and E is range_value_t<ELR>&
+// edgelist(elr,proj)  -> edge_info<VId,true,E,Value> -> {source_id, target_id, edge&, Value}, where VId and Value defined by proj and E is range_value_t<ELR>&
 // Note: proj(range_value_t<ELR>&) is a projection and determines whether to return a value member or not
 //
-// basic_edgelist(g) -> edge_descriptor<VId,true,void,void> -> {source_id, target_id}
+// basic_edgelist(g) -> edge_info<VId,true,void,void> -> {source_id, target_id}
 //
-// basic_edgelist(g,uid) -> edge_descriptor<VId,true,void,void> -> {source_id, target_id}
+// basic_edgelist(g,uid) -> edge_info<VId,true,void,void> -> {source_id, target_id}
 //
-// basic_edgelist(elr,proj)  -> edge_descriptor<VId,true,void,void>  -> {source_id, target_id},      where VId is defined by proj
+// basic_edgelist(elr,proj)  -> edge_info<VId,true,void,void>  -> {source_id, target_id},      where VId is defined by proj
 // Note: proj(range_value_t<ELR>&) is a projection and determines whether to return a value member or not
 //
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(uv); }
@@ -118,7 +118,7 @@ public:
   using edge_value_type     = invoke_result_t<EVF, edge_reference_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
+  using value_type        = edge_info<const vertex_id_type, true, edge_reference_type, edge_value_type>;
   using difference_type   = range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -146,7 +146,7 @@ protected:
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_edge_type = remove_reference_t<edge_reference_type>;
   using shadow_value_type =
-        edge_descriptor<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+        edge_info<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
   union internal_value {
     value_type        value_;
@@ -220,7 +220,7 @@ public:
   using edge_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
+  using value_type        = edge_info<const vertex_id_type, true, edge_reference_type, edge_value_type>;
   using difference_type   = range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -232,7 +232,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-  using shadow_value_type = edge_descriptor<vertex_id_type, true, shadow_edge_type*, edge_value_type>;
+  using shadow_value_type = edge_info<vertex_id_type, true, shadow_edge_type*, edge_value_type>;
 
   union internal_value {
     value_type        value_;
@@ -299,7 +299,7 @@ private: // member variables
 
 
 /**
- * @brief Iterator for a range with values that can be projected to a edge_descriptor.
+ * @brief Iterator for a range with values that can be projected to a edge_info.
  *
  * @tparam ELR    Graph type
  * @tparam Proj  Edge Value Function type
@@ -318,7 +318,7 @@ public:
   using value_type          = invoke_result_t<Proj, edge_reference_type>;
 
   using vertex_id_type =
-        typename value_type::target_id_type; // If this generates an error then value_type is not an edge_descriptor
+        typename value_type::target_id_type; // If this generates an error then value_type is not an edge_info
 
   using iterator_category = forward_iterator_tag;
 
@@ -544,7 +544,7 @@ namespace views {
      * @tparam G The graph type.
      * @param g A graph instance.
      * @return A range of edges in graph g where the range value_type is 
-     *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+     *         edge_info<vertex_id_t<G>,false,vertex_reference_t<G>,void>
     */
       template <class _G>
       requires(_Choice_all<_G&>._Strategy != _St_adjlist_all::_None)
@@ -575,7 +575,7 @@ namespace views {
      * @tparam G The graph type.
      * @param g A graph instance.
      * @return A range of edges in graph g where the range value_type is 
-     *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+     *         edge_info<vertex_id_t<G>,false,vertex_reference_t<G>,void>
     */
       template <class _G, class EVF>
       requires(_Choice_all_evf<_G&, EVF>._Strategy != _St_adjlist_all::_None)
@@ -607,7 +607,7 @@ namespace views {
      * @tparam G The graph type.
      * @param __g A graph instance.
      * @return A range of edges in graph __g where the range value_type is 
-     *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+     *         edge_info<vertex_id_t<G>,false,vertex_reference_t<G>,void>
     */
       template <class _G>
       requires(_Choice_idrng<_G&>._Strategy != _St_adjlist_idrng::_None)
@@ -639,7 +639,7 @@ namespace views {
      * @tparam _G The graph type.
      * @param g A graph instance.
      * @return A range of edges in graph g where the range value_type is 
-     *         edge_descriptor<vertex_id_t<_G>,false,vertex_reference_t<_G>,void>
+     *         edge_info<vertex_id_t<_G>,false,vertex_reference_t<_G>,void>
     */
       template <class _G, class EVF>
       requires(_Choice_idrng_evf<_G&, EVF>._Strategy != _St_adjlist_idrng::_None)
@@ -666,8 +666,8 @@ namespace views {
      * @brief Create an edgelist from an arbitrary range using a projection.
      * 
      * The projection must return a value of one of the following types:
-     *      edge_descriptor<Id, true, range_value_t<ELR>&, void>
-     *      edge_descriptor<Id, true, range_value_t<ELR>&, Value>
+     *      edge_info<Id, true, range_value_t<ELR>&, void>
+     *      edge_info<Id, true, range_value_t<ELR>&, Value>
      * where Id is an integral type defined by proj, and Value is also a type defined by proj.
      * 
      * Complexity: O(n)
@@ -676,12 +676,12 @@ namespace views {
      *  ???
      * 
      * @tparam ELR The Edge List Range type. This can be any forward_range.
-     * @tparam Proj The projection function type that converts a range_value_t<ELR> to an edge_descriptor.
+     * @tparam Proj The projection function type that converts a range_value_t<ELR> to an edge_info.
      * @param elr The Edge List Range instance.
-     * @param proj The projection instance that converts a range_value_t<ELR> to an edge_descriptor. If
-     *             the range_value_t<ELR> is already a valid edge_descriptor then identity can be used.
-     * @return A range of edge_descriptors projected from elr. The value member type can be void or non-void.
-     *         If it is void, the value member will not exist in the returned edge_descriptor.
+     * @param proj The projection instance that converts a range_value_t<ELR> to an edge_info. If
+     *             the range_value_t<ELR> is already a valid edge_info then identity can be used.
+     * @return A range of edge_infos projected from elr. The value member type can be void or non-void.
+     *         If it is void, the value member will not exist in the returned edge_info.
     */
       template <class ELR, class Proj>
       requires(_Choice_elr_proj<ELR&, Proj>._Strategy != _St_adjlist_all::_None)

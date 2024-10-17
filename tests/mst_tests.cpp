@@ -44,7 +44,7 @@ TEST_CASE("Kruskal Min ST Algorithm", "[min st]") {
   size_t N(size(vertices(g)));
 
   auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
-  std::vector<graph::edge_descriptor<vertex_id_t<G>, true, void, double>> e, t;
+  std::vector<graph::edge_info<vertex_id_t<G>, true, void, double>> e, t;
   for (auto&& [uid, vid, uv] : graph::views::edgelist(g)) {
     e.push_back(std::ranges::range_value_t<decltype(e)>());
     e.back().source_id = uid;
@@ -66,7 +66,7 @@ TEST_CASE("Kruskal Min ST Algorithm", "[min st]") {
   }
 
   // Kruskal inplace, modifiy input edgelist
-  std::vector<graph::edge_descriptor<vertex_id_t<G>, true, void, double>> t2;
+  std::vector<graph::edge_info<vertex_id_t<G>, true, void, double>> t2;
   graph::inplace_kruskal(e, t2);
   last = -1;
   for (auto&& [u, v, val] : t2) {
@@ -76,7 +76,7 @@ TEST_CASE("Kruskal Min ST Algorithm", "[min st]") {
   }
 
   // Kruskal inplace from adjacency list
-  std::vector<graph::edge_descriptor<vertex_id_t<G>, true, void, double>> t3;
+  std::vector<graph::edge_info<vertex_id_t<G>, true, void, double>> t3;
   graph::kruskal(graph::views::edgelist(g, evf), t3);
   last = -1;
   for (auto&& [u, v, val] : t3) {
@@ -94,7 +94,7 @@ TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
   size_t N(size(vertices(g)));
 
   auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
-  std::vector<graph::edge_descriptor<vertex_id_t<G>, true, void, double>> e, t;
+  std::vector<graph::edge_info<vertex_id_t<G>, true, void, double>> e, t;
   for (auto&& [uid, vid, uv] : graph::views::edgelist(g)) {
     e.push_back(std::ranges::range_value_t<decltype(e)>());
     e.back().source_id = uid;
@@ -116,7 +116,7 @@ TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
   }
 
   // Kruskal inplace, modifiy input edgelist
-  std::vector<graph::edge_descriptor<vertex_id_t<G>, true, void, double>> t2;
+  std::vector<graph::edge_info<vertex_id_t<G>, true, void, double>> t2;
   graph::inplace_kruskal(e, t2, [](auto&& i, auto&& j) { return i > j; });
   last = std::numeric_limits<double>::max();
   for (auto&& [u, v, val] : t2) {
@@ -126,7 +126,7 @@ TEST_CASE("Kruskal Max ST Algorithm", "[max st]") {
   }
 
   // Kruskal inplace from adjacency list
-  std::vector<graph::edge_descriptor<vertex_id_t<G>, true, void, double>> t3;
+  std::vector<graph::edge_info<vertex_id_t<G>, true, void, double>> t3;
   graph::kruskal(graph::views::edgelist(g, evf), t3, [](auto&& i, auto&& j) { return i > j; });
   last = std::numeric_limits<double>::max();
   for (auto&& [u, v, val] : t3) {

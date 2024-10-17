@@ -24,7 +24,7 @@
 #include <type_traits>
 #include <stdexcept>
 
-#include "graph_descriptors.hpp"
+#include "graph_info.hpp"
 #include "detail/graph_cpo.hpp"
 
 
@@ -51,8 +51,8 @@
 // EI        uvi,vwi        Edge iterator
 // EVF       evf            Edge Value Function: evf(uv) -> value
 //
-// ELR       elr            Edge List Range; an arbitrary range where its values can be projected to be an edge_descriptor.
-// Proj      proj           Projection function: proj(y) -> edge_descriptor<...>, where y is the value type of an ELR
+// ELR       elr            Edge List Range; an arbitrary range where its values can be projected to be an edge_info.
+// Proj      proj           Projection function: proj(y) -> edge_info<...>, where y is the value type of an ELR
 
 #ifndef GRAPH_HPP
 #  define GRAPH_HPP

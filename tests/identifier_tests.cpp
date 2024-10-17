@@ -811,11 +811,11 @@ for (auto&& u : vertices(a)) {
 
 // for(auto&& u : identifier_view(a))
 for (auto&& u : vertices(a)) {
-  // u is a vertex identifier/descriptor = index/iterator = graph_traits<G>::vertex_descriptor
+  // u is a vertex identifier/descriptor = index/iterator = graph_traits<G>::vertex_info
   for (auto&& uv : edges(a,u)) {
-    // uv is an edge identifier/descriptor = index/iterator = graph_traits<G>::edge_descriptor
+    // uv is an edge identifier/descriptor = index/iterator = graph_traits<G>::edge_info
     auto&& uu = source(g, uv);
-    //uu is graph_traits<G>::vertex_descriptor
+    //uu is graph_traits<G>::vertex_info
   }
 }
 

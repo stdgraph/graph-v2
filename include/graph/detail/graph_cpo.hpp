@@ -1,7 +1,7 @@
 #pragma once
 
 // (included from graph.hpp)
-#include "graph/graph_descriptors.hpp"
+#include "graph/graph_info.hpp"
 
 #ifndef GRAPH_CPO_HPP
 #  define GRAPH_CPO_HPP
@@ -93,9 +93,9 @@ concept _el_index_tuple_edge = _el_tuple_edge<_E> && //
                                integral<tuple_element_t<0, _E>>;
 
 //
-// Suport the use of edge_descriptor for edgelist edge definitions
-// (Only types and values needed from edge_descriptor are used and there is no
-// explicit use of edge_descriptor. This is deemed more flexible and no
+// Suport the use of edge_info for edgelist edge definitions
+// (Only types and values needed from edge_info are used and there is no
+// explicit use of edge_info. This is deemed more flexible and no
 // functionality is compromised for it.)
 //
 template <class _E>                                   // For exposition only
@@ -898,7 +898,7 @@ namespace _Target_id {
                 noexcept(_Fake_copy_init(declval<tuple_element_t<0, _E>>()))}; // first element of tuple/pair
       } else if constexpr (_is_edge_desc<_E>) {
         return {_St_edgl_ref::_EDesc_id,
-                noexcept(_Fake_copy_init(declval<typename _E::target_id_type>()))}; // target_id of edge_descriptor
+                noexcept(_Fake_copy_init(declval<typename _E::target_id_type>()))}; // target_id of edge_info
       } else {
         return {_St_edgl_ref::_None};
       }
@@ -949,7 +949,7 @@ namespace _Target_id {
      * 
      * Default implementation:
      *  get<0>(e)   for tuple<T,T,...> or pair<T,T>
-     *  e.source_id for edge_descriptor<VId,true,_,_>
+     *  e.source_id for edge_info<VId,true,_,_>
      * 
      * @tparam G The graph type.
      * @param g A graph instance.
@@ -1077,7 +1077,7 @@ namespace _Source_id {
                 noexcept(_Fake_copy_init(declval<tuple_element_t<1, _E>>()))}; // first element of tuple/pair
       } else if constexpr (_is_edge_desc<_E>) {
         return {_St_edgl_ref::_EDesc_id,
-                noexcept(_Fake_copy_init(declval<typename _E::source_id_type>()))}; // source_id of edge_descriptor
+                noexcept(_Fake_copy_init(declval<typename _E::source_id_type>()))}; // source_id of edge_info
       } else {
         return {_St_edgl_ref::_None};
       }
@@ -1123,7 +1123,7 @@ namespace _Source_id {
      * 
      * Default implementation: 
      *  get<1>(e)   for tuple<T,T,...> or pair<T,T>
-     *  e.target_id for edge_descriptor<VId,true,_,_>
+     *  e.target_id for edge_info<VId,true,_,_>
      * 
      * @tparam E The edgelist value_type.
      * @param e A edgelist edge instance.
@@ -1557,7 +1557,7 @@ namespace _Contains_edge {
      * @tparam G The graph type.
      * @param g  A graph instance.
      * @param uv An edge reference.
-     * @return An edge_descriptor with the source_id and target_id.
+     * @return An edge_info with the source_id and target_id.
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
@@ -2181,7 +2181,7 @@ namespace _Edge_value {
                 noexcept(_Fake_copy_init(declval<tuple_element_t<2, _E>>()))}; // first element of tuple/pair
       } else if constexpr (_is_edge_desc<_E>) {
         return {_St_edgl_ref::_EDesc_id,
-                noexcept(_Fake_copy_init(declval<typename _E::value_type>()))}; // edge_value of edge_descriptor
+                noexcept(_Fake_copy_init(declval<typename _E::value_type>()))}; // edge_value of edge_info
       } else {
         return {_St_edgl_ref::_None};
       }
@@ -2230,7 +2230,7 @@ namespace _Edge_value {
      * 
      * Default implementation: 
      *  get<2>(e)   for tuple<T,T,V,...>
-     *  e.value     for edge_descriptor<VId,true,_,V>
+     *  e.value     for edge_info<VId,true,_,V>
      * 
      * @tparam E The edgelist value_type.
      * @param e A edgelist edge instance.

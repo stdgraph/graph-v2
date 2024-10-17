@@ -1106,7 +1106,7 @@ public: // Construction/Destruction
                              const Alloc&   alloc               = Alloc())
         : base_type(erng, vrng, eprojection, vprojection, partition_start_ids, alloc) {}
 
-  // initializer list using edge_descriptor<VId,true,void,EV>
+  // initializer list using edge_info<VId,true,void,EV>
   constexpr compressed_graph(const std::initializer_list<copyable_edge_t<VId, EV>>& ilist, const Alloc& alloc = Alloc())
         : base_type(ilist, alloc) {}
 };

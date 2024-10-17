@@ -64,8 +64,8 @@ class dijkstra_visitor_base {
   // Types
 public:
   using graph_type             = G;
-  using vertex_desc_type       = vertex_descriptor<vertex_id_t<G>, vertex_reference_t<G>, void>;
-  using sourced_edge_desc_type = edge_descriptor<vertex_id_t<G>, true, edge_reference_t<G>, void>;
+  using vertex_desc_type       = vertex_info<vertex_id_t<G>, vertex_reference_t<G>, void>;
+  using sourced_edge_desc_type = edge_info<vertex_id_t<G>, true, edge_reference_t<G>, void>;
 
   // Visitor Functions
 public:

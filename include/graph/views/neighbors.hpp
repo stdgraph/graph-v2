@@ -3,10 +3,10 @@
 #include "graph/graph_utility.hpp"
 
 //
-// neighbors(g,uid)       -> neighbor_descriptor<VId,false,E,VV>    -> {target_id, vertex&}
-// neighbors(g,uid,vvf)   -> neighbor_descriptor<VId,false,E,VV>    -> {target_id, vertex&, value]}
+// neighbors(g,uid)       -> neighbor_info<VId,false,E,VV>    -> {target_id, vertex&}
+// neighbors(g,uid,vvf)   -> neighbor_info<VId,false,E,VV>    -> {target_id, vertex&, value]}
 //
-// basic_neighbors(g,uid) -> neighbor_descriptor<VId,false,void,EV> -> {target_id}
+// basic_neighbors(g,uid) -> neighbor_info<VId,false,void,EV> -> {target_id}
 //
 // given:    auto vvf = [&g](vertex_reference_t<G> v) { return vertex_value(g,v); }
 //
@@ -51,7 +51,7 @@ public:
   using edge_type     = edge_t<graph_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type       = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
+  using value_type       = neighbor_info<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
   using difference_type  = range_difference_t<edge_range>;
   using pointer          = value_type*;
   using const_pointer    = const value_type*;
@@ -78,7 +78,7 @@ protected:
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type =
-        neighbor_descriptor<vertex_id_type, Sourced, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+        neighbor_info<vertex_id_type, Sourced, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
   union internal_value {
     value_type        value_;
@@ -165,7 +165,7 @@ public:
   using edge_type     = edge_t<graph_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type       = neighbor_descriptor<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
+  using value_type       = neighbor_info<const vertex_id_type, Sourced, vertex_reference_type, vertex_value_type>;
   using difference_type  = range_difference_t<edge_range>;
   using pointer          = value_type*;
   using const_pointer    = const value_type*;
@@ -177,7 +177,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
-  using shadow_value_type  = neighbor_descriptor<vertex_id_type, Sourced, shadow_vertex_type*, vertex_value_type>;
+  using shadow_value_type  = neighbor_info<vertex_id_type, Sourced, shadow_vertex_type*, vertex_value_type>;
 
   union internal_value {
     value_type        value_;

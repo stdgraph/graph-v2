@@ -55,11 +55,11 @@
 //  tuple<T,T>
 //  tuple<T,T,EV,...>
 //
-//  edge_descriptor<VId, true, void, void> : {source_id, target_id}
-//  edge_descriptor<VId, true, void, EV>   : {source_id, target_id, EV}
+//  edge_info<VId, true, void, void> : {source_id, target_id}
+//  edge_info<VId, true, void, EV>   : {source_id, target_id, EV}
 //
-//  edge_descriptor<VId, true, E&, void>   : {source_id, target_id, edge}
-//  edge_descriptor<VId, true, E&, EV>     : {source_id, target_id, edge, EV}
+//  edge_info<VId, true, E&, void>   : {source_id, target_id, edge}
+//  edge_info<VId, true, E&, EV>     : {source_id, target_id, edge, EV}
 //
 // Naming conventions
 // -----------------------------------------------------------------------------

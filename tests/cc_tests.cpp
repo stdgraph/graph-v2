@@ -57,7 +57,7 @@ TEST_CASE("strongly connected components test", "[strong cc]") {
   using value = std::ranges::range_value_t<decltype(reverse)>;
 
   vertex_id_t<G> N = static_cast<vertex_id_t<G>>(size(vertices(g)));
-  using edge_desc  = graph::edge_descriptor<vertex_id_t<G>, true, void, double>;
+  using edge_desc  = graph::edge_info<vertex_id_t<G>, true, void, double>;
   auto edge_proj   = [](const value& val) -> edge_desc {
     return edge_desc{std::get<0>(val), std::get<1>(val), std::get<2>(val)};
   };
