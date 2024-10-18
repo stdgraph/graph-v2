@@ -20,6 +20,9 @@ using std::declval;
 using std::allocator;
 using std::allocator_traits;
 
+using std::iter_difference_t;
+using std::iter_value_t;
+
 // functional types
 using std::plus;
 using std::less;
@@ -30,6 +33,7 @@ using std::invoke;
 
 // optional types
 using std::optional;
+using std::conditional_t;
 
 // type traits
 using std::is_arithmetic_v;

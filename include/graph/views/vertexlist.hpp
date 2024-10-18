@@ -375,16 +375,16 @@ namespace views {
       }
 
       /**
-       * @brief The number of outgoing edges of a vertex.
+       * @brief A range of vertices for a graph.
        * 
        * Complexity: O(1)
        * 
-       * Default implementation: size(edges(g, u))
+       * Default implementation: 
        * 
        * @tparam G The graph type.
        * @param g A graph instance.
-       * @param u A vertex instance.
-       * @return The number of outgoing edges of vertex u.
+       * @param vr A range of vertices.
+       * @return A range of vertices.
       */
       template <class _G, class Rng>
       requires(_Choice_rng<_G, Rng>._Strategy != _St_rng::_None)

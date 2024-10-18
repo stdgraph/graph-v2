@@ -177,7 +177,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
 
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, iterator_t<Container>>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, iter_difference_t<Container>>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
@@ -196,59 +196,59 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(advance(begin(v), 0));
-    Iterator it1(advance(begin(v), 1));
-    //REQUIRE(*it == 0);
-    REQUIRE(*it0 == advance(begin(v), 0));
-    REQUIRE(*it1 == advance(begin(v), 1));
+    Iterator it0(0);
+    Iterator it1(1);
+    REQUIRE(*it == 0);
+    REQUIRE(*it0 == 0);
+    REQUIRE(*it1 == 1);
   }
   SECTION("copy") {
-    Iterator it(advance(begin(v), 1));
+    Iterator it(1);
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
-    REQUIRE(*it1 == advance(begin(v), 1));
-    REQUIRE(*it2 == advance(begin(v), 1));
+    REQUIRE(*it1 == 1);
+    REQUIRE(*it2 == 1);
   }
 
   SECTION("move") {
-    Iterator it(advance(begin(v), 1));
+    Iterator it(1);
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
-    REQUIRE(*it1 == advance(begin(v), 1));
-    REQUIRE(*it2 == advance(begin(v), 1));
+    REQUIRE(*it1 == 1);
+    REQUIRE(*it2 == 1);
   }
 
   SECTION("increment and add") {
-    Iterator it(advance(begin(v), 1));
-    REQUIRE(*it == advance(begin(v), 1));
-    REQUIRE(*(it++) == advance(begin(v), 1));
-    REQUIRE(*it == advance(begin(v), 2));
-    REQUIRE(*(++it) == advance(begin(v), 3));
-    REQUIRE(*it == advance(begin(v), 3));
-    //REQUIRE(*(it + 2) == advance(begin(v), 5));
-    //REQUIRE(*(2 + it) == advance(begin(v), 5));
-    //REQUIRE(*(it += 2) == advance(begin(v), 5));
-    //REQUIRE(*it == advance(begin(v), 5));
+    Iterator it(1);
+    REQUIRE(*it == 1);
+    REQUIRE(*(it++) == 1);
+    REQUIRE(*it == 2);
+    REQUIRE(*(++it) == 3);
+    REQUIRE(*it == 3);
+    //REQUIRE(*(it + 2) == 5);
+    //REQUIRE(*(2 + it) == 5);
+    //REQUIRE(*(it += 2) == 5);
+    //REQUIRE(*it == 5);
   }
 
   //SECTION("decrement and subtract") {
-  //  Iterator it(advance(begin(v), 5));
-  //  REQUIRE(*it == advance(begin(v), 5));
-  //  REQUIRE(*(it--) == advance(begin(v), 5));
-  //  REQUIRE(*it == advance(begin(v), 4));
-  //  REQUIRE(*(--it) == advance(begin(v), 3));
-  //  REQUIRE(*it == advance(begin(v), 3));
-  //  REQUIRE(*(it - 2) == advance(begin(v), 1));
-  //  REQUIRE(*(it -= 2) == advance(begin(v), 1));
-  //  REQUIRE(*it == advance(begin(v), 1));
+  //  Iterator it(5);
+  //  REQUIRE(*it == 5);
+  //  REQUIRE(*(it--) == 5);
+  //  REQUIRE(*it == 4);
+  //  REQUIRE(*(--it) == 3);
+  //  REQUIRE(*it == 3);
+  //  REQUIRE(*(it - 2) == 1);
+  //  REQUIRE(*(it -= 2) == 1);
+  //  REQUIRE(*it == 1);
   //}
 
   SECTION("compare equality") {
-    Iterator it(advance(begin(v), 1));
-    Iterator it1(advance(begin(v), 1));
-    Iterator it2(advance(begin(v), 2));
+    Iterator it(1);
+    Iterator it1(1);
+    Iterator it2(2);
     REQUIRE(it == it1);
     REQUIRE(it != it2);
     REQUIRE(it1 == it);
