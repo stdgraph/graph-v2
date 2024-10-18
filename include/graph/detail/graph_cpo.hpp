@@ -2,6 +2,7 @@
 
 // (included from graph.hpp)
 #include "graph/graph_info.hpp"
+#include "graph/detail/descriptor.hpp"
 
 #ifndef GRAPH_CPO_HPP
 #  define GRAPH_CPO_HPP
@@ -107,29 +108,6 @@ concept _el_basic_sourced_edge_desc = _el_edge<_E> && //
 template <class _E> // For exposition only
 concept _el_basic_sourced_index_edge_desc =
       _el_basic_sourced_edge_desc<_E> && integral<typename _E::source_id_type> && integral<typename _E::target_id_type>;
-
-
-// Tags are defined in tag_invoke namespace to avoid conflicts with function names
-// in graph, allowing customization for default behavior.
-//
-// graphs must use tags like graph::tag_invoke::vertex_id_fn_t when defining
-// CPO specialization.
-//
-// Minimal requirements for a graph with random_access vertices(g)
-//      vertices(g), edges(g,u), target_id(g,u)
-// To have vertex_id_t<G> be something other than size_t
-//      vertex_id(g,ui)
-// Properties, as supported by the graph:
-//      edge_value(g,uv), vertex_value(g,uv), graph_value(g)
-//
-
-// Additional functions to consider for future
-//  reserve_vertices(g,n) - noop if n/a
-//  reserve_edges(g,n)    - noop if n/a
-//
-//  load_graph(g,erng,vrng,eproj,vproj)
-//
-// Graph reference of graph type G.*</ summary>*<typeparam name = "G"> Graph</ typeparam>
 
 
 template <class G>

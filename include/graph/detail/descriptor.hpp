@@ -5,7 +5,7 @@
 #ifndef GRAPH_DESCRIPTOR_HPP
 #  define GRAPH_DESCRIPTOR_HPP
 
-namespace graph {
+namespace graph::detail {
 
 /**
  * @brief An iterator that uses a descriptor (integral index or iterator) for a container.
@@ -21,10 +21,10 @@ namespace graph {
  * @tparam I Iterator type of the underlying container.
  */
 template <forward_iterator I>
-class descriptor_iterator {
+class _descriptor_iterator {
 public:
   using inner_iterator = I;
-  using this_type      = descriptor_iterator<inner_iterator>;
+  using this_type      = _descriptor_iterator<inner_iterator>;
 
   using difference_type   = iter_difference_t<inner_iterator>;
   using value_type        = conditional_t<random_access_iterator<inner_iterator>, difference_type, inner_iterator>;
@@ -33,8 +33,8 @@ public:
   using iterator_category = std::forward_iterator_tag;
   using iterator_concept  = iterator_category;
 
-  descriptor_iterator() = default;
-  explicit descriptor_iterator(value_type descriptor) : descriptor_(descriptor) {}
+  _descriptor_iterator() = default;
+  explicit _descriptor_iterator(value_type descriptor) : descriptor_(descriptor) {}
   // copy & move constructors and assignment operators are default
 
   //
@@ -46,12 +46,12 @@ public:
   //
   // operators ++
   //
-  descriptor_iterator& operator++() {
+  _descriptor_iterator& operator++() {
     ++descriptor_;
     return *this;
   }
-  descriptor_iterator operator++(int) {
-    descriptor_iterator tmp = *this;
+  _descriptor_iterator operator++(int) {
+    _descriptor_iterator tmp = *this;
     ++descriptor_;
     return tmp;
   }
@@ -59,7 +59,7 @@ public:
   //
   // operators ==, !=
   //
-  auto operator==(const descriptor_iterator& rhs) const { return descriptor_ == rhs.descriptor_; }
+  auto operator==(const _descriptor_iterator& rhs) const { return descriptor_ == rhs.descriptor_; }
 
 private:
   value_type descriptor_ = value_type(); // integral index or iterator, depending on container type
@@ -144,7 +144,7 @@ public:
   using value_type      = descriptor_value_t<range_value_t<C>>;
   using difference_type = range_difference_t<C>;
   using id_type         = difference_type;                    // e.g. vertex_id_t
-  using iterator        = descriptor_iterator<iterator_t<C>>; //
+  using iterator        = _descriptor_iterator<iterator_t<C>>; //
   using descriptor_type = iter_value_t<iterator>;             // integral index or iterator, depending on container type
 
   descriptor_view_old() = default;
@@ -207,14 +207,9 @@ private:
 };
 
 template <forward_iterator I>
-using descriptor_view = subrange<descriptor_iterator<I>>;
+using _descriptor_range = subrange<_descriptor_iterator<I>>;
 
-
-namespace views {
-  // descriptor_list
-}
-
-} // namespace graph
+} // namespace graph::detail
 
 
 #endif // GRAPH_DESCRIPTOR_HPP

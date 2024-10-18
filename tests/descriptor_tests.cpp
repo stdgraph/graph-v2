@@ -6,9 +6,10 @@
 #include <list>         // bidirectional
 #include <forward_list> // forward
 
-#include "graph/views/descriptor.hpp"
+#include "graph/detail/descriptor.hpp"
 
 using namespace graph;
+using namespace graph::detail;
 
 using std::move;
 using std::conditional_t;
@@ -58,7 +59,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
                    (vector<int>),
                    (const vector<int>)) {
   using Container       = TestType;
-  using Iterator        = descriptor_iterator<iterator_t<Container>>;
+  using Iterator        = _descriptor_iterator<iterator_t<Container>>;
   using difference_type = typename iterator_traits<Iterator>::difference_type;
   Container v           = {1, 2, 3, 4, 5};
 
@@ -168,7 +169,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
                    (deque<int>),
                    (const deque<int>)) {
   using Container       = TestType;
-  using Iterator        = descriptor_iterator<iterator_t<Container>>;
+  using Iterator        = _descriptor_iterator<iterator_t<Container>>;
   using difference_type = typename iterator_traits<Iterator>::difference_type;
   Container v           = {1, 2, 3, 4, 5};
 
@@ -277,7 +278,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
                    (map<int, int>),
                    (const map<int, int>)) {
   using Container       = TestType;
-  using Iterator        = descriptor_iterator<iterator_t<Container>>;
+  using Iterator        = _descriptor_iterator<iterator_t<Container>>;
   using difference_type = typename iterator_traits<Iterator>::difference_type;
   Container v           = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
 
@@ -386,7 +387,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
                    (list<int>),
                    (const list<int>)) {
   using Container       = TestType;
-  using Iterator        = descriptor_iterator<iterator_t<Container>>;
+  using Iterator        = _descriptor_iterator<iterator_t<Container>>;
   using difference_type = typename iterator_traits<Iterator>::difference_type;
   Container v           = {1, 2, 3, 4, 5};
 
@@ -495,7 +496,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
                    (forward_list<int>),
                    (const forward_list<int>)) {
   using Container       = TestType;
-  using Iterator        = descriptor_iterator<iterator_t<Container>>;
+  using Iterator        = _descriptor_iterator<iterator_t<Container>>;
   using difference_type = typename iterator_traits<Iterator>::difference_type;
   Container v           = {5, 4, 3, 2, 1}; // reverse order b/c forward_list adds to the front
 
@@ -603,7 +604,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
 
 TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (vector<int>), (const vector<int>)) {
   using Container             = TestType;
-  using Iterator              = descriptor_iterator<iterator_t<Container>>;
+  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {1, 2, 3, 4, 5};
   auto            descriptors = descriptor_view_old(v);
@@ -630,7 +631,7 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
 
 TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (list<int>), (const list<int>)) {
   using Container             = TestType;
-  using Iterator              = descriptor_iterator<iterator_t<Container>>;
+  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {1, 2, 3, 4, 5};
   auto            descriptors = descriptor_view_old(v);
@@ -664,7 +665,7 @@ TEMPLATE_TEST_CASE("All simple values",
                    (const list<int>)) {
   using Container             = TestType;
   using IdentifierView        = descriptor_view_old<Container>;
-  using Iterator              = descriptor_iterator<iterator_t<Container>>;
+  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
   using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {1, 2, 3, 4, 5};
@@ -698,7 +699,7 @@ TEMPLATE_TEST_CASE("All simple values",
 TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (const map<int, int>)) {
   using Container             = TestType;
   using IdentifierView        = descriptor_view_old<Container>;
-  using Iterator              = descriptor_iterator<iterator_t<Container>>;
+  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
   using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
@@ -730,7 +731,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
 //TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
 //  using Container             = TestType;
 //  using IdentifierView        = descriptor_view_old<Container>;
-//  using Iterator              = descriptor_iterator<iterator_t<Container>>;
+//  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
 //  using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
 //  using difference_type       = typename iterator_traits<Iterator>::difference_type;
 //  Container       v           = {5, 4, 3, 2, 1};
