@@ -819,4 +819,4 @@ auto vertices(const G& g) {
 
 #  endif // 0
 
-#endif   // ENABLE_DESCRIPTOR_TESTS
+#endif // ENABLE_DESCRIPTOR_TESTS

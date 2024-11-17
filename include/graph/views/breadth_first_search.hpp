@@ -689,7 +689,7 @@ namespace views {
 #  endif                                           // ^^^ workaround ^^^
 
     template <class _G, class _Alloc>
-    concept _Has_ref_ADL = _HasClassOrEnumType<_G>                                                   //
+    concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                            && requires(_G&& __g, const vertex_id_t<_G>& uid, _Alloc alloc) {
                                 { _Fake_copy_init(vertices_breadth_first_search(__g, uid, alloc)) }; // intentional ADL
                               };
@@ -776,7 +776,7 @@ namespace views {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return vertices_breadth_first_search(__g, seed, alloc);                // intentional ADL
+          return vertices_breadth_first_search(__g, seed, alloc); // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return vertices_breadth_first_search_view<_G, void>(__g, seed, alloc); // default impl
         } else {
@@ -809,7 +809,7 @@ namespace views {
         constexpr _St_ref_vvf _Strat_ref_vvf = _Choice_ref_vvf<_G&, _VVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_vvf == _St_ref_vvf::_Non_member) {
-          return vertices_breadth_first_search(__g, seed, vvf, alloc);                // intentional ADL
+          return vertices_breadth_first_search(__g, seed, vvf, alloc); // intentional ADL
         } else if constexpr (_Strat_ref_vvf == _St_ref_vvf::_Auto_eval) {
           return vertices_breadth_first_search_view<_G, _VVF>(__g, seed, vvf, alloc); // default impl
         } else {
@@ -838,7 +838,7 @@ namespace views {
 #  endif                                        // ^^^ workaround ^^^
 
     template <class _G, class _Alloc>
-    concept _Has_ref_ADL = _HasClassOrEnumType<_G>                                                //
+    concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                            && requires(_G&& __g, const vertex_id_t<_G>& uid, _Alloc alloc) {
                                 { _Fake_copy_init(edges_breadth_first_search(__g, uid, alloc)) }; // intentional ADL
                               };
@@ -927,7 +927,7 @@ namespace views {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return edges_breadth_first_search(__g, seed, alloc);                       // intentional ADL
+          return edges_breadth_first_search(__g, seed, alloc); // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return edges_breadth_first_search_view<_G, void, false>(__g, seed, alloc); // default impl
         } else {
@@ -960,7 +960,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return edges_breadth_first_search(__g, seed, alloc);                            // intentional ADL
+          return edges_breadth_first_search(__g, seed, alloc); // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_breadth_first_search_view<_G, _EVF, false>(__g, seed, evf, alloc); // default impl
         } else {
@@ -1080,7 +1080,7 @@ namespace views {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return sourced_edges_breadth_first_search(__g, seed, alloc);              // intentional ADL
+          return sourced_edges_breadth_first_search(__g, seed, alloc); // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return edges_breadth_first_search_view<_G, void, true>(__g, seed, alloc); // default impl
         } else {
@@ -1113,7 +1113,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return sourced_edges_breadth_first_search(__g, seed, alloc);                   // intentional ADL
+          return sourced_edges_breadth_first_search(__g, seed, alloc); // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_breadth_first_search_view<_G, _EVF, true>(__g, seed, evf, alloc); // default impl
         } else {

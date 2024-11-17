@@ -168,8 +168,8 @@ void kruskal(IELR&&    e,      // graph
              CompareOp compare // edge value comparitor
 ) {
   using edge_info = range_value_t<IELR>;
-  using VId             = remove_const_t<typename edge_info::source_id_type>;
-  using EV              = edge_info::value_type;
+  using VId       = remove_const_t<typename edge_info::source_id_type>;
+  using EV        = edge_info::value_type;
 
   std::vector<tuple<VId, VId, EV>> e_copy;
   std::ranges::transform(e, back_inserter(e_copy),
@@ -242,7 +242,7 @@ void inplace_kruskal(IELR&&    e,      // graph
                      CompareOp compare // edge value comparitor
 ) {
   using edge_info = range_value_t<IELR>;
-  using VId             = remove_const_t<typename edge_info::source_id_type>;
+  using VId       = remove_const_t<typename edge_info::source_id_type>;
 
   VId  N             = 0;
   auto outer_compare = [&](auto&& i, auto&& j) {

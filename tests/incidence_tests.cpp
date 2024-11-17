@@ -204,8 +204,7 @@ TEST_CASE("incidence test", "[csr][incidence]") {
     using view_t              = decltype(graph::views::incidence(g, uid));
     static_assert(forward_range<view_t>, "incidence(g) is not a forward_range");
     size_t cnt = 0;
-    for (auto&& [vid, uv] :
-         graph::views::incidence(g, uid)) { // edge_info<vertex_id_t<G>, false, edge_t<G>, void>
+    for (auto&& [vid, uv] : graph::views::incidence(g, uid)) { // edge_info<vertex_id_t<G>, false, edge_t<G>, void>
       ++cnt;
     }
     REQUIRE(cnt == size(edges(g, u)));

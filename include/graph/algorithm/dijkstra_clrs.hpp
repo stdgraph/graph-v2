@@ -140,7 +140,7 @@ void dijkstra_clrs(
   }
 }
 
-#else  // using Identifiers
+#else // using Identifiers
 
 template <adjacency_list      G,
           random_access_range Distance,
