@@ -20,12 +20,12 @@ concept edge_weight_function = // e.g. weight(uv)
       is_arithmetic_v<invoke_result_t<WF, edge_reference_t<G>>> &&
       basic_edge_weight_function<G, WF, DistanceValue, less<DistanceValue>, plus<DistanceValue>>;
 
-// These types comprise the bfs value type, made up of bfs_events and variant<vertex_descriptor, edge_descriptor>.
+// These types comprise the bfs value type, made up of bfs_events and variant<vertex_info, edge_info>.
 // monostate is used to indicate that the value is not set and to make it default-constructible.
 template <class G, class VValue = void>
-using bfs_vertex_value_t = vertex_descriptor<vertex_id_t<G>, reference_wrapper<vertex_t<G>>, VValue>;
+using bfs_vertex_value_t = vertex_info<vertex_id_t<G>, reference_wrapper<vertex_t<G>>, VValue>;
 template <class G>
-using bfs_edge_value_t = edge_descriptor<vertex_id_t<G>, true, reference_wrapper<edge_t<G>>, void>;
+using bfs_edge_value_t = edge_info<vertex_id_t<G>, true, reference_wrapper<edge_t<G>>, void>;
 template <class G, class VValue = void>
 using bfs_variant_value_t = std::variant<std::monostate, bfs_vertex_value_t<G, VValue>, bfs_edge_value_t<G>>;
 

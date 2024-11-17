@@ -4,10 +4,10 @@
 #include <functional>
 
 //
-// incidence(g,uid)     -> edge_descriptor<VId,false,E,EV> -> {target_id, edge&}
-// incidence(g,uid,evf) -> edge_descriptor<VId,false,E,EV> -> {target_id, edge&, value}
+// incidence(g,uid)     -> edge_info<VId,false,E,EV> -> {target_id, edge&}
+// incidence(g,uid,evf) -> edge_info<VId,false,E,EV> -> {target_id, edge&, value}
 //
-// basic_incidence(g,uid,evf) -> edge_descriptor<VId,false,void,void> -> {target_id}
+// basic_incidence(g,uid,evf) -> edge_info<VId,false,void,void> -> {target_id}
 //
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(g,uv) };
 //
@@ -47,7 +47,7 @@ public:
   using edge_value_type     = invoke_result_t<EVF, edge_reference_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
+  using value_type        = edge_info<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
   using difference_type   = range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -72,9 +72,8 @@ public:
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
-  using shadow_edge_type = remove_reference_t<edge_reference_type>;
-  using shadow_value_type =
-        edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+  using shadow_edge_type  = remove_reference_t<edge_reference_type>;
+  using shadow_value_type = edge_info<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
   union internal_value {
     value_type        value_;
@@ -154,7 +153,7 @@ public:
   using edge_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
+  using value_type        = edge_info<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
   using difference_type   = range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -166,7 +165,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-  using shadow_value_type = edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, edge_value_type>;
+  using shadow_value_type = edge_info<vertex_id_type, Sourced, shadow_edge_type*, edge_value_type>;
 
   union internal_value {
     value_type        value_;

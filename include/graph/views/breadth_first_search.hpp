@@ -244,7 +244,7 @@ public:
   class iterator {
   public:
     using iterator_category = std::input_iterator_tag;
-    using value_type        = vertex_descriptor<const vertex_id_type, vertex_type&, vertex_value_type>;
+    using value_type        = vertex_info<const vertex_id_type, vertex_type&, vertex_value_type>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -258,7 +258,7 @@ public:
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_vertex_type = remove_reference_t<vertex_reference>;
     using shadow_value_type =
-          vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+          vertex_info<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
     union internal_value {
       value_type        value_;
@@ -364,7 +364,7 @@ public:
   class iterator {
   public:
     using iterator_category = std::input_iterator_tag;
-    using value_type        = vertex_descriptor<const vertex_id_type, vertex_type&, void>;
+    using value_type        = vertex_info<const vertex_id_type, vertex_type&, void>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -377,7 +377,7 @@ public:
     // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_vertex_type = remove_reference_t<vertex_reference>;
-    using shadow_value_type  = vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, void>;
+    using shadow_value_type  = vertex_info<vertex_id_t<graph_type>, shadow_vertex_type*, void>;
 
     union internal_value {
       value_type        value_;
@@ -485,7 +485,7 @@ public:
   class iterator {
   public:
     using iterator_category = std::input_iterator_tag;
-    using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
+    using value_type        = edge_info<const vertex_id_type, Sourced, edge_reference_type, edge_value_type>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -499,7 +499,7 @@ public:
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_edge_type = remove_reference_t<edge_reference_type>;
     using shadow_value_type =
-          edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+          edge_info<vertex_id_type, Sourced, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
     union internal_value {
       value_type        value_;
@@ -600,7 +600,7 @@ public:
   class iterator {
   public:
     using iterator_category = std::input_iterator_tag;
-    using value_type        = edge_descriptor<const vertex_id_type, Sourced, edge_reference_type, void>;
+    using value_type        = edge_info<const vertex_id_type, Sourced, edge_reference_type, void>;
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using rvalue_reference  = value_type&&;
@@ -613,7 +613,7 @@ public:
     // avoid difficulty in undefined vertex reference value in value_type
     // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
     using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-    using shadow_value_type = edge_descriptor<vertex_id_type, Sourced, shadow_edge_type*, void>;
+    using shadow_value_type = edge_info<vertex_id_type, Sourced, shadow_edge_type*, void>;
 
     union internal_value {
       value_type        value_;
@@ -678,8 +678,8 @@ public:
 
 namespace views {
   //
-  // vertices_breadth_first_search(g,seed)     -> vertex_descriptor[vid,v]
-  // vertices_breadth_first_search(g,seed,vvf) -> vertex_descriptor[vid,v,value]
+  // vertices_breadth_first_search(g,seed)     -> vertex_info[vid,v]
+  // vertices_breadth_first_search(g,seed,vvf) -> vertex_info[vid,v,value]
   //
   namespace _Vertices_BFS {
 #  if defined(__clang__) || defined(__EDG__)       // TRANSITION, VSO-1681199
@@ -689,7 +689,7 @@ namespace views {
 #  endif                                           // ^^^ workaround ^^^
 
     template <class _G, class _Alloc>
-    concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
+    concept _Has_ref_ADL = _HasClassOrEnumType<_G>                                                   //
                            && requires(_G&& __g, const vertex_id_t<_G>& uid, _Alloc alloc) {
                                 { _Fake_copy_init(vertices_breadth_first_search(__g, uid, alloc)) }; // intentional ADL
                               };
@@ -776,7 +776,7 @@ namespace views {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return vertices_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return vertices_breadth_first_search(__g, seed, alloc);                // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return vertices_breadth_first_search_view<_G, void>(__g, seed, alloc); // default impl
         } else {
@@ -809,7 +809,7 @@ namespace views {
         constexpr _St_ref_vvf _Strat_ref_vvf = _Choice_ref_vvf<_G&, _VVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_vvf == _St_ref_vvf::_Non_member) {
-          return vertices_breadth_first_search(__g, seed, vvf, alloc); // intentional ADL
+          return vertices_breadth_first_search(__g, seed, vvf, alloc);                // intentional ADL
         } else if constexpr (_Strat_ref_vvf == _St_ref_vvf::_Auto_eval) {
           return vertices_breadth_first_search_view<_G, _VVF>(__g, seed, vvf, alloc); // default impl
         } else {
@@ -827,8 +827,8 @@ namespace views {
 
 
   //
-  // edges_breadth_first_search(g,seed)     -> edge_descriptor[vid,uv]
-  // edges_breadth_first_search(g,seed,evf) -> edge_descriptor[vid,uv,value]
+  // edges_breadth_first_search(g,seed)     -> edge_info[vid,uv]
+  // edges_breadth_first_search(g,seed,evf) -> edge_info[vid,uv,value]
   //
   namespace _Edges_BFS {
 #  if defined(__clang__) || defined(__EDG__)    // TRANSITION, VSO-1681199
@@ -838,7 +838,7 @@ namespace views {
 #  endif                                        // ^^^ workaround ^^^
 
     template <class _G, class _Alloc>
-    concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
+    concept _Has_ref_ADL = _HasClassOrEnumType<_G>                                                //
                            && requires(_G&& __g, const vertex_id_t<_G>& uid, _Alloc alloc) {
                                 { _Fake_copy_init(edges_breadth_first_search(__g, uid, alloc)) }; // intentional ADL
                               };
@@ -927,7 +927,7 @@ namespace views {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return edges_breadth_first_search(__g, seed, alloc);                       // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return edges_breadth_first_search_view<_G, void, false>(__g, seed, alloc); // default impl
         } else {
@@ -960,7 +960,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return edges_breadth_first_search(__g, seed, alloc);                            // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_breadth_first_search_view<_G, _EVF, false>(__g, seed, evf, alloc); // default impl
         } else {
@@ -978,8 +978,8 @@ namespace views {
 
 
   //
-  // sourced_edges_breadth_first_search(g,seed)     -> edge_descriptor[uid,vid,uv]
-  // sourced_edges_breadth_first_search(g,seed,evf) -> edge_descriptor[uid,vid,uv,value]
+  // sourced_edges_breadth_first_search(g,seed)     -> edge_info[uid,vid,uv]
+  // sourced_edges_breadth_first_search(g,seed,evf) -> edge_info[uid,vid,uv,value]
   //
   namespace _Sourced_Edges_BFS {
 #  if defined(__clang__) || defined(__EDG__)            // TRANSITION, VSO-1681199
@@ -1080,7 +1080,7 @@ namespace views {
         constexpr _St_ref _Strat_ref = _Choice_ref<_G&, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref == _St_ref::_Non_member) {
-          return sourced_edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return sourced_edges_breadth_first_search(__g, seed, alloc);              // intentional ADL
         } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
           return edges_breadth_first_search_view<_G, void, true>(__g, seed, alloc); // default impl
         } else {
@@ -1113,7 +1113,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return sourced_edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return sourced_edges_breadth_first_search(__g, seed, alloc);                   // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_breadth_first_search_view<_G, _EVF, true>(__g, seed, evf, alloc); // default impl
         } else {

@@ -2,6 +2,7 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include <deque>
 #include <map>
+#include <tuple>
 
 using std::conditional_t;
 using std::ranges::contiguous_range;
@@ -32,6 +33,10 @@ struct identifier_value {
 };
 template <typename T, typename U>
 struct identifier_value<std::pair<T, U>> {
+  using type = U;
+};
+template <typename T, typename U, typename... Args>
+struct identifier_value<std::tuple<T, U, Args...>> {
   using type = U;
 };
 template <typename T>

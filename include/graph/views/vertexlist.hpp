@@ -3,8 +3,8 @@
 #include "graph/graph_utility.hpp"
 #include <functional>
 //
-// vertexlist(g)       -> vertex_descriptor<VId,V,VV> -> {id, vertex& [,value]}
-// basic_vertexlist(g) -> vertex_descriptor<VId> -> {id}
+// vertexlist(g)       -> vertex_info<VId,V,VV> -> {id, vertex& [,value]}
+// basic_vertexlist(g) -> vertex_info<VId> -> {id}
 //
 // given:    vvf = [&g](vertex_reference_t<G> u) -> decl_type(vertex_value(g)) { return vertex_value(g,u);}
 //           (trailing return type is required if defined inline as vertexlist parameter)
@@ -41,7 +41,7 @@ public:
   using vertex_value_type     = invoke_result_t<VVF, vertex_type&>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = vertex_descriptor<const vertex_id_t<graph_type>, vertex_reference_type, vertex_value_type>;
+  using value_type        = vertex_info<const vertex_id_t<graph_type>, vertex_reference_type, vertex_value_type>;
   using difference_type   = range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -53,7 +53,7 @@ protected:
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type =
-        vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+        vertex_info<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
   union internal_value {
     value_type        value_;
@@ -123,7 +123,7 @@ public:
   using vertex_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = vertex_descriptor<const vertex_id_type, vertex_reference_type, void>;
+  using value_type        = vertex_info<const vertex_id_type, vertex_reference_type, void>;
   using difference_type   = range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -135,7 +135,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
-  using shadow_value_type  = vertex_descriptor<vertex_id_type, shadow_vertex_type*, void>;
+  using shadow_value_type  = vertex_info<vertex_id_type, shadow_vertex_type*, void>;
 
   union internal_value {
     value_type        value_;
@@ -375,16 +375,16 @@ namespace views {
       }
 
       /**
-       * @brief The number of outgoing edges of a vertex.
+       * @brief A range of vertices for a graph.
        * 
        * Complexity: O(1)
        * 
-       * Default implementation: size(edges(g, u))
+       * Default implementation: 
        * 
        * @tparam G The graph type.
        * @param g A graph instance.
-       * @param u A vertex instance.
-       * @return The number of outgoing edges of vertex u.
+       * @param vr A range of vertices.
+       * @return A range of vertices.
       */
       template <class _G, class Rng>
       requires(_Choice_rng<_G, Rng>._Strategy != _St_rng::_None)

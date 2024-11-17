@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include "graph/edgelist.hpp"
-#include "graph/graph_descriptors.hpp"
+#include "graph/graph_info.hpp"
 #include <vector>
 #include <tuple>
 
@@ -11,7 +11,7 @@ using std::tuple;
 using std::pair;
 using std::is_same_v;
 using std::same_as;
-using graph::edge_descriptor;
+using graph::edge_info;
 using graph::_el_tuple_edge;
 using graph::_el_basic_sourced_edge_desc;
 using graph::source_id;
@@ -122,8 +122,8 @@ TEST_CASE("edgelist pair test", "[edgelist][tuple]") {
   static_assert(basic_sourced_edgelist<EL>);
 }
 
-TEST_CASE("edgelist edge_descriptor test", "[edgelist][edge_descriptor]") {
-  using EL = vector<edge_descriptor<int, true, void, void>>;
+TEST_CASE("edgelist edge_info test", "[edgelist][edge_info]") {
+  using EL = vector<edge_info<int, true, void, void>>;
   using E  = std::ranges::range_value_t<EL>;
 
   EL el{{1, 2}, {1, 4}, {2, 3}, {2, 4}};
@@ -135,7 +135,7 @@ TEST_CASE("edgelist edge_descriptor test", "[edgelist][edge_descriptor]") {
 
   graph::_Target_id::_Cpo cpo;
   E                       e;
-  static_assert(same_as<E, edge_descriptor<int, true, void, void>>);
+  static_assert(same_as<E, edge_info<int, true, void, void>>);
 
   static_assert(!std::ranges::forward_range<E>);
   //static_assert(_el_value<E>);
@@ -155,8 +155,8 @@ TEST_CASE("edgelist edge_descriptor test", "[edgelist][edge_descriptor]") {
   static_assert(basic_sourced_edgelist<EL>);
 }
 
-TEST_CASE("edgelist edge_descriptor test with value", "[edgelist][edge_descriptor]") {
-  using EL = vector<edge_descriptor<int, true, void, double>>;
+TEST_CASE("edgelist edge_info test with value", "[edgelist][edge_info]") {
+  using EL = vector<edge_info<int, true, void, double>>;
   using E  = std::ranges::range_value_t<EL>;
 
   EL el{{1, 2, 11.1}, {1, 4, 22.2}, {2, 3, 3.33}, {2, 4, 4.44}};
@@ -168,7 +168,7 @@ TEST_CASE("edgelist edge_descriptor test with value", "[edgelist][edge_descripto
 
   graph::_Target_id::_Cpo cpo;
   E                       e;
-  static_assert(same_as<E, edge_descriptor<int, true, void, double>>);
+  static_assert(same_as<E, edge_info<int, true, void, double>>);
 
   static_assert(!std::ranges::forward_range<E>);
   //static_assert(_el_value<E>);
