@@ -8,8 +8,9 @@
 
 #include "graph/detail/descriptor.hpp"
 
+#define ENABLE_DESCRIPTOR_TESTS 0
+
 using namespace graph;
-using namespace graph::detail;
 
 using std::move;
 using std::conditional_t;
@@ -53,7 +54,15 @@ I advance(I it, std::iter_difference_t<I> n) {
   return it;
 }
 
+TEST_CASE("Tuple tail") {
+  using Tuple = std::tuple<int, double, char>;
+  using Tail  = tuple_tail_t<Tuple>;
+  static_assert(is_same_v<Tail, std::tuple<double, char>>);
 
+  Tuple t{1, 2.0, '3'};
+}
+
+#if ENABLE_DESCRIPTOR_TESTS
 TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
                    "[descriptor]",
                    (vector<int>),
@@ -607,7 +616,7 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
   using Iterator              = _descriptor_iterator<iterator_t<Container>>;
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {1, 2, 3, 4, 5};
-  auto            descriptors = descriptor_view_old(v);
+  auto            descriptors = descriptor_subrange_view(v);
   difference_type i           = 0;
 
   SECTION("descriptor std for") {
@@ -634,7 +643,7 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
   using Iterator              = _descriptor_iterator<iterator_t<Container>>;
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {1, 2, 3, 4, 5};
-  auto            descriptors = descriptor_view_old(v);
+  auto            descriptors = descriptor_subrange_view(v);
   difference_type i           = 0;
 
   SECTION("descriptor std for") {
@@ -664,12 +673,12 @@ TEMPLATE_TEST_CASE("All simple values",
                    (list<int>),
                    (const list<int>)) {
   using Container             = TestType;
-  using IdentifierView        = descriptor_view_old<Container>;
+  using IdentifierView        = descriptor_subrange_view<Container>;
   using Iterator              = _descriptor_iterator<iterator_t<Container>>;
   using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {1, 2, 3, 4, 5};
-  auto            descriptors = descriptor_view_old(v);
+  auto            descriptors = descriptor_subrange_view(v);
   difference_type i           = 0;
 
   SECTION("descriptor std for") {
@@ -698,12 +707,12 @@ TEMPLATE_TEST_CASE("All simple values",
 
 TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (const map<int, int>)) {
   using Container             = TestType;
-  using IdentifierView        = descriptor_view_old<Container>;
+  using IdentifierView        = descriptor_subrange_view<Container>;
   using Iterator              = _descriptor_iterator<iterator_t<Container>>;
   using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       v           = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
-  auto            descriptors = descriptor_view_old(v);
+  auto            descriptors = descriptor_subrange_view(v);
   difference_type i           = 0;
 
   SECTION("descriptor std for") {
@@ -730,12 +739,12 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
 
 //TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
 //  using Container             = TestType;
-//  using IdentifierView        = descriptor_view_old<Container>;
+//  using IdentifierView        = descriptor_subrange_view<Container>;
 //  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
 //  using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
 //  using difference_type       = typename iterator_traits<Iterator>::difference_type;
 //  Container       v           = {5, 4, 3, 2, 1};
-//  auto            descriptors = descriptor_view_old(v);
+//  auto            descriptors = descriptor_subrange_view(v);
 //  difference_type i           = 0;
 //
 //  SECTION("descriptor std for") {
@@ -761,11 +770,11 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
 //}
 
 
-#if 0
+#  if 0
 TEST_CASE("example") {
   using G  = vector<int>;
   G    g   = {1, 2, 3, 4, 5};
-  auto V = descriptor_view_old(g);
+  auto V = descriptor_subrange_view(g);
 
   for (auto&& uid : V) {
     auto id = vertex_id(g, uid);
@@ -792,7 +801,7 @@ for (auto&& u : vertices(a)) {
   }
 }
 
-// for(auto&& u : descriptor_view_old(a))
+// for(auto&& u : descriptor_subrange_view(a))
 for (auto&& u : vertices(a)) {
   // u is a vertex descriptor/descriptor = index/iterator = graph_traits<G>::vertex_info
   for (auto&& uv : edges(a,u)) {
@@ -804,8 +813,10 @@ for (auto&& u : vertices(a)) {
 
 template <typename G>
 auto vertices(const G& g) {
-  return descriptor_view_old(g);
+  return descriptor_subrange_view(g);
 }
 
 
-#endif // 0
+#  endif // 0
+
+#endif   // ENABLE_DESCRIPTOR_TESTS
