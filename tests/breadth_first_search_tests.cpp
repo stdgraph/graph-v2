@@ -21,6 +21,8 @@ using namespace graph;
 
 void init_console(); // init cout for UTF-8
 
+// Catch2: https://github.com/catchorg/Catch2
+
 TEST_CASE("breadth_first_search algorithm test", "[bfs][single-source][algorithm]") {
   init_console();
 
