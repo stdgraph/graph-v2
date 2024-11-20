@@ -99,7 +99,10 @@ inline void init_bfs(Distances& distances, Predecessors& predecessors) {
 
 // C++
 inline void
-breadth_first_search(const Graph& g, const Source& source, Distances& distances, Predecessors& predecessors) {}
+breadth_first_search(const Graph& g, const Source& source, Distances& distances, Predecessors& predecessors) {
+    // std::queue & std::priority_queue
+    // https://en.cppreference.com/w/cpp/container
+}
 
 // C
 inline void breadth_first_search(const Graph*  g,

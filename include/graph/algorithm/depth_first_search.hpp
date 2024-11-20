@@ -107,7 +107,10 @@ inline void depth_first_search(const Graph*  g,
                                const size_t  distances_len,
                                Distances*    distances,
                                const size_t  predecessors_len,
-                               Predecessors* predecessors) {}
+                               Predecessors* predecessors) {
+  // std::stack
+  // https://en.cppreference.com/w/cpp/container
+}
 
 
 } // namespace graph

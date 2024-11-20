@@ -106,7 +106,10 @@ inline void topological_sort(const Graph*  g,
                              const size_t  distances_len,
                              Distances*    distances,
                              const size_t  predecessors_len,
-                             Predecessors* predecessors) {}
+                             Predecessors* predecessors) {
+  // std::queue & std::priority_queue
+  // https://en.cppreference.com/w/cpp/container
+}
 
 
 } // namespace graph
