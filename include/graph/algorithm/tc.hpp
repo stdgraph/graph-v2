@@ -14,6 +14,7 @@
  */
 
 #include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
 
 #ifndef GRAPH_TC_HPP
 #  define GRAPH_TC_HPP
