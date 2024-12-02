@@ -17,24 +17,24 @@
 using std::cout;
 using std::endl;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_reference_t;
-using std::graph::vertex_iterator_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::edge_t;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_reference_t;
+using graph::vertex_iterator_t;
+using graph::vertex_edge_range_t;
+using graph::edge_t;
 
-using std::graph::vertices;
-using std::graph::edges;
-using std::graph::vertex_value;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::find_vertex;
-using std::graph::vertex_id;
+using graph::vertices;
+using graph::edges;
+using graph::vertex_value;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
+using graph::find_vertex;
+using graph::vertex_id;
 
-using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
-using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
+using routes_vol_graph_traits = graph::container::vol_graph_traits<double, std::string, std::string>;
+using routes_vol_graph_type   = graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
 TEST_CASE("Maximal Independent Set Algorithm", "[mis]") {
@@ -45,7 +45,7 @@ TEST_CASE("Maximal Independent Set Algorithm", "[mis]") {
   SECTION("default seed(0)") {
     std::set<vertex_id_t<G>> mis;
     cout << "MIS seed with " << vertex_value(g, *find_vertex(g, 0)) << endl;
-    std::graph::maximal_independent_set(g, std::inserter(mis, mis.begin()));
+    graph::maximal_independent_set(g, std::inserter(mis, mis.begin()));
 
     for (auto&& uid : mis) {
       cout << uid << " " << vertex_value(g, *find_vertex(g, uid)) << endl;
@@ -54,7 +54,7 @@ TEST_CASE("Maximal Independent Set Algorithm", "[mis]") {
   SECTION("seed=4") {
     std::vector<vertex_id_t<G>> mis;
     cout << "MIS seed with " << vertex_value(g, *find_vertex(g, 4)) << endl;
-    std::graph::maximal_independent_set(g, std::back_inserter(mis), 4);
+    graph::maximal_independent_set(g, std::back_inserter(mis), 4);
 
     for (auto&& uid : mis) {
       cout << uid << " " << vertex_value(g, *find_vertex(g, uid)) << endl;
@@ -69,17 +69,17 @@ TEST_CASE("Maximal Independent Set Algorithm", "[mis]") {
 
   SECTION("default seed(0)") {
     std::set<vertex_id_t<G>> mis;
-    std::graph::maximal_independent_set(g, std::inserter(mis, mis.begin()));
+    graph::maximal_independent_set(g, std::inserter(mis, mis.begin()));
 
     for (auto&& uid : mis) {
-      for (auto&& [vid, v] : std::graph::views::incidence(g, uid)) {
+      for (auto&& [vid, v] : graph::views::incidence(g, uid)) {
         REQUIRE(mis.find(vid) == mis.end());
       }
     }
   }
   SECTION("seed=4") {
     std::vector<vertex_id_t<G>> mis;
-    std::graph::maximal_independent_set(g, std::back_inserter(mis), 4);
+    graph::maximal_independent_set(g, std::back_inserter(mis), 4);
     REQUIRE(mis.size() == 5);
   }
 }

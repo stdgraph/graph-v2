@@ -36,6 +36,10 @@ set(UNITTEST_SOURCES
     "co_dijkstra_tests.cpp"
     "visitor_dijkstra_tests.cpp"
 
+    "breadth_first_search_tests.cpp"
+    "depth_first_search_tests.cpp"
+    "topological_sort_tests.cpp"
+
     "csv_routes_vofl_tests.cpp" 
     "csv_routes.cpp" 
     "csv_routes_dov_tests.cpp" 
@@ -55,6 +59,9 @@ set(UNITTEST_SOURCES
     "mst_tests.cpp"
     "tc_tests.cpp"
     "cc_tests.cpp"
+
+    "descriptor_tests.cpp"
+    "tests.cpp"
 )
 
 foreach(SOURCE IN LISTS UNITTEST_SOURCES)

@@ -169,37 +169,36 @@ auto max_vertex_id(csv::string_view csv_file, ColNumOrName col1, ColNumOrName co
 
 
 template <typename G>
-std::optional<std::graph::vertex_iterator_t<G>> find_city(G&& g, std::string_view city_name) {
+std::optional<graph::vertex_iterator_t<G>> find_city(G&& g, std::string_view city_name) {
 #if 1
-  auto it = std::ranges::find_if(std::graph::vertices(g),
-                                 [&g, &city_name](auto& u) { return std::graph::vertex_value(g, u) == city_name; });
-  if (it != end(std::graph::vertices(g)))
-    return std::optional<std::graph::vertex_iterator_t<G>>(it);
-  return std::optional<std::graph::vertex_iterator_t<G>>();
+  auto it = std::ranges::find_if(graph::vertices(g),
+                                 [&g, &city_name](auto& u) { return graph::vertex_value(g, u) == city_name; });
+  if (it != end(graph::vertices(g)))
+    return std::optional<graph::vertex_iterator_t<G>>(it);
+  return std::optional<graph::vertex_iterator_t<G>>();
 #else
-  auto vertex_to_name = [&g](std::graph::vertex_reference_t<G> u) { return std::graph::vertex_value<G>(g, u); };
-  auto it = std::ranges::lower_bound(std::graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
-  bool atEnd = (it == end(std::graph::vertices(g)));
-  auto id    = it - begin(std::graph::vertices(g));
-  if (it != end(std::graph::vertices(g)) && std::graph::vertex_value(g, *it) == city_name)
-    return std::optional<std::graph::vertex_iterator_t<G>>(it);
-  return std::optional<std::graph::vertex_iterator_t<G>>();
+  auto vertex_to_name = [&g](graph::vertex_reference_t<G> u) { return graph::vertex_value<G>(g, u); };
+  auto it    = std::ranges::lower_bound(graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
+  bool atEnd = (it == end(graph::vertices(g)));
+  auto id    = it - begin(graph::vertices(g));
+  if (it != end(graph::vertices(g)) && graph::vertex_value(g, *it) == city_name)
+    return std::optional<graph::vertex_iterator_t<G>>(it);
+  return std::optional<graph::vertex_iterator_t<G>>();
 #endif
 }
 
 template <typename G>
-std::graph::vertex_id_t<G> find_city_id(G&& g, std::string_view city_name) {
+graph::vertex_id_t<G> find_city_id(G&& g, std::string_view city_name) {
 #if 1
-  auto it = std::ranges::find_if(std::graph::vertices(g),
-                                 [&g, &city_name](auto& u) { return std::graph::vertex_value(g, u) == city_name; });
+  auto it = std::ranges::find_if(graph::vertices(g),
+                                 [&g, &city_name](auto& u) { return graph::vertex_value(g, u) == city_name; });
 #else
-  auto vertex_to_name = [&g](std::graph::vertex_reference_t<G> u) { return std::graph::vertex_value<G>(g, u); };
-  auto it = std::ranges::lower_bound(std::graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
-  if (it != end(std::graph::vertices(g)) && std::graph::vertex_value(g, *it) != city_name)
-    it = end(std::graph::vertices(g));
+  auto vertex_to_name = [&g](graph::vertex_reference_t<G> u) { return graph::vertex_value<G>(g, u); };
+  auto it = std::ranges::lower_bound(graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
+  if (it != end(graph::vertices(g)) && graph::vertex_value(g, *it) != city_name)
+    it = end(graph::vertices(g));
 #endif
-  return static_cast<std::graph::vertex_id_t<G>>(it -
-                                                 begin(std::graph::vertices(g))); // == size(vertices(g)) if not found
+  return static_cast<graph::vertex_id_t<G>>(it - begin(graph::vertices(g))); // == size(vertices(g)) if not found
 }
 
 /**
@@ -218,7 +217,7 @@ std::graph::vertex_id_t<G> find_city_id(G&& g, std::string_view city_name) {
 */
 template <typename G>
 auto load_graph(csv::string_view csv_file) {
-  using namespace std::graph;
+  using namespace graph;
 
   using graph_type     = G;
   using vertex_id_type = vertex_id_t<graph_type>;
@@ -234,7 +233,7 @@ auto load_graph(csv::string_view csv_file) {
   // Load vertices
   auto&& cnames         = city_names; // Clang-15 not finding city_names for following capture
   auto   city_id_getter = [&cnames](const city_id_map& name_id) {
-    using copyable_id_name = std::graph::copyable_vertex_t<vertex_id_type, std::string>;
+    using copyable_id_name = graph::copyable_vertex_t<vertex_id_type, std::string>;
     return copyable_id_name{name_id.second,
                             name_id.first}; // {id,name} don't move name b/c we need to keep it in the map
   };
@@ -284,7 +283,7 @@ template <typename G>
 auto load_ordered_graph(csv::string_view        csv_file,
                         const name_order_policy order_policy         = name_order_policy::alphabetical,
                         const bool              add_reversed_src_tgt = false) {
-  using namespace std::graph;
+  using namespace graph;
   using std::ranges::range_value_t;
   using std::ranges::iterator_t;
   using std::string_view;
@@ -361,7 +360,7 @@ auto load_ordered_graph(csv::string_view        csv_file,
 
   // load vertices
   using copyable_label        = std::remove_reference_t<vertex_value_type>;
-  using graph_copyable_vertex = std::graph::copyable_vertex_t<vertex_id_type, copyable_label>;
+  using graph_copyable_vertex = graph::copyable_vertex_t<vertex_id_type, copyable_label>;
   auto city_name_getter       = [](lbl_iter& lbl) {
     graph_copyable_vertex retval{lbl->second, copyable_label(lbl->first)};
     return retval;
@@ -389,7 +388,7 @@ struct routes_graph {
 
 template <typename OStream, typename G>
 OStream& operator<<(OStream& os, const routes_graph<G>& graph) {
-  using namespace std::graph;
+  using namespace graph;
   const auto& g = graph.g;
 
 #if 0
@@ -495,7 +494,7 @@ void output_routes_graphviz(
       const directedness dir,
       std::string_view   bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
 ) {
-  using namespace std::graph;
+  using namespace graph;
   using namespace std::literals;
   std::string   fn(filename);
   std::ofstream of(fn);
@@ -539,7 +538,7 @@ void output_routes_graphviz_adjlist(
       std::string_view filename,
       std::string_view bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
 ) {
-  using namespace std::graph;
+  using namespace graph;
   using namespace std::literals;
   std::string   fn(filename);
   std::ofstream of(fn);
@@ -574,13 +573,13 @@ void output_routes_graphviz_adjlist(
 
 template <class G>
 void output_routes_graphviz_dfs_vertices(
-      const G&                   g,
-      std::string_view           filename,
-      std::graph::vertex_id_t<G> seed,
+      const G&              g,
+      std::string_view      filename,
+      graph::vertex_id_t<G> seed,
       std::string_view bgcolor = std::string_view() // "transparent" or see http://graphviz.org/docs/attr-types/color/
 ) {
-  using namespace std::graph;
-  using namespace std::graph::views;
+  using namespace graph;
+  using namespace graph::views;
   using namespace std::literals;
   std::string   fn(filename);
   std::ofstream of(fn);
@@ -604,7 +603,7 @@ void output_routes_graphviz_dfs_vertices(
      << "}\"]\n";
 
   // output descendents
-  for (auto&& [uid, vid, uv] : std::graph::views::sourced_edges_depth_first_search(g, seed)) {
+  for (auto&& [uid, vid, uv] : graph::views::sourced_edges_depth_first_search(g, seed)) {
     // Output newly discovered vertex
     if (!visited[vid]) {
       of << "  " << vid << " [shape=Mrecord, label=\"{<f0>" << vid << "|<f1>" << vertex_value(g, *find_vertex(g, uid))
@@ -627,7 +626,7 @@ void output_routes_graphviz_dfs_vertices(
 */
 template <class G>
 void generate_routes_tests(const G& g, std::string_view name) {
-  using namespace std::graph;
+  using namespace graph;
   using std::cout;
   using std::endl;
   ostream_indenter indent;

@@ -2,21 +2,21 @@
 #include "graph/graph.hpp"
 
 //
-// edgelist(g)     -> edge_descriptor<VId,true,E,void> -> {source_id, target_id, edge&}
-// edgelist(g,evf) -> edge_descriptor<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
+// edgelist(g)     -> edge_info<VId,true,E,void> -> {source_id, target_id, edge&}
+// edgelist(g,evf) -> edge_info<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
 //
-// edgelist(g,uid)     -> edge_descriptor<VId,true,E,void> -> {source_id, target_id, edge&}
-// edgelist(g,uid,evf) -> edge_descriptor<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
+// edgelist(g,uid)     -> edge_info<VId,true,E,void> -> {source_id, target_id, edge&}
+// edgelist(g,uid,evf) -> edge_info<VId,true,E,EV>   -> {source_id, target_id, edge&, value}
 //
-// edgelist(elr,proj)  -> edge_descriptor<VId,true,E,void>  -> {source_id, target_id, edge&},        where VId is defined by proj and E is range_value_t<ELR>&
-// edgelist(elr,proj)  -> edge_descriptor<VId,true,E,Value> -> {source_id, target_id, edge&, Value}, where VId and Value defined by proj and E is range_value_t<ELR>&
+// edgelist(elr,proj)  -> edge_info<VId,true,E,void>  -> {source_id, target_id, edge&},        where VId is defined by proj and E is range_value_t<ELR>&
+// edgelist(elr,proj)  -> edge_info<VId,true,E,Value> -> {source_id, target_id, edge&, Value}, where VId and Value defined by proj and E is range_value_t<ELR>&
 // Note: proj(range_value_t<ELR>&) is a projection and determines whether to return a value member or not
 //
-// basic_edgelist(g) -> edge_descriptor<VId,true,void,void> -> {source_id, target_id}
+// basic_edgelist(g) -> edge_info<VId,true,void,void> -> {source_id, target_id}
 //
-// basic_edgelist(g,uid) -> edge_descriptor<VId,true,void,void> -> {source_id, target_id}
+// basic_edgelist(g,uid) -> edge_info<VId,true,void,void> -> {source_id, target_id}
 //
-// basic_edgelist(elr,proj)  -> edge_descriptor<VId,true,void,void>  -> {source_id, target_id},      where VId is defined by proj
+// basic_edgelist(elr,proj)  -> edge_info<VId,true,void,void>  -> {source_id, target_id},      where VId is defined by proj
 // Note: proj(range_value_t<ELR>&) is a projection and determines whether to return a value member or not
 //
 // given:    auto evf = [&g](edge_reference_t<G> uv) { return edge_value(uv); }
@@ -34,14 +34,14 @@
 //           for([uid, vid]        : basic_edgelist(g,uid))
 //
 
-namespace std::graph {
+namespace graph {
 
 template <adjacency_list G, class EVF = void>
 class edgelist_iterator;
 
 #ifdef ENABLE_EDGELIST_RANGE
 //template <edgelist_range ELR, class Proj = identity>
-//requires requires(ranges::iterator_t<ELR> i, Proj&& proj) {
+//requires requires(iterator_t<ELR> i, Proj&& proj) {
 //  { proj(*i) };
 //}
 //class edgelist_range_iterator;
@@ -67,9 +67,9 @@ protected:
    * @param uvi Current edge
   */
   constexpr void find_non_empty_vertex(G& g, vertex_iterator& ui, edge_iterator& uvi) noexcept {
-    for (; ui != ranges::end(vertices(g)); ++ui) {
-      if (!ranges::empty(edges(g, *ui))) {
-        uvi = ranges::begin(edges(g, *ui));
+    for (; ui != end(vertices(g)); ++ui) {
+      if (!empty(edges(g, *ui))) {
+        uvi = begin(edges(g, *ui));
         return;
       }
     }
@@ -85,9 +85,9 @@ protected:
    * @param uvi Current edge
   */
   constexpr void find_next_edge(G& g, vertex_iterator& ui, edge_iterator& uvi) noexcept {
-    assert(ui != ranges::end(vertices(g)));
-    assert(uvi != ranges::end(edges(g, *ui)));
-    if (++uvi != ranges::end(edges(g, *ui)))
+    assert(ui != end(vertices(g)));
+    assert(uvi != end(edges(g, *ui)));
+    if (++uvi != end(edges(g, *ui)))
       return;
     ++ui;
     find_non_empty_vertex(g, ui, uvi);
@@ -118,8 +118,8 @@ public:
   using edge_value_type     = invoke_result_t<EVF, edge_reference_type>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
-  using difference_type   = ranges::range_difference_t<edge_range>;
+  using value_type        = edge_info<const vertex_id_type, true, edge_reference_type, edge_value_type>;
+  using difference_type   = range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
   using reference         = value_type&;
@@ -129,7 +129,7 @@ public:
 public:
   edgelist_iterator(graph_type& g, vertex_iterator ui, const EVF& value_fn)
         : base_type(), g_(&g), ui_(ui), uvi_(), value_fn_(&value_fn) {}
-  edgelist_iterator(graph_type& g, const EVF& value_fn) : edgelist_iterator(g, ranges::begin(vertices(g)), value_fn) {
+  edgelist_iterator(graph_type& g, const EVF& value_fn) : edgelist_iterator(g, begin(vertices(g)), value_fn) {
     this->find_non_empty_vertex(*g_, ui_, uvi_);
   }
 
@@ -144,9 +144,8 @@ public:
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
-  using shadow_edge_type = remove_reference_t<edge_reference_type>;
-  using shadow_value_type =
-        edge_descriptor<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
+  using shadow_edge_type  = remove_reference_t<edge_reference_type>;
+  using shadow_value_type = edge_info<vertex_id_type, true, shadow_edge_type*, _detail::ref_to_ptr<edge_value_type>>;
 
   union internal_value {
     value_type        value_;
@@ -220,8 +219,8 @@ public:
   using edge_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = edge_descriptor<const vertex_id_type, true, edge_reference_type, edge_value_type>;
-  using difference_type   = ranges::range_difference_t<edge_range>;
+  using value_type        = edge_info<const vertex_id_type, true, edge_reference_type, edge_value_type>;
+  using difference_type   = range_difference_t<edge_range>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
   using reference         = value_type&;
@@ -232,7 +231,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_edge_type  = remove_reference_t<edge_reference_type>;
-  using shadow_value_type = edge_descriptor<vertex_id_type, true, shadow_edge_type*, edge_value_type>;
+  using shadow_value_type = edge_info<vertex_id_type, true, shadow_edge_type*, edge_value_type>;
 
   union internal_value {
     value_type        value_;
@@ -248,7 +247,7 @@ public:
   edgelist_iterator(graph_type& g, vertex_iterator ui) : base_type(), g_(&g), ui_(ui), uvi_() {
     this->find_non_empty_vertex(*g_, ui_, uvi_);
   }
-  edgelist_iterator(graph_type& g) : edgelist_iterator(g, ranges::begin(vertices(g))) {}
+  edgelist_iterator(graph_type& g) : edgelist_iterator(g, begin(vertices(g))) {}
 
   constexpr edgelist_iterator()                         = default;
   constexpr edgelist_iterator(const edgelist_iterator&) = default;
@@ -299,30 +298,30 @@ private: // member variables
 
 
 /**
- * @brief Iterator for a range with values that can be projected to a edge_descriptor.
+ * @brief Iterator for a range with values that can be projected to a edge_info.
  *
  * @tparam ELR    Graph type
  * @tparam Proj  Edge Value Function type
 */
 #if 0
 template <edgelist_range ELR, class Proj>
-//requires requires(ranges::iterator_t<ELR> i, Proj&& proj) {
+//requires requires(iterator_t<ELR> i, Proj&& proj) {
 //  { proj(*i)->target_id };
 //}
 class edgelist_range_iterator {
 public:
   using edge_range          = ELR;
-  using edge_iterator       = ranges::iterator_t<edge_range>;
-  using edge_type           = ranges::range_value_t<edge_range>;
-  using edge_reference_type = ranges::range_reference_t<edge_range>;
+  using edge_iterator       = iterator_t<edge_range>;
+  using edge_type           = range_value_t<edge_range>;
+  using edge_reference_type = range_reference_t<edge_range>;
   using value_type          = invoke_result_t<Proj, edge_reference_type>;
 
   using vertex_id_type =
-        typename value_type::target_id_type; // If this generates an error then value_type is not an edge_descriptor
+        typename value_type::target_id_type; // If this generates an error then value_type is not an edge_info
 
   using iterator_category = forward_iterator_tag;
 
-  using difference_type  = ranges::range_difference_t<edge_range>;
+  using difference_type  = range_difference_t<edge_range>;
   using pointer          = value_type*;
   using const_pointer    = const value_type*;
   using reference        = value_type&;
@@ -333,7 +332,7 @@ public:
   edgelist_range_iterator(edge_range& elr, edge_iterator uvi, Proj&& proj_fn) //
         : uvi_(uvi), proj_fn_(proj_fn) {}
   edgelist_range_iterator(edge_range& elr, Proj&& proj_fn)
-        : edgelist_range_iterator(elr, ranges::begin(vertices(elr)), forward<Proj>(proj_fn)) {}
+        : edgelist_range_iterator(elr, begin(vertices(elr)), forward<Proj>(proj_fn)) {}
 
   constexpr edgelist_range_iterator()                               = default;
   constexpr edgelist_range_iterator(const edgelist_range_iterator&) = default;
@@ -370,10 +369,10 @@ private: // member variables
 
 
 template <adjacency_list G, class EVF>
-using edgelist_view = ranges::subrange<edgelist_iterator<G, EVF>, vertex_iterator_t<G>>;
+using edgelist_view = subrange<edgelist_iterator<G, EVF>, vertex_iterator_t<G>>;
 
 //template <edgelist_range ELR, class Proj>
-//using edgelist_view = ranges::subrange<edgelist_iterator<ELR, Proj>, vertex_iterator_t<ELR>>;
+//using edgelist_view = subrange<edgelist_iterator<ELR, Proj>, vertex_iterator_t<ELR>>;
 
 namespace views {
 
@@ -429,10 +428,10 @@ namespace views {
 #ifdef ENABLE_EDGELIST_RANGE
     template <class ELR, class class Proj>
     concept _Has_edgelist_all_proj_ADL = edgelist_range<ELR> //
-                                         && invocable<Proj, ranges::range_value_t<ELR>>;
+                                         && invocable<Proj, range_value_t<ELR>>;
     template <class ELR, class Proj>
     concept _Can_edgelist_all_proj_eval = edgelist_range<ELR> //
-                                          && invocable<Proj, ranges::range_value_t<ELR>>;
+                                          && invocable<Proj, range_value_t<ELR>>;
 #endif
 
     class _Cpo {
@@ -539,12 +538,12 @@ namespace views {
      * 
      * Default implementation: 
      *  using iterator_type = edgelist_iterator<G, void>;
-     *  edgelist_view<G, void>(iterator_type(g), ranges::end(vertices(g)));
+     *  edgelist_view<G, void>(iterator_type(g), end(vertices(g)));
      * 
      * @tparam G The graph type.
      * @param g A graph instance.
      * @return A range of edges in graph g where the range value_type is 
-     *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+     *         edge_info<vertex_id_t<G>,false,vertex_reference_t<G>,void>
     */
       template <class _G>
       requires(_Choice_all<_G&>._Strategy != _St_adjlist_all::_None)
@@ -555,9 +554,9 @@ namespace views {
           return edgelist(__g); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
           using iterator_type = edgelist_iterator<_G, void>;
-          return edgelist_view<_G, void>(iterator_type(__g), ranges::end(vertices(__g))); // default impl
+          return edgelist_view<_G, void>(iterator_type(__g), end(vertices(__g))); // default impl
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "edgelist(g) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -570,12 +569,12 @@ namespace views {
      * 
      * Default implementation: 
      *  using iterator_type = edgelist_iterator<G, void>;
-     *  edgelist_view<G, void>(iterator_type(g), ranges::end(vertices(g)));
+     *  edgelist_view<G, void>(iterator_type(g), end(vertices(g)));
      * 
      * @tparam G The graph type.
      * @param g A graph instance.
      * @return A range of edges in graph g where the range value_type is 
-     *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+     *         edge_info<vertex_id_t<G>,false,vertex_reference_t<G>,void>
     */
       template <class _G, class EVF>
       requires(_Choice_all_evf<_G&, EVF>._Strategy != _St_adjlist_all::_None)
@@ -587,9 +586,9 @@ namespace views {
           return edgelist(__g); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
           using iterator_type = edgelist_iterator<_G, EVF>;
-          return edgelist_view<_G, EVF>(iterator_type(__g, evf), ranges::end(vertices(__g)));
+          return edgelist_view<_G, EVF>(iterator_type(__g, evf), end(vertices(__g)));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "edgelist(g,evf) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -602,12 +601,12 @@ namespace views {
      * 
      * Default implementation: 
      *  using iterator_type = edgelist_iterator<G, void>;
-     *  edgelist_view<G, void>(iterator_type(__g), ranges::end(vertices(__g)));
+     *  edgelist_view<G, void>(iterator_type(__g), end(vertices(__g)));
      * 
      * @tparam G The graph type.
      * @param __g A graph instance.
      * @return A range of edges in graph __g where the range value_type is 
-     *         edge_descriptor<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+     *         edge_info<vertex_id_t<G>,false,vertex_reference_t<G>,void>
     */
       template <class _G>
       requires(_Choice_idrng<_G&>._Strategy != _St_adjlist_idrng::_None)
@@ -621,7 +620,7 @@ namespace views {
           using iterator_type = edgelist_iterator<_G, void>;
           return edgelist_view<_G, void>(iterator_type(__g, find_vertex(__g, first)), find_vertex(__g, last));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "edgelist(g,uid,vid) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -634,12 +633,12 @@ namespace views {
      * 
      * Default implementation: 
      *  using iterator_type = edgelist_iterator<_G, void>;
-     *  edgelist_view<_G, void>(iterator_type(g), ranges::end(vertices(g)));
+     *  edgelist_view<_G, void>(iterator_type(g), end(vertices(g)));
      * 
      * @tparam _G The graph type.
      * @param g A graph instance.
      * @return A range of edges in graph g where the range value_type is 
-     *         edge_descriptor<vertex_id_t<_G>,false,vertex_reference_t<_G>,void>
+     *         edge_info<vertex_id_t<_G>,false,vertex_reference_t<_G>,void>
     */
       template <class _G, class EVF>
       requires(_Choice_idrng_evf<_G&, EVF>._Strategy != _St_adjlist_idrng::_None)
@@ -652,9 +651,9 @@ namespace views {
           return edgelist(__g); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_idrng::_Auto_eval) {
           using iterator_type = edgelist_iterator<_G, EVF>;
-          return edgelist_view<_G, void>(iterator_type(__g, evf), ranges::end(vertices(__g))); // default impl
+          return edgelist_view<_G, void>(iterator_type(__g, evf), end(vertices(__g))); // default impl
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "edgelist(g,uid,vid,evf) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -666,8 +665,8 @@ namespace views {
      * @brief Create an edgelist from an arbitrary range using a projection.
      * 
      * The projection must return a value of one of the following types:
-     *      edge_descriptor<Id, true, range_value_t<ELR>&, void>
-     *      edge_descriptor<Id, true, range_value_t<ELR>&, Value>
+     *      edge_info<Id, true, range_value_t<ELR>&, void>
+     *      edge_info<Id, true, range_value_t<ELR>&, Value>
      * where Id is an integral type defined by proj, and Value is also a type defined by proj.
      * 
      * Complexity: O(n)
@@ -676,12 +675,12 @@ namespace views {
      *  ???
      * 
      * @tparam ELR The Edge List Range type. This can be any forward_range.
-     * @tparam Proj The projection function type that converts a range_value_t<ELR> to an edge_descriptor.
+     * @tparam Proj The projection function type that converts a range_value_t<ELR> to an edge_info.
      * @param elr The Edge List Range instance.
-     * @param proj The projection instance that converts a range_value_t<ELR> to an edge_descriptor. If
-     *             the range_value_t<ELR> is already a valid edge_descriptor then identity can be used.
-     * @return A range of edge_descriptors projected from elr. The value member type can be void or non-void.
-     *         If it is void, the value member will not exist in the returned edge_descriptor.
+     * @param proj The projection instance that converts a range_value_t<ELR> to an edge_info. If
+     *             the range_value_t<ELR> is already a valid edge_info then identity can be used.
+     * @return A range of edge_infos projected from elr. The value member type can be void or non-void.
+     *         If it is void, the value member will not exist in the returned edge_info.
     */
       template <class ELR, class Proj>
       requires(_Choice_elr_proj<ELR&, Proj>._Strategy != _St_adjlist_all::_None)
@@ -693,10 +692,10 @@ namespace views {
           return edgelist(elr); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
           //using iterator_type = edgelist_iterator<ELR, Proj>;
-          //return edgelist_view<ELR, Proj>(iterator_type(elr, proj), ranges::end(vertices(elr)));
+          //return edgelist_view<ELR, Proj>(iterator_type(elr, proj), end(vertices(elr)));
           return 1; // bogus; must implement
         } else {
-          static_assert(_Always_false<ELR>,
+          static_assert(_AlwaysFalse<ELR>,
                         "edgelist(elr,proj) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -710,4 +709,4 @@ namespace views {
   }
 
 } // namespace views
-} // namespace std::graph
+} // namespace graph

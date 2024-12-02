@@ -20,33 +20,32 @@ using std::is_lvalue_reference_v;
 using std::forward_iterator;
 using std::input_iterator;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_value_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::vertex_reference_t;
-using std::graph::edge_t;
-using std::graph::edge_value_t;
-using std::graph::edge_reference_t;
-using std::graph::adjacency_list;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_value_t;
+using graph::vertex_edge_range_t;
+using graph::vertex_reference_t;
+using graph::edge_t;
+using graph::edge_value_t;
+using graph::edge_reference_t;
+using graph::adjacency_list;
 
-using std::graph::graph_value;
-using std::graph::vertices;
-using std::graph::edges;
-using std::graph::vertex_id;
-using std::graph::vertex_value;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::degree;
-using std::graph::find_vertex;
-using std::graph::find_vertex_edge;
-using std::graph::experimental::dijkstra_visitor_base;
-using std::graph::experimental::dijkstra_with_visitor;
-using std::graph::experimental::init_shortest_paths;
+using graph::graph_value;
+using graph::vertices;
+using graph::edges;
+using graph::vertex_id;
+using graph::vertex_value;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
+using graph::degree;
+using graph::find_vertex;
+using graph::find_vertex_edge;
+using graph::experimental::dijkstra_with_visitor;
+using graph::experimental::init_shortest_paths;
 
-using routes_vol_graph_traits = std::graph::container::vol_graph_traits<double, std::string, std::string>;
-using routes_vol_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
+using routes_vol_graph_traits = graph::container::vol_graph_traits<double, std::string, std::string>;
+using routes_vol_graph_type   = graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
 
 using Distance     = double;
 using Distances    = std::vector<Distance>;
@@ -62,7 +61,7 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
-struct my_dijkstra_visitor : dijkstra_visitor_base<routes_vol_graph_type> {
+struct my_dijkstra_visitor : graph::experimental::dijkstra_visitor_base<routes_vol_graph_type> {
   using G      = routes_vol_graph_type;
   using base_t = dijkstra_visitor_base<G>;
 
@@ -141,7 +140,7 @@ TEST_CASE("dijstra visitor test", "[dynamic][dijkstra][bfs][vertex][visitor]") {
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("vertices_breadth_first_search_view generate content test") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -252,8 +251,8 @@ TEST_CASE("dijstra visitor test", "[dynamic][dijkstra][bfs][vertex][visitor]") {
 }
 
 #if 0
-using std::graph::fibonacci_sequence;
-using std::graph::fib_seq;
+using graph::fibonacci_sequence;
+using graph::fib_seq;
 
 TEST_CASE("co fib test", "[fibonacci][coroutine]") {
   try {

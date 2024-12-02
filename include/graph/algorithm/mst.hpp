@@ -21,7 +21,7 @@
 #ifndef GRAPH_MST_HPP
 #  define GRAPH_MST_HPP
 
-namespace std::graph {
+namespace graph {
 
 template <class VId>
 struct disjoint_element {
@@ -30,7 +30,7 @@ struct disjoint_element {
 };
 
 template <class VId>
-using disjoint_vector = vector<disjoint_element<VId>>;
+using disjoint_vector = std::vector<disjoint_element<VId>>;
 
 template <class VId>
 VId disjoint_find(disjoint_vector<VId>& subsets, VId vtx) {
@@ -105,7 +105,7 @@ template <class ELVT> // For exposition only
 concept _basic_edgelist_type = is_same_v<typename ELVT::target_id_type, typename ELVT::source_id_type>;
 
 template <class ELVT> // For exposition only
-concept _basic_index_edgelist_type = _basic_edgelist_type<ELVT> && is_integral_v<typename ELVT::target_id_type>;
+concept _basic_index_edgelist_type = _basic_edgelist_type<ELVT> && integral<typename ELVT::target_id_type>;
 
 template <class ELVT> // For exposition only
 concept _edgelist_type = _basic_edgelist_type<ELVT> && _has_edgelist_value<ELVT>;
@@ -115,17 +115,16 @@ concept _index_edgelist_type = _basic_index_edgelist_type<ELVT> && _has_edgelist
 
 
 template <class EL> // For exposition only
-concept x_basic_edgelist_range = ranges::forward_range<EL> && _basic_edgelist_type<ranges::range_value_t<EL>>;
+concept x_basic_edgelist_range = forward_range<EL> && _basic_edgelist_type<range_value_t<EL>>;
 
 template <class EL> // For exposition only
-concept x_basic_index_edgelist_range =
-      ranges::forward_range<EL> && _basic_index_edgelist_type<ranges::range_value_t<EL>>;
+concept x_basic_index_edgelist_range = forward_range<EL> && _basic_index_edgelist_type<range_value_t<EL>>;
 
 template <class EL> // For exposition only
-concept x_edgelist_range = ranges::forward_range<EL> && _edgelist_type<ranges::range_value_t<EL>>;
+concept x_edgelist_range = forward_range<EL> && _edgelist_type<range_value_t<EL>>;
 
 template <class EL> // For exposition only
-concept x_index_edgelist_range = ranges::forward_range<EL> && _index_edgelist_type<ranges::range_value_t<EL>>;
+concept x_index_edgelist_range = forward_range<EL> && _index_edgelist_type<range_value_t<EL>>;
 
 /*template<typename T, typename = void>
 struct has_edge : false_type { };
@@ -168,13 +167,13 @@ void kruskal(IELR&&    e,      // graph
              OELR&&    t,      // tree
              CompareOp compare // edge value comparitor
 ) {
-  using edge_descriptor = ranges::range_value_t<IELR>;
-  using VId             = remove_const<typename edge_descriptor::source_id_type>::type;
-  using EV              = edge_descriptor::value_type;
+  using edge_info = range_value_t<IELR>;
+  using VId       = remove_const_t<typename edge_info::source_id_type>;
+  using EV        = edge_info::value_type;
 
-  vector<tuple<VId, VId, EV>> e_copy;
-  ranges::transform(e, back_inserter(e_copy),
-                    [](auto&& ed) { return make_tuple(ed.source_id, ed.target_id, ed.value); });
+  std::vector<tuple<VId, VId, EV>> e_copy;
+  std::ranges::transform(e, back_inserter(e_copy),
+                         [](auto&& ed) { return std::make_tuple(ed.source_id, ed.target_id, ed.value); });
   VId  N             = 0;
   auto outer_compare = [&](auto&& i, auto&& j) {
     if (get<0>(i) > N) {
@@ -185,7 +184,7 @@ void kruskal(IELR&&    e,      // graph
     }
     return compare(get<2>(i), get<2>(j));
   };
-  ranges::sort(e_copy, outer_compare);
+  std::ranges::sort(e_copy, outer_compare);
 
   disjoint_vector<VId> subsets(N + 1);
   for (VId uid = 0; uid < N; ++uid) {
@@ -196,7 +195,7 @@ void kruskal(IELR&&    e,      // graph
   t.reserve(N);
   for (auto&& [uid, vid, val] : e_copy) {
     if (disjoint_union_find(subsets, uid, vid)) {
-      t.push_back(ranges::range_value_t<OELR>());
+      t.push_back(range_value_t<OELR>());
       t.back().source_id = uid;
       t.back().target_id = vid;
       t.back().value     = val;
@@ -217,7 +216,7 @@ void kruskal(IELR&&    e,      // graph
  * @param t           The output edgelist containing the tree.
  */
 template <x_index_edgelist_range IELR, x_index_edgelist_range OELR>
-requires permutable<ranges::iterator_t<IELR>>
+requires std::permutable<iterator_t<IELR>>
 void inplace_kruskal(IELR&& e, OELR&& t) {
   inplace_kruskal(e, t, [](auto&& i, auto&& j) { return i < j; });
 }
@@ -237,13 +236,13 @@ void inplace_kruskal(IELR&& e, OELR&& t) {
  * @param compare     The comparison operator.
  */
 template <x_index_edgelist_range IELR, x_index_edgelist_range OELR, class CompareOp>
-requires permutable<ranges::iterator_t<IELR>>
+requires std::permutable<iterator_t<IELR>>
 void inplace_kruskal(IELR&&    e,      // graph
                      OELR&&    t,      // tree
                      CompareOp compare // edge value comparitor
 ) {
-  using edge_descriptor = ranges::range_value_t<IELR>;
-  using VId             = remove_const<typename edge_descriptor::source_id_type>::type;
+  using edge_info = range_value_t<IELR>;
+  using VId       = remove_const_t<typename edge_info::source_id_type>;
 
   VId  N             = 0;
   auto outer_compare = [&](auto&& i, auto&& j) {
@@ -255,7 +254,7 @@ void inplace_kruskal(IELR&&    e,      // graph
     }
     return compare(i.value, j.value);
   };
-  ranges::sort(e, outer_compare);
+  std::ranges::sort(e, outer_compare);
 
   disjoint_vector<VId> subsets(N + 1);
   for (VId uid = 0; uid < N; ++uid) {
@@ -266,7 +265,7 @@ void inplace_kruskal(IELR&&    e,      // graph
   t.reserve(N);
   for (auto&& [uid, vid, val] : e) {
     if (disjoint_union_find(subsets, uid, vid)) {
-      t.push_back(ranges::range_value_t<OELR>());
+      t.push_back(range_value_t<OELR>());
       t.back().source_id = uid;
       t.back().target_id = vid;
       t.back().value     = val;
@@ -288,10 +287,10 @@ void inplace_kruskal(IELR&&    e,      // graph
  *                    caller must assure size(predecessor) >= size(vertices(g)).
  * @param seed        The single source vertex to start the search.
  */
-template <adjacency_list              G,
-          ranges::random_access_range Predecessor,
-          ranges::random_access_range Weight>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+template <adjacency_list      G,
+          random_access_range Predecessor,
+          random_access_range Weight>
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 void prim(G&&            g,           // graph
           Predecessor&   predecessor, // out: predecessor[uid] of uid in tree
           Weight&        weight,      // out: edge value weight[uid] from tree edge uid to predecessor[uid]
@@ -299,7 +298,7 @@ void prim(G&&            g,           // graph
 ) {
   prim(
         g, predecessor, weight, [](auto&& i, auto&& j) { return i < j; },
-        numeric_limits<ranges::range_value_t<Weight>>::max(), seed);
+        std::numeric_limits<range_value_t<Weight>>::max(), seed);
 }
 
 /**
@@ -319,21 +318,21 @@ void prim(G&&            g,           // graph
  * @param init_dist   The initial distance value.
  * @param seed        The single source vertex to start the search.
  */
-template <adjacency_list              G,
-          ranges::random_access_range Predecessor,
-          ranges::random_access_range Weight,
+template <adjacency_list      G,
+          random_access_range Predecessor,
+          random_access_range Weight,
           class CompareOp>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-void prim(G&&                           g,           // graph
-          Predecessor&                  predecessor, // out: predecessor[uid] of uid in tree
-          Weight&                       weight,    // out: edge value weight[uid] from tree edge uid to predecessor[uid]
-          CompareOp                     compare,   // edge value comparitor
-          ranges::range_value_t<Weight> init_dist, // initial distance
-          vertex_id_t<G>                seed = 0   // seed vtx
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+void prim(G&&                   g,           // graph
+          Predecessor&          predecessor, // out: predecessor[uid] of uid in tree
+          Weight&               weight,      // out: edge value weight[uid] from tree edge uid to predecessor[uid]
+          CompareOp             compare,     // edge value comparitor
+          range_value_t<Weight> init_dist,   // initial distance
+          vertex_id_t<G>        seed = 0     // seed vtx
 ) {
-  typedef ranges::range_value_t<Weight> EV;
-  size_t                                N(size(vertices(g)));
-  vector<EV>                            distance(N, init_dist);
+  typedef range_value_t<Weight> EV;
+  size_t                        N(size(vertices(g)));
+  std::vector<EV>               distance(N, init_dist);
   distance[seed]    = 0;
   predecessor[seed] = seed;
 
@@ -342,7 +341,7 @@ void prim(G&&                           g,           // graph
   auto evf           = [&g](edge_reference_t<G> uv) { return edge_value(g, uv); };
   auto outer_compare = [&](auto&& i, auto&& j) { return compare(get<1>(i), get<1>(j)); };
 
-  priority_queue<weighted_vertex, vector<weighted_vertex>, decltype(outer_compare)> Q(outer_compare);
+  std::priority_queue<weighted_vertex, std::vector<weighted_vertex>, decltype(outer_compare)> Q(outer_compare);
   Q.push({seed, distance[seed]});
   while (!Q.empty()) {
     auto uid = get<0>(Q.top());
@@ -358,6 +357,6 @@ void prim(G&&                           g,           // graph
     }
   }
 }
-} // namespace std::graph
+} // namespace graph
 
 #endif //GRAPH_MST_HPP

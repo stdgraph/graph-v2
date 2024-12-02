@@ -14,7 +14,7 @@ int main() {
   std::vector<size_t> bacon_number(size(actors));
 
   // for (auto&& [u, v] : bfs_edge_range(costars, 1)) {
-  for (auto&& [u, v, uv] : std::graph::views::sourced_edges_breadth_first_search(costars, 1)) {
+  for (auto&& [u, v, uv] : graph::views::sourced_edges_breadth_first_search(costars, 1)) {
     bacon_number[v] = bacon_number[u] + 1;
   }
 

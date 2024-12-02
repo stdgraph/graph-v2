@@ -29,38 +29,13 @@ using std::assignable_from;
 using std::less;
 using std::plus;
 using std::is_arithmetic_v;
+using std::optional;
 
-using std::graph::index_adjacency_list;
-using std::graph::edge_weight_function;
-using std::graph::basic_edge_weight_function;
+using namespace graph;
+using graph::views::vertexlist;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::edge_t;
-using std::graph::edge_value_t;
-
-using std::graph::vertices;
-using std::graph::find_vertex;
-using std::graph::vertex_value;
-using std::graph::edges;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::num_vertices;
-using std::graph::vertex_reference_t;
-using std::graph::edge_reference_t;
-
-using std::graph::views::vertexlist;
-
-using std::graph::shortest_path_invalid_distance;
-using std::graph::init_shortest_paths;
-using std::graph::bellman_ford_shortest_paths;
-using std::graph::bellman_ford_shortest_distances;
-using std::graph::bellman_visitor_base;
-
-using routes_volf_graph_traits = std::graph::container::vofl_graph_traits<double, std::string>;
-using routes_volf_graph_type   = std::graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
+using routes_volf_graph_traits = graph::container::vofl_graph_traits<double, std::string>;
+using routes_volf_graph_type   = graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -116,6 +91,37 @@ auto to_string(const Predecessors& predecessors) {
   return pred;
 }
 
+template <typename G>
+using visited_vertex_t = vertex_info<vertex_id_t<G>, vertex_reference_t<G>, void>;
+template <typename G>
+using visited_edge_t = edge_info<vertex_id_t<G>, true, edge_reference_t<G>, void>;
+
+template <index_adjacency_list G>
+class empty_bellman_ford_visitor {
+  // Types
+public:
+  using graph_type             = G;
+  using vertex_desc_type       = visited_vertex_t<G>;
+  using sourced_edge_desc_type = visited_edge_t<G>;
+
+  // Visitor Functions
+public:
+  empty_bellman_ford_visitor() = default;
+
+  // vertex visitor functions
+  constexpr void on_initialize_vertex(vertex_desc_type& vdesc) {}
+  constexpr void on_discover_vertex(vertex_desc_type& vdesc) {}
+  constexpr void on_examine_vertex(vertex_desc_type& vdesc) {}
+  constexpr void on_finish_vertex(vertex_desc_type& vdesc) {}
+
+  // edge visitor functions
+  constexpr void on_examine_edge(sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_relaxed(sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_not_relaxed(sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_minimized(sourced_edge_desc_type& edesc) {}
+  constexpr void on_edge_not_minimized(sourced_edge_desc_type& edesc) {}
+};
+
 TEST_CASE("Bellman-Ford's Common Shortest Segments", "[csv][vofl][shortest][segments][bellman][common]") {
   init_console();
   using G                     = routes_volf_graph_type;
@@ -130,11 +136,11 @@ TEST_CASE("Bellman-Ford's Common Shortest Segments", "[csv][vofl][shortest][segm
   auto weight = [](edge_reference_t<G> uv) -> double { return 1.0; };
 
 #if 0
-  //using V = std::graph::bellman_visitor_base<G>;
-  //static_assert(std::graph::bellman_visitor<G, V>, "Visitor doesn't match bellman_visitor requirements");
+  //using V = graph::empty_visitor;
+  //static_assert(graph::bellman_visitor<G, V>, "Visitor doesn't match bellman_visitor requirements");
 #endif
 
-  bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors);
+  optional<vertex_id_t<G>> cycle_vertex_id = bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors);
 
   SECTION("types") {
     //auto weight         = [](edge_reference_t<G> uv) -> double { return 1.0; };
@@ -185,7 +191,7 @@ TEST_CASE("Bellman-Ford's Common Shortest Segments", "[csv][vofl][shortest][segm
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("Bellman-Ford's Shortest Segments generate") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -288,7 +294,8 @@ TEST_CASE("Bellman-Ford's Common Shortest Paths", "[csv][vofl][shortest][paths][
   init_shortest_paths(distance, predecessors);
   auto weight = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
-  bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors, weight);
+  optional<vertex_id_t<G>> cycle_vertex_id =
+        bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors, weight);
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("Bellman-Ford's Shortest Paths output") {
@@ -315,7 +322,7 @@ TEST_CASE("Bellman-Ford's Common Shortest Paths", "[csv][vofl][shortest][paths][
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("Bellman-Ford's Shortest Paths generate") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -415,8 +422,8 @@ TEST_CASE("Bellman-Ford's Common Shortest Distances", "[csv][vofl][shortest][dis
   auto weight = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
 
   // This test case just tests that these will compile without error. The distances will be the same as before.
-  bellman_ford_shortest_distances(g, frankfurt_id, distance);
-  bellman_ford_shortest_distances(g, frankfurt_id, distance, weight);
+  optional<vertex_id_t<G>> cycle_vertex_id = bellman_ford_shortest_distances(g, frankfurt_id, distance);
+  cycle_vertex_id                          = bellman_ford_shortest_distances(g, frankfurt_id, distance, weight);
 }
 
 TEST_CASE("Bellman-Ford's General Shortest Segments", "[csv][vofl][shortest][segments][bellman][general]") {
@@ -431,7 +438,7 @@ TEST_CASE("Bellman-Ford's General Shortest Segments", "[csv][vofl][shortest][seg
   Predecessors predecessors(size(vertices(g)));
   init_shortest_paths(distance, predecessors);
   auto weight  = [](edge_reference_t<G> uv) -> double { return 1.0; };
-  auto visitor = bellman_visitor_base<G>();
+  auto visitor = empty_visitor();
 
 #if 0
   using Visitor = decltype(visitor);
@@ -440,10 +447,10 @@ TEST_CASE("Bellman-Ford's General Shortest Segments", "[csv][vofl][shortest][seg
   auto&                           uv      = *begin(edges(g, u));
   Visitor::sourced_edge_desc_type uv_desc = {frankfurt_id, target_id(g, uv), uv};
 
-  static_assert(std::graph::bellman_visitor<G, decltype(visitor)>, "visitor is not a bellman_visitor");
+  static_assert(graph::bellman_visitor<G, decltype(visitor)>, "visitor is not a bellman_visitor");
 #endif
-  bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
-                              std::plus<Distance>());
+  optional<vertex_id_t<G>> cycle_vertex_id = bellman_ford_shortest_paths(
+        g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(), std::plus<Distance>());
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("Bellman-Ford's Shortest Segments output") {
@@ -470,7 +477,7 @@ TEST_CASE("Bellman-Ford's General Shortest Segments", "[csv][vofl][shortest][seg
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("Bellman-Ford's Shortest Segments generate") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -572,10 +579,10 @@ TEST_CASE("Bellman-Ford's General Shortest Paths", "[csv][vofl][shortest][paths]
   vector<vertex_id_t<G>> predecessors(size(vertices(g)));
   init_shortest_paths(distance, predecessors);
   auto weight  = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-  auto visitor = bellman_visitor_base<G>();
+  auto visitor = empty_visitor();
 
-  bellman_ford_shortest_paths(g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(),
-                              std::plus<Distance>());
+  optional<vertex_id_t<G>> cycle_vertex_id = bellman_ford_shortest_paths(
+        g, frankfurt_id, distance, predecessors, weight, visitor, std::less<Distance>(), std::plus<Distance>());
 
 #if TEST_OPTION == TEST_OPTION_OUTPUT
   SECTION("Bellman-Ford's Shortest Paths output") {
@@ -602,7 +609,7 @@ TEST_CASE("Bellman-Ford's General Shortest Paths", "[csv][vofl][shortest][paths]
   }
 #elif TEST_OPTION == TEST_OPTION_GEN
   SECTION("Bellman-Ford's Shortest Paths generate") {
-    using namespace std::graph;
+    using namespace graph;
     using std::cout;
     using std::endl;
     ostream_indenter indent;
@@ -700,10 +707,10 @@ TEST_CASE("Bellman-Ford's General Shortest Distances", "[csv][vofl][shortest][di
   vector<double> distance(size(vertices(g)));
   init_shortest_paths(distance);
   auto weight  = [&g](edge_reference_t<G> uv) -> double { return edge_value(g, uv); };
-  auto visitor = bellman_visitor_base<G>();
+  auto visitor = empty_visitor();
 
   // This test case just tests that these will compile without error. The distances will be the same as before.
   //bellman_ford_shortest_distances(g, frankfurt_id, distance, std::less<Distance>(), std::plus<Distance>());
-  bellman_ford_shortest_distances(g, frankfurt_id, distance, weight, visitor, std::less<Distance>(),
-                                  std::plus<Distance>());
+  optional<vertex_id_t<G>> cycle_vertex_id = bellman_ford_shortest_distances(
+        g, frankfurt_id, distance, weight, visitor, std::less<Distance>(), std::plus<Distance>());
 }

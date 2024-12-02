@@ -1,10 +1,10 @@
 #pragma once
 #include "graph/graph.hpp"
 #include "graph/graph_utility.hpp"
-
+#include <functional>
 //
-// vertexlist(g)       -> vertex_descriptor<VId,V,VV> -> {id, vertex& [,value]}
-// basic_vertexlist(g) -> vertex_descriptor<VId> -> {id}
+// vertexlist(g)       -> vertex_info<VId,V,VV> -> {id, vertex& [,value]}
+// basic_vertexlist(g) -> vertex_info<VId> -> {id}
 //
 // given:    vvf = [&g](vertex_reference_t<G> u) -> decl_type(vertex_value(g)) { return vertex_value(g,u);}
 //           (trailing return type is required if defined inline as vertexlist parameter)
@@ -20,29 +20,29 @@
 // examples: for(auto&& [uid]      : basic_vertexlist(g))
 //         : for(auto&& [uid]      : basic_vertexlist(g, vr))
 //
-namespace std::graph {
+namespace graph {
 
 template <adjacency_list G, class VVF = void>
-requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+requires forward_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertexlist_iterator;
 
 
 template <adjacency_list G, class VVF>
-requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+requires forward_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertexlist_iterator {
 public:
   using graph_type            = G;
   using vertex_id_type        = vertex_id_t<graph_type>;
   using vertex_range_type     = vertex_range_t<graph_type>;
-  using vertex_iterator_type  = ranges::iterator_t<vertex_range_type>;
+  using vertex_iterator_type  = iterator_t<vertex_range_type>;
   using vertex_type           = vertex_t<graph_type>;
-  using vertex_reference_type = ranges::range_reference_t<vertex_range_type>;
+  using vertex_reference_type = range_reference_t<vertex_range_type>;
   using vertex_value_func     = VVF;
   using vertex_value_type     = invoke_result_t<VVF, vertex_type&>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = vertex_descriptor<const vertex_id_t<graph_type>, vertex_reference_type, vertex_value_type>;
-  using difference_type   = ranges::range_difference_t<vertex_range_type>;
+  using value_type        = vertex_info<const vertex_id_t<graph_type>, vertex_reference_type, vertex_value_type>;
+  using difference_type   = range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
   using reference         = value_type&;
@@ -53,7 +53,7 @@ protected:
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type =
-        vertex_descriptor<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+        vertex_info<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
 
   union internal_value {
     value_type        value_;
@@ -110,21 +110,21 @@ protected:
 
 
 template <adjacency_list G>
-requires ranges::forward_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+requires forward_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 class vertexlist_iterator<G, void> {
 public:
   using graph_type            = G;
   using vertex_id_type        = vertex_id_t<graph_type>;
   using vertex_range_type     = vertex_range_t<graph_type>;
-  using vertex_iterator_type  = ranges::iterator_t<vertex_range_type>;
+  using vertex_iterator_type  = iterator_t<vertex_range_type>;
   using vertex_type           = vertex_t<graph_type>;
-  using vertex_reference_type = ranges::range_reference_t<vertex_range_type>;
+  using vertex_reference_type = range_reference_t<vertex_range_type>;
   using vertex_value_func     = void;
   using vertex_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = vertex_descriptor<const vertex_id_type, vertex_reference_type, void>;
-  using difference_type   = ranges::range_difference_t<vertex_range_type>;
+  using value_type        = vertex_info<const vertex_id_type, vertex_reference_type, void>;
+  using difference_type   = range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
   using reference         = value_type&;
@@ -135,7 +135,7 @@ protected:
   // avoid difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
   using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
-  using shadow_value_type  = vertex_descriptor<vertex_id_type, shadow_vertex_type*, void>;
+  using shadow_value_type  = vertex_info<vertex_id_type, shadow_vertex_type*, void>;
 
   union internal_value {
     value_type        value_;
@@ -149,7 +149,7 @@ protected:
   };
 
 public:
-  vertexlist_iterator(graph_type& g) : iter_(ranges::begin(vertices(const_cast<graph_type&>(g)))) {}
+  vertexlist_iterator(graph_type& g) : iter_(begin(vertices(const_cast<graph_type&>(g)))) {}
   vertexlist_iterator(vertex_iterator_type iter, vertex_id_type start_at = 0) : value_{start_at}, iter_(iter) {}
 
   constexpr vertexlist_iterator()                           = default;
@@ -191,7 +191,7 @@ protected:
 
 
 template <adjacency_list G, class VVF = void>
-using vertexlist_view = ranges::subrange<vertexlist_iterator<G, VVF>, vertex_iterator_t<G>>;
+using vertexlist_view = subrange<vertexlist_iterator<G, VVF>, vertex_iterator_t<G>>;
 
 
 namespace views {
@@ -226,19 +226,19 @@ namespace views {
 
     // rng
     template <class _G, class Rng>
-    concept _Has_rng_ADL = vertex_range<_G> && ranges::forward_range<Rng> && requires(_G&& __g, Rng&& vr) {
+    concept _Has_rng_ADL = vertex_range<_G> && forward_range<Rng> && requires(_G&& __g, Rng&& vr) {
       { _Fake_copy_init(vertexlist(__g, vr)) }; // intentional ADL
     };
     template <class _G, class Rng>
-    concept _Can_rng_eval = vertex_range<_G> && convertible_to<ranges::iterator_t<Rng>, vertex_iterator_t<_G>>;
+    concept _Can_rng_eval = vertex_range<_G> && convertible_to<iterator_t<Rng>, vertex_iterator_t<_G>>;
 
     template <class _G, class Rng, class VVF>
-    concept _Has_rng_vvf_ADL = ranges::forward_range<Rng> && invocable<VVF, vertex_reference_t<_G>> &&
+    concept _Has_rng_vvf_ADL = forward_range<Rng> && invocable<VVF, vertex_reference_t<_G>> &&
                                requires(_G&& __g, vertex_range_t<_G>&& vr, const VVF& vvf) {
                                  { _Fake_copy_init(vertexlist(__g, vr, vvf)) }; // intentional ADL
                                };
     template <class _G, class Rng, class VVF>
-    concept _Can_rng_vvf_eval = vertex_range<_G> && convertible_to<ranges::iterator_t<Rng>, vertex_iterator_t<_G>> &&
+    concept _Can_rng_vvf_eval = vertex_range<_G> && convertible_to<iterator_t<Rng>, vertex_iterator_t<_G>> &&
                                 invocable<VVF, vertex_reference_t<_G>>;
 
     class _Cpo {
@@ -349,7 +349,7 @@ namespace views {
         } else if constexpr (_Strat_all == _St_all::_Auto_eval) {
           return vertexlist_view<_G, void>(vertices(forward<_G>(__g)));
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -369,22 +369,22 @@ namespace views {
           auto last           = end(vertices(forward<_G>(__g)));
           return view_type(iterator_type(forward<_G>(__g), vvf, first), last);
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g,vvf) is not defined and the default implementation cannot be evaluated");
         }
       }
 
       /**
-       * @brief The number of outgoing edges of a vertex.
+       * @brief A range of vertices for a graph.
        * 
        * Complexity: O(1)
        * 
-       * Default implementation: size(edges(g, u))
+       * Default implementation: 
        * 
        * @tparam G The graph type.
        * @param g A graph instance.
-       * @param u A vertex instance.
-       * @return The number of outgoing edges of vertex u.
+       * @param vr A range of vertices.
+       * @return A range of vertices.
       */
       template <class _G, class Rng>
       requires(_Choice_rng<_G, Rng>._Strategy != _St_rng::_None)
@@ -396,12 +396,12 @@ namespace views {
         } else if constexpr (_Strat_rng == _St_rng::_Auto_eval) {
           using view_type     = vertexlist_view<_G, void>;
           using iterator_type = vertexlist_iterator<_G>;
-          auto first          = ranges::begin(vr);
-          auto last           = ranges::end(vr);
+          auto first          = begin(vr);
+          auto last           = end(vr);
           auto first_id       = static_cast<vertex_id_t<_G>>(first - begin(vertices(__g)));
           return view_type(iterator_type(first, first_id), last);
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g,vr) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -417,12 +417,12 @@ namespace views {
         } else if constexpr (_Strat_rng == _St_rng::_Auto_eval) {
           using view_type     = vertexlist_view<_G, VVF>;
           using iterator_type = vertexlist_iterator<_G, VVF>;
-          auto first          = ranges::begin(vr);
-          auto last           = ranges::end(vr);
+          auto first          = begin(vr);
+          auto last           = end(vr);
           auto first_id       = static_cast<vertex_id_t<_G>>(first - begin(vertices(__g)));
           return view_type(iterator_type(forward<_G>(__g), vvf, first, first_id), last);
         } else {
-          static_assert(_Always_false<_G>,
+          static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g,vr,vvf) is not defined and the default implementation cannot be evaluated");
         }
       }
@@ -435,4 +435,4 @@ namespace views {
 
 } // namespace views
 
-} // namespace std::graph
+} // namespace graph

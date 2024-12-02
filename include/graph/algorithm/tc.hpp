@@ -14,11 +14,12 @@
  */
 
 #include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
 
 #ifndef GRAPH_TC_HPP
 #  define GRAPH_TC_HPP
 
-namespace std::graph {
+namespace graph {
 
 /**
  * @ingroup graph_algorithms
@@ -31,23 +32,23 @@ namespace std::graph {
  * @param g           The graph.
  */
 template <adjacency_list G>
-requires ranges::random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
+requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 size_t triangle_count(G&& g) {
   size_t N(size(vertices(g)));
   size_t triangles(0);
 
   for (vertex_id_t<G> uid = 0; uid < N; ++uid) {
-    std::graph::incidence_iterator<G> i(g, uid);
-    auto                              ie = ranges::end(edges(g, uid));
+    graph::incidence_iterator<G> i(g, uid);
+    auto                         ie = end(edges(g, uid));
     while (i != ie) {
       auto&& [vid, uv] = *i;
       if (vid < uid) {
         ++i;
         continue;
       }
-      std::graph::incidence_iterator<G> j(g, vid);
+      graph::incidence_iterator<G> j(g, vid);
 
-      auto je = ranges::end(edges(g, vid));
+      auto je = end(edges(g, vid));
       auto i2 = i;
 
       // Alternatively use std::set_intersection(i2, ie, j, je, counter) but this is slower
@@ -69,6 +70,6 @@ size_t triangle_count(G&& g) {
   }
   return triangles;
 }
-} // namespace std::graph
+} // namespace graph
 
 #endif //GRAPH_TC_HPP

@@ -113,7 +113,7 @@ public:
   template <std::ranges::forward_range ERng, class EProj = std::identity>
   rr_adaptor(VVR&         vertex_values,       //
              const ERng&  erng,                //
-             const EProj& eproj     = EProj(), // EProj(ERng::value_type&) -> edge_descriptor<VId,true[,val]>
+             const EProj& eproj     = EProj(), // EProj(ERng::value_type&) -> edge_info<VId,true[,val]>
              bool         dup_edges = false)
         : vertex_values_(vertex_values) {
     vertex_id_type max_vid = max_vertex_id(erng, eproj);
@@ -148,9 +148,9 @@ private:
   }
 
   void push(edges_range& edges, const edge_type& val) {
-    if constexpr (std::graph::container::has_push_back<edges_range>)
+    if constexpr (graph::container::has_push_back<edges_range>)
       edges.push_back(val);
-    else if constexpr (std::graph::container::has_push_front<edges_range>)
+    else if constexpr (graph::container::has_push_front<edges_range>)
       edges.push_front(val);
   }
 
@@ -364,9 +364,9 @@ private:
   }
 
   void push(edges_range& edges, const edge_type& val) {
-    if constexpr (std::graph::container::has_push_back<edges_range>)
+    if constexpr (graph::container::has_push_back<edges_range>)
       edges.push_back(val);
-    else if constexpr (std::graph::container::has_push_front<edges_range>)
+    else if constexpr (graph::container::has_push_front<edges_range>)
       edges.push_front(val);
   }
 

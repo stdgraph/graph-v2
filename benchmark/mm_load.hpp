@@ -29,8 +29,8 @@ using std::convertible_to;
 using std::ranges::forward_range;
 using std::ranges::random_access_range;
 using std::ranges::range_value_t;
-using std::graph::adjacency_list;
-using std::graph::container::compressed_graph;
+using graph::adjacency_list;
+using graph::container::compressed_graph;
 namespace fmm = fast_matrix_market;
 
 template <typename T>
@@ -287,14 +287,14 @@ struct graph_stats {
   size_t max_degree         = 0;
   size_t self_loops_removed = 0;
 
-  template <std::graph::adjacency_list G>
+  template <graph::adjacency_list G>
   graph_stats(const G& g, size_t self_loops = 0)
-        : vertex_count(std::graph::num_vertices(g))
-        , edge_count(static_cast<size_t>(std::graph::num_edges(g)))
+        : vertex_count(graph::num_vertices(g))
+        , edge_count(static_cast<size_t>(graph::num_edges(g)))
         , self_loops_removed(self_loops) {
-    for (auto&& u : std::graph::vertices(g)) {
-      min_degree = std::min(min_degree, size(std::graph::edges(g, u)));
-      max_degree = std::max(max_degree, size(std::graph::edges(g, u)));
+    for (auto&& u : graph::vertices(g)) {
+      min_degree = std::min(min_degree, size(graph::edges(g, u)));
+      max_degree = std::max(max_degree, size(graph::edges(g, u)));
     }
   }
 };
@@ -353,7 +353,7 @@ template <typename EV, typename VV, typename GV, integral VId, integral EIndex =
     auto zip_view   = std::views::zip(triplet.rows, triplet.cols, triplet.vals);
     using zip_value = std::ranges::range_value_t<decltype(zip_view)>;
 
-    using edge_desc = std::graph::copyable_edge_t<VId, EV>;
+    using edge_desc = graph::copyable_edge_t<VId, EV>;
     auto edge_proj  = [](const zip_value& val) -> edge_desc {
       return edge_desc{std::get<0>(val), std::get<1>(val), std::get<2>(val)};
     };

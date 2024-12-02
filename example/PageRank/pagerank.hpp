@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace std::graph {
+namespace graph {
 
 /**
  * @brief Requirements for an edge value function: evf(uv) -> value.
@@ -117,6 +117,6 @@ void pagerank(
   }
 }
 
-} // namespace std::graph
+} // namespace graph
 
 #endif // GRAPH_PAGERANK_HPP

@@ -4,19 +4,19 @@
 #include <queue>
 #include <algorithm>
 
-namespace std::graph::experimental {
+namespace graph::experimental {
 /**
  * @ingroup graph_algorithms
- * @brief Returns a value to define an invalid distance used to initialize distance values
+ * @brief Returns a value to define an infinite distance used to initialize distance values
  * in the distance range before one of the shorts paths functions.
  * 
  * @tparam DistanceValue The type of the distance.
  * 
- * @return A unique sentinal value to indicate that a value is invalid, or undefined.
+ * @return A value for an infinite distance.
 */
 template <class DistanceValue>
-constexpr auto shortest_path_invalid_distance() {
-  return numeric_limits<DistanceValue>::max();
+constexpr auto shortest_path_infinite_distance() {
+  return std::numeric_limits<DistanceValue>::max();
 }
 
 /**
@@ -34,7 +34,7 @@ constexpr auto shortest_path_zero() {
 
 /**
  * @ingroup graph_algorithms
- * @brief Intializes the distance values to shortest_path_invalid_distance().
+ * @brief Intializes the distance values to shortest_path_infinite_distance().
  * 
  * @tparam Distances The range type of the distances.
  * 
@@ -42,7 +42,7 @@ constexpr auto shortest_path_zero() {
 */
 template <class Distances>
 constexpr void init_shortest_paths(Distances& distances) {
-  ranges::fill(distances, shortest_path_invalid_distance<ranges::range_value_t<Distances>>());
+  std::ranges::fill(distances, shortest_path_infinite_distance<range_value_t<Distances>>());
 }
 
 /**
@@ -59,7 +59,7 @@ template <class Distances, class Predecessors>
 constexpr void init_shortest_paths(Distances& distances, Predecessors& predecessors) {
   init_shortest_paths(distances);
 
-  using pred_t = ranges::range_value_t<Predecessors>;
+  using pred_t = range_value_t<Predecessors>;
   pred_t i     = pred_t();
   for (auto& pred : predecessors)
     pred = i++;
@@ -84,4 +84,4 @@ concept _queueable = requires(Q&& q, typename Q::value_type value) {
   { q.empty() };
   { q.size() };
 };
-} // namespace std::graph::experimental
+} // namespace graph::experimental

@@ -1,82 +1,89 @@
 #pragma once
 
 // (included from graph.hpp)
-#include "graph/graph_descriptors.hpp"
+#include "graph/graph_info.hpp"
+#include "graph/detail/descriptor.hpp"
 
 #ifndef GRAPH_CPO_HPP
 #  define GRAPH_CPO_HPP
 
-namespace std::graph {
+#  define USE_VERTEX_DESCRIPTOR 0
+#  define USE_EDGE_DESCRIPTOR 0
 
-#  ifndef _MSC_VER
+namespace graph {
+
+// The non-standard naming of these structs is intentional to avoid conflicts with
+// implementations in gcc and msvc, and provide a consistent implementation across
+// compilers.
+
 // Taken from gcc11 definition of __decay_copy().
 // Very similar (identical?) to std::_Fake_copy_init<T> in msvc.
-struct _Decay_copy final {
+struct _DecayCopy final {
   template <typename _Tp>
-  constexpr decay_t<_Tp> operator()(_Tp&& __t) const noexcept(is_nothrow_convertible_v<_Tp, decay_t<_Tp>>) {
+  constexpr std::decay_t<_Tp> operator()(_Tp&& __t) const
+        noexcept(std::is_nothrow_convertible_v<_Tp, std::decay_t<_Tp>>) {
     return std::forward<_Tp>(__t);
   }
 } inline constexpr _Fake_copy_init{};
 
 template <class _Ty>
-concept _Has_class_or_enum_type =
+concept _HasClassOrEnumType =
       __is_class(remove_reference_t<_Ty>) || __is_enum(remove_reference_t<_Ty>) || __is_union(remove_reference_t<_Ty>);
 
 template <class>
 // false value attached to a dependent name (for static_assert)
-inline constexpr bool _Always_false = false;
+inline constexpr bool _AlwaysFalse = false;
 
 template <class _Ty>
-inline constexpr bool _Is_nonbool_integral = is_integral_v<_Ty> && !is_same_v<remove_cv_t<_Ty>, bool>;
+inline constexpr bool _IsNonboolIntegral = std::is_integral_v<_Ty> && !std::is_same_v<remove_cv_t<_Ty>, bool>;
 
 template <class _Ty>
-inline constexpr bool _Integer_class = requires {
+inline constexpr bool _IntegerClass = requires {
   typename _Ty::_Signed_type;
   typename _Ty::_Unsigned_type;
 };
 
 template <class _Ty>
-concept _Integer_like = _Is_nonbool_integral<remove_cv_t<_Ty>> || _Integer_class<_Ty>;
+concept _IntegerLike = _IsNonboolIntegral<remove_cv_t<_Ty>> || _IntegerClass<_Ty>;
 
 template <class _Ty>
-concept _Signed_integer_like = _Integer_like<_Ty> && static_cast<_Ty>(-1) < static_cast<_Ty>(0);
+concept _SignedIntegerLike = _IntegerLike<_Ty> && static_cast<_Ty>(-1) < static_cast<_Ty>(0);
 
 template <class _Ty>
 struct _Choice_t {
   _Ty  _Strategy = _Ty{};
   bool _No_throw = false;
 };
-#  endif
 
 //
 // Support the use of std containers, tuple and pair for adj list definitions (e.g. vector<vector<...>>)
 //
 template <class _G>
-concept _al_adjlist = ranges::forward_range<_G> && ranges::forward_range<ranges::range_value_t<_G>>;
+concept _al_adjlist = forward_range<_G> && forward_range<range_value_t<_G>>;
 
 // Edge type for range-of-ranges
 template <_al_adjlist _G>
-using _al_edge_t = ranges::range_value_t<ranges::range_value_t<_G>>;
+using _al_edge_t = range_value_t<range_value_t<_G>>;
 
 template <class _G>
 concept _al_simple_id = _al_adjlist<_G> && integral<_al_edge_t<_G>>;
 
 template <class _G>
-concept _al_tuple_id = _al_adjlist<_G> && integral<tuple_element_t<0, _al_edge_t<_G>>>;
+concept _al_tuple_id = _al_adjlist<_G> && integral<std::tuple_element_t<0, _al_edge_t<_G>>>;
 
 
 //
 // Support the use of std containers, tuple and pair for edgelist definitions (e.g. vector<tuple<T,T,T>>)
 //
 template <class EL>
-concept _el_edgelist = ranges::input_range<EL> && !ranges::range<ranges::range_value_t<EL>>;
+concept _el_edgelist = input_range<EL> && !range<range_value_t<EL>>;
 
 //
 // An edge type cannot be a range, which distinguishes it from an adjacency list
 // that is a range-of-ranges.
 //
 template <class _E> // For exposition only
-concept _el_edge = !ranges::range<_E>;
+concept _el_edge = !range<_E>;
 
 //
 // Support the use of std containers for edgelist edge definitions
@@ -90,9 +97,9 @@ concept _el_index_tuple_edge = _el_tuple_edge<_E> && //
                                integral<tuple_element_t<0, _E>>;
 
 //
-// Suport the use of edge_descriptor for edgelist edge definitions
-// (Only types and values needed from edge_descriptor are used and there is no
-// explicit use of edge_descriptor. This is deemed more flexible and no
+// Suport the use of edge_info for edgelist edge definitions
+// (Only types and values needed from edge_info are used and there is no
+// explicit use of edge_info. This is deemed more flexible and no
 // functionality is compromised for it.)
 //
 template <class _E>                                   // For exposition only
@@ -106,31 +113,8 @@ concept _el_basic_sourced_index_edge_desc =
       _el_basic_sourced_edge_desc<_E> && integral<typename _E::source_id_type> && integral<typename _E::target_id_type>;
 
 
-// Tags are defined in tag_invoke namespace to avoid conflicts with function names
-// in std::graph, allowing customization for default behavior.
-//
-// graphs must use tags like std::graph::tag_invoke::vertex_id_fn_t when defining
-// CPO specialization.
-//
-// Minimal requirements for a graph with random_access vertices(g)
-//      vertices(g), edges(g,u), target_id(g,u)
-// To have vertex_id_t<G> be something other than size_t
-//      vertex_id(g,ui)
-// Properties, as supported by the graph:
-//      edge_value(g,uv), vertex_value(g,uv), graph_value(g)
-//
-
-// Additional functions to consider for future
-//  reserve_vertices(g,n) - noop if n/a
-//  reserve_edges(g,n)    - noop if n/a
-//
-//  load_graph(g,erng,vrng,eproj,vproj)
-//
-// Graph reference of graph type G.*</ summary>*<typeparam name = "G"> Graph</ typeparam>
-
-
 template <class G>
-using graph_reference_t = add_lvalue_reference<G>;
+using graph_reference_t = std::add_lvalue_reference<G>;
 
 
 /** 
@@ -145,7 +129,7 @@ using graph_reference_t = add_lvalue_reference<G>;
  *      template<class X>
  *      class my_graph { ... };
  *  }
- *  namespace std::graph {
+ *  namespace graph {
  *     template<>
  *     struct is_adjacency_matrix<my_namespace::my_graph<X>> : true_type;
  *  }
@@ -181,18 +165,18 @@ namespace _Vertices {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
-  concept _Has_ref_member = _Has_class_or_enum_type<_G> && //
+  concept _Has_ref_member = _HasClassOrEnumType<_G> && //
                             requires(_G&& __g) {
                               { _Fake_copy_init(__g.vertices()) };
                             };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(vertices(__g)) }; // intentional ADL
                             };
 
   template <class _G>
-  concept _Can_ref_eval = _Has_class_or_enum_type<_G> && ranges::random_access_range<_G>;
+  concept _Can_ref_eval = _HasClassOrEnumType<_G> && random_access_range<_G>;
 
   class _Cpo {
   private:
@@ -242,7 +226,7 @@ namespace _Vertices {
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return std::forward<_G>(__g); // intentional ADL
       } else {
-        static_assert(_Always_false<_G>, "vertices(g) is not defined");
+        static_assert(_AlwaysFalse<_G>, "vertices(g) is not defined");
       }
     }
   };
@@ -257,28 +241,28 @@ inline namespace _Cpos {
  * @tparam G The graph type.
  */
 template <class G>
-using vertex_range_t = decltype(std::graph::vertices(declval<G&&>()));
+using vertex_range_t = decltype(graph::vertices(std::declval<G&&>()));
 
 /**
  * @brief The vertex iterator type for a graph G.
  * @tparam G The graph type.
  */
 template <class G>
-using vertex_iterator_t = ranges::iterator_t<vertex_range_t<G>>;
+using vertex_iterator_t = iterator_t<vertex_range_t<G>>;
 
 /**
  * @brief The vertex type for a graph G.
  * @tparam G The graph type.
  */
 template <class G>
-using vertex_t = ranges::range_value_t<vertex_range_t<G>>;
+using vertex_t = range_value_t<vertex_range_t<G>>;
 
 /**
  * @brief The vertex reference type for a graph G.
  * @tparam G The graph type.
 */
 template <class G>
-using vertex_reference_t = ranges::range_reference_t<vertex_range_t<G>>;
+using vertex_reference_t = range_reference_t<vertex_range_t<G>>;
 
 
 //
@@ -297,12 +281,12 @@ namespace _Vertex_id {
     { _Fake_copy_init(ui->vertex_id(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_iterator_t<_G> ui) {
                               { _Fake_copy_init(vertex_id(__g, ui)) }; // intentional ADL
                             };
   template <class _G>
-  concept _Can_ref_eval = ranges::random_access_range<vertex_range_t<_G>>;
+  concept _Can_ref_eval = random_access_range<vertex_range_t<_G>>;
 
   class _Cpo {
   private:
@@ -319,9 +303,8 @@ namespace _Vertex_id {
               _St_ref::_Non_member,
               noexcept(_Fake_copy_init(vertex_id(declval<_G>(), declval<vertex_iterator_t<_G>>())))}; // intentional ADL
       } else if constexpr (_Can_ref_eval<_G>) {
-        return {_St_ref::_Auto_eval,
-                noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>() -
-                                         ranges::begin(vertices(declval<_G>()))))}; // intentional ADL
+        return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>() -
+                                                              begin(vertices(declval<_G>()))))}; // intentional ADL
       } else {
         return {_St_ref::_None};
       }
@@ -397,9 +380,9 @@ namespace _Vertex_id {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return vertex_id(__g, ui); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return static_cast<_al_vertex_id_t<_G>>(ui - ranges::begin(vertices(__g)));
+        return static_cast<_al_vertex_id_t<_G>>(ui - begin(vertices(__g)));
       } else {
-        static_assert(_Always_false<_G>, "vertices(g) is not defined or is not random-access");
+        static_assert(_AlwaysFalse<_G>, "vertices(g) is not defined or is not random-access");
       }
     }
   };
@@ -452,7 +435,7 @@ struct _vertex_id_type {
 #  endif
 
 template <class G>
-using vertex_id_t = decltype(vertex_id(declval<G&&>(), declval<vertex_iterator_t<G>>()));
+using vertex_id_t = decltype(vertex_id(std::declval<G&&>(), std::declval<vertex_iterator_t<G>>()));
 
 //template<class G_or_EL>
 //using vertex_id_t = typename _vertex_id_type<G_or_EL>::type;
@@ -475,7 +458,7 @@ namespace _Find_vertex {
   };
 
   template <class _G>
-  concept _Has_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ADL = _HasClassOrEnumType<_G> //
                      && requires(_G&& __g, const vertex_id_t<_G>& uid) {
                           { _Fake_copy_init(find_vertex(__g, uid)) }; // intentional ADL
                         };
@@ -523,13 +506,13 @@ namespace _Find_vertex {
       } else if constexpr (_Strat == _St::_Non_member) {
         return find_vertex(__g, uid); // intentional ADL
       } else if constexpr (random_access_iterator<vertex_iterator_t<_G>>) {
-        auto uid_diff = static_cast<ranges::range_difference_t<vertex_range_t<_G>>>(uid);
+        auto uid_diff = static_cast<range_difference_t<vertex_range_t<_G>>>(uid);
         if (uid_diff < ssize(vertices(__g)))
           return begin(vertices(__g)) + uid_diff;
         else
           return end(vertices(__g));
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "find_vertex(g,uid) has not been defined and the default implemenation cannot be evaluated");
       }
     }
@@ -562,20 +545,20 @@ namespace _Edges {
     { _Fake_copy_init(u.edges(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_reference_t<_G>& u) {
                               { _Fake_copy_init(edges(__g, u)) }; // intentional ADL
                             };
   template <class _G>
-  concept _Can_ref_eval = _Has_class_or_enum_type<_G> && ranges::forward_range<vertex_t<_G>>;
+  concept _Can_ref_eval = _HasClassOrEnumType<_G> && forward_range<vertex_t<_G>>;
 
   template <class _G>
-  concept _Has_id_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, const vertex_id_t<_G>& uid) {
                              { _Fake_copy_init(edges(__g, uid)) }; // intentional ADL
                            };
   template <class _G>
-  concept _Can_id_eval = _Has_class_or_enum_type<_G> && ranges::forward_range<vertex_t<_G>> //
+  concept _Can_id_eval = _HasClassOrEnumType<_G> && forward_range<vertex_t<_G>> //
                          && requires(_G&& __g, vertex_id_t<_G> uid) {
                               { _Fake_copy_init(find_vertex(__g, uid)) };
                             };
@@ -647,8 +630,7 @@ namespace _Edges {
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return u; // default impl
       } else {
-        static_assert(_Always_false<_G>,
-                      "edges(g,u) is not defined and the default implementation cannot be evaluated");
+        static_assert(_AlwaysFalse<_G>, "edges(g,u) is not defined and the default implementation cannot be evaluated");
       }
     }
 
@@ -670,14 +652,25 @@ namespace _Edges {
           noexcept(_Choice_id<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
 
+#  if USE_EDGE_DESCRIPTOR
+      if constexpr (_Strat_id == _St_id::_Non_member) {
+        return to_descriptor_view(edges(__g, uid)); // intentional ADL
+      } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
+        return to_descriptor_view(*find_vertex(__g, uid)); // default impl
+      } else {
+        static_assert(_AlwaysFalse<_G>,
+                      "edges(g,uid) is not defined and the default implementation cannot be evaluated");
+      }
+#  else
       if constexpr (_Strat_id == _St_id::_Non_member) {
         return edges(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
         return *find_vertex(__g, uid); // default impl
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "edges(g,uid) is not defined and the default implementation cannot be evaluated");
       }
+#  endif
     }
   };
 } // namespace _Edges
@@ -698,22 +691,38 @@ using vertex_edge_range_t = decltype(edges(declval<G&&>(), declval<vertex_refere
  * @tparam G The graph type.
 */
 template <class G>
-using vertex_edge_iterator_t = ranges::iterator_t<vertex_edge_range_t<G>>;
+using vertex_edge_iterator_t = iterator_t<vertex_edge_range_t<G>>;
 
+#  if USE_EDGE_DESCRIPTOR
+/**
+ * @brief The edge descriptor type for graph G.
+ * The edge descriptor is an integral index value or an iterator to the edge value.
+ * @tparam G The graph type.
+*/
+template <class G>
+using edge_descriptor_t = range_value_t<vertex_edge_range_t<G>>;
+
+/**
+ * @brief The concrete edge type for graph G.
+ * @tparam G The graph type.
+*/
+//template <class G>
+//using edge_t = _concrete_value_type<vertex_edge_range_t<G>>;
+#  else
 /**
  * @brief The edge type for graph G.
  * @tparam G The graph type.
 */
 template <class G>
-using edge_t = ranges::range_value_t<vertex_edge_range_t<G>>;
+using edge_t = range_value_t<vertex_edge_range_t<G>>;
 
 /**
  * @brief The edge reference type for graph G.
  * @tparam G The graph type.
 */
 template <class G>
-using edge_reference_t = ranges::range_reference_t<vertex_edge_range_t<G>>;
-
+using edge_reference_t = range_reference_t<vertex_edge_range_t<G>>;
+#  endif
 
 //
 // num_edges(g,)      -> integral   default = n=0; for (const auto& u : vertices(g)) n += distance(edges(g,u))
@@ -731,14 +740,14 @@ namespace _NumEdges {
     { _Fake_copy_init(__g.num_edges()) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(num_edges(__g)) }; // intentional ADL
                             };
   template <class _G>
   concept _Can_ref_eval = requires(_G&& __g, vertex_t<_G> __u) {
     { vertices(__g) };
-    { _Fake_copy_init(ranges::distance(edges(__g, __u))) };
+    { _Fake_copy_init(std::ranges::distance(edges(__g, __u))) };
   };
 
   class _Cpo {
@@ -754,8 +763,8 @@ namespace _NumEdges {
       } else if constexpr (_Has_ref_ADL<_G>) {
         return {_St_ref::_Non_member, noexcept(_Fake_copy_init(num_edges(declval<_G>())))}; // intentional ADL
       } else if constexpr (_Can_ref_eval<_G>) {
-        return {_St_ref::_Auto_eval,
-                noexcept(_Fake_copy_init(ranges::distance(edges(declval<_G>(), declval<vertex_reference_t<_G>>()))))};
+        return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(std::ranges::distance(
+                                           edges(declval<_G>(), declval<vertex_reference_t<_G>>()))))};
       } else {
         return {_St_ref::_None};
       }
@@ -792,13 +801,13 @@ namespace _NumEdges {
       } else if constexpr (_Strat_id == _St_ref::_Non_member) {
         return num_edges(__g); // intentional ADL
       } else if constexpr (_Strat_id == _St_ref::_Auto_eval) {
-        using size_type = decltype(ranges::distance(edges(__g, declval<vertex_reference_t<_G>>())));
+        using size_type = decltype(std::ranges::distance(edges(__g, declval<vertex_reference_t<_G>>())));
         size_type n     = 0; // default impl
         for (auto&& u : vertices(__g))
-          n += ranges::distance(edges(__g, u));
+          n += std::ranges::distance(edges(__g, u));
         return n;
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "num_edges(g) is not defined and the default implementation cannot be evaluated");
       }
     }
@@ -821,6 +830,16 @@ namespace _Target_id {
   void target_id();
 #  endif                                     // ^^^ workaround ^^^
 
+#  if USE_EDGE_DESCRIPTOR
+  template <class _G>
+  concept _Has_adjl_ref_member = requires(_G&& __g, edge_descriptor_t<_G> uv) {
+    { _Fake_copy_init(uv.target_id(__g)) };
+  };
+  template <class _G>
+  concept _Has_adjl_ref_ADL = requires(_G&& __g, edge_descriptor_t<_G> uv) {
+    { _Fake_copy_init(target_id(__g, uv)) }; // intentional ADL
+  };
+#  else
   template <class _G>
   concept _Has_adjl_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
     { _Fake_copy_init(uv.target_id(__g)) };
@@ -829,6 +848,7 @@ namespace _Target_id {
   concept _Has_adjl_ref_ADL = requires(_G&& __g, edge_reference_t<_G> uv) {
     { _Fake_copy_init(target_id(__g, uv)) }; // intentional ADL
   };
+#  endif
 
   template <class _G>
   concept _Is_basic_id_adj = integral<_al_edge_t<_G>>; // vertex<vertex<int>>
@@ -897,7 +917,7 @@ namespace _Target_id {
                 noexcept(_Fake_copy_init(declval<tuple_element_t<0, _E>>()))}; // first element of tuple/pair
       } else if constexpr (_is_edge_desc<_E>) {
         return {_St_edgl_ref::_EDesc_id,
-                noexcept(_Fake_copy_init(declval<typename _E::target_id_type>()))}; // target_id of edge_descriptor
+                noexcept(_Fake_copy_init(declval<typename _E::target_id_type>()))}; // target_id of edge_info
       } else {
         return {_St_edgl_ref::_None};
       }
@@ -937,7 +957,7 @@ namespace _Target_id {
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Tuple_id) {
         return get<0>(uv);
       } else {
-        static_assert(_Always_false<_G>, "target_id(g,uv) or g.target_id(uv) is not defined");
+        static_assert(_AlwaysFalse<_G>, "target_id(g,uv) or g.target_id(uv) is not defined");
       }
     }
 
@@ -948,7 +968,7 @@ namespace _Target_id {
      * 
      * Default implementation:
      *  get<0>(e)   for tuple<T,T,...> or pair<T,T>
-     *  e.source_id for edge_descriptor<VId,true,_,_>
+     *  e.source_id for edge_info<VId,true,_,_>
      * 
      * @tparam G The graph type.
      * @param g A graph instance.
@@ -970,7 +990,7 @@ namespace _Target_id {
       } else if constexpr (_Strat_ref == _St_edgl_ref::_EDesc_id) {
         return __e.target_id;
       } else {
-        static_assert(_Always_false<_E>, "target_id(e) or e.target_id() is not defined");
+        static_assert(_AlwaysFalse<_E>, "target_id(e) or e.target_id() is not defined");
       }
     }
   };
@@ -1019,7 +1039,7 @@ namespace _Source_id {
     { _Fake_copy_init(uv.source_id(__g)) };
   };
   template <class _G>
-  concept _Has_adjl_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_adjl_ref_ADL = _HasClassOrEnumType<_G> //
                               && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                                    { _Fake_copy_init(source_id(__g, uv)) }; // intentional ADL
                                  };
@@ -1029,7 +1049,7 @@ namespace _Source_id {
     { _Fake_copy_init(__e.source_id()) };
   };
   template <class _E>
-  concept _Has_edgl_ref_ADL = _Has_class_or_enum_type<_E> //
+  concept _Has_edgl_ref_ADL = _HasClassOrEnumType<_E> //
                               && requires(_E&& __e) {
                                    { _Fake_copy_init(source_id(__e)) }; // intentional ADL
                                  };
@@ -1076,7 +1096,7 @@ namespace _Source_id {
                 noexcept(_Fake_copy_init(declval<tuple_element_t<1, _E>>()))}; // first element of tuple/pair
       } else if constexpr (_is_edge_desc<_E>) {
         return {_St_edgl_ref::_EDesc_id,
-                noexcept(_Fake_copy_init(declval<typename _E::source_id_type>()))}; // source_id of edge_descriptor
+                noexcept(_Fake_copy_init(declval<typename _E::source_id_type>()))}; // source_id of edge_info
       } else {
         return {_St_edgl_ref::_None};
       }
@@ -1111,7 +1131,7 @@ namespace _Source_id {
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Non_member) {
         return source_id(__g, uv); // intentional ADL
       } else {
-        static_assert(_Always_false<_G>, "source_id(g,uv) or g.source_id(uv) is not defined");
+        static_assert(_AlwaysFalse<_G>, "source_id(g,uv) or g.source_id(uv) is not defined");
       }
     }
 
@@ -1122,7 +1142,7 @@ namespace _Source_id {
      * 
      * Default implementation: 
      *  get<1>(e)   for tuple<T,T,...> or pair<T,T>
-     *  e.target_id for edge_descriptor<VId,true,_,_>
+     *  e.target_id for edge_info<VId,true,_,_>
      * 
      * @tparam E The edgelist value_type.
      * @param e A edgelist edge instance.
@@ -1142,7 +1162,7 @@ namespace _Source_id {
       } else if constexpr (_Strat_ref == _St_edgl_ref::_EDesc_id) {
         return __e.source_id;
       } else {
-        static_assert(_Always_false<_E>, "source_id(e) or e.source_id() is not defined");
+        static_assert(_AlwaysFalse<_E>, "source_id(e) or e.source_id() is not defined");
       }
     }
   };
@@ -1175,12 +1195,12 @@ namespace _Target {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                               { _Fake_copy_init(target(__g, uv)) }; // intentional ADL
                             };
   template <class _G>
-  concept _Can_ref_eval = ranges::random_access_range<vertex_range_t<_G>> //
+  concept _Can_ref_eval = random_access_range<vertex_range_t<_G>> //
                           && requires(_G&& __g, edge_reference_t<_G> uv, vertex_id_t<_G> uid) {
                                { _Fake_copy_init(find_vertex(__g, uid)) };
                                { _Fake_copy_init(target_id(__g, uv)) } -> integral;
@@ -1233,7 +1253,7 @@ namespace _Target {
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return *find_vertex(__g, target_id(__g, uv));
       } else {
-        static_assert(_Always_false<_G>, "target(g,uv) or uv.target(g) or g.target_id(g,uv) is not defined");
+        static_assert(_AlwaysFalse<_G>, "target(g,uv) or uv.target(g) or g.target_id(g,uv) is not defined");
       }
     }
   };
@@ -1259,12 +1279,12 @@ namespace _Source {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const edge_reference_t<_G>& uv) {
                               { _Fake_copy_init(source(__g, uv)) }; // intentional ADL
                             };
   template <class _G>
-  concept _Can_ref_eval = ranges::random_access_range<vertex_range_t<_G>> //
+  concept _Can_ref_eval = random_access_range<vertex_range_t<_G>> //
                           && requires(_G&& __g, edge_reference_t<_G> uv) {
                                { _Fake_copy_init(source_id(__g, uv)) } -> integral;
                              };
@@ -1321,7 +1341,7 @@ namespace _Source {
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return *(begin(vertices(__g)) + source_id(__g, uv));
       } else {
-        static_assert(_Always_false<_G>, "source(g,uv) or g.source(uv) is not defined");
+        static_assert(_AlwaysFalse<_G>, "source(g,uv) or g.source(uv) is not defined");
       }
     }
   };
@@ -1352,7 +1372,7 @@ namespace _Find_vertex_edge {
   };
 
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, vertex_reference_t<_G> u, const vertex_id_t<_G>& vid) {
                               { _Fake_copy_init(find_vertex_edge(__g, u, vid)) }; // intentional ADL
                             };
@@ -1363,7 +1383,7 @@ namespace _Find_vertex_edge {
   };
 
   template <class _G>
-  concept _Has_id_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, vertex_id_t<_G> uid, const vertex_id_t<_G>& vid) {
                              { _Fake_copy_init(find_vertex_edge(__g, uid, vid)) }; // intentional ADL
                            };
@@ -1391,8 +1411,8 @@ namespace _Find_vertex_edge {
       } else if constexpr (_Can_ref_eval<_G>) {
         using fnc_find_t = decltype([](edge_reference_t<_G>) -> bool { return true; });
         return {_St_ref::_Auto_eval,
-                noexcept(_Fake_copy_init(ranges::find_if(edges(declval<_G>(), declval<vertex_reference_t<_G>>()),
-                                                         declval<fnc_find_t>())))}; // intentional ADL
+                noexcept(_Fake_copy_init(std::ranges::find_if(edges(declval<_G>(), declval<vertex_reference_t<_G>>()),
+                                                              declval<fnc_find_t>())))}; // intentional ADL
       } else {
         return {_St_ref::_None};
       }
@@ -1411,8 +1431,8 @@ namespace _Find_vertex_edge {
       } else if constexpr (_Can_id_eval<_G>) {
         using fnc_find_t = decltype([](edge_reference_t<_G>) -> bool { return true; });
         return {_St_id::_Auto_eval,
-                noexcept(_Fake_copy_init(ranges::find_if(edges(declval<_G>(), declval<vertex_id_t<_G>>()),
-                                                         declval<fnc_find_t>())))}; // intentional ADL
+                noexcept(_Fake_copy_init(std::ranges::find_if(edges(declval<_G>(), declval<vertex_id_t<_G>>()),
+                                                              declval<fnc_find_t>())))}; // intentional ADL
       } else {
         return {_St_id::_None};
       }
@@ -1445,9 +1465,9 @@ namespace _Find_vertex_edge {
       } else if constexpr (_Strat == _St_ref::_Non_member) {
         return find_vertex_edge(__g, u, vid); // intentional ADL
       } else if constexpr (_Strat == _St_ref::_Auto_eval) {
-        return ranges::find_if(edges(__g, u), [&__g, &vid](auto&& uv) { return target_id(__g, uv) == vid; });
+        return std::ranges::find_if(edges(__g, u), [&__g, &vid](auto&& uv) { return target_id(__g, uv) == vid; });
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "find_vertex_edge(g,uid) has not been defined and the default implemenation cannot be evaluated");
       }
     }
@@ -1473,9 +1493,9 @@ namespace _Find_vertex_edge {
       if constexpr (_Strat == _St_id::_Non_member) {
         return find_vertex_edge(__g, uid, uid); // intentional ADL
       } else if constexpr (_Strat == _St_id::_Auto_eval) {
-        return ranges::find_if(edges(__g, uid), [&__g, &vid](auto&& uv) { return target_id(__g, uv) == vid; });
+        return std::ranges::find_if(edges(__g, uid), [&__g, &vid](auto&& uv) { return target_id(__g, uv) == vid; });
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "find_vertex_edge(g,uid) has not been defined and the default implemenation cannot be evaluated");
       }
     }
@@ -1490,7 +1510,7 @@ inline namespace _Cpos {
 //
 // contains_edge(g,uid,vid) -> bool
 //      default = uid < size(vertices(g)) && vid < size(vertices(g)), if adjacency_matrix<G>
-//              = find_vertex_edge(g,uid) != ranges::end(edges(g,uid));
+//              = find_vertex_edge(g,uid) != end(edges(g,uid));
 //
 namespace _Contains_edge {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
@@ -1500,17 +1520,17 @@ namespace _Contains_edge {
 #  endif                                     // ^^^ workaround ^^^
 
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_id_t<_G>& uid, const vertex_id_t<_G>& vid) {
                               { _Fake_copy_init(contains_edge(__g, uid, vid)) }; // intentional ADL
                             };
 
   template <class _G>
-  concept _Can_matrix_eval = _Has_class_or_enum_type<_G> && is_adjacency_matrix_v<_G> //
-                             && ranges::sized_range<vertex_range_t<_G>>;
+  concept _Can_matrix_eval = _HasClassOrEnumType<_G> && is_adjacency_matrix_v<_G> //
+                             && sized_range<vertex_range_t<_G>>;
 
   template <class _G>
-  concept _Can_id_eval = _Has_class_or_enum_type<_G> //
+  concept _Can_id_eval = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, vertex_reference_t<_G> u, vertex_id_t<_G> uid, vertex_id_t<_G> vid) {
                               { _Fake_copy_init(find_vertex(__g, uid)) };
                               { _Fake_copy_init(edges(__g, u)) };
@@ -1529,7 +1549,7 @@ namespace _Contains_edge {
                                                        declval<vertex_id_t<_G>>())))}; // intentional ADL
       } else if constexpr (_Can_matrix_eval<_G>) {
         return {_St_ref::_Matrix_eval,
-                noexcept(_Fake_copy_init(declval<vertex_id_t<_G>>() < ranges::size(vertices(declval<_G>()))))};
+                noexcept(_Fake_copy_init(declval<vertex_id_t<_G>>() < size(vertices(declval<_G>()))))};
       } else if constexpr (_Can_id_eval<_G>) {
         return {_St_ref::_Auto_eval,
                 noexcept(_Fake_copy_init(
@@ -1550,13 +1570,13 @@ namespace _Contains_edge {
      * Complexity: O(1)
      * 
      * Default implementation: 
-     *      uid < ranges::size(vertices(__g)) && vid < ranges::size(vertices(__g)), if is_adjacency_matrix_v<_G>
-     *      find_vertex_edge(g, uid) != ranges::end(edges(g, uid)), otherwise
+     *      uid < size(vertices(__g)) && vid < size(vertices(__g)), if is_adjacency_matrix_v<_G>
+     *      find_vertex_edge(g, uid) != end(edges(g, uid)), otherwise
      * 
      * @tparam G The graph type.
      * @param g  A graph instance.
      * @param uv An edge reference.
-     * @return An edge_descriptor with the source_id and target_id.
+     * @return An edge_info with the source_id and target_id.
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
@@ -1567,12 +1587,12 @@ namespace _Contains_edge {
       if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return contains_edge(__g, uid, vid); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Matrix_eval) {
-        return uid < ranges::size(vertices(__g)) && vid < ranges::size(vertices(__g));
+        return uid < size(vertices(__g)) && vid < size(vertices(__g));
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         auto ui = find_vertex(__g, uid);
-        return find_vertex_edge(__g, *ui, vid) != ranges::end(edges(__g, *ui));
+        return find_vertex_edge(__g, *ui, vid) != end(edges(__g, *ui));
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "contains_edge(g,uv) is not defined, or find_vertex_(g,uid) and source_id(g,uv) are not defined");
       }
     }
@@ -1599,23 +1619,23 @@ namespace _Partition_id {
     { _Fake_copy_init(u.partition_id(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_reference_t<_G>& u) {
                               { _Fake_copy_init(partition_id(__g, u)) }; // intentional ADL
                             };
   template <class _G>
-  concept _Can_ref_eval = _Has_class_or_enum_type<_G> && integral<vertex_id_t<_G>> //
+  concept _Can_ref_eval = _HasClassOrEnumType<_G> && integral<vertex_id_t<_G>> //
                           && requires(_G&& __g, vertex_id_t<_G> uid) {
                                { _Fake_copy_init(vertex_id_t<_G>{0}) };
                              };
 
   template <class _G>
-  concept _Has_id_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, const vertex_id_t<_G>& uid) {
                              { _Fake_copy_init(partition_id(__g, uid)) }; // intentional ADL
                            };
   template <class _G>
-  concept _Can_id_eval = _Has_class_or_enum_type<_G> && integral<vertex_id_t<_G>> //
+  concept _Can_id_eval = _HasClassOrEnumType<_G> && integral<vertex_id_t<_G>> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(vertex_id_t<_G>{0}) };
                             };
@@ -1686,7 +1706,7 @@ namespace _Partition_id {
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return vertex_id_t<_G>{0}; // default impl
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "partition_id(g,u) is not defined and the default implementation cannot be evaluated");
       }
     }
@@ -1714,7 +1734,7 @@ namespace _Partition_id {
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
         return vertex_id_t<_G>{0}; // default impl
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "partition_id(g,uid) is not defined and the default implementation cannot be evaluated");
       }
     }
@@ -1745,25 +1765,25 @@ namespace _NumVertices {
     { _Fake_copy_init(__g.num_vertices(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(num_vertices(__g)) }; // intentional ADL
                             };
   template <class _G>
-  concept _Can_ref_eval = ranges::sized_range<vertex_range_t<_G>> //
+  concept _Can_ref_eval = sized_range<vertex_range_t<_G>> //
                           && requires(_G&& __g) {
-                               { _Fake_copy_init(ranges::size(vertices(__g))) };
+                               { _Fake_copy_init(size(vertices(__g))) };
                              };
 
   template <class _G>
-  concept _Has_id_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, partition_id_t<_G> pid) {
                              { _Fake_copy_init(num_vertices(__g, pid)) }; // intentional ADL
                            };
   template <class _G>
-  concept _Can_id_eval = ranges::sized_range<vertex_edge_range_t<_G>> //
+  concept _Can_id_eval = sized_range<vertex_edge_range_t<_G>> //
                          && requires(_G&& __g, partition_id_t<_G> pid) {
-                              { _Fake_copy_init(ranges::size(vertices(__g, pid))) };
+                              { _Fake_copy_init(size(vertices(__g, pid))) };
                             };
 
   class _Cpo {
@@ -1779,7 +1799,7 @@ namespace _NumVertices {
       } else if constexpr (_Has_ref_ADL<_G>) {
         return {_St_ref::_Non_member, noexcept(_Fake_copy_init(num_vertices(declval<_G>())))}; // intentional ADL
       } else if constexpr (_Can_ref_eval<_G>) {
-        return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(ranges::size(vertices(declval<_G>()))))};
+        return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(size(vertices(declval<_G>()))))};
       } else {
         return {_St_ref::_None};
       }
@@ -1796,8 +1816,9 @@ namespace _NumVertices {
               _St_id::_Non_member,
               noexcept(_Fake_copy_init(num_vertices(declval<_G>(), declval<partition_id_t<_G>>())))}; // intentional ADL
       } else if constexpr (_Can_id_eval<_G>) {
-        return {_St_id::_Auto_eval, noexcept(_Fake_copy_init(ranges::size(
-                                          vertices(declval<_G>(), declval<partition_id_t<_G>>()))))}; // default impl
+        return {
+              _St_id::_Auto_eval,
+              noexcept(_Fake_copy_init(size(vertices(declval<_G>(), declval<partition_id_t<_G>>()))))}; // default impl
       } else {
         return {_St_id::_None};
       }
@@ -1829,9 +1850,9 @@ namespace _NumVertices {
       if constexpr (_Strat_id == _St_id::_Non_member) {
         return num_vertices(__g, pid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
-        return ranges::size(vertices(__g, pid)); // default impl
+        return size(vertices(__g, pid)); // default impl
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "num_vertices(g,pid) is not defined and the default implementation cannot be evaluated");
       }
     }
@@ -1857,9 +1878,9 @@ namespace _NumVertices {
       } else if constexpr (_Strat_id == _St_ref::_Non_member) {
         return num_vertices(__g); // intentional ADL
       } else if constexpr (_Strat_id == _St_ref::_Auto_eval) {
-        return ranges::size(vertices(__g)); // default impl
+        return size(vertices(__g)); // default impl
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "num_vertices(g) is not defined and the default implementation cannot be evaluated");
       }
     }
@@ -1886,23 +1907,23 @@ namespace _Degree {
     { _Fake_copy_init(u.degree(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, const vertex_reference_t<_G>& u) {
                               { _Fake_copy_init(degree(__g, u)) }; // intentional ADL
                             };
   template <class _G>
-  concept _Can_ref_eval = ranges::sized_range<vertex_edge_range_t<_G>> //
+  concept _Can_ref_eval = sized_range<vertex_edge_range_t<_G>> //
                           && requires(_G&& __g, vertex_reference_t<_G> u) {
                                { _Fake_copy_init(edges(__g, u)) };
                              };
 
   template <class _G>
-  concept _Has_id_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
                         && requires(_G&& __g, const vertex_id_t<_G>& uid) {
                              { _Fake_copy_init(degree(__g, uid)) }; // intentional ADL
                            };
   template <class _G>
-  concept _Can_id_eval = ranges::sized_range<vertex_edge_range_t<_G>> //
+  concept _Can_id_eval = sized_range<vertex_edge_range_t<_G>> //
                          && requires(_G&& __g, vertex_id_t<_G>& uid) {
                               { _Fake_copy_init(edges(__g, uid)) };
                             };
@@ -1919,8 +1940,8 @@ namespace _Degree {
         return {_St_id::_Non_member,
                 noexcept(_Fake_copy_init(degree(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
       } else if constexpr (_Can_id_eval<_G>) {
-        return {_St_id::_Auto_eval, noexcept(_Fake_copy_init(ranges::size(
-                                          edges(declval<_G>(), declval<vertex_id_t<_G>>()))))}; // default impl
+        return {_St_id::_Auto_eval,
+                noexcept(_Fake_copy_init(size(edges(declval<_G>(), declval<vertex_id_t<_G>>()))))}; // default impl
       } else {
         return {_St_id::_None};
       }
@@ -1939,7 +1960,7 @@ namespace _Degree {
                 noexcept(_Fake_copy_init(degree(declval<_G>(), declval<vertex_reference_t<_G>>())))}; // intentional ADL
       } else if constexpr (_Can_ref_eval<_G>) {
         return {_St_ref::_Auto_eval,
-                noexcept(_Fake_copy_init(ranges::size(edges(declval<_G>(), declval<vertex_reference_t<_G>>()))))};
+                noexcept(_Fake_copy_init(size(edges(declval<_G>(), declval<vertex_reference_t<_G>>()))))};
       } else {
         return {_St_ref::_None};
       }
@@ -1972,9 +1993,9 @@ namespace _Degree {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return degree(__g, u); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return ranges::size(edges(__g, u)); // default impl
+        return size(edges(__g, u)); // default impl
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "degree(g,u) is not defined and the default implementation cannot be evaluated");
       }
     }
@@ -2000,9 +2021,9 @@ namespace _Degree {
       if constexpr (_Strat_id == _St_id::_Non_member) {
         return degree(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
-        return ranges::size(edges(__g, uid)); // default impl
+        return size(edges(__g, uid)); // default impl
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "degree(g,uid) is not defined and the default implementation cannot be evaluated");
       }
     }
@@ -2031,7 +2052,7 @@ namespace _Vertex_value {
     { _Fake_copy_init(u.vertex_value(__g)) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g, vertex_reference_t<_G> u) {
                               { _Fake_copy_init(vertex_value(__g, u)) }; // intentional ADL
                             };
@@ -2081,7 +2102,7 @@ namespace _Vertex_value {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return vertex_value(__g, u); // intentional ADL
       } else {
-        static_assert(_Always_false<_G>, "vertex_value(g,u) must be defined for the graph");
+        static_assert(_AlwaysFalse<_G>, "vertex_value(g,u) must be defined for the graph");
       }
     }
   };
@@ -2111,14 +2132,14 @@ namespace _Edge_value {
     { _Fake_copy_init(uv.edge_value(__g)) };
   };
   template <class _G>
-  concept _Has_adjl_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_adjl_ref_ADL = _HasClassOrEnumType<_G> //
                               && requires(_G&& __g, edge_reference_t<_G> uv) {
                                    { _Fake_copy_init(edge_value(__g, uv)) }; // intentional ADL
                                  };
   template <class _G>
   concept _Can_adjl_ref_eval =
-        _Has_class_or_enum_type<_G> && ranges::forward_range<vertex_range_t<_G>> //
-        && requires(edge_reference_t<_G> uv) { uv; }; // vertex is just a range, and edge type defined?
+        _HasClassOrEnumType<_G> && forward_range<vertex_range_t<_G>> //
+        && requires(edge_reference_t<_G> uv) { uv; };                // vertex is just a range, and edge type defined?
 
 
   template <class _E>
@@ -2126,7 +2147,7 @@ namespace _Edge_value {
     { _Fake_copy_init(__e.edge_value()) };
   };
   template <class _E>
-  concept _Has_edgl_ref_ADL = _Has_class_or_enum_type<_E> //
+  concept _Has_edgl_ref_ADL = _HasClassOrEnumType<_E> //
                               && requires(_E&& __e) {
                                    { _Fake_copy_init(edge_value(__e)) }; // intentional ADL
                                  };
@@ -2179,7 +2200,7 @@ namespace _Edge_value {
                 noexcept(_Fake_copy_init(declval<tuple_element_t<2, _E>>()))}; // first element of tuple/pair
       } else if constexpr (_is_edge_desc<_E>) {
         return {_St_edgl_ref::_EDesc_id,
-                noexcept(_Fake_copy_init(declval<typename _E::value_type>()))}; // edge_value of edge_descriptor
+                noexcept(_Fake_copy_init(declval<typename _E::value_type>()))}; // edge_value of edge_info
       } else {
         return {_St_edgl_ref::_None};
       }
@@ -2217,7 +2238,7 @@ namespace _Edge_value {
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Auto_eval) {
         return uv; // intentional ADL
       } else {
-        static_assert(_Always_false<_G>, "edge_value(g,uv) must be defined for the graph");
+        static_assert(_AlwaysFalse<_G>, "edge_value(g,uv) must be defined for the graph");
       }
     }
 
@@ -2228,7 +2249,7 @@ namespace _Edge_value {
      * 
      * Default implementation: 
      *  get<2>(e)   for tuple<T,T,V,...>
-     *  e.value     for edge_descriptor<VId,true,_,V>
+     *  e.value     for edge_info<VId,true,_,V>
      * 
      * @tparam E The edgelist value_type.
      * @param e A edgelist edge instance.
@@ -2248,7 +2269,7 @@ namespace _Edge_value {
       } else if constexpr (_Strat_ref == _St_edgl_ref::_EDesc_id) {
         return __e.value;
       } else {
-        static_assert(_Always_false<_E>, "edge_value(e) or e.edge_value() is not defined");
+        static_assert(_AlwaysFalse<_E>, "edge_value(e) or e.edge_value() is not defined");
       }
     }
   };
@@ -2291,7 +2312,7 @@ namespace _Graph_value {
     { _Fake_copy_init(__g.graph_value()) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(graph_value(__g)) }; // intentional ADL
                             };
@@ -2338,7 +2359,7 @@ namespace _Graph_value {
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         return graph_value(__g); // intentional ADL
       } else {
-        static_assert(_Always_false<_G>, "graph_value(g) must be defined for the graph");
+        static_assert(_AlwaysFalse<_G>, "graph_value(g) must be defined for the graph");
       }
     }
   };
@@ -2363,7 +2384,7 @@ namespace _Num_partitions {
     { _Fake_copy_init(__g.num_partitions()) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(num_partitions(__g)) }; // intentional ADL
                             };
@@ -2419,7 +2440,7 @@ namespace _Num_partitions {
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
         return vertex_id_t<_G>(1); // default impl
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "num_partitions(g) is not defined and the default implementation cannot be evaluated");
       }
     }
@@ -2447,21 +2468,21 @@ namespace _HasEdge {
     { _Fake_copy_init(__g.has_edge()) };
   };
   template <class _G>
-  concept _Has_ref_ADL = _Has_class_or_enum_type<_G> //
+  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
                          && requires(_G&& __g) {
                               { _Fake_copy_init(has_edge(__g)) }; // intentional ADL
                             };
   template <class _G>
   concept _Can_ref_eval = requires(_G&& __g, vertex_t<_G> __u) {
     { vertices(__g) };
-    { _Fake_copy_init(ranges::empty(edges(__g, __u))) };
+    { _Fake_copy_init(empty(edges(__g, __u))) };
   };
 
   // This is for edges(g, pid) which is not defined in the proposal.
   // The proposal only defines edges(g, u, pid) and edges(g, uid, pid)
   // We need edges(g, u) and edges(g, uid) which isn't implemented yet.
   //template <class _G>
-  //concept _Has_id_ADL = _Has_class_or_enum_type<_G>                    //
+  //concept _Has_id_ADL = _HasClassOrEnumType<_G>                    //
   //                      && requires(_G&& __g, partition_id_t<_G> pid) {
   //                           { _Fake_copy_init(has_edge(__g, pid)) }; // intentional ADL
   //                         };
@@ -2485,7 +2506,7 @@ namespace _HasEdge {
         return {_St_ref::_Non_member, noexcept(_Fake_copy_init(has_edge(declval<_G>())))}; // intentional ADL
       } else if constexpr (_Can_ref_eval<_G>) {
         return {_St_ref::_Auto_eval,
-                noexcept(_Fake_copy_init(ranges::empty(edges(declval<_G>(), declval<vertex_reference_t<_G>>()))))};
+                noexcept(_Fake_copy_init(empty(edges(declval<_G>(), declval<vertex_reference_t<_G>>()))))};
       } else {
         return {_St_ref::_None};
       }
@@ -2540,11 +2561,11 @@ namespace _HasEdge {
         return has_edge(__g); // intentional ADL
       } else if constexpr (_Strat_id == _St_ref::_Auto_eval) {
         for (auto&& u : vertices(__g))
-          if (ranges::empty(edges(__g, u)))
+          if (empty(edges(__g, u)))
             return true;
         return false;
       } else {
-        static_assert(_Always_false<_G>,
+        static_assert(_AlwaysFalse<_G>,
                       "has_edge(g) is not defined and the default implementation cannot be evaluated");
       }
     }
@@ -2571,9 +2592,9 @@ namespace _HasEdge {
     //  if constexpr (_Strat_id == _St_id::_Non_member) {
     //    return has_edge(__g, pid);              // intentional ADL
     //  } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
-    //    return ranges::size(vertices(__g, pid)); // default impl
+    //    return size(vertices(__g, pid)); // default impl
     //  } else {
-    //    static_assert(_Always_false<_G>,
+    //    static_assert(_AlwaysFalse<_G>,
     //                  "has_edge(g,pid) is not defined and the default implementation cannot be evaluated");
     //  }
     //}
@@ -2585,6 +2606,6 @@ inline namespace _Cpos {
 }
 
 
-} // namespace std::graph
+} // namespace graph
 
 #endif //GRAPH_CPO_HPP

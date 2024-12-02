@@ -13,11 +13,11 @@
 
 enum three_colors { black, white, grey };
 
-template <typename Graph, typename Queue = std::queue<std::graph::vertex_id_t<Graph>>>
-requires std::graph::adjacency_list<Graph>
+template <typename Graph, typename Queue = std::queue<graph::vertex_id_t<Graph>>>
+requires graph::adjacency_list<Graph>
 class bfs_edge_range {
 private:
-  using vertex_id_type = std::graph::vertex_id_t<Graph>;
+  using vertex_id_type = graph::vertex_id_t<Graph>;
 
 public:
   explicit bfs_edge_range(Graph& graph, vertex_id_type seed = 0) : the_graph_(graph), visited_(graph.size(), false) {
@@ -39,7 +39,7 @@ public:
     typename Graph::iterator      G;
     vertex_id_type                v_;
     //typename inner_range_t<Graph>::iterator u_begin, u_end;
-    std::graph::vertex_iterator_t<Graph> u_begin, u_end;
+    graph::vertex_iterator_t<Graph> u_begin, u_end;
 
   public:
     bfs_edge_range_iterator(bfs_edge_range<Graph, Queue>& range)
@@ -106,7 +106,7 @@ private:
 };
 
 template <typename Graph, typename PriorityQueue>
-requires std::graph::adjacency_list<Graph>
+requires graph::adjacency_list<Graph>
 class bfs_edge_range_2 {
 private:
   using vertex_id_type = typename Graph::vertex_id_type;

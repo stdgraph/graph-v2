@@ -12,9 +12,9 @@
 #include <cassert>
 
 using namespace std::ranges;
-using namespace std::graph;
-using namespace std::graph::container;
-using namespace std::graph::views;
+using namespace graph;
+using namespace graph::container;
+using namespace graph::views;
 using namespace std::literals;
 
 using std::cout;
@@ -103,9 +103,9 @@ TEST_CASE("Germany Routes Presentation", "[presentation][germany][routes][shorte
   vertex_reference_t<G> frankfurt    = *find_vertex(g, frankfurt_id);
 
   cout << "Traverse the vertices & outgoing edges" << endl;
-  for (auto&& [uid, u] : vertexlist(g)) {                           // [id,vertex&]
-    cout << city_id(g, uid) << endl;                                // city name [id]
-    for (auto&& [vid, uv] : std::graph::views::incidence(g, uid)) { // [target_id,edge&]
+  for (auto&& [uid, u] : vertexlist(g)) {                      // [id,vertex&]
+    cout << city_id(g, uid) << endl;                           // city name [id]
+    for (auto&& [vid, uv] : graph::views::incidence(g, uid)) { // [target_id,edge&]
       cout << "   --> " << city_id(g, vid) << endl;
       // "--> "target city" [target_id]
     }

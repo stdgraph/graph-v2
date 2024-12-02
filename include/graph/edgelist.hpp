@@ -55,11 +55,11 @@
 //  tuple<T,T>
 //  tuple<T,T,EV,...>
 //
-//  edge_descriptor<VId, true, void, void> : {source_id, target_id}
-//  edge_descriptor<VId, true, void, EV>   : {source_id, target_id, EV}
+//  edge_info<VId, true, void, void> : {source_id, target_id}
+//  edge_info<VId, true, void, EV>   : {source_id, target_id, EV}
 //
-//  edge_descriptor<VId, true, E&, void>   : {source_id, target_id, edge}
-//  edge_descriptor<VId, true, E&, EV>     : {source_id, target_id, edge, EV}
+//  edge_info<VId, true, E&, void>   : {source_id, target_id, edge}
+//  edge_info<VId, true, E&, EV>     : {source_id, target_id, edge, EV}
 //
 // Naming conventions
 // -----------------------------------------------------------------------------
@@ -70,30 +70,30 @@
 // EV       val         Edge Value
 //
 
-// merge implementation into std::graph with single namespace?
+// merge implementation into graph with single namespace?
 // Issues:
 //  1.  name conflict with edgelist view? No: basic_sourced_edgelist vs. views::edgelist.
 //  2.  template aliases can't be distinguished by concepts
 //  3.  vertex_id_t definition for adjlist and edgelist have be done in separate locations
 
-namespace std::graph {
+namespace graph {
 
 
 namespace edgelist {
   //
   // edgelist concepts
   //
-  template <class EL>                                                           // For exposition only
-  concept basic_sourced_edgelist = ranges::input_range<EL> &&                   //
-                                   !ranges::range<ranges::range_value_t<EL>> && // distinguish from adjacency list
-                                   requires(ranges::range_value_t<EL> e) {
+  template <class EL>                                           // For exposition only
+  concept basic_sourced_edgelist = input_range<EL> &&           //
+                                   !range<range_value_t<EL>> && // distinguish from adjacency list
+                                   requires(range_value_t<EL> e) {
                                      { source_id(e) };
                                      { target_id(e) } -> same_as<decltype(source_id(e))>;
                                    };
 
   template <class EL>                                                  // For exposition only
   concept basic_sourced_index_edgelist = basic_sourced_edgelist<EL> && //
-                                         requires(ranges::range_value_t<EL> e) {
+                                         requires(range_value_t<EL> e) {
                                            { source_id(e) } -> integral;
                                            { target_id(e) } -> integral; // this is redundant, but makes it clear
                                          };
@@ -102,7 +102,7 @@ namespace edgelist {
 
   template <class EL>                                    // For exposition only
   concept has_edge_value = basic_sourced_edgelist<EL> && //
-                           requires(ranges::range_value_t<EL> e) {
+                           requires(range_value_t<EL> e) {
                              { edge_value(e) };
                            };
 
@@ -120,13 +120,13 @@ namespace edgelist {
   using edge_range_t = EL;
 
   template <basic_sourced_edgelist EL> // For exposition only
-  using edge_iterator_t = ranges::iterator_t<edge_range_t<EL>>;
+  using edge_iterator_t = iterator_t<edge_range_t<EL>>;
 
   template <basic_sourced_edgelist EL> // For exposition only
-  using edge_t = ranges::range_value_t<edge_range_t<EL>>;
+  using edge_t = range_value_t<edge_range_t<EL>>;
 
   template <basic_sourced_edgelist EL> // For exposition only
-  using edge_reference_t = ranges::range_reference_t<edge_range_t<EL>>;
+  using edge_reference_t = range_reference_t<edge_range_t<EL>>;
 
   template <basic_sourced_edgelist EL> // For exposition only
   using edge_value_t = decltype(edge_value(declval<edge_t<edge_range_t<EL>>>()));
@@ -144,6 +144,6 @@ namespace edgelist {
   //using vid_t = decltype(source_id(declval<edge_t<EL>>()));
 
 } // namespace edgelist
-} // namespace std::graph
+} // namespace graph
 
 #endif

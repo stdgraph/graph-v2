@@ -19,7 +19,7 @@ using std::tuple;
 using std::cout;
 using std::endl;
 
-using namespace std::graph::views;
+using namespace graph::views;
 
 
 const vector<string> actors{"Tom Cruise",      "Kevin Bacon",    "Hugo Weaving",      "Carrie-Anne Moss",

@@ -19,31 +19,31 @@ using std::ranges::forward_range;
 using std::remove_reference_t;
 using std::is_const_v;
 
-using std::graph::vertex_t;
-using std::graph::vertex_id_t;
-using std::graph::vertex_edge_range_t;
-using std::graph::edge_t;
-using std::graph::edge_value_t;
+using graph::vertex_t;
+using graph::vertex_id_t;
+using graph::vertex_edge_range_t;
+using graph::edge_t;
+using graph::edge_value_t;
 
-using std::graph::graph_value;
-using std::graph::vertices;
-using std::graph::num_vertices;
-using std::graph::num_edges;
-using std::graph::has_edge;
-using std::graph::edges;
-using std::graph::vertex_id;
-using std::graph::vertex_value;
-using std::graph::target_id;
-using std::graph::target;
-using std::graph::edge_value;
-using std::graph::degree;
-using std::graph::find_vertex;
-using std::graph::find_vertex_edge;
+using graph::graph_value;
+using graph::vertices;
+using graph::num_vertices;
+using graph::num_edges;
+using graph::has_edge;
+using graph::edges;
+using graph::vertex_id;
+using graph::vertex_value;
+using graph::target_id;
+using graph::target;
+using graph::edge_value;
+using graph::degree;
+using graph::find_vertex;
+using graph::find_vertex_edge;
 
-using std::graph::partition_id;
+using graph::partition_id;
 
 
-using routes_compressed_graph_type = std::graph::container::compressed_graph<double, std::string, std::string>;
+using routes_compressed_graph_type = graph::container::compressed_graph<double, std::string, std::string>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -60,15 +60,15 @@ auto find_frankfurt(G&& g) {
 
 
 TEST_CASE("CSR void EV test", "[csr][capabilities]") {
-  using G = std::graph::container::compressed_graph<void, std::string, std::string>; // use it because it's easy
+  using G = graph::container::compressed_graph<void, std::string, std::string>; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
-  //using init_edge_value = std::graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
+  //using init_edge_value = graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
 
   // Define the graph. It's the same as the germany routes using source_order_found
   G g = {{0, 1}, {0, 4}, {0, 6}, {1, 2}, {2, 3}, {3, 8}, {4, 5}, {4, 7}, {5, 8}, {5, 9}, {6, 8}};
 
-  using init_vertex_value             = std::graph::copyable_vertex_t<vertex_id_t<G>, std::string>;
+  using init_vertex_value             = graph::copyable_vertex_t<vertex_id_t<G>, std::string>;
   std::vector<std::string_view> names = {"Frankfürt", "Mannheim", "Karlsruhe", "Augsburg", "Würzburg",
                                          "Nürnberg",  "Kassel",   "Erfurt",    "München",  "Stuttgart"};
   g.load_vertices(names, [&names](std::string_view& nm) {
@@ -80,10 +80,10 @@ TEST_CASE("CSR void EV test", "[csr][capabilities]") {
 }
 
 TEST_CASE("CSR void VV test", "[csr][capabilities]") {
-  using G = std::graph::container::compressed_graph<double, void, std::string>; // use it because it's easy
+  using G = graph::container::compressed_graph<double, void, std::string>; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
-  //using init_edge_value = std::graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
+  //using init_edge_value = graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
 
   // Define the graph. It's the same as the germany routes using source_order_found
   G g = {{0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, {1, 2, 80.0},  {2, 3, 250.0}, {3, 8, 84.0},
@@ -96,13 +96,13 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
   using G = routes_compressed_graph_type; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
-  //using init_edge_value = std::graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
+  //using init_edge_value = graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
 
   // Define the graph. It's the same as the germany routes using source_order_found
   G g = {{0, 1, 85.0},  {0, 4, 217.0}, {0, 6, 173.0}, {1, 2, 80.0},  {2, 3, 250.0}, {3, 8, 84.0},
          {4, 5, 103.0}, {4, 7, 186.0}, {5, 8, 167.0}, {5, 9, 183.0}, {6, 8, 502.0}};
 
-  using init_vertex_value             = std::graph::copyable_vertex_t<vertex_id_t<G>, std::string>;
+  using init_vertex_value             = graph::copyable_vertex_t<vertex_id_t<G>, std::string>;
   std::vector<std::string_view> names = {"Frankfürt", "Mannheim", "Karlsruhe", "Augsburg", "Würzburg",
                                          "Nürnberg",  "Kassel",   "Erfurt",    "München",  "Stuttgart"};
   g.load_vertices(names, [&names](std::string_view& nm) {
