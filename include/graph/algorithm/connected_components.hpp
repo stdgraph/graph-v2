@@ -18,7 +18,6 @@
 #include "graph/views/incidence.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/breadth_first_search.hpp"
-#include "graph/views/depth_first_search.hpp"
 #include <stack>
 
 #ifndef GRAPH_CC_HPP
@@ -103,6 +102,10 @@ void connected_components(G&&        g,        // graph
     }
     visited[uid]   = true;
     component[uid] = cid;
+    if (!size(edges(g,u))) {
+      ++cid;
+      continue;
+    }
     vertices_breadth_first_search_view<G, void> bfs(g, uid);
     for (auto&& [vid, v] : bfs) {
       component[vid] = cid;
