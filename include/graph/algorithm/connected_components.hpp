@@ -102,7 +102,7 @@ void connected_components(G&&        g,        // graph
     }
     visited[uid]   = true;
     component[uid] = cid;
-    if (!size(edges(g,u))) {
+    if (!size(edges(g, u))) {
       ++cid;
       continue;
     }
