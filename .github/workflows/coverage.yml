@@ -49,7 +49,7 @@ jobs:
         run: |
           cd ${{github.workspace}}/build
           lcov --no-external --capture --directory . --output-file coverage.info
-          lcov --remove coverage.info '/usr/include/*' '*/tests/*' --output-file coverage.info
+          lcov --ignore-errors unused --remove coverage.info '/usr/include/*' '*/tests/*' --output-file coverage.info
           geninfo --rc geninfo_unexecuted_blocks=1 --ignore-errors gcov --output-filename coverage.info .
           genhtml coverage.info --output-directory out
         
