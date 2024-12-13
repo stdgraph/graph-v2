@@ -17,7 +17,6 @@
 #include <queue>
 #include <ranges>
 #include <limits>
-#include <fmt/format.h>
 
 #ifndef GRAPH_DFS_ALGORITHM_HPP
 #  define GRAPH_DFS_ALGORITHM_HPP

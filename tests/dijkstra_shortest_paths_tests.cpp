@@ -5,7 +5,7 @@
 #include "graph/algorithm/dijkstra_shortest_paths.hpp"
 #include "graph/container/dynamic_graph.hpp"
 #include "graph/views/vertexlist.hpp"
-#include <fmt/format.h>
+#include <format>
 #include <cassert>
 #ifdef _MSC_VER
 #  include "Windows.h"
@@ -59,9 +59,9 @@ auto to_string(G&& g, const Predecessors& predecessors, vertex_id_t<G> uid, vert
     vertex_id_t<G>        pid  = predecessors[uid];
     vertex_reference_t<G> pref = *find_vertex(g, pid);
     if (pred.empty()) {
-      pred += fmt::format("[{}]{}", pid, vertex_value(g, pref));
+      pred += std::format("[{}]{}", pid, vertex_value(g, pref));
     } else {
-      pred += fmt::format(", [{}]{}", pid, vertex_value(g, pref));
+      pred += std::format(", [{}]{}", pid, vertex_value(g, pref));
     }
   }
   return pred;
@@ -82,9 +82,9 @@ auto to_string(const Predecessors& predecessors) {
   std::string pred;
   for (auto& pid : predecessors) {
     if (pred.empty()) {
-      pred += fmt::format("{}", pid);
+      pred += std::format("{}", pid);
     } else {
-      pred += fmt::format(",{}", pid);
+      pred += std::format(",{}", pid);
     }
   }
   return pred;

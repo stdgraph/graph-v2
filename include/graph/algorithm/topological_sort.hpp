@@ -17,7 +17,6 @@
 #include <queue>
 #include <ranges>
 #include <limits>
-#include <fmt/format.h>
 
 #ifndef GRAPH_TOPO_SORT_ALGO_HPP
 #  define GRAPH_TOPO_SORT_ALGO_HPP
