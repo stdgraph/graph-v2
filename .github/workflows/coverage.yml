@@ -34,8 +34,8 @@ jobs:
         run: cmake -B ${{github.workspace}}/build -D ENABLE_COVERAGE=ON
         shell: bash
         env:
-          CC:   gcc-11
-          CXX:  g++-11
+          CC:   gcc-13
+          CXX:  g++-13
         
       - name: Build all applications
         run: cmake --build ${{github.workspace}}/build
