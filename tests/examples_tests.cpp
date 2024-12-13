@@ -29,10 +29,10 @@ const vector<string> actors{"Tom Cruise",      "Kevin Bacon",    "Hugo Weaving",
 
 TEMPLATE_TEST_CASE("Kevin Bacon example",
                    "[example][bfs][basic_graph]",
-                   vector<vector<size_t>>,
-                   vector<vector<size_t>> const,
-                   vector<vector<tuple<size_t>>>,
-                   vector<vector<tuple<size_t>>> const) {
+                   (vector<vector<size_t>>),
+                   (vector<vector<size_t>> const),
+                   (vector<vector<tuple<size_t>>>),
+                   (vector<vector<tuple<size_t>>> const)) {
   using Graph = TestType;
 
   Graph costar_adjacency_list{{1, 5, 6}, {7, 10, 0, 5, 12}, {4, 3, 11}, {2, 11}, {8, 9, 2, 12}, {0, 1},
