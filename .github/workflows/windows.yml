@@ -32,3 +32,6 @@ jobs:
         
       - name: Build all applications
         run: cmake --build ${{github.workspace}}/build
+
+      - name: Run tests
+        run: ctest --test-dir ${{github.workspace}}/build/tests
