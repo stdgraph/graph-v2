@@ -16,12 +16,42 @@ enum struct cancel_search : int8_t { continue_search, cancel_branch, cancel_all 
  * Tuple utilities to get the "cdr" of a tuple (for our purposes)
  */
 
+// Returns tuple of copies
 template <size_t N, typename... Ts>
 auto nth_cdr(tuple<Ts...> t) {
   return [&]<std::size_t... Ns>(std::index_sequence<Ns...>) {
     return tuple{std::get<Ns + N>(t)...};
   }(std::make_index_sequence<sizeof...(Ts) - N>());
 }
+
+// Returns tuple of references
+template <size_t N, typename... Ts>
+auto nth_cdr_ref(std::tuple<Ts&...> t) {
+  return [&]<std::size_t... Ns>(std::index_sequence<Ns...>) { 
+    return std::tuple<decltype(std::get<Ns+N>(t))...>{std::get<Ns + N>(t)...}; }
+  (std::make_index_sequence<sizeof...(Ts) - N>());
+}
+
+// Returns tuple of references to original tuple values
+template <size_t N, class... Ts>
+auto tuple_tail(std::tuple<Ts...>& t) {
+  return [&]<std::size_t... Ns>(std::index_sequence<Ns...>) {
+    return std::tuple<std::add_lvalue_reference_t<decltype(std::get<Ns + N>(t))>...>{std::get<Ns + N>(t)...};
+  }(std::make_index_sequence<sizeof...(Ts) - N>());
+}
+
+// Returns tuple of references to original pair values
+template <size_t N, class T1, class T2>
+auto tuple_tail(std::pair<T1,T2>& pr) {
+  if constexpr (N == 0) {
+    return std::tuple<T1&, T2&>(pr.first, pr.second);
+  } else if constexpr (N == 1) {
+    return std::tuple<T2&>(pr.second);
+  } else {
+    return std::tuple<>();
+  }
+}
+
 
 template <typename... Ts>
 auto props(tuple<Ts...> t) {

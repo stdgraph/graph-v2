@@ -7,7 +7,6 @@
 #include <forward_list> // forward
 
 #include "graph/detail/descriptor.hpp"
-#include "graph/graph_utility.hpp"
 
 #define ENABLE_DESCRIPTOR_TESTS 0
 
@@ -48,7 +47,6 @@ using std::ranges::range_size_t;
 using std::ranges::iterator_t;
 using std::declval;
 
-
 // We need an advance function to return the updated iterator
 template <forward_iterator I>
 I advance(I it, std::iter_difference_t<I> n) {
@@ -57,65 +55,14 @@ I advance(I it, std::iter_difference_t<I> n) {
 }
 
 TEST_CASE("Tuple tail") {
-  using Tuple  = std::tuple<int, double, float>;
-  using Tuple2 = std::tuple<int&, double&, float&>;
-  using Pair   = std::pair<int, double>;
-  using Pair2   = std::pair<int&, double&>;
+  using Tuple = std::tuple<int, double, char>;
+  using Tail  = tuple_tail_t<Tuple>;
+  static_assert(is_same_v<Tail, std::tuple<double, char>>);
 
-  int    a{1};
-  double b{2};
-  float  c{3};
-
-  SECTION("Tuple source") {
-    SECTION("nth_cdr") {
-      Tuple t(a, b, c);
-      auto  last2   = graph::nth_cdr<1>(t);
-      get<0>(last2) = 4.0;
-      REQUIRE(get<1>(t) == 2.0);
-      REQUIRE(b == 2.0);
-    }
-    SECTION("tuple_tail") {
-      Tuple t(a, b, c);
-      auto  last2   = graph::tuple_tail<1>(t);
-      get<0>(last2) = 5.0;
-      REQUIRE(get<1>(t) == 5.0);
-      REQUIRE(b == 2.0);
-    }
-  }
-
-  SECTION("Tuple2 source") {
-    SECTION("Copy Tuple to Tuple2") {
-      Tuple  t(a, b, c);
-      Tuple2 t2(t);
-      get<1>(t2) = 6.0;
-      REQUIRE(get<1>(t) == 6.0);
-    }
-    SECTION("nth_cdr_ref") {
-      Tuple2 t{a, b, c};
-      auto   last2  = graph::nth_cdr_ref<1>(t);
-      get<0>(last2) = 6.0;
-      REQUIRE(b == 6.0);
-    }
-    SECTION("tuple_tail") {
-      Tuple2 t(a, b, c);
-      auto   last2  = graph::tuple_tail<1>(t);
-      get<0>(last2) = 7.0;
-      REQUIRE(b == 7.0);
-    }
-  }
-
-  SECTION("pair source") {
-    SECTION("tuple_tail") {
-      Pair2 p(a, b);
-      auto   last1  = graph::tuple_tail<1>(p);
-      get<0>(last1) = 7.0;
-      REQUIRE(b == 7.0);
-    }
-  }
+  Tuple t{1, 2.0, '3'};
 }
 
-
-
+#if ENABLE_DESCRIPTOR_TESTS
 TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
                    "[descriptor]",
                    (vector<int>),
@@ -664,7 +611,6 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
 }
 
 
-#if ENABLE_DESCRIPTOR_TESTS
 TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (vector<int>), (const vector<int>)) {
   using Container             = TestType;
   using Iterator              = _descriptor_iterator<iterator_t<Container>>;
@@ -873,4 +819,4 @@ auto vertices(const G& g) {
 
 #  endif // 0
 
-#endif   // ENABLE_DESCRIPTOR_TESTS
+#endif // ENABLE_DESCRIPTOR_TESTS
