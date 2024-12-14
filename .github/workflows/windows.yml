@@ -34,4 +34,4 @@ jobs:
         run: cmake --build ${{github.workspace}}/build
 
       - name: Run tests
-        run: ctest -C Release --test-dir ${{github.workspace}}/build/tests
+        run: ctest -C Debug --test-dir ${{github.workspace}}/build/tests
