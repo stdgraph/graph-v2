@@ -17,7 +17,7 @@
 #  pragma GCC diagnostic ignored "-Wfloat-conversion"
 #endif
 
-#include <csv.hpp>
+#include "csv.hpp"
 
 #ifdef _MSC_VER
 #  pragma warning(pop)

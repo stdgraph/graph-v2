@@ -78,9 +78,8 @@ if (ENABLE_PCH)
 endif()
 
 
-# Add libraries. Order is important based on dependencies.
+# Add thirdparty libraries
 include(${PROJECT_SOURCE_DIR}/cmake/FetchCatch.cmake)
-include(${PROJECT_SOURCE_DIR}/cmake/FetchCSVParser.cmake)
 
 add_library(graph INTERFACE)
 target_include_directories(graph INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
