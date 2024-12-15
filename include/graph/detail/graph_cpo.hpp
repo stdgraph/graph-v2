@@ -693,22 +693,6 @@ using vertex_edge_range_t = decltype(edges(declval<G&&>(), declval<vertex_refere
 template <class G>
 using vertex_edge_iterator_t = iterator_t<vertex_edge_range_t<G>>;
 
-#  if USE_EDGE_DESCRIPTOR
-/**
- * @brief The edge descriptor type for graph G.
- * The edge descriptor is an integral index value or an iterator to the edge value.
- * @tparam G The graph type.
-*/
-template <class G>
-using edge_descriptor_t = range_value_t<vertex_edge_range_t<G>>;
-
-/**
- * @brief The concrete edge type for graph G.
- * @tparam G The graph type.
-*/
-//template <class G>
-//using edge_t = _concrete_value_type<vertex_edge_range_t<G>>;
-#  else
 /**
  * @brief The edge type for graph G.
  * @tparam G The graph type.
@@ -722,7 +706,6 @@ using edge_t = range_value_t<vertex_edge_range_t<G>>;
 */
 template <class G>
 using edge_reference_t = range_reference_t<vertex_edge_range_t<G>>;
-#  endif
 
 //
 // num_edges(g,)      -> integral   default = n=0; for (const auto& u : vertices(g)) n += distance(edges(g,u))
@@ -830,16 +813,6 @@ namespace _Target_id {
   void target_id();
 #  endif                                     // ^^^ workaround ^^^
 
-#  if USE_EDGE_DESCRIPTOR
-  template <class _G>
-  concept _Has_adjl_ref_member = requires(_G&& __g, edge_descriptor_t<_G> uv) {
-    { _Fake_copy_init(uv.target_id(__g)) };
-  };
-  template <class _G>
-  concept _Has_adjl_ref_ADL = requires(_G&& __g, edge_descriptor_t<_G> uv) {
-    { _Fake_copy_init(target_id(__g, uv)) }; // intentional ADL
-  };
-#  else
   template <class _G>
   concept _Has_adjl_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
     { _Fake_copy_init(uv.target_id(__g)) };
@@ -848,7 +821,6 @@ namespace _Target_id {
   concept _Has_adjl_ref_ADL = requires(_G&& __g, edge_reference_t<_G> uv) {
     { _Fake_copy_init(target_id(__g, uv)) }; // intentional ADL
   };
-#  endif
 
   template <class _G>
   concept _Is_basic_id_adj = integral<_al_edge_t<_G>>; // vertex<vertex<int>>

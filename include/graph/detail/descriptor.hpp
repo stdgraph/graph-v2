@@ -56,6 +56,13 @@ struct _is_tuple_like<tuple<Args...>> : public std::true_type {};
 template <typename... Args>
 inline constexpr bool _is_tuple_like_v = _is_tuple_like<Args...>::value;
 
+template<forward_iterator I, class IdT = iter_difference_t<I>>
+using iter_descriptor_t = conditional_t<random_access_iterator<I>, IdT, I>;
+
+template <forward_range R, class IdT = range_difference_t<R>>
+using range_descriptor_t = iter_descriptor_t<iterator_t<R>, IdT>;
+
+
 // vertex range type                          desc value_type   vertex_id_type    inner_value_type      target_id_type        edge_value_type
 // =========================================  ================  ================  ====================  ====================  ================================
 // vector<vector<int>>                        VId               VId               vector<int>           int                   void
@@ -79,15 +86,6 @@ inline constexpr bool _is_tuple_like_v = _is_tuple_like<Args...>::value;
 // Because the vertex range can be a simple vertex<int> for CSR we can't assume that the edge range is part of the
 // vertex range. However, that is a common and useful use-case and can be used as a default.
 //
-
-template <class I, class VId = iter_difference_t<I>>
-struct _descriptor_traits {
-  using inner_iterator   = I;
-  using difference_type  = iter_difference_t<inner_iterator>;
-  using vertex_id_type   = VId;
-  using value_type       = conditional_t<random_access_iterator<inner_iterator>, VId, inner_iterator>;
-  using inner_value_type = iter_value_t<I>;
-};
 
 
 /**
@@ -116,7 +114,7 @@ public:
   using inner_value_type = iter_value_t<I>;
 
   using vertex_id_type = VId;
-  using value_type     = conditional_t<random_access_iterator<inner_iterator>, vertex_id_type, inner_iterator>;
+  using value_type     = iter_descriptor_t<I, vertex_id_type>;
 
   using pointer           = std::add_pointer_t<std::add_const_t<value_type>>;
   using reference         = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
@@ -164,24 +162,6 @@ public:
 private:
   value_type descriptor_ = value_type(); // integral index or iterator, depending on container type
 };
-
-
-#if 0
-template <class T>
-struct descriptor_inner_value {
-  using type = T;
-};
-template <class T, class U>
-struct descriptor_inner_value<std::pair<T, U>> {
-  using type = decltype(tuple_tail(1, std::declval<std::pair<T, U>>()));
-};
-template <class... Args>
-struct descriptor_inner_value<std::tuple<Args...>> {
-  using type = decltype(tuple_tail(1, std::declval<std::tuple<Args...>>()));
-};
-template <class T>
-using descriptor_inner_value_t = typename descriptor_inner_value<T>::type;
-#endif
 
 
 template <forward_range R, class VId = range_difference_t<R>>
@@ -449,6 +429,11 @@ private:
   iterator first_;
   iterator last_;
 };
+
+template <forward_range R, class VId = range_difference_t<R>>
+auto to_descriptor_view(R&& r) {
+  return descriptor_view<R, VId>(r);
+}
 
 
 } // namespace graph
