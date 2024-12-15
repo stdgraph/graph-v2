@@ -52,8 +52,9 @@ int main() {
 
   bool pass = true;
   for (size_t i = 0; i < size(ospf_vertices); ++i) {
-      std::cout << std::setw(6) << ospf_vertices[i] << std::setw(6) << e[i] << std::endl;
-      if (e[i] != d[i]) pass = false;
+    std::cout << std::setw(6) << ospf_vertices[i] << std::setw(6) << e[i] << std::endl;
+    if (e[i] != d[i])
+      pass = false;
   }
   std::cout << (pass ? "***PASS***" : "***FAIL***") << std::endl;
 
@@ -73,7 +74,8 @@ int main() {
   bool pass2 = true;
   for (size_t i = 0; i < size(ospf_vertices); ++i) {
     std::cout << std::setw(6) << ospf_vertices[i] << std::setw(6) << e[i] << std::endl;
-    if (e[i] != d[i]) pass2 = false;
+    if (e[i] != d[i])
+      pass2 = false;
   }
   std::cout << (pass2 ? "***PASS***" : "***FAIL***") << std::endl;
 
