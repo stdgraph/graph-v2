@@ -50,9 +50,13 @@ int main() {
   graph::init_shortest_paths(e, p);
   graph::dijkstra_shortest_paths(G, 5UL, e, p, [](auto&& ee) { return std::get<1>(ee); });
 
+  bool pass = true;
   for (size_t i = 0; i < size(ospf_vertices); ++i) {
     std::cout << std::setw(6) << ospf_vertices[i] << std::setw(6) << e[i] << std::endl;
+    if (e[i] != d[i])
+      pass = false;
   }
+  std::cout << (pass ? "***PASS***" : "***FAIL***") << std::endl;
 
   std::cout << "----------------" << std::endl;
   std::cout << "Results from make_index_graph(osp_vertices)" << std::endl;
@@ -67,9 +71,13 @@ int main() {
   graph::init_shortest_paths(f, p);
   graph::dijkstra_shortest_paths(J, 5UL, f, p, [](auto&& ee) { return std::get<2>(ospf_edges[std::get<1>(ee)]); });
 
+  bool pass2 = true;
   for (size_t i = 0; i < size(ospf_vertices); ++i) {
     std::cout << std::setw(6) << ospf_vertices[i] << std::setw(6) << e[i] << std::endl;
+    if (e[i] != d[i])
+      pass2 = false;
   }
+  std::cout << (pass2 ? "***PASS***" : "***FAIL***") << std::endl;
 
   return 0;
 }

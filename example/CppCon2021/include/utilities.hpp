@@ -233,7 +233,7 @@ auto make_plain_bipartite_graph(const V1& left_vertices, const V2& right_vertice
   auto index_edges = data_to_graph_edge_list(left_vertices, right_vertices, edges);
   auto graph_size  = idx == 0 ? size(left_vertices) : size(right_vertices);
 
-  Graph G(size(left_vertices));
+  Graph G(graph_size);
   push_back_plain_fill(index_edges, G, true, idx);
 
   return G;

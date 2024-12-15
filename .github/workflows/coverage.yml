@@ -19,13 +19,14 @@ jobs:
     # https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/
     if: "!contains(github.event.commits[0].message, '[skip cov]')"
     runs-on: ubuntu-latest
+    container: ubuntu:24.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - run: sudo apt-get update && sudo apt-get install -y gcc-11 g++-11 lcov cmake git
+      - run: apt-get update && apt-get install -y gcc-13 g++-13 lcov cmake git
         shell: bash
       
       - name: Configure cmake
@@ -34,8 +35,8 @@ jobs:
         run: cmake -B ${{github.workspace}}/build -D ENABLE_COVERAGE=ON
         shell: bash
         env:
-          CC:   gcc-11
-          CXX:  g++-11
+          CC:   gcc-13
+          CXX:  g++-13
         
       - name: Build all applications
         run: cmake --build ${{github.workspace}}/build
@@ -48,12 +49,12 @@ jobs:
         run: |
           cd ${{github.workspace}}/build
           lcov --no-external --capture --directory . --output-file coverage.info
-          lcov --remove coverage.info '/usr/include/*' '*/tests/*' --output-file coverage.info
+          lcov --ignore-errors unused --remove coverage.info '/usr/include/*' '*/tests/*' --output-file coverage.info
           geninfo --rc geninfo_unexecuted_blocks=1 --ignore-errors gcov --output-filename coverage.info .
           genhtml coverage.info --output-directory out
         
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ${{github.workspace}}/build/out/index.html
           token: ${{ secrets.CODECOV_TOKEN }}

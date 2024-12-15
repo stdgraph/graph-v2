@@ -17,7 +17,6 @@
 #include <queue>
 #include <ranges>
 #include <limits>
-#include <fmt/format.h>
 
 #ifndef GRAPH_BREADTH_FIRST_SEARCH_HPP
 #  define GRAPH_BREADTH_FIRST_SEARCH_HPP
