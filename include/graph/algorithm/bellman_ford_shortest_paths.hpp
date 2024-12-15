@@ -20,7 +20,7 @@
 #include <ranges>
 #include <optional>
 #include <stdexcept>
-#include <fmt/format.h>
+#include <format>
 
 #ifndef GRAPH_BELLMAN_SHORTEST_PATHS_HPP
 #  define GRAPH_BELLMAN_SHORTEST_PATHS_HPP
@@ -139,14 +139,14 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&      //
 
   if (size(distances) < size(vertices(g))) {
     throw std::out_of_range(
-          fmt::format("bellman_ford_shortest_paths: size of distances is {} is less than the number of vertices {}",
+          std::format("bellman_ford_shortest_paths: size of distances is {} is less than the number of vertices {}",
                       size(distances), size(vertices(g))));
   }
 
   if constexpr (!is_same_v<Predecessors, _null_range_type>) {
     if (size(predecessor) < size(vertices(g))) {
       throw std::out_of_range(
-            fmt::format("bellman_ford_shortest_paths: size of predecessor is {} is less than the number of vertices {}",
+            std::format("bellman_ford_shortest_paths: size of predecessor is {} is less than the number of vertices {}",
                         size(predecessor), size(vertices(g))));
     }
   }
@@ -160,7 +160,7 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&      //
   for (auto&& source : sources) {
     if (source >= N || source < 0) {
       throw std::out_of_range(
-            fmt::format("bellman_ford_shortest_paths: source vertex id '{}' is out of range", source));
+            std::format("bellman_ford_shortest_paths: source vertex id '{}' is out of range", source));
     }
     distances[static_cast<size_t>(source)] = zero; // mark source as discovered
     if constexpr (has_on_discover_vertex<G, Visitor>) {

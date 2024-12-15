@@ -19,7 +19,7 @@
 #include <queue>
 #include <vector>
 #include <ranges>
-#include <fmt/format.h>
+#include <format>
 
 #ifndef GRAPH_DIJKSTRA_SHORTEST_PATHS_HPP
 #  define GRAPH_DIJKSTRA_SHORTEST_PATHS_HPP
@@ -102,13 +102,13 @@ constexpr void dijkstra_shortest_paths(
 
   if (size(distances) < size(vertices(g))) {
     throw std::out_of_range(
-          fmt::format("dijkstra_shortest_paths: size of distances of {} is less than the number of vertices {}",
+          std::format("dijkstra_shortest_paths: size of distances of {} is less than the number of vertices {}",
                       size(distances), size(vertices(g))));
   }
   if constexpr (!is_same_v<Predecessors, _null_range_type>) {
     if (size(predecessor) < size(vertices(g))) {
       throw std::out_of_range(
-            fmt::format("dijkstra_shortest_paths: size of predecessor of {} is less than the number of vertices {}",
+            std::format("dijkstra_shortest_paths: size of predecessor of {} is less than the number of vertices {}",
                         size(predecessor), size(vertices(g))));
     }
   }
@@ -134,7 +134,7 @@ constexpr void dijkstra_shortest_paths(
   // Seed the queue with the initial vertice(s)
   for (auto&& source : sources) {
     if (source >= N || source < 0) {
-      throw std::out_of_range(fmt::format("dijkstra_shortest_paths: source vertex id '{}' is out of range", source));
+      throw std::out_of_range(std::format("dijkstra_shortest_paths: source vertex id '{}' is out of range", source));
     }
     queue.push(source);
     distances[static_cast<size_t>(source)] = zero; // mark source as discovered
@@ -161,7 +161,7 @@ constexpr void dijkstra_shortest_paths(
       if constexpr (is_signed_v<weight_type>) {
         if (w < zero) {
           throw std::out_of_range(
-                fmt::format("dijkstra_shortest_paths: invalid negative edge weight of '{}' encountered", w));
+                std::format("dijkstra_shortest_paths: invalid negative edge weight of '{}' encountered", w));
         }
       }
 

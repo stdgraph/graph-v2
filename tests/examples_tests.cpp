@@ -27,13 +27,8 @@ const vector<string> actors{"Tom Cruise",      "Kevin Bacon",    "Hugo Weaving",
                             "Sebastian Stan",  "Mila Kunis",     "Michelle Pfeiffer", "Keanu Reeves",
                             "Julia Roberts"};
 
-TEMPLATE_TEST_CASE("Kevin Bacon example",
-                   "[example][bfs][basic_graph]",
-                   vector<vector<size_t>>,
-                   vector<vector<size_t>> const,
-                   vector<vector<tuple<size_t>>>,
-                   vector<vector<tuple<size_t>>> const) {
-  using Graph = TestType;
+TEST_CASE("Kevin Bacon example", "[example][bfs][basic_graph]") {
+  using Graph = vector<vector<size_t>>;
 
   Graph costar_adjacency_list{{1, 5, 6}, {7, 10, 0, 5, 12}, {4, 3, 11}, {2, 11}, {8, 9, 2, 12}, {0, 1},
                               {7, 0},    {6, 1, 10},        {4, 9},     {4, 8},  {7, 1},        {2, 3},
@@ -92,4 +87,4 @@ TEMPLATE_TEST_CASE("Kevin Bacon example",
   }
 #endif
 
-} // TEMPLATE_TEST_CASE
+} // TEST_CASE

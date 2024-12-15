@@ -8,8 +8,9 @@
 #include <ranges>
 #include <cstdint>
 #include <cassert>
+#include <format>
+#include <iostream>
 #include "graph/graph.hpp"
-#include <fmt/format.h>
 
 // NOTES
 //  have public load_edges(...), load_vertices(...), and load()
@@ -699,10 +700,10 @@ public: // Operations
     for (auto&& edge_data : erng) {
       auto&& edge = eprojection(edge_data); // compressed_graph requires EV!=void
       if (edge.source_id < last_uid) {      // ordered by uid? (requirement)
-        std::string msg = fmt::format(
+        std::string msg = std::format(
               "source id of {} on line {} of the data input is not ordered after source id of {} on the previous line",
               edge.source_id, debug_count, last_uid);
-        fmt::print("\n{}\n", msg);
+        std::cout << std::format("\n{}\n", msg);
         assert(false);
         throw graph_error(move(msg));
       }

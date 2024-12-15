@@ -43,7 +43,7 @@ Other releases or compilers may or may not work.
 
 ### Prerequesites
 - C\+\+20 compliant compiler that fully supports concepts and ranges. (C\+\+23 is required for building the benchmarks.)
-- CMake 26 or later (for CMake Presets)
+- CMake 3.20 or later (for CMake Presets)
 
 ### Quick Start Guide (Linux, WSL, MacOS)
 ```bash
@@ -51,7 +51,7 @@ git clone https://github.com/stdgraph/graph-v2.git
 cd graph-v2
 mkdir build && cd build
 cmake ..
-make -j8
+make
 ```
 
 ### Editor/IDE Configuration (Windows)
@@ -123,5 +123,5 @@ The following papers make up the current proposal for the Graph Library.
 Committee ([WG21](https://isocpp.org/std/the-committee)).
 - Bob Steagal for his [gcc-builder & clang-builder scripts](https://github.com/BobSteagall)
 - Jason Turner for his [cpp_starter_project](https://github.com/lefticus/cpp_starter_project)
-- Vincent La for his [cvs-parser](https://github.com/vincentlaucsb/csv-parser)
+- Vincent La for his [cvs-parser](https://github.com/vincentlaucsb/csv-parser) (copied into tests).
 - The ISO C++ Standards Committee (WG21) for [C++](http://eel.is/c++draft/)
