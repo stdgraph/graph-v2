@@ -60,7 +60,7 @@ TEST_CASE("Tuple tail") {
   using Tuple  = std::tuple<int, double, float>;
   using Tuple2 = std::tuple<int&, double&, float&>;
   using Pair   = std::pair<int, double>;
-  using Pair2   = std::pair<int&, double&>;
+  using Pair2  = std::pair<int&, double&>;
 
   int    a{1};
   double b{2};
@@ -107,13 +107,12 @@ TEST_CASE("Tuple tail") {
   SECTION("pair source") {
     SECTION("tuple_tail") {
       Pair2 p(a, b);
-      auto   last1  = graph::tuple_tail<1>(p);
+      auto  last1   = graph::tuple_tail<1>(p);
       get<0>(last1) = 7.0;
       REQUIRE(b == 7.0);
     }
   }
 }
-
 
 
 TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
@@ -664,55 +663,102 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
 }
 
 
-#if ENABLE_DESCRIPTOR_TESTS
 TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (vector<int>), (const vector<int>)) {
-  using Container             = TestType;
-  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
-  using difference_type       = typename iterator_traits<Iterator>::difference_type;
-  Container       v           = {1, 2, 3, 4, 5};
-  auto            descriptors = descriptor_subrange_view(v);
-  difference_type i           = 0;
+  using Container       = TestType;
+  using Iterator        = _descriptor_iterator<iterator_t<Container>>;
+  using difference_type = typename iterator_traits<Iterator>::difference_type;
+  Container       v     = {1, 2, 3, 4, 5};
+  difference_type i     = 0;
 
-  SECTION("descriptor std for") {
-    for (auto it = begin(descriptors); it != end(descriptors); ++it) {
-      difference_type descriptor = *it;
-      REQUIRE(descriptor == i);
-      //REQUIRE(descriptors[descriptor] == descriptor + 1);
-      REQUIRE(descriptors.id(descriptor) == i);
-      ++i;
+  SECTION("descriptor_view") {
+    auto descriptors = descriptor_view(v);
+
+    SECTION("descriptor std for") {
+      for (auto it = begin(descriptors); it != end(descriptors); ++it) {
+        difference_type descriptor = *it;
+        REQUIRE(descriptor == i);
+        //REQUIRE(descriptors[descriptor] == descriptor + 1);
+        REQUIRE(descriptors.get_vertex_id(descriptor) == i);
+        ++i;
+      }
+    }
+
+    SECTION("descriptor range for") {
+      for (difference_type descriptor : descriptors) {
+        REQUIRE(descriptor == i);
+        //REQUIRE(descriptors[descriptor] == descriptor + 1);
+        ++i;
+      }
     }
   }
 
-  SECTION("descriptor range for") {
-    for (difference_type descriptor : descriptors) {
-      REQUIRE(descriptor == i);
-      //REQUIRE(descriptors[descriptor] == descriptor + 1);
-      ++i;
+  SECTION("descriptor_subrange_view") {
+    auto descriptors = descriptor_subrange_view(v);
+
+    SECTION("descriptor std for") {
+      for (auto it = begin(descriptors); it != end(descriptors); ++it) {
+        difference_type descriptor = *it;
+        REQUIRE(descriptor == i);
+        //REQUIRE(descriptors[descriptor] == descriptor + 1);
+        REQUIRE(descriptors.get_vertex_id(descriptor) == i);
+        ++i;
+      }
+    }
+
+    SECTION("descriptor range for") {
+      for (difference_type descriptor : descriptors) {
+        REQUIRE(descriptor == i);
+        //REQUIRE(descriptors[descriptor] == descriptor + 1);
+        ++i;
+      }
     }
   }
 }
 
 TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (list<int>), (const list<int>)) {
-  using Container             = TestType;
-  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
-  using difference_type       = typename iterator_traits<Iterator>::difference_type;
-  Container       v           = {1, 2, 3, 4, 5};
-  auto            descriptors = descriptor_subrange_view(v);
-  difference_type i           = 0;
+  using Container       = TestType;
+  using Iterator        = _descriptor_iterator<iterator_t<Container>>;
+  using difference_type = typename iterator_traits<Iterator>::difference_type;
+  Container       v     = {1, 2, 3, 4, 5};
+  difference_type i     = 0;
 
-  SECTION("descriptor std for") {
-    for (auto it = begin(descriptors); it != end(descriptors); ++it) {
-      auto descriptor = *it;
-      //const int& value      = descriptors[descriptor];
-      //REQUIRE(descriptors[descriptor] == i + 1);
-      ++i;
+  SECTION("descriptor_view") {
+    auto descriptors = descriptor_view(v);
+
+    SECTION("descriptor std for") {
+      for (auto it = begin(descriptors); it != end(descriptors); ++it) {
+        auto descriptor = *it;
+        //const int& value      = descriptors[descriptor];
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        ++i;
+      }
+    }
+
+    SECTION("descriptor range for") {
+      for (auto descriptor : descriptors) {
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        ++i;
+      }
     }
   }
 
-  SECTION("descriptor range for") {
-    for (auto descriptor : descriptors) {
-      //REQUIRE(descriptors[descriptor] == i + 1);
-      ++i;
+  SECTION("descriptor_subrange_view") {
+    auto descriptors = descriptor_subrange_view(v);
+
+    SECTION("descriptor std for") {
+      for (auto it = begin(descriptors); it != end(descriptors); ++it) {
+        auto descriptor = *it;
+        //const int& value      = descriptors[descriptor];
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        ++i;
+      }
+    }
+
+    SECTION("descriptor range for") {
+      for (auto descriptor : descriptors) {
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        ++i;
+      }
     }
   }
 }
@@ -726,71 +772,142 @@ TEMPLATE_TEST_CASE("All simple values",
                    (const deque<int>),
                    (list<int>),
                    (const list<int>)) {
-  using Container             = TestType;
-  using IdentifierView        = descriptor_subrange_view<Container>;
-  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
-  using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
-  using difference_type       = typename iterator_traits<Iterator>::difference_type;
-  Container       v           = {1, 2, 3, 4, 5};
-  auto            descriptors = descriptor_subrange_view(v);
-  difference_type i           = 0;
+  using Container       = TestType;
+  using Iterator        = _descriptor_iterator<iterator_t<Container>>;
+  using difference_type = typename iterator_traits<Iterator>::difference_type;
+  //using IdentifierView  = descriptor_subrange_view<Container>;
+  //using Iterator        = _descriptor_iterator<iterator_t<Container>>;
+  //using descriptor_type = typename IdentifierView::value_type; // integral or iterator
+  //using difference_type = typename iterator_traits<Iterator>::difference_type;
+  Container       v = {1, 2, 3, 4, 5};
+  difference_type i = 0;
 
-  SECTION("descriptor std for") {
-    // for(auto it = begin(vertices(g)); it != end(vertices(g)); ++it)
-    for (auto it = begin(descriptors); it != end(descriptors); ++it) {
-      descriptor_type descriptor = *it; // descriptor is integral or iterator
-      //REQUIRE(descriptors[descriptor] == i + 1);
-      if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
-        REQUIRE(descriptors.id(descriptor) == i); // e.g. vertex_id(descriptor)
+  SECTION("descriptor_view") {
+    auto descriptors = descriptor_view(v);
+    using desc_view  = decltype(descriptors);
+    using desc_type  = range_value_t<desc_view>;
+
+    SECTION("descriptor std for") {
+      // for(auto it = begin(vertices(g)); it != end(vertices(g)); ++it)
+      for (auto it = begin(descriptors); it != end(descriptors); ++it) {
+        const desc_type& descriptor = *it; // descriptor is integral or iterator
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i); // e.g. vertex_id(descriptor)
+        }
+        ++i;
       }
-      ++i;
+    }
+
+    SECTION("descriptor range for") {
+      // for(auto descriptor : vertices(g)) // descriptor is integral or iterator
+      for (auto&& descriptor : descriptors) {
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i); // e.g. vertex_id(descriptor) == i
+        }
+        ++i;
+      }
     }
   }
 
-  SECTION("descriptor range for") {
-    // for(auto descriptor : vertices(g)) // descriptor is integral or iterator
-    for (descriptor_type descriptor : descriptors) {
-      //REQUIRE(descriptors[descriptor] == i + 1);
-      if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
-        REQUIRE(descriptors.id(descriptor) == i); // e.g. vertex_id(descriptor) == i
+  SECTION("descriptor_subrange_view") {
+    auto descriptors = descriptor_subrange_view(v);
+    using desc_view  = decltype(descriptors);
+    using desc_type  = range_value_t<desc_view>;
+
+    SECTION("descriptor std for") {
+      // for(auto it = begin(vertices(g)); it != end(vertices(g)); ++it)
+      for (auto it = begin(descriptors); it != end(descriptors); ++it) {
+        const desc_type& descriptor = *it; // descriptor is integral or iterator
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i); // e.g. vertex_id(descriptor)
+        }
+        ++i;
       }
-      ++i;
+    }
+
+    SECTION("descriptor range for") {
+      // for(auto descriptor : vertices(g)) // descriptor is integral or iterator
+      for (auto&& descriptor : descriptors) {
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i); // e.g. vertex_id(descriptor) == i
+        }
+        ++i;
+      }
     }
   }
 }
 
 TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (const map<int, int>)) {
-  using Container             = TestType;
-  using IdentifierView        = descriptor_subrange_view<Container>;
-  using Iterator              = _descriptor_iterator<iterator_t<Container>>;
-  using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
-  using difference_type       = typename iterator_traits<Iterator>::difference_type;
-  Container       v           = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
-  auto            descriptors = descriptor_subrange_view(v);
-  difference_type i           = 0;
+  using Container       = TestType;
+  using Iterator        = _descriptor_iterator<iterator_t<Container>>;
+  using difference_type = typename iterator_traits<Iterator>::difference_type;
+  Container v           = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
 
-  SECTION("descriptor std for") {
-    for (auto it = begin(descriptors); it != end(descriptors); ++it) {
-      descriptor_type descriptor = *it;
-      //REQUIRE(descriptors[descriptor] == i + 1);
-      if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
-        REQUIRE(descriptors.id(descriptor) == i);
+  //using IdentifierView        = descriptor_subrange_view<Container>;
+  //using Iterator              = _descriptor_iterator<iterator_t<Container>>;
+  //using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
+  //using difference_type       = typename iterator_traits<Iterator>::difference_type;
+  difference_type i = 0;
+
+  SECTION("descriptor_view") {
+    auto descriptors = descriptor_view(v);
+    using desc_view  = decltype(descriptors);
+    using desc_type  = range_value_t<desc_view>;
+
+    SECTION("descriptor std for") {
+      for (auto it = begin(descriptors); it != end(descriptors); ++it) {
+        desc_type descriptor = *it;
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i);
+        }
+        ++i;
       }
-      ++i;
+    }
+
+    SECTION("descriptor range for") {
+      for (auto&& descriptor : descriptors) {
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i);
+        }
+        ++i;
+      }
     }
   }
+  SECTION("descriptor_view") {
+    auto descriptors = descriptor_subrange_view(v);
+    using desc_view  = decltype(descriptors);
+    using desc_type  = range_value_t<desc_view>;
 
-  SECTION("descriptor range for") {
-    for (descriptor_type descriptor : descriptors) {
-      //REQUIRE(descriptors[descriptor] == i + 1);
-      if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
-        REQUIRE(descriptors.id(descriptor) == i);
+    SECTION("descriptor std for") {
+      for (auto it = begin(descriptors); it != end(descriptors); ++it) {
+        desc_type descriptor = *it;
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i);
+        }
+        ++i;
       }
-      ++i;
+    }
+
+    SECTION("descriptor range for") {
+      for (auto&& descriptor : descriptors) {
+        //REQUIRE(descriptors[descriptor] == i + 1);
+        if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i);
+        }
+        ++i;
+      }
     }
   }
 }
 
+#if ENABLE_DESCRIPTOR_TESTS
 //TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
 //  using Container             = TestType;
 //  using IdentifierView        = descriptor_subrange_view<Container>;

@@ -166,6 +166,7 @@ private:
 };
 
 
+#if 0
 template <class T>
 struct descriptor_inner_value {
   using type = T;
@@ -180,11 +181,11 @@ struct descriptor_inner_value<std::tuple<Args...>> {
 };
 template <class T>
 using descriptor_inner_value_t = typename descriptor_inner_value<T>::type;
+#endif
 
 
-#  if 1
 template <forward_range R, class VId = range_difference_t<R>>
-class descriptor_view : public std::ranges::view_interface<descriptor_view<R>> {
+class descriptor_view : public std::ranges::view_interface<descriptor_view<R, VId>> {
 public:
   //using size_type       = range_size_t<R>;
   using inner_iterator = iterator_t<R>;                             // iterator of the underlying container
@@ -196,24 +197,49 @@ public:
   //using descriptor_type = iter_value_t<iterator>; // integral index or iterator, depending on container type
 
   descriptor_view() = default;
-  constexpr explicit descriptor_view(R&& r) : r_(r) {}
+  constexpr descriptor_view(R& r) : r_(r) {}
 
   auto size() const
   requires sized_range<R>
   {
-    return std::ranges::size(r_);
+    return std::ranges::size(r_.get());
   }
 
-  iterator begin() const { return std::ranges::begin(r_); }
-  iterator end() const { return std::ranges::end(r_); }
+  iterator begin() const {
+    if constexpr (integral<value_type>) {
+      return iterator(static_cast<id_type>(0));
+    } else {
+      return iterator(std::ranges::begin(r_.get()));
+    }
+  }
+  iterator end() const {
+    if constexpr (integral<value_type>) {
+      return iterator(static_cast<id_type>(std::ranges::size(r_.get())));
+    } else {
+      return iterator(std::ranges::end(r_.get()));
+    }
+  }
 
   /**
-   * @brief Get the vertex id for a descriptor.
+   * @brief Get an iterator to an element in the underlying container.
+   * @param desc The descriptor. This must refer to a valid element in the container.
+   * @return An iterator to the underlying container.
+   */
+  inner_iterator inner_value(const value_type& desc) const {
+    if constexpr (integral<value_type>) {
+      return std::ranges::begin(r_.get(desc)) + desc;
+    } else {
+      return desc;
+    }
+  }
+
+  /**
+   * @brief Get the vertex id for a descriptor on an outer range.
    * 
    * @param desc The descriptor. This must refer to a valid element in the container.
    * @return vertex id.
    */
-  id_type id(value_type& desc) const {
+  id_type get_vertex_id(const value_type& desc) const {
     if constexpr (integral<value_type>) {
       return desc;
     } else if constexpr (random_access_range<R>) {
@@ -229,21 +255,43 @@ public:
   }
 
   /**
-   * @brief Find an element in the container, given an id.
+   * @brief Get the target id for a descriptor in the inner range.
+   * 
+   * If the inner value is a tuple or pair, the first element is used as the target id. Examples:
+   *    vector<pair<int,double>>
+   *    list<tuple<int,double>>
+   *    map<int,double>
+   * Otherwise, the value itself is used as the target id. In some cases this is OK (e.g. set<int>).
+   * In more complex cases, the target id may be a struct and the caller needs to determine what to do
+   * with it.
+   * 
+   * @param desc The descriptor. This must refer to a valid element in the container.
+   * @return target id.
+   */
+  auto& get_target_id(const value_type& desc) const {
+    if constexpr (_is_tuple_like_v<range_value_t<R>>) {
+      return std::get<0>(*inner_value(desc)); // e.g., pair::first used for map, or vector<tuple<int,double>>
+    } else {
+      *inner_value(desc);                     // default to the value itself, e.g. set<int>
+    }
+  }
+
+  /**
+   * @brief Find an element in the descriptor container, given a descriptor.
    * 
    * This assumes that the full range of id's in the container is [0, size(r_)). If a subrange is needed, use 
    * subrange_find.
    * 
-   * @param id The id to search for.
+   * @param desc The descriptor to search for, either an integral index or an iterator.
    * @return Descriptor iterator to the element. If the element is not found, the iterator is equal to end().
    */
-  iterator find(id_type id) const {
+  iterator find(const value_type& desc) const {
     if constexpr (integral<value_type>) {
-      return iterator(id);
+      return iterator(desc);
     } else if constexpr (random_access_range<R>) {
-      return iterator(r_.begin() + id);
+      return iterator(r_.begin() + get_vertex_id(desc));
     } else if constexpr (bidirectional_range<R>) {
-      return iterator(r_.find(id)); // map or set
+      return iterator(r_.find(get_vertex_id(desc))); // map or set
     } else {
       static_assert(random_access_range<R>,
                     "find(id) cannot be evaluated for a forward range because there is no id/key in the container");
@@ -254,7 +302,154 @@ public:
 private:
   reference_wrapper<R> r_;
 };
-#  endif //0
+
+
+template <forward_range R, class VId = range_difference_t<R>>
+class descriptor_subrange_view : public std::ranges::view_interface<descriptor_subrange_view<R, VId>> {
+public:
+  //using size_type       = range_size_t<R>;
+  using inner_iterator = iterator_t<R>;                             // iterator of the underlying container
+  using iterator       = _descriptor_iterator<inner_iterator, VId>; //
+
+  using value_type      = iter_value_t<iterator>;                   // descriptor value type
+  using difference_type = iter_difference_t<iterator>;
+  using id_type         = iterator::vertex_id_type;                 // e.g. vertex_id_t
+  //using descriptor_type = iter_value_t<iterator>; // integral index or iterator, depending on container type
+
+  descriptor_subrange_view() = default;
+  constexpr explicit descriptor_subrange_view(R& r)
+        : r_(r), first_(r, std::ranges::begin(r)), last_(r, std::ranges::end(r)) {}
+  constexpr descriptor_subrange_view(R& r, inner_iterator first, inner_iterator last)
+        : r_(r), first_(r, first), last_(last) {}
+
+  auto size() const
+  requires sized_range<R>
+  {
+    return std::ranges::size(r_.get());
+  }
+
+  iterator begin() const { return first_; }
+  iterator end() const { return last_; }
+
+  /**
+   * @brief Get an iterator to an element in the underlying container.
+   * @param desc The descriptor. This must refer to a valid element in the container.
+   * @return An iterator to the underlying container.
+   */
+  inner_iterator inner_value(const value_type& desc) const {
+    if constexpr (integral<value_type>) {
+      return std::ranges::begin(r_.get(desc)) + desc;
+    } else {
+      return desc;
+    }
+  }
+
+  /**
+   * @brief Get the vertex id for a descriptor on an outer range.
+   * 
+   * @param desc The descriptor. This must refer to a valid element in the container.
+   * @return vertex id.
+   */
+  id_type get_vertex_id(const value_type& desc) const {
+    if constexpr (integral<value_type>) {
+      return desc;
+    } else if constexpr (random_access_range<R>) {
+      return static_cast<id_type>(std::distance(r_.get().begin(), desc));
+    } else if constexpr (_is_tuple_like_v<range_value_t<R>>) {
+      return std::get<0>(*desc); // e.g., pair::first used for map
+    } else {
+      static_assert(
+            random_access_range<R>,
+            "id cannot be determined for a forward range or a bidirectional range without a tuple-like value type");
+      return id_type();
+    }
+  }
+
+  /**
+   * @brief Get the target id for a descriptor in the inner range.
+   * 
+   * If the inner value is a tuple or pair, the first element is used as the target id. Examples:
+   *    vector<pair<int,double>>
+   *    list<tuple<int,double>>
+   *    map<int,double>
+   * Otherwise, the value itself is used as the target id. In some cases this is OK (e.g. set<int>).
+   * In more complex cases, the target id may be a struct and the caller needs to determine what to do
+   * with it.
+   * 
+   * @param desc The descriptor. This must refer to a valid element in the container.
+   * @return target id.
+   */
+  auto& get_target_id(const value_type& desc) const {
+    if constexpr (_is_tuple_like_v<range_value_t<R>>) {
+      return std::get<0>(*inner_value(desc)); // e.g., pair::first used for map, or vector<tuple<int,double>>
+    } else {
+      *inner_value(desc);                     // default to the value itself, e.g. set<int>
+    }
+  }
+
+  /**
+   * @brief Find an element in the descriptor container, given a descriptor.
+   * 
+   * This assumes that the full range of id's in the container is [0, size(r_)). If a subrange is needed, use 
+   * subrange_find.
+   * 
+   * @param id The id to search for.
+   * @return Descriptor iterator to the element. If the element is not found, the iterator is equal to end().
+   */
+  iterator find(const value_type& desc) const {
+    if constexpr (integral<value_type>) {
+      return iterator(desc);
+    } else if constexpr (random_access_range<R>) {
+      return iterator(r_.get().begin() + get_vertex_id(desc));
+    } else if constexpr (bidirectional_range<R>) {
+      return iterator(r_.get().find(get_vertex_id(desc))); // map or set
+    } else {
+      static_assert(random_access_range<R>,
+                    "find(id) cannot be evaluated for a forward range because there is no id/key in the container");
+    }
+    return last_;
+  }
+
+  /**
+   * @brief Find an element in a container, given an id, constrained to the range [first_, last_).
+   * 
+   * The id must be in the range [first_, last_) of the container. If it isn't, the iterator will be equal to end()
+   * which is also last_.
+   * 
+   * Note: The first/last constraint is really for edges in a CSR. Vertices in a CSR and edges in vertex<vertex<int>>
+   * will include all elements in the container. Specialization for different conditions could reduce the number of
+   * constraints.
+   * 
+   * @param id The id to search for. It must be in the range [first_, last_) of the container.
+   * @return Descriptor iterator to the element. If the element is not found, the iterator is equal to end().
+   */
+  iterator subrange_find(const id_type& id) const {
+    if constexpr (integral<value_type>) {
+      assert(id >= *first_ && id < *last_);
+      return iterator(r_, r_.begin() + id);
+    } else if constexpr (random_access_range<R>) {
+      assert((id >= *first_ - r_.begin()) && (id < *last_ - r_.begin()));
+      return iterator(r_.begin() + id);
+    } else if constexpr (bidirectional_range<R>) {
+      auto it = r_.find(id);
+      if (it != r_.end()) {
+        return iterator(it);
+      }
+    } else {
+      static_assert(random_access_range<R>,
+                    "find(id) cannot be evaluated for a forward range because there is no id/key in the container");
+    }
+    return last_;
+  }
+
+private:
+  reference_wrapper<R> r_;
+
+  // first_ and last_ may be a sub-range of the container (e.g. for a CSR).
+  iterator first_;
+  iterator last_;
+};
+
 
 } // namespace graph
 
