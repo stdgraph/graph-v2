@@ -154,9 +154,9 @@ struct _descriptor_traits {
  * @tparam I Iterator type of the underlying container.
  */
 template <forward_iterator I, class Traits = _descriptor_traits<I>>
-class _descriptor_iterator {
+class descriptor_iterator {
 public:
-  using this_type = _descriptor_iterator<I>;
+  using this_type = descriptor_iterator<I>;
   using traits    = Traits;
 
   using inner_iterator   = I;
@@ -170,13 +170,13 @@ public:
   using iterator_category = std::forward_iterator_tag;
   using iterator_concept  = iterator_category;
 
-  _descriptor_iterator() = default;
-  explicit _descriptor_iterator(value_type descriptor) : descriptor_(descriptor) {}
+  descriptor_iterator() = default;
+  explicit descriptor_iterator(value_type descriptor) : descriptor_(descriptor) {}
   // copy & move constructors and assignment operators are default
 
   template <forward_range R>
   requires convertible_to<iterator_t<R>, inner_iterator>
-  explicit _descriptor_iterator(R& r, inner_iterator iter) {
+  explicit descriptor_iterator(R& r, inner_iterator iter) {
     if constexpr (integral<value_type>) {
       descriptor_ = static_cast<difference_type>(std::distance(std::ranges::begin(r), iter));
     } else {
@@ -193,12 +193,12 @@ public:
   //
   // operators ++
   //
-  _descriptor_iterator& operator++() {
+  descriptor_iterator& operator++() {
     ++descriptor_;
     return *this;
   }
-  _descriptor_iterator operator++(int) {
-    _descriptor_iterator tmp = *this;
+  descriptor_iterator operator++(int) {
+    descriptor_iterator tmp = *this;
     ++descriptor_;
     return tmp;
   }
@@ -206,7 +206,7 @@ public:
   //
   // operators ==, !=
   //
-  auto operator==(const _descriptor_iterator& rhs) const { return descriptor_ == rhs.descriptor_; }
+  auto operator==(const descriptor_iterator& rhs) const { return descriptor_ == rhs.descriptor_; }
 
 private:
   value_type descriptor_ = value_type(); // integral index or iterator, depending on container type
@@ -277,7 +277,7 @@ class descriptor_view : public std::ranges::view_interface<descriptor_view<C>> {
 public:
   //using size_type       = range_size_t<C>;
   using inner_iterator = iterator_t<C>;                        // iterator of the underlying container
-  using iterator       = _descriptor_iterator<inner_iterator>; //
+  using iterator       = descriptor_iterator<inner_iterator>; //
 
   using value_type      = descriptor_value_t<range_value_t<C>>;
   using difference_type = iter_difference_t<iterator>;
@@ -349,7 +349,7 @@ class descriptor_subrange_view : public std::ranges::view_interface<descriptor_s
 public:
   //using size_type       = range_size_t<C>;
   using inner_iterator = iterator_t<C>;                        // iterator of the underlying container
-  using iterator       = _descriptor_iterator<inner_iterator>; //
+  using iterator       = descriptor_iterator<inner_iterator>; //
 
   using value_type      = descriptor_value_t<range_value_t<C>>;
   using difference_type = iter_difference_t<iterator>;
@@ -455,7 +455,7 @@ private:
 
 #  if 0
 template <forward_range R>
-using _descriptor_view = subrange<_descriptor_iterator<iterator_t<R>>, _descriptor_iterator<iterator_t<R>>>;
+using _descriptor_view = subrange<descriptor_iterator<iterator_t<R>>, descriptor_iterator<iterator_t<R>>>;
 
 template <forward_range R>
 auto to_descriptor_view(R&& r) {

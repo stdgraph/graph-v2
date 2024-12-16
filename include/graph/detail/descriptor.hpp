@@ -56,11 +56,152 @@ struct _is_tuple_like<tuple<Args...>> : public std::true_type {};
 template <typename... Args>
 inline constexpr bool _is_tuple_like_v = _is_tuple_like<Args...>::value;
 
-template<forward_iterator I, class IdT = iter_difference_t<I>>
-using iter_descriptor_t = conditional_t<random_access_iterator<I>, IdT, I>;
-
+// Optimization: owner_ isn't needed when the descriptor is an iterator.
 template <forward_range R, class IdT = range_difference_t<R>>
-using range_descriptor_t = iter_descriptor_t<iterator_t<R>, IdT>;
+class descriptor {
+public:
+  using range_type = remove_reference_t<R>; // (conflict with range concept?)
+  using iterator   = iterator_t<range_type>;
+  using id_type    = IdT;
+  using value_type = conditional_t<random_access_range<range_type>, id_type, iterator>;
+
+  constexpr descriptor()                  = default;
+  constexpr descriptor(const descriptor&) = default;
+  constexpr ~descriptor() noexcept        = default;
+
+  constexpr descriptor(range_type& owner, iterator iter) : owner_(&owner) {
+    if constexpr (integral<value_type>) {
+      value_ = static_cast<id_type>(std::distance(owner_->begin(), iter));
+    } else {
+      value_ = iter;
+    }
+  }
+  constexpr descriptor(range_type& owner, id_type id) : owner_(&owner) {
+    if constexpr (integral<value_type>) {
+      value_ = id;
+    } else {
+      value_ = owner_.begin() + id;
+    }
+  }
+
+  constexpr descriptor& operator=(const descriptor&) = default;
+
+public:
+  constexpr value_type value() const noexcept { return value_; }
+
+  /**
+   * @brief Get the vertex id for a descriptor on an outer range.
+   * 
+   * @param desc The descriptor. This must refer to a valid element in the container.
+   * @return vertex id.
+   */
+  [[nodiscard]] constexpr id_type vertex_id() const
+  requires integral<value_type> || random_access_range<range_type> || _is_tuple_like_v<range_value_t<range_type>>
+  {
+    if constexpr (integral<value_type>) {
+      return value_;
+    } else if constexpr (random_access_range<range_type>) {
+      return static_cast<id_type>(std::ranges::distance(owner_->begin(), value_)); // value_ is an iterator
+    } else if constexpr (_is_tuple_like_v<range_value_t<range_type>>) {
+      return std::get<0>(*value_);                                                 // e.g., pair::first used for map
+    } else {
+      static_assert(
+            random_access_range<R>,
+            "id cannot be determined for a forward range or a bidirectional range without a tuple-like value type");
+      return id_type();
+    }
+  }
+
+  /**
+   * @brief Get an iterator to the element in the underlying container.
+   * @param desc The descriptor. This must refer to a valid element in the container.
+   * @return An iterator to the underlying container.
+   */
+  [[nodiscard]] constexpr iterator inner_value() {
+    if constexpr (integral<value_type>) {
+      return owner_->begin() + value_;
+    } else {
+      return value_;
+    }
+  }
+  [[nodiscard]] constexpr iterator inner_value() const {
+    if constexpr (integral<value_type>) {
+      return owner_->begin() + value_;
+    } else {
+      return value_;
+    }
+  }
+
+  /**
+   * @brief Get the target id for a descriptor in the owning range.
+   * 
+   * If the inner value is a tuple or pair, the first element is used as the target id. Examples:
+   *    vector<pair<int,double>>
+   *    list<tuple<int,double>>
+   *    map<int,double>
+   * Otherwise, the value itself is used as the target id. In some cases this is OK (e.g. set<int>).
+   * In more complex cases, the target id may be a struct and the caller needs to determine what to do
+   * with it.
+   * 
+   * @param desc The descriptor. This must refer to a valid element in the container.
+   * @return target id.
+   */
+  constexpr const auto& target_id() const {
+    if constexpr (_is_tuple_like_v<range_value_t<range_type>>) {
+      return std::get<0>(*inner_value()); // e.g., pair::first used for map, or vector<tuple<int,double>>
+    } else {
+      return *inner_value();              // default to the value itself, e.g. set<int>
+    }
+  }
+
+public:
+  //
+  // dereference
+  //
+  [[nodiscard]] constexpr auto& operator*() const noexcept { return *inner_value(); }
+  [[nodiscard]] constexpr auto* operator->() const noexcept { return &*inner_value(); }
+
+  //
+  // operator ++
+  //
+  constexpr descriptor& operator++() {
+    ++value_;
+    return *this;
+  }
+  constexpr descriptor operator++(int) {
+    descriptor tmp = *this;
+    ++value_;
+    return tmp;
+  }
+
+  //
+  // operators ==, !=, <=>
+  //
+  constexpr bool operator==(const descriptor& rhs) const { return value_ == rhs.value_; }
+
+  constexpr auto operator<=>(const descriptor& rhs) const
+  requires random_access_range<range_type>
+  {
+    return value_ <=> rhs.value_;
+  }
+
+  /**
+   * @brief Cast to the vertex id type.
+   * 
+   * This is a convenience function to allow the descriptor to be used as a vertex id.
+   */
+  constexpr operator id_type() const noexcept { return vertex_id(); }
+
+private:
+  value_type  value_ = value_type(); // index or iterator
+  range_type* owner_ = nullptr;      // owning range of value
+};
+
+//template <forward_iterator I, class IdT = iter_difference_t<I>>
+//using iter_descriptor_t = conditional_t<random_access_iterator<I>, IdT, I>;
+//
+//template <forward_range R, class IdT = range_difference_t<R>>
+//using range_descriptor_t = iter_descriptor_t<iterator_t<R>, IdT>;
 
 
 // vertex range type                          desc value_type   vertex_id_type    inner_value_type      target_id_type        edge_value_type
@@ -104,52 +245,50 @@ using range_descriptor_t = iter_descriptor_t<iterator_t<R>, IdT>;
  * 
  * @tparam I Iterator type of the underlying container.
  */
-template <forward_iterator I, class VId = iter_difference_t<I>>
-class _descriptor_iterator {
+template <forward_range R, class IdT = range_difference_t<R>>
+class descriptor_iterator {
 public:
-  using this_type = _descriptor_iterator<I, VId>;
+  using this_type = descriptor_iterator<R, IdT>;
 
-  using inner_iterator   = I;
+  using inner_range    = remove_reference_t<R>;
+  using inner_iterator = iterator_t<inner_range>;
+  //using size_type        = range_size_t<inner_range>;
   using difference_type  = iter_difference_t<inner_iterator>;
-  using inner_value_type = iter_value_t<I>;
+  using inner_value_type = iter_value_t<inner_iterator>;
 
-  using vertex_id_type = VId;
-  using value_type     = iter_descriptor_t<I, vertex_id_type>;
+  using id_type    = IdT;
+  using value_type = descriptor<inner_range, IdT>;
 
   using pointer           = std::add_pointer_t<std::add_const_t<value_type>>;
   using reference         = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
   using iterator_category = std::forward_iterator_tag;
   using iterator_concept  = iterator_category;
 
-  _descriptor_iterator() = default;
-  explicit _descriptor_iterator(value_type descriptor) : descriptor_(descriptor) {}
-  // copy and move constructors & assignment operators are default
+  constexpr descriptor_iterator()                           = default;
+  constexpr descriptor_iterator(const descriptor_iterator&) = default;
+  constexpr ~descriptor_iterator() noexcept                 = default;
 
-  template <forward_range R>
-  requires convertible_to<iterator_t<R>, inner_iterator>
-  explicit _descriptor_iterator(R& r, inner_iterator iter) {
-    if constexpr (integral<value_type>) {
-      descriptor_ = static_cast<difference_type>(std::distance(std::ranges::begin(r), iter));
-    } else {
-      descriptor_ = iter;
-    }
-  }
+  constexpr explicit descriptor_iterator(const value_type& descriptor) : descriptor_(descriptor) {}
+  constexpr descriptor_iterator(inner_range& r, inner_iterator iter) : descriptor_(r, iter) {}
+  constexpr descriptor_iterator(inner_range& r, id_type id) : descriptor_(r, id) {}
+
+  constexpr descriptor_iterator& operator=(const descriptor_iterator&) = default;
 
   //
   // dereference
   //
-  reference operator*() const noexcept { return descriptor_; }
-  pointer   operator->() const noexcept { return &descriptor_; }
+  [[nodiscard]] constexpr reference operator*() const noexcept { return descriptor_; }
+  [[nodiscard]] constexpr pointer   operator->() const noexcept { return &descriptor_; }
 
   //
   // operators ++
   //
-  _descriptor_iterator& operator++() {
+  constexpr descriptor_iterator& operator++() {
     ++descriptor_;
     return *this;
   }
-  _descriptor_iterator operator++(int) {
-    _descriptor_iterator tmp = *this;
+  constexpr descriptor_iterator operator++(int) {
+    descriptor_iterator tmp = *this;
     ++descriptor_;
     return tmp;
   }
@@ -157,102 +296,49 @@ public:
   //
   // operators ==, !=
   //
-  auto operator==(const _descriptor_iterator& rhs) const { return descriptor_ == rhs.descriptor_; }
+  [[nodiscard]] constexpr auto operator==(const descriptor_iterator& rhs) const {
+    return descriptor_ == rhs.descriptor_;
+  }
 
 private:
-  value_type descriptor_ = value_type(); // integral index or iterator, depending on container type
+  value_type descriptor_ = value_type();
 };
 
 
-template <forward_range R, class VId = range_difference_t<R>>
-class descriptor_view : public std::ranges::view_interface<descriptor_view<R, VId>> {
+template <forward_range R, class IdT = range_difference_t<R>>
+class descriptor_view : public std::ranges::view_interface<descriptor_view<R, IdT>> {
 public:
-  //using size_type       = range_size_t<R>;
-  using inner_iterator = iterator_t<R>;                             // iterator of the underlying container
-  using iterator       = _descriptor_iterator<inner_iterator, VId>; //
+  using inner_range    = remove_reference_t<R>;
+  using inner_iterator = iterator_t<inner_range>;               // iterator of the underlying container
+  using size_type      = range_size_t<inner_range>;
+  using iterator       = descriptor_iterator<inner_range, IdT>; //
 
-  using value_type      = iter_value_t<iterator>;                   // descriptor value type
+  using value_type      = iter_value_t<iterator>;               // descriptor value type
   using difference_type = iter_difference_t<iterator>;
-  using id_type         = iterator::vertex_id_type;                 // e.g. vertex_id_t
+  using id_type         = iterator::id_type;                    // e.g. vertex_id_t
   //using descriptor_type = iter_value_t<iterator>; // integral index or iterator, depending on container type
 
   descriptor_view() = default;
   constexpr descriptor_view(R& r) : r_(r) {}
 
-  auto size() const
+  [[nodiscard]] auto size() const
   requires sized_range<R>
   {
     return std::ranges::size(r_.get());
   }
 
-  iterator begin() const {
+  [[nodiscard]] iterator begin() const {
     if constexpr (integral<value_type>) {
       return iterator(static_cast<id_type>(0));
     } else {
-      return iterator(std::ranges::begin(r_.get()));
+      return iterator(r_, r_.get().begin());
     }
   }
-  iterator end() const {
+  [[nodiscard]] iterator end() const {
     if constexpr (integral<value_type>) {
       return iterator(static_cast<id_type>(std::ranges::size(r_.get())));
     } else {
-      return iterator(std::ranges::end(r_.get()));
-    }
-  }
-
-  /**
-   * @brief Get an iterator to an element in the underlying container.
-   * @param desc The descriptor. This must refer to a valid element in the container.
-   * @return An iterator to the underlying container.
-   */
-  inner_iterator inner_value(const value_type& desc) const {
-    if constexpr (integral<value_type>) {
-      return std::ranges::begin(r_.get(desc)) + desc;
-    } else {
-      return desc;
-    }
-  }
-
-  /**
-   * @brief Get the vertex id for a descriptor on an outer range.
-   * 
-   * @param desc The descriptor. This must refer to a valid element in the container.
-   * @return vertex id.
-   */
-  id_type get_vertex_id(const value_type& desc) const {
-    if constexpr (integral<value_type>) {
-      return desc;
-    } else if constexpr (random_access_range<R>) {
-      return static_cast<id_type>(std::distance(r_.begin(), desc));
-    } else if constexpr (_is_tuple_like_v<range_value_t<R>>) {
-      return std::get<0>(*desc); // e.g., pair::first used for map
-    } else {
-      static_assert(
-            random_access_range<R>,
-            "id cannot be determined for a forward range or a bidirectional range without a tuple-like value type");
-      return id_type();
-    }
-  }
-
-  /**
-   * @brief Get the target id for a descriptor in the inner range.
-   * 
-   * If the inner value is a tuple or pair, the first element is used as the target id. Examples:
-   *    vector<pair<int,double>>
-   *    list<tuple<int,double>>
-   *    map<int,double>
-   * Otherwise, the value itself is used as the target id. In some cases this is OK (e.g. set<int>).
-   * In more complex cases, the target id may be a struct and the caller needs to determine what to do
-   * with it.
-   * 
-   * @param desc The descriptor. This must refer to a valid element in the container.
-   * @return target id.
-   */
-  auto& get_target_id(const value_type& desc) const {
-    if constexpr (_is_tuple_like_v<range_value_t<R>>) {
-      return std::get<0>(*inner_value(desc)); // e.g., pair::first used for map, or vector<tuple<int,double>>
-    } else {
-      *inner_value(desc);                     // default to the value itself, e.g. set<int>
+      return iterator(r_, r_.get().end());
     }
   }
 
@@ -265,7 +351,7 @@ public:
    * @param desc The descriptor to search for, either an integral index or an iterator.
    * @return Descriptor iterator to the element. If the element is not found, the iterator is equal to end().
    */
-  iterator find(const value_type& desc) const {
+  [[nodiscard]] iterator find(const value_type& desc) const {
     if constexpr (integral<value_type>) {
       return iterator(desc);
     } else if constexpr (random_access_range<R>) {
@@ -280,92 +366,43 @@ public:
   }
 
 private:
-  reference_wrapper<R> r_;
+  reference_wrapper<inner_range> r_;
 };
-
 
 template <forward_range R, class VId = range_difference_t<R>>
 class descriptor_subrange_view : public std::ranges::view_interface<descriptor_subrange_view<R, VId>> {
 public:
-  //using size_type       = range_size_t<R>;
-  using inner_iterator = iterator_t<R>;                             // iterator of the underlying container
-  using iterator       = _descriptor_iterator<inner_iterator, VId>; //
+  using range_type     = remove_reference_t<R>;                // retain const
+  using size_type      = range_size_t<R>;                      //
+  using inner_iterator = iterator_t<R>;                        // iterator of the underlying container
+  using iterator       = descriptor_iterator<range_type, VId>; //
 
-  using value_type      = iter_value_t<iterator>;                   // descriptor value type
+  using value_type      = iter_value_t<iterator>;              // descriptor value type
   using difference_type = iter_difference_t<iterator>;
-  using id_type         = iterator::vertex_id_type;                 // e.g. vertex_id_t
+  using id_type         = iterator::id_type;                   // e.g. vertex_id_t
   //using descriptor_type = iter_value_t<iterator>; // integral index or iterator, depending on container type
 
   descriptor_subrange_view() = default;
   constexpr explicit descriptor_subrange_view(R& r)
-        : r_(r), first_(r, std::ranges::begin(r)), last_(r, std::ranges::end(r)) {}
+        : r_(r), subrange_(iterator(r, std::ranges::begin(r)), iterator(r, std::ranges::end(r))) {}
   constexpr descriptor_subrange_view(R& r, inner_iterator first, inner_iterator last)
-        : r_(r), first_(r, first), last_(last) {}
+        : r_(r), subrange_(iterator(r, first), iterator(r, last)) {}
+  constexpr descriptor_subrange_view(R& r, subrange<inner_iterator> subrng)
+        : r_(r), subrange_(iterator(r, subrng.begin()), iterator(r, subrng.end())) {}
 
-  auto size() const
-  requires sized_range<R>
-  {
-    return std::ranges::size(r_.get());
-  }
-
-  iterator begin() const { return first_; }
-  iterator end() const { return last_; }
-
-  /**
-   * @brief Get an iterator to an element in the underlying container.
-   * @param desc The descriptor. This must refer to a valid element in the container.
-   * @return An iterator to the underlying container.
-   */
-  inner_iterator inner_value(const value_type& desc) const {
+  auto size() const {
     if constexpr (integral<value_type>) {
-      return std::ranges::begin(r_.get(desc)) + desc;
+      return static_cast<size_type>(*end() - *begin()); // subtract integral index
     } else {
-      return desc;
+      return static_cast<size_type>(std::ranges::distance(*begin(), *end()));
     }
   }
 
-  /**
-   * @brief Get the vertex id for a descriptor on an outer range.
-   * 
-   * @param desc The descriptor. This must refer to a valid element in the container.
-   * @return vertex id.
-   */
-  id_type get_vertex_id(const value_type& desc) const {
-    if constexpr (integral<value_type>) {
-      return desc;
-    } else if constexpr (random_access_range<R>) {
-      return static_cast<id_type>(std::distance(r_.get().begin(), desc));
-    } else if constexpr (_is_tuple_like_v<range_value_t<R>>) {
-      return std::get<0>(*desc); // e.g., pair::first used for map
-    } else {
-      static_assert(
-            random_access_range<R>,
-            "id cannot be determined for a forward range or a bidirectional range without a tuple-like value type");
-      return id_type();
-    }
-  }
+  constexpr iterator begin() { return subrange_.begin(); }
+  constexpr iterator end() { return subrange_.end(); }
 
-  /**
-   * @brief Get the target id for a descriptor in the inner range.
-   * 
-   * If the inner value is a tuple or pair, the first element is used as the target id. Examples:
-   *    vector<pair<int,double>>
-   *    list<tuple<int,double>>
-   *    map<int,double>
-   * Otherwise, the value itself is used as the target id. In some cases this is OK (e.g. set<int>).
-   * In more complex cases, the target id may be a struct and the caller needs to determine what to do
-   * with it.
-   * 
-   * @param desc The descriptor. This must refer to a valid element in the container.
-   * @return target id.
-   */
-  auto& get_target_id(const value_type& desc) const {
-    if constexpr (_is_tuple_like_v<range_value_t<R>>) {
-      return std::get<0>(*inner_value(desc)); // e.g., pair::first used for map, or vector<tuple<int,double>>
-    } else {
-      *inner_value(desc);                     // default to the value itself, e.g. set<int>
-    }
-  }
+  constexpr iterator begin() const { return subrange_.begin(); }
+  constexpr iterator end() const { return subrange_.end(); }
 
   /**
    * @brief Find an element in the descriptor container, given a descriptor.
@@ -387,7 +424,7 @@ public:
       static_assert(random_access_range<R>,
                     "find(id) cannot be evaluated for a forward range because there is no id/key in the container");
     }
-    return last_;
+    return end();
   }
 
   /**
@@ -405,10 +442,10 @@ public:
    */
   iterator subrange_find(const id_type& id) const {
     if constexpr (integral<value_type>) {
-      assert(id >= *first_ && id < *last_);
+      assert(id >= *begin() && id < *end());
       return iterator(r_, r_.begin() + id);
     } else if constexpr (random_access_range<R>) {
-      assert((id >= *first_ - r_.begin()) && (id < *last_ - r_.begin()));
+      assert((id >= *begin() - r_.begin()) && (id < *end() - r_.begin()));
       return iterator(r_.begin() + id);
     } else if constexpr (bidirectional_range<R>) {
       auto it = r_.find(id);
@@ -419,23 +456,22 @@ public:
       static_assert(random_access_range<R>,
                     "find(id) cannot be evaluated for a forward range because there is no id/key in the container");
     }
-    return last_;
+    return end();
   }
 
 private:
-  reference_wrapper<R> r_;
-
-  // first_ and last_ may be a sub-range of the container (e.g. for a CSR).
-  iterator first_;
-  iterator last_;
+  reference_wrapper<range_type> r_;
+  subrange<iterator>            subrange_; // subrange of r_
 };
-
-template <forward_range R, class VId = range_difference_t<R>>
-auto to_descriptor_view(R&& r) {
-  return descriptor_view<R, VId>(r);
-}
 
 
 } // namespace graph
+
+template <class R, class VId>
+constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_view<R, VId>> = true;
+
+template <class R, class VId>
+constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_subrange_view<R, VId>> = true;
+
 
 #endif // GRAPH_DESCRIPTOR_HPP

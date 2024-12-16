@@ -163,7 +163,7 @@ protected:
     }
 
     // visited all neighbors of u, or cancelled u
-    if (uv_ == end(edges(*graph_, u_id))) {
+    if (uv_ == std::ranges::end(edges(*graph_, u_id))) {
       colors_[u_id] = black; // finished with u
       Q_.pop();
       while (!Q_.empty()) {
