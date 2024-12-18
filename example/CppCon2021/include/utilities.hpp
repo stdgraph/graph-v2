@@ -293,6 +293,17 @@ auto join(const Graph1& G, const Graph2& H) {
 
   std::vector<std::tuple<size_t, size_t, size_t>> s_overlap;
 
+#if USE_EDGE_DESCRIPTOR
+  for (size_t i = 0; i < H.size(); ++i) {
+    for (auto&& k : graph::edges(H, H[i])) {
+      for (auto&& j : graph::edges(G, graph::target_id(H, k))) {
+        if (graph::target_id(G, j) != i) {
+          s_overlap.push_back({i, graph::target_id(G, j), graph::target_id(H, k)});
+        }
+      }
+    }
+  }
+#else
   for (size_t i = 0; i < H.size(); ++i) {
     for (auto&& k : H[i]) {
       for (auto&& j : G[graph::target_id(H, k)]) {
@@ -302,6 +313,7 @@ auto join(const Graph1& G, const Graph2& H) {
       }
     }
   }
+#endif
 
   IndexGraph L(size(H));
   push_back_fill(s_overlap, L, true, 0);

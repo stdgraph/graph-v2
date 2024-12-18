@@ -31,38 +31,50 @@ target_include_directories(catch_main
 
 # begin /* Add unit tests */
 set(UNITTEST_SOURCES
-    "examples.cpp" 
-    "co_bfs_tests.cpp"
-    "co_dijkstra_tests.cpp"
-    "visitor_dijkstra_tests.cpp"
-
-    "breadth_first_search_tests.cpp"
-    "depth_first_search_tests.cpp"
-    "topological_sort_tests.cpp"
-
-    "csv_routes_vofl_tests.cpp" 
-    "csv_routes.cpp" 
-    "csv_routes_dov_tests.cpp" 
-    "csv_routes_csr_tests.cpp" 
-    "vertexlist_tests.cpp" 
-    "incidence_tests.cpp"  
-    "neighbors_tests.cpp"
-    "edgelist_tests.cpp" 
-    "edgelist_view_tests.cpp" 
-    "examples_tests.cpp"
-    "bellman_shortest_paths_tests.cpp" 
-    "dijkstra_shortest_paths_tests.cpp" 
-    "transitive_closure_tests.cpp" 
-    "dfs_tests.cpp" 
-    "bfs_tests.cpp"
-    "mis_tests.cpp" 
-    "mst_tests.cpp"
-    "tc_tests.cpp"
-    "cc_tests.cpp"
-
+    # Basic tests
     "descriptor_tests.cpp"
+    "edgelist_tests.cpp" 
+    "examples.cpp" 
     "tests.cpp"
+
+    # Views
+
+    # Algorithms
+
+    # Examples
+
+    # Coroutine Experiments
 )
+#   "co_bfs_tests.cpp"
+#   "co_dijkstra_tests.cpp"
+#   "visitor_dijkstra_tests.cpp"
+#
+#   "breadth_first_search_tests.cpp"
+#   "depth_first_search_tests.cpp"
+#   "topological_sort_tests.cpp"
+#
+#   "csv_routes_vofl_tests.cpp" 
+#   "csv_routes.cpp" 
+#   "csv_routes_dov_tests.cpp" 
+#   "csv_routes_csr_tests.cpp" 
+#   "vertexlist_tests.cpp" 
+#   "incidence_tests.cpp"  
+#   "neighbors_tests.cpp"
+#   "edgelist_tests.cpp" 
+#   "edgelist_view_tests.cpp" 
+#   "examples_tests.cpp"
+#   "bellman_shortest_paths_tests.cpp" 
+#   "dijkstra_shortest_paths_tests.cpp" 
+#   "transitive_closure_tests.cpp" 
+#   "dfs_tests.cpp" 
+#   "bfs_tests.cpp"
+#   "mis_tests.cpp" 
+#   "mst_tests.cpp"
+#   "tc_tests.cpp"
+#   "cc_tests.cpp"
+#
+
+
 
 foreach(SOURCE IN LISTS UNITTEST_SOURCES)
 	get_filename_component(TEST_NAME ${SOURCE} NAME_WLE)

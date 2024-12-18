@@ -861,9 +861,15 @@ namespace _Target_id {
         return {_St_adjl_ref::_Basic_id,
                 noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>()))}; // e.g. vector<list<int>>
       } else if constexpr (_Is_tuple_id_adj<_G>) {
+#  if USE_EDGE_DESCRIPTOR
+        return {_St_adjl_ref::_Tuple_id,
+                noexcept(_Fake_copy_init(
+                      declval<edge_reference_t<_G>>().target_id()))}; // e.g. vector<list<tuple<int,...>>>
+#  else
         return {
               _St_adjl_ref::_Tuple_id,
               noexcept(_Fake_copy_init(get<0>(declval<edge_reference_t<_G>>())))}; // e.g. vector<list<tuple<int,...>>>
+#  endif
       } else {
         return {_St_adjl_ref::_None};
       }
@@ -2109,17 +2115,25 @@ namespace _Edge_value {
 
   template <class _G>
   concept _Has_adjl_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
-    { _Fake_copy_init(uv.edge_value(__g)) };
+    { _Fake_copy_init(uv.edge_value(__g)) }; // member function
   };
   template <class _G>
   concept _Has_adjl_ref_ADL = _HasClassOrEnumType<_G>                        //
                               && requires(_G&& __g, edge_reference_t<_G> uv) {
                                    { _Fake_copy_init(edge_value(__g, uv)) }; // intentional ADL
                                  };
+#  if USE_EDGE_DESCRIPTOR
+  template <class _G>
+  concept _Can_adjl_ref_eval = _HasClassOrEnumType<_G> && forward_range<vertex_range_t<_G>> && //
+                               requires(edge_reference_t<_G> uv) {                             //
+                                 { *uv }; // vertex is just a range, edge type defined, and dereferenceable descriptor?
+                               };
+#  else
   template <class _G>
   concept _Can_adjl_ref_eval =
         _HasClassOrEnumType<_G> && forward_range<vertex_range_t<_G>> //
         && requires(edge_reference_t<_G> uv) { uv; };                // vertex is just a range, and edge type defined?
+#  endif
 
 
   template <class _E>
@@ -2216,7 +2230,11 @@ namespace _Edge_value {
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Non_member) {
         return edge_value(__g, uv); // intentional ADL
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Auto_eval) {
-        return uv;                  // intentional ADL
+#  if USE_EDGE_DESCRIPTOR
+        return *uv; // default impl
+#  else
+        return uv;                                                   // default impl
+#  endif
       } else {
         static_assert(_AlwaysFalse<_G>, "edge_value(g,uv) must be defined for the graph");
       }

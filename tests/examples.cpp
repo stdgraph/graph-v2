@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
+#include <forward_list>
+#include <ranges>
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/incidence.hpp"
@@ -36,9 +38,15 @@ using graph::target_id;
 using graph::target;
 using graph::edge_value;
 
+using std::vector;
+using std::tuple;
+using std::string;
 
-using routes_volf_graph_traits = graph::container::vofl_graph_traits<double, std::string>;
-using routes_volf_graph_type   = graph::container::dynamic_adjacency_graph<routes_volf_graph_traits>;
+using routes_vol_graph_traits = graph::container::vol_graph_traits<double, std::string>;
+using routes_vol_graph_type   = graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
+
+//using routes_vol_graph_type = vector<tuple<string, vector<tuple<int, double>>>>;
+
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -50,16 +58,39 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
+TEST_CASE("forward_list", "[csv][vofl][germany][example]") {
+  using diff_t = std::ranges::range_difference_t<std::forward_list<int>>;
+  diff_t diff  = diff_t();
+  int    i     = 0;
+}
 
 TEST_CASE("Germany routes examples", "[csv][vofl][germany][example]") {
   init_console();
-  using G  = routes_volf_graph_type;
-  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  using EV      = double;
+  using VV      = std::string;
+  using GV      = void;
+  using VId     = uint32_t;
+  using GTraits = graph::container::vol_graph_traits<EV, VV, GV, VId>; // vov --> vol generates error!
+  using E       = graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>;
 
+  //using G2 = std::list<graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>,
+  //                     std::allocator<graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>>>;
+
+  //static_assert(std::ranges::forward_range<
+  //              std::list<graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>,
+  //                        std::allocator<graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>>>>);
+
+  // using G = routes_vol_graph_type;
+
+  //static_assert(graph::_Edges::_Has_ref_ADL<G>);
+
+
+  //auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+
+#if 0
   auto frankfurt    = find_frankfurt(g);
   auto frankfurt_id = find_frankfurt_id(g);
 
-#if 0
   SECTION("Incidence iteration") {
     for (auto&& [uid, u] : graph::views::vertexlist(g)) {
       for (auto&& [vid, uv] : graph::views::edges_view(g, u)) {

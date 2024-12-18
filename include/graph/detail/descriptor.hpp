@@ -188,7 +188,8 @@ public:
   /**
    * @brief Cast to the vertex id type.
    * 
-   * This is a convenience function to allow the descriptor to be used as a vertex id.
+   * This is a convenience function to allow the descriptor to be used as a vertex id for the
+   * outer (vertex) range.
    */
   constexpr operator id_type() const noexcept { return vertex_id(); }
 
@@ -310,7 +311,6 @@ class descriptor_view : public std::ranges::view_interface<descriptor_view<R, Id
 public:
   using inner_range    = remove_reference_t<R>;
   using inner_iterator = iterator_t<inner_range>;               // iterator of the underlying container
-  using size_type      = range_size_t<inner_range>;
   using iterator       = descriptor_iterator<inner_range, IdT>; //
 
   using value_type      = iter_value_t<iterator>;               // descriptor value type
@@ -373,7 +373,6 @@ template <forward_range R, class VId = range_difference_t<R>>
 class descriptor_subrange_view : public std::ranges::view_interface<descriptor_subrange_view<R, VId>> {
 public:
   using range_type     = remove_reference_t<R>;                // retain const
-  using size_type      = range_size_t<R>;                      //
   using inner_iterator = iterator_t<R>;                        // iterator of the underlying container
   using iterator       = descriptor_iterator<range_type, VId>; //
 
@@ -391,6 +390,7 @@ public:
         : r_(r), subrange_(iterator(r, subrng.begin()), iterator(r, subrng.end())) {}
 
   auto size() const {
+    using size_type = range_size_t<R>;                  //
     if constexpr (integral<value_type>) {
       return static_cast<size_type>(*end() - *begin()); // subtract integral index
     } else {

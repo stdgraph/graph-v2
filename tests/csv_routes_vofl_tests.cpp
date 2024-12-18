@@ -74,6 +74,15 @@ TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstr
   // Remark(Andrew): edge_value_t should be a value
   std::vector<std::remove_reference_t<edge_value_t<G>>> distances(size(g));
 
+  auto&& ee  = graph::edges(g, frankfurt_id);
+  auto&& uv  = *std::ranges::begin(ee);
+  auto&& vid = graph::target_id(g, uv);
+
+  static_assert(graph::vertex_range<G>);
+  static_assert(graph::targeted_edge_range<G>);
+  static_assert(graph::basic_targeted_edge<G>);
+  static_assert(graph::targeted_edge<G>);
+  static_assert(graph::adjacency_list<G>);
   graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors);
   graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
 }
@@ -224,7 +233,7 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
     cout << "\n" << test_name << "\n----------------------------------------" << endl << routes_graph(g) << endl;
     int x = 0; // results have edges in reverse order from other tests because forward_list can only push_front
 
-    //Germany Routes using vector+forward_list
+               //Germany Routes using vector+forward_list
     //----------------------------------------
     //[0 Frankfürt]
     //  --> [6 Kassel] 173km

@@ -9,7 +9,7 @@
 #include "graph/detail/descriptor.hpp"
 #include "graph/graph_utility.hpp"
 
-#define ENABLE_DESCRIPTOR_TESTS 0
+#define ENABLE_DESCRIPTOR_TESTS 1
 
 using namespace graph;
 
@@ -914,9 +914,9 @@ TEMPLATE_TEST_CASE("All simple values",
   //using difference_type = typename iterator_traits<Iterator>::difference_type;
   G g = {{1, 2}, {3, 4}, {5}};
   //difference_type i     = 0;
-  //static_assert(graph::basic_targeted_edge<G>);  //<<<<<
-  //static_assert(graph::targeted_edge<G>);
-  //static_assert(graph::adjacency_list<G>);
+  static_assert(graph::basic_targeted_edge<G>); //<<<<<
+  static_assert(graph::targeted_edge<G>);
+  static_assert(graph::adjacency_list<G>);
 
   SECTION("descriptor_view") {
     auto                      ee    = edges(g, 0);
@@ -953,37 +953,37 @@ TEMPLATE_TEST_CASE("All simple values",
 }
 
 #if ENABLE_DESCRIPTOR_TESTS
-//TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
-//  using Container             = TestType;
-//  using IdentifierView        = descriptor_subrange_view<Container>;
-//  using Iterator              = descriptor_iterator<Container>;
-//  using descriptor_type       = typename IdentifierView::descriptor_type; // integral or iterator
-//  using difference_type       = typename iterator_traits<Iterator>::difference_type;
-//  Container       v           = {5, 4, 3, 2, 1};
-//  auto            descriptors = descriptor_subrange_view(v);
-//  difference_type i           = 0;
-//
-//  SECTION("descriptor std for") {
-//    for (auto it = begin(descriptors); it != end(descriptors); ++it) {
-//      descriptor_type descriptor = *it;
-//      REQUIRE(descriptors[descriptor] == i + 1);
-//      if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
-//        REQUIRE(descriptors.id(descriptor) == i);
-//      }
-//      ++i;
-//    }
-//  }
-//
-//  SECTION("descriptor range for") {
-//    for (descriptor_type descriptor : descriptors) {
-//      REQUIRE(descriptors[descriptor] == i + 1);
-//      if constexpr (random_access_range<Container> || is_tuple_like_v<range_value_t<Container>>) {
-//        REQUIRE(descriptors.id(descriptor) == i);
-//      }
-//      ++i;
-//    }
-//  }
-//}
+TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
+  using Container             = TestType;
+  using view_type             = descriptor_subrange_view<Container, int64_t>;
+  using Iterator              = descriptor_iterator<Container, int64_t>;
+  using descriptor_type       = typename view_type::value_type; // integral or iterator
+  using difference_type       = typename iterator_traits<Iterator>::difference_type;
+  Container       v           = {5, 4, 3, 2, 1};
+  auto            descriptors = descriptor_subrange_view(v);
+  difference_type i           = 5;
+
+  SECTION("descriptor std for") {
+    for (auto it = begin(descriptors); it != end(descriptors); ++it) {
+      const descriptor_type& descriptor = *it;
+      REQUIRE(descriptor.target_id() == i);
+      if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+        REQUIRE(descriptors.id(descriptor) == i);
+      }
+      --i;
+    }
+  }
+
+  SECTION("descriptor range for") {
+    for (auto&& descriptor : descriptors) {
+      REQUIRE(descriptor.target_id() == i);
+      if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
+        REQUIRE(descriptors.id(descriptor) == i);
+      }
+      --i;
+    }
+  }
+}
 
 
 #  if 0

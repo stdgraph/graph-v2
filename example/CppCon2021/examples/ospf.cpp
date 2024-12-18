@@ -22,7 +22,7 @@ int main() {
   std::vector<size_t> d(size(ospf_index_adjacency_list));
   std::vector<size_t> p(size(ospf_index_adjacency_list));
   graph::init_shortest_paths(d, p);
-  graph::dijkstra_shortest_paths(ospf_index_adjacency_list, 5UL, d, p, [](auto&& ee) { return std::get<1>(ee); });
+  graph::dijkstra_shortest_paths(ospf_index_adjacency_list, 5UL, d, p, [](auto&& ee) { return std::get<1>(*ee); });
 
   std::cout << "----------------" << std::endl;
   std::cout << "Contents of ospf_index_adjacency_list (the correct answer)" << std::endl;
@@ -48,7 +48,7 @@ int main() {
   p.resize(graph::num_vertices(G));
   std::vector<size_t> e(graph::num_vertices(G));
   graph::init_shortest_paths(e, p);
-  graph::dijkstra_shortest_paths(G, 5UL, e, p, [](auto&& ee) { return std::get<1>(ee); });
+  graph::dijkstra_shortest_paths(G, 5UL, e, p, [](auto&& ee) { return std::get<1>(*ee); });
 
   bool pass = true;
   for (size_t i = 0; i < size(ospf_vertices); ++i) {
@@ -69,7 +69,7 @@ int main() {
   p.resize(graph::num_vertices(G));
   std::vector<size_t> f(graph::num_vertices(G));
   graph::init_shortest_paths(f, p);
-  graph::dijkstra_shortest_paths(J, 5UL, f, p, [](auto&& ee) { return std::get<2>(ospf_edges[std::get<1>(ee)]); });
+  graph::dijkstra_shortest_paths(J, 5UL, f, p, [](auto&& ee) { return std::get<2>(ospf_edges[std::get<1>(*ee)]); });
 
   bool pass2 = true;
   for (size_t i = 0; i < size(ospf_vertices); ++i) {
