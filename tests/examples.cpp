@@ -42,8 +42,8 @@ using std::vector;
 using std::tuple;
 using std::string;
 
-using routes_vol_graph_traits = graph::container::vol_graph_traits<double, std::string>;
-using routes_vol_graph_type   = graph::container::dynamic_adjacency_graph<routes_vol_graph_traits>;
+using routes_vofl_graph_traits = graph::container::vofl_graph_traits<double, std::string>;
+using routes_vofl_graph_type   = graph::container::dynamic_adjacency_graph<routes_vofl_graph_traits>;
 
 //using routes_vol_graph_type = vector<tuple<string, vector<tuple<int, double>>>>;
 
@@ -66,26 +66,9 @@ TEST_CASE("forward_list", "[csv][vofl][germany][example]") {
 
 TEST_CASE("Germany routes examples", "[csv][vofl][germany][example]") {
   init_console();
-  using EV      = double;
-  using VV      = std::string;
-  using GV      = void;
-  using VId     = uint32_t;
-  using GTraits = graph::container::vol_graph_traits<EV, VV, GV, VId>; // vov --> vol generates error!
-  using E       = graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>;
 
-  //using G2 = std::list<graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>,
-  //                     std::allocator<graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>>>;
-
-  //static_assert(std::ranges::forward_range<
-  //              std::list<graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>,
-  //                        std::allocator<graph::container::dynamic_edge<EV, VV, GV, VId, false, GTraits>>>>);
-
-  // using G = routes_vol_graph_type;
-
-  //static_assert(graph::_Edges::_Has_ref_ADL<G>);
-
-
-  //auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
+  using G  = routes_vofl_graph_type;
+  auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
 #if 0
   auto frankfurt    = find_frankfurt(g);

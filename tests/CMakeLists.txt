@@ -36,8 +36,10 @@ set(UNITTEST_SOURCES
     "edgelist_tests.cpp" 
     "examples.cpp" 
     "tests.cpp"
+    "examples_tests.cpp"
 
     # Views
+    "vertexlist_tests.cpp" 
 
     # Algorithms
 
@@ -57,12 +59,10 @@ set(UNITTEST_SOURCES
 #   "csv_routes.cpp" 
 #   "csv_routes_dov_tests.cpp" 
 #   "csv_routes_csr_tests.cpp" 
-#   "vertexlist_tests.cpp" 
 #   "incidence_tests.cpp"  
 #   "neighbors_tests.cpp"
 #   "edgelist_tests.cpp" 
 #   "edgelist_view_tests.cpp" 
-#   "examples_tests.cpp"
 #   "bellman_shortest_paths_tests.cpp" 
 #   "dijkstra_shortest_paths_tests.cpp" 
 #   "transitive_closure_tests.cpp" 

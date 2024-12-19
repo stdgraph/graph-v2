@@ -1322,13 +1322,13 @@ private:                       // Member Variables
   size_t edge_count_ = 0;      // total number of edges in the graph
 
 private:                       // CPO properties
-  friend constexpr vertices_type&       vertices(dynamic_graph_base& g) { return g.vertices_; }
-  friend constexpr const vertices_type& vertices(const dynamic_graph_base& g) { return g.vertices_; }
+  friend constexpr vertices_type&       vertices(graph_type& g) { return g.vertices_; }
+  friend constexpr const vertices_type& vertices(const graph_type& g) { return g.vertices_; }
 
-  friend auto num_edges(const dynamic_graph_base& g) { return g.edge_count_; }
-  friend bool has_edge(const dynamic_graph_base& g) { return g.edge_count_ > 0; }
+  friend auto num_edges(const graph_type& g) { return g.edge_count_; }
+  friend bool has_edge(const graph_type& g) { return g.edge_count_ > 0; }
 
-  friend vertex_id_type vertex_id(const dynamic_graph_base& g, typename vertices_type::const_iterator ui) {
+  friend vertex_id_type vertex_id(const graph_type& g, typename vertices_type::const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
   }
 
@@ -1339,21 +1339,21 @@ private:                       // CPO properties
     return g.vertices_[uid].edges();
   }
 
-  friend constexpr auto num_partitions(const dynamic_graph_base& g) {
+  friend constexpr auto num_partitions(const graph_type& g) {
     return static_cast<partition_id_type>(g.partition_.size());
   }
 
-  friend constexpr auto partition_id(const dynamic_graph_base& g, vertex_id_type uid) {
+  friend constexpr auto partition_id(const graph_type& g, vertex_id_type uid) {
     auto it = std::upper_bound(g.partition_.begin(), g.partition_.end(), uid);
     return static_cast<partition_id_type>(it - g.partition_.begin() - 1);
   }
 
-  friend constexpr auto num_vertices(const dynamic_graph_base& g, partition_id_type pid) {
+  friend constexpr auto num_vertices(const graph_type& g, partition_id_type pid) {
     assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
     g.partition_[pid + 1] - g.partition_[pid];
   }
 
-  friend constexpr auto vertices(const dynamic_graph_base& g, partition_id_type pid) {
+  friend constexpr auto vertices(const graph_type& g, partition_id_type pid) {
     assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
     return subrange(g.vertices_.begin() + g.partition_[pid], g.vertices_.begin() + g.partition_[pid + 1]);
   }

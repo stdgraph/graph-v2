@@ -59,8 +59,8 @@ I advance(I it, std::iter_difference_t<I> n) {
 TEST_CASE("Tuple tail") {
   using Tuple  = std::tuple<int, double, float>;
   using Tuple2 = std::tuple<int&, double&, float&>;
-  using Pair   = std::pair<int, double>;
-  using Pair2  = std::pair<int&, double&>;
+  //using Pair   = std::pair<int, double>;
+  using Pair2 = std::pair<int&, double&>;
 
   int    a{1};
   double b{2};
@@ -119,10 +119,10 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
                    "[descriptor]",
                    (vector<int>),
                    (const vector<int>)) {
-  using Container       = TestType;
-  using Iterator        = descriptor_iterator<Container>;
-  using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container v           = {1, 2, 3, 4, 5};
+  using Container = TestType;
+  using Iterator  = descriptor_iterator<Container>;
+  //using difference_type = typename iterator_traits<Iterator>::difference_type;
+  Container v = {1, 2, 3, 4, 5};
 
   SECTION("iterator traits") {
     using value_type = typename iterator_traits<Iterator>::value_type;
@@ -228,10 +228,10 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
                    "[descriptor]",
                    (deque<int>),
                    (const deque<int>)) {
-  using Container       = TestType;
-  using Iterator        = descriptor_iterator<Container>;
-  using difference_type = iter_difference_t<Iterator>;
-  Container v           = {1, 2, 3, 4, 5};
+  using Container = TestType;
+  using Iterator  = descriptor_iterator<Container>;
+  //using difference_type = iter_difference_t<Iterator>;
+  Container v = {1, 2, 3, 4, 5};
 
   SECTION("iterator traits") {
     using value_type = typename iterator_traits<Iterator>::value_type;
@@ -337,10 +337,10 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
                    "[descriptor]",
                    (map<int, int>),
                    (const map<int, int>)) {
-  using Container       = TestType;
-  using Iterator        = descriptor_iterator<Container>;
-  using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container v           = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
+  using Container = TestType;
+  using Iterator  = descriptor_iterator<Container>;
+  //using difference_type = typename iterator_traits<Iterator>::difference_type;
+  Container v = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
 
   SECTION("iterator traits") {
     using value_type = typename iterator_traits<Iterator>::value_type;
@@ -446,10 +446,10 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
                    "[descriptor]",
                    (list<int>),
                    (const list<int>)) {
-  using Container       = TestType;
-  using Iterator        = descriptor_iterator<Container>;
-  using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container v           = {1, 2, 3, 4, 5};
+  using Container = TestType;
+  using Iterator  = descriptor_iterator<Container>;
+  //using difference_type = typename iterator_traits<Iterator>::difference_type;
+  Container v = {1, 2, 3, 4, 5};
 
   SECTION("iterator traits") {
     using value_type = typename iterator_traits<Iterator>::value_type;
@@ -555,10 +555,10 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
                    "[descriptor]",
                    (forward_list<int>),
                    (const forward_list<int>)) {
-  using Container       = TestType;
-  using Iterator        = descriptor_iterator<Container>;
-  using difference_type = iter_difference_t<Iterator>;
-  Container v           = {5, 4, 3, 2, 1}; // reverse order b/c forward_list adds to the front
+  using Container = TestType;
+  using Iterator  = descriptor_iterator<Container>;
+  //using difference_type = iter_difference_t<Iterator>;
+  Container v = {5, 4, 3, 2, 1}; // reverse order b/c forward_list adds to the front
 
   SECTION("iterator traits") {
     using value_type = typename iterator_traits<Iterator>::value_type;

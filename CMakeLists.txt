@@ -59,7 +59,7 @@ include(cmake/StaticAnalyzers.cmake)
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ON)
 option(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
-option(ENABLE_EXAMPLES "Enable Example Builds" ON)
+option(ENABLE_EXAMPLES "Enable Example Builds" OFF)
 option(ENABLE_BENCHMARKING "Enable Benchmark Builds" OFF)
 
 # Very basic PCH example
