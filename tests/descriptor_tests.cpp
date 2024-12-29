@@ -120,20 +120,22 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
                    (vector<int>),
                    (const vector<int>)) {
   using Container = TestType;
-  using Iterator  = descriptor_iterator<Container>;
+  using Iterator  = descriptor_iterator<iterator_t<Container>>;
   //using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container v = {1, 2, 3, 4, 5};
+  using descriptor_type = descriptor_t<iterator_t<Container>>;
+  Container v           = {1, 2, 3, 4, 5};
 
   SECTION("iterator traits") {
-    using value_type = typename iterator_traits<Iterator>::value_type;
-
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor<Container>>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
+    static_assert(is_same_v<iter_value_t<Iterator>, descriptor_type>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const descriptor_type*>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const descriptor_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
     static_assert(is_same_v<typename Iterator::iterator_concept, std::forward_iterator_tag>);
+
+    static_assert(random_access_iterator<iterator_t<Container>>);
+    static_assert(integral<descriptor_type>);
   }
 
   SECTION("contiguous iterator concept") {
@@ -148,14 +150,14 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, 0);
-    Iterator it1(v, 1);
+    Iterator it0(0);
+    Iterator it1(1);
     REQUIRE(*it == 0);
     REQUIRE(*it0 == 0);
     REQUIRE(*it1 == 1);
   }
   SECTION("copy") {
-    Iterator it(v, 1);
+    Iterator it(1);
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
@@ -164,7 +166,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
   }
 
   SECTION("move") {
-    Iterator it(v, 1);
+    Iterator it(1);
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
@@ -173,7 +175,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
   }
 
   SECTION("increment and add") {
-    Iterator it(v, 1);
+    Iterator it(1);
     REQUIRE(*it == 1);
     REQUIRE(*(it++) == 1);
     REQUIRE(*it == 2);
@@ -198,9 +200,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>",
   //}
 
   SECTION("compare equality") {
-    Iterator it(v, 1);
-    Iterator it1(v, 1);
-    Iterator it2(v, 2);
+    Iterator it(1);
+    Iterator it1(1);
+    Iterator it2(2);
     REQUIRE(it == it1);
     REQUIRE(it != it2);
     REQUIRE(it1 == it);
@@ -228,8 +230,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
                    "[descriptor]",
                    (deque<int>),
                    (const deque<int>)) {
-  using Container = TestType;
-  using Iterator  = descriptor_iterator<Container>;
+  using Container       = TestType;
+  using Iterator        = descriptor_iterator<iterator_t<Container>>;
+  using descriptor_type = descriptor_t<iterator_t<Container>>;
   //using difference_type = iter_difference_t<Iterator>;
   Container v = {1, 2, 3, 4, 5};
 
@@ -238,7 +241,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
 
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor<Container>>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor_type>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
@@ -257,14 +260,14 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, 0);
-    Iterator it1(v, 1);
+    Iterator it0(0);
+    Iterator it1(1);
     REQUIRE(*it == 0);
     REQUIRE(*it0 == 0);
     REQUIRE(*it1 == 1);
   }
   SECTION("copy") {
-    Iterator it(v, 1);
+    Iterator it(1);
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
@@ -273,7 +276,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
   }
 
   SECTION("move") {
-    Iterator it(v, 1);
+    Iterator it(1);
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
@@ -282,7 +285,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
   }
 
   SECTION("increment and add") {
-    Iterator it(v, 1);
+    Iterator it(1);
     REQUIRE(*it == 1);
     REQUIRE(*(it++) == 1);
     REQUIRE(*it == 2);
@@ -307,9 +310,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
   //}
 
   SECTION("compare equality") {
-    Iterator it(v, 1);
-    Iterator it1(v, 1);
-    Iterator it2(v, 2);
+    Iterator it(1);
+    Iterator it1(1);
+    Iterator it2(2);
     REQUIRE(it == it1);
     REQUIRE(it != it2);
     REQUIRE(it1 == it);
@@ -337,17 +340,20 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
                    "[descriptor]",
                    (map<int, int>),
                    (const map<int, int>)) {
-  using Container = TestType;
-  using Iterator  = descriptor_iterator<Container>;
+  using Container       = TestType;
+  using View            = descriptor_view<Container>;
+  using Iterator        = descriptor_iterator<iterator_t<Container>>;
+  using descriptor_type = descriptor_t<iterator_t<Container>>;
   //using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container v = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
+  Container c = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
+  View      v(c);
 
   SECTION("iterator traits") {
     using value_type = typename iterator_traits<Iterator>::value_type;
 
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor<Container>>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor_type>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
@@ -366,37 +372,37 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, advance(begin(v), 0));
-    Iterator it1(v, advance(begin(v), 1));
+    Iterator it0(c, advance(begin(c), 0));
+    Iterator it1(c, advance(begin(c), 1));
     //REQUIRE(*it == 0);
-    REQUIRE(it0->vertex_id() == 1);
-    REQUIRE(it1->vertex_id() == 2);
+    REQUIRE(v.get_vertex_id(*it0) == 1);
+    REQUIRE(v.get_vertex_id(*it1) == 2);
   }
   SECTION("copy") {
-    Iterator it(v, advance(begin(v), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
-    REQUIRE(it1->vertex_id() == 2);
-    REQUIRE(it2->vertex_id() == 2);
+    REQUIRE(v.get_vertex_id(*it1) == 2);
+    REQUIRE(v.get_vertex_id(*it2) == 2);
   }
 
   SECTION("move") {
-    Iterator it(v, advance(begin(v), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
-    REQUIRE(it1->vertex_id() == 2);
-    REQUIRE(it2->vertex_id() == 2);
+    REQUIRE(v.get_vertex_id(*it1) == 2);
+    REQUIRE(v.get_vertex_id(*it2) == 2);
   }
 
   SECTION("increment and add") {
-    Iterator it(v, advance(begin(v), 1));
-    REQUIRE(it->vertex_id() == 2);
-    REQUIRE((it++)->vertex_id() == 2);
-    REQUIRE(it->vertex_id() == 3);
-    REQUIRE((++it)->vertex_id() == 4);
-    REQUIRE(it->vertex_id() == 4);
+    Iterator it(c, advance(begin(c), 1));
+    REQUIRE(v.get_vertex_id(*it) == 2);
+    REQUIRE(v.get_vertex_id(*it++) == 2);
+    REQUIRE(v.get_vertex_id(*it) == 3);
+    REQUIRE(v.get_vertex_id(*++it) == 4);
+    REQUIRE(v.get_vertex_id(*it) == 4);
     //REQUIRE((it + 2)->vertex_id() == 5);
     //REQUIRE((2 + it)->vertex_id() == 5);
     //REQUIRE((it += 2)->vertex_id() == 5);
@@ -404,21 +410,21 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
   }
 
   //SECTION("decrement and subtract") {
-  //  Iterator it(advance(begin(v), 5));
-  //  REQUIRE(*it == advance(begin(v), 5));
-  //  REQUIRE(*(it--) == advance(begin(v), 5));
-  //  REQUIRE(*it == advance(begin(v), 4));
-  //  REQUIRE(*(--it) == advance(begin(v), 3));
-  //  REQUIRE(*it == advance(begin(v), 3));
-  //  //REQUIRE(*(it - 2) == advance(begin(v), 1));
-  //  //REQUIRE(*(it -= 2) == advance(begin(v), 1));
-  //  //REQUIRE(*it == advance(begin(v), 1));
+  //  Iterator it(advance(begin(c), 5));
+  //  REQUIRE(*it == advance(begin(c), 5));
+  //  REQUIRE(*(it--) == advance(begin(c), 5));
+  //  REQUIRE(*it == advance(begin(c), 4));
+  //  REQUIRE(*(--it) == advance(begin(c), 3));
+  //  REQUIRE(*it == advance(begin(c), 3));
+  //  //REQUIRE(*(it - 2) == advance(begin(c), 1));
+  //  //REQUIRE(*(it -= 2) == advance(begin(c), 1));
+  //  //REQUIRE(*it == advance(begin(c), 1));
   //}
 
   SECTION("compare equality") {
-    Iterator it(v, advance(begin(v), 1));
-    Iterator it1(v, advance(begin(v), 1));
-    Iterator it2(v, advance(begin(v), 2));
+    Iterator it(c, advance(begin(c), 1));
+    Iterator it1(c, advance(begin(c), 1));
+    Iterator it2(c, advance(begin(c), 2));
     REQUIRE(it == it1);
     REQUIRE(it != it2);
     REQUIRE(it1 == it);
@@ -428,9 +434,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
   }
 
   //SECTION("compare relative") {
-  //  Iterator it(advance(begin(v), 1));
-  //  Iterator it1(advance(begin(v), 1));
-  //  Iterator it2(advance(begin(v), 2));
+  //  Iterator it(advance(begin(c), 1));
+  //  Iterator it1(advance(begin(c), 1));
+  //  Iterator it2(advance(begin(c), 2));
   //  REQUIRE(it == it1);
   //  REQUIRE(it != it2);
   //  REQUIRE(it < it2);
@@ -446,17 +452,20 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
                    "[descriptor]",
                    (list<int>),
                    (const list<int>)) {
-  using Container = TestType;
-  using Iterator  = descriptor_iterator<Container>;
+  using Container       = TestType;
+  using View            = descriptor_view<Container>;
+  using Iterator        = descriptor_iterator<iterator_t<Container>>;
+  using descriptor_type = descriptor_t<iterator_t<Container>>;
   //using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container v = {1, 2, 3, 4, 5};
+  Container c = {1, 2, 3, 4, 5};
+  View      v(c);
 
   SECTION("iterator traits") {
     using value_type = typename iterator_traits<Iterator>::value_type;
 
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor<Container>>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor_type>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
@@ -475,37 +484,37 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, advance(begin(v), 0));
-    Iterator it1(v, advance(begin(v), 1));
+    Iterator it0(c, advance(begin(c), 0));
+    Iterator it1(c, advance(begin(c), 1));
     //REQUIRE(*it == 0);
-    REQUIRE(it0->target_id() == 1);
-    REQUIRE(it1->target_id() == 2);
+    REQUIRE(v.get_target_id(*it0) == 1);
+    REQUIRE(v.get_target_id(*it1) == 2);
   }
   SECTION("copy") {
-    Iterator it(v, advance(begin(v), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
-    REQUIRE(it1->target_id() == 2);
-    REQUIRE(it2->target_id() == 2);
+    REQUIRE(v.get_target_id(*it1) == 2);
+    REQUIRE(v.get_target_id(*it2) == 2);
   }
 
   SECTION("move") {
-    Iterator it(v, advance(begin(v), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
-    REQUIRE(it1->target_id() == 2);
-    REQUIRE(it2->target_id() == 2);
+    REQUIRE(v.get_target_id(*it1) == 2);
+    REQUIRE(v.get_target_id(*it2) == 2);
   }
 
   SECTION("increment and add") {
-    Iterator it(v, advance(begin(v), 1));
-    REQUIRE(it->target_id() == 2);
-    REQUIRE((it++)->target_id() == 2);
-    REQUIRE(it->target_id() == 3);
-    REQUIRE((++it)->target_id() == 4);
-    REQUIRE(it->target_id() == 4);
+    Iterator it(c, advance(begin(c), 1));
+    REQUIRE(v.get_target_id(*it) == 2);
+    REQUIRE(v.get_target_id(*it++) == 2);
+    REQUIRE(v.get_target_id(*it) == 3);
+    REQUIRE(v.get_target_id(*++it) == 4);
+    REQUIRE(v.get_target_id(*it) == 4);
     //REQUIRE((it + 2)->target_id() == 5);
     //REQUIRE((2 + it)->target_id() == 5);
     //REQUIRE((it += 2)->target_id() == 5);
@@ -513,21 +522,21 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
   }
 
   //SECTION("decrement and subtract") {
-  //  Iterator it(advance(begin(v), 5));
-  //  REQUIRE(*it == advance(begin(v), 5));
-  //  REQUIRE(*(it--) == advance(begin(v), 5));
-  //  REQUIRE(*it == advance(begin(v), 4));
-  //  REQUIRE(*(--it) == advance(begin(v), 3));
-  //  REQUIRE(*it == advance(begin(v), 3));
-  //  //REQUIRE(*(it - 2) == advance(begin(v), 1));
-  //  //REQUIRE(*(it -= 2) == advance(begin(v), 1));
-  //  //REQUIRE(*it == advance(begin(v), 1));
+  //  Iterator it(advance(begin(c), 5));
+  //  REQUIRE(*it == advance(begin(c), 5));
+  //  REQUIRE(*(it--) == advance(begin(c), 5));
+  //  REQUIRE(*it == advance(begin(c), 4));
+  //  REQUIRE(*(--it) == advance(begin(c), 3));
+  //  REQUIRE(*it == advance(begin(c), 3));
+  //  //REQUIRE(*(it - 2) == advance(begin(c), 1));
+  //  //REQUIRE(*(it -= 2) == advance(begin(c), 1));
+  //  //REQUIRE(*it == advance(begin(c), 1));
   //}
 
   SECTION("compare equality") {
-    Iterator it(v, advance(begin(v), 1));
-    Iterator it1(v, advance(begin(v), 1));
-    Iterator it2(v, advance(begin(v), 2));
+    Iterator it(c, advance(begin(c), 1));
+    Iterator it1(c, advance(begin(c), 1));
+    Iterator it2(c, advance(begin(c), 2));
     REQUIRE(it == it1);
     REQUIRE(it != it2);
     REQUIRE(it1 == it);
@@ -537,9 +546,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
   }
 
   //SECTION("compare relative") {
-  //  Iterator it(advance(begin(v), 1));
-  //  Iterator it1(advance(begin(v), 1));
-  //  Iterator it2(advance(begin(v), 2));
+  //  Iterator it(advance(begin(c), 1));
+  //  Iterator it1(advance(begin(c), 1));
+  //  Iterator it2(advance(begin(c), 2));
   //  REQUIRE(it == it1);
   //  REQUIRE(it != it2);
   //  REQUIRE(it < it2);
@@ -555,17 +564,20 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
                    "[descriptor]",
                    (forward_list<int>),
                    (const forward_list<int>)) {
-  using Container = TestType;
-  using Iterator  = descriptor_iterator<Container>;
+  using Container       = TestType;
+  using View            = descriptor_view<Container>;
+  using Iterator        = descriptor_iterator<iterator_t<Container>>;
+  using descriptor_type = descriptor_t<iterator_t<Container>>;
   //using difference_type = iter_difference_t<Iterator>;
-  Container v = {5, 4, 3, 2, 1}; // reverse order b/c forward_list adds to the front
+  Container c = {5, 4, 3, 2, 1}; // reverse order b/c forward_list adds to the front
+  View      v(c);
 
   SECTION("iterator traits") {
     using value_type = typename iterator_traits<Iterator>::value_type;
 
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor<Container>>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor_type>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category,
@@ -585,59 +597,59 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, advance(begin(v), 0));
-    Iterator it1(v, advance(begin(v), 1));
+    Iterator it0(c, advance(begin(c), 0));
+    Iterator it1(c, advance(begin(c), 1));
     //REQUIRE(*it == 0);
-    REQUIRE(it0->target_id() == 5);
-    REQUIRE(it1->target_id() == 4);
+    REQUIRE(v.get_target_id(*it0) == 5);
+    REQUIRE(v.get_target_id(*it1) == 4);
   }
   SECTION("copy") {
-    Iterator it(v, advance(begin(v), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
-    REQUIRE(it1->target_id() == 4);
-    REQUIRE(it2->target_id() == 4);
+    REQUIRE(v.get_target_id(*it1) == 4);
+    REQUIRE(v.get_target_id(*it2) == 4);
   }
 
   SECTION("move") {
-    Iterator it(v, advance(begin(v), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
-    REQUIRE(it1->target_id() == 4);
-    REQUIRE(it2->target_id() == 4);
+    REQUIRE(v.get_target_id(*it1) == 4);
+    REQUIRE(v.get_target_id(*it2) == 4);
   }
 
   SECTION("increment and add") {
-    Iterator it(v, advance(begin(v), 1));
-    REQUIRE(it->target_id() == 4);
-    REQUIRE((it++)->target_id() == 4);
-    REQUIRE(it->target_id() == 3);
-    REQUIRE((++it)->target_id() == 2);
-    REQUIRE(it->target_id() == 2);
-    //REQUIRE(*(it + 2) == advance(begin(v), 5));
-    //REQUIRE(*(2 + it) == advance(begin(v), 5));
-    //REQUIRE(*(it += 2) == advance(begin(v), 5));
-    //REQUIRE(*it == advance(begin(v), 5));
+    Iterator it(c, advance(begin(c), 1));
+    REQUIRE(v.get_target_id(*it) == 4);
+    REQUIRE(v.get_target_id(*it++) == 4);
+    REQUIRE(v.get_target_id(*it) == 3);
+    REQUIRE(v.get_target_id(*++it) == 2);
+    REQUIRE(v.get_target_id(*it) == 2);
+    //REQUIRE(*(it + 2) == advance(begin(c), 5));
+    //REQUIRE(*(2 + it) == advance(begin(c), 5));
+    //REQUIRE(*(it += 2) == advance(begin(c), 5));
+    //REQUIRE(*it == advance(begin(c), 5));
   }
 
   //SECTION("decrement and subtract") {
-  //  Iterator it(advance(begin(v), 5));
-  //  REQUIRE(*it == advance(begin(v), 5));
-  //  REQUIRE(*(it--) == advance(begin(v), 5));
-  //  REQUIRE(*it == advance(begin(v), 4));
-  //  REQUIRE(*(--it) == advance(begin(v), 3));
-  //  REQUIRE(*it == advance(begin(v), 3));
-  //  REQUIRE(*(it - 2) == advance(begin(v), 1));
-  //  REQUIRE(*(it -= 2) == advance(begin(v), 1));
-  //  REQUIRE(*it == advance(begin(v), 1));
+  //  Iterator it(advance(begin(c), 5));
+  //  REQUIRE(*it == advance(begin(c), 5));
+  //  REQUIRE(*(it--) == advance(begin(c), 5));
+  //  REQUIRE(*it == advance(begin(c), 4));
+  //  REQUIRE(*(--it) == advance(begin(c), 3));
+  //  REQUIRE(*it == advance(begin(c), 3));
+  //  REQUIRE(*(it - 2) == advance(begin(c), 1));
+  //  REQUIRE(*(it -= 2) == advance(begin(c), 1));
+  //  REQUIRE(*it == advance(begin(c), 1));
   //}
 
   //SECTION("compare equality") {
-  //  Iterator it(v, 1);
-  //  Iterator it1(v, 1);
-  //  Iterator it2(v, 2);
+  //  Iterator it(c, 1);
+  //  Iterator it1(c, 1);
+  //  Iterator it2(c, 2);
   //  REQUIRE(it == it1);
   //  REQUIRE(it != it2);
   //  REQUIRE(it1 == it);
@@ -647,9 +659,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
   //}
 
   //SECTION("compare relative") {
-  //  Iterator it(advance(begin(v), 1));
-  //  Iterator it1(advance(begin(v), 1));
-  //  Iterator it2(advance(begin(v), 2));
+  //  Iterator it(advance(begin(c), 1));
+  //  Iterator it1(advance(begin(c), 1));
+  //  Iterator it2(advance(begin(c), 2));
   //  REQUIRE(it == it1);
   //  REQUIRE(it != it2);
   //  REQUIRE(it < it2);
@@ -664,27 +676,27 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
 
 TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (vector<int>), (const vector<int>)) {
   using Container       = TestType;
-  using Iterator        = descriptor_iterator<Container>;
+  using Iterator        = descriptor_iterator<iterator_t<Container>>;
   using difference_type = iter_difference_t<Iterator>;
-  Container       v     = {1, 2, 3, 4, 5};
+  Container       c     = {1, 2, 3, 4, 5};
   difference_type i     = 0;
 
   SECTION("descriptor_view") {
-    auto descriptors = descriptor_view(v);
+    auto descriptors = descriptor_view(c);
 
     SECTION("descriptor std for") {
       for (auto it = begin(descriptors); it != end(descriptors); ++it) {
         auto& desc = *it;
         REQUIRE(desc == i);
         //REQUIRE(descriptors[i] == i + 1);
-        REQUIRE(desc.vertex_id() == i);
+        REQUIRE(descriptors.get_vertex_id(desc) == i);
         ++i;
       }
     }
 
     SECTION("descriptor range for") {
       for (auto& desc : descriptors) {
-        REQUIRE(desc.vertex_id() == i);
+        REQUIRE(descriptors.get_vertex_id(desc) == i);
         //REQUIRE(descriptors[i] == i + 1);
         ++i;
       }
@@ -692,12 +704,12 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
   }
 
   SECTION("descriptor_subrange_view") {
-    auto descriptors = descriptor_subrange_view(v);
+    auto descriptors = descriptor_subrange_view(c);
 
     SECTION("descriptor std for") {
       for (auto it = begin(descriptors); it != end(descriptors); ++it) {
         auto& desc = *it;
-        REQUIRE(desc.vertex_id() == i);
+        REQUIRE(descriptors.get_vertex_id(desc) == i);
         //REQUIRE(descriptors[i] == i + 1);
         ++i;
       }
@@ -705,7 +717,7 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
 
     SECTION("descriptor range for") {
       for (auto&& desc : descriptors) {
-        REQUIRE(desc.vertex_id() == i);
+        REQUIRE(descriptors.get_vertex_id(desc) == i);
         //REQUIRE(descriptors[i] == i + 1);
         ++i;
       }
@@ -714,47 +726,57 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
 }
 
 TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (list<int>), (const list<int>)) {
-  using Container       = TestType;
-  using Iterator        = descriptor_iterator<Container>;
-  using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container       v     = {1, 2, 3, 4, 5};
-  difference_type i     = 0;
+  using Container = TestType;
+  Container c     = {1, 2, 3, 4, 5};
 
   SECTION("descriptor_view") {
-    auto descriptors = descriptor_view(v);
+    using View            = descriptor_view<Container>;
+    using Iterator        = descriptor_iterator<iterator_t<Container>>;
+    using descriptor_type = descriptor_t<iterator_t<Container>>;
+    using difference_type = typename iterator_traits<Iterator>::difference_type;
+    View            v(c);
+    difference_type i = 0;
+
+    auto descriptors = descriptor_view(c);
 
     SECTION("descriptor std for") {
       for (auto it = begin(descriptors); it != end(descriptors); ++it) {
         auto descriptor = *it;
         //const int& value      = descriptors[descriptor];
-        //REQUIRE(descriptors[descriptor] == i + 1);
+        REQUIRE(descriptors.get_vertex_id(descriptor) == i + 1);
         ++i;
       }
     }
 
     SECTION("descriptor range for") {
       for (auto descriptor : descriptors) {
-        //REQUIRE(descriptors[descriptor] == i + 1);
+        REQUIRE(descriptors.get_vertex_id(descriptor) == i + 1);
         ++i;
       }
     }
   }
 
   SECTION("descriptor_subrange_view") {
-    auto descriptors = descriptor_subrange_view(v);
+    //using View            = descriptor_subrange_view<Container>;
+    using Iterator        = descriptor_iterator<iterator_t<Container>>;
+    using descriptor_type = descriptor_t<iterator_t<Container>>;
+    using difference_type = typename iterator_traits<Iterator>::difference_type;
+    difference_type i     = 0;
+
+    descriptor_subrange_view<Container, int64_t> descriptors(c);
 
     SECTION("descriptor std for") {
       for (auto it = begin(descriptors); it != end(descriptors); ++it) {
         auto descriptor = *it;
         //const int& value      = descriptors[descriptor];
-        //REQUIRE(descriptors[descriptor] == i + 1);
+        REQUIRE(descriptors.get_vertex_id(descriptor) == i + 1);
         ++i;
       }
     }
 
     SECTION("descriptor range for") {
       for (auto descriptor : descriptors) {
-        //REQUIRE(descriptors[descriptor] == i + 1);
+        REQUIRE(descriptors.get_vertex_id(descriptor) == i + 1);
         ++i;
       }
     }
@@ -770,13 +792,13 @@ TEMPLATE_TEST_CASE("All simple values",
                    (list<int>),
                    (const list<int>)) {
   using Container       = TestType;
-  using Iterator        = descriptor_iterator<Container>;
+  using Iterator        = descriptor_iterator<iterator_t<Container>>;
   using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container       v     = {1, 2, 3, 4, 5};
+  Container       c     = {1, 2, 3, 4, 5};
   difference_type i     = 0;
 
   SECTION("descriptor_view") {
-    auto descriptors = descriptor_view(v);
+    auto descriptors = descriptor_view(c);
     using desc_view  = decltype(descriptors);
     using desc_type  = range_value_t<desc_view>;
     static_assert(forward_range<desc_view>, "descriptor_view is a forward_range");
@@ -787,7 +809,7 @@ TEMPLATE_TEST_CASE("All simple values",
         const desc_type& descriptor = *it; // descriptor is integral or iterator
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.vertex_id() == i); // e.g. vertex_id(descriptor)
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i); // e.g. vertex_id(descriptor)
         }
         ++i;
       }
@@ -798,7 +820,7 @@ TEMPLATE_TEST_CASE("All simple values",
       for (auto&& descriptor : descriptors) {
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.vertex_id() == i); // e.g. vertex_id(descriptor) == i
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i); // e.g. vertex_id(descriptor) == i
         }
         ++i;
       }
@@ -806,7 +828,7 @@ TEMPLATE_TEST_CASE("All simple values",
   }
 
   SECTION("descriptor_subrange_view") {
-    auto descriptors = descriptor_subrange_view(v);
+    auto descriptors = descriptor_subrange_view(c);
     using desc_view  = decltype(descriptors);
     using desc_type  = range_value_t<desc_view>;
     static_assert(forward_range<desc_view>, "descriptor_subrange_view is a forward_range");
@@ -817,7 +839,7 @@ TEMPLATE_TEST_CASE("All simple values",
         const desc_type& descriptor = *it; // descriptor is integral or iterator
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.vertex_id() == i); // e.g. vertex_id(descriptor)
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i); // e.g. vertex_id(descriptor)
         }
         ++i;
       }
@@ -828,7 +850,7 @@ TEMPLATE_TEST_CASE("All simple values",
       for (auto&& descriptor : descriptors) {
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.vertex_id() == i); // e.g. vertex_id(descriptor) == i
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i); // e.g. vertex_id(descriptor) == i
         }
         ++i;
       }
@@ -838,15 +860,15 @@ TEMPLATE_TEST_CASE("All simple values",
 
 TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (const map<int, int>)) {
   using Container       = TestType;
-  using Iterator        = descriptor_iterator<Container>;
+  using Iterator        = descriptor_iterator<iterator_t<Container>>;
   using difference_type = typename iterator_traits<Iterator>::difference_type;
-  Container       v     = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
+  Container       c     = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
   difference_type i     = 0;
 
   static_assert(std::default_initializable<Iterator>);
 
   SECTION("descriptor_view") {
-    auto descriptors = descriptor_view(v);
+    auto descriptors = descriptor_view(c);
     using desc_view  = decltype(descriptors);
     using desc_type  = range_value_t<desc_view>;
     static_assert(forward_range<desc_view>, "descriptor_view is a forward_range");
@@ -856,7 +878,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
         desc_type descriptor = *it;
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.vertex_id() == i);
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i);
         }
         ++i;
       }
@@ -866,14 +888,14 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
       for (auto&& descriptor : descriptors) {
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.vertex_id() == i);
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i);
         }
         ++i;
       }
     }
   }
   SECTION("descriptor_subrange_view") {
-    auto descriptors = descriptor_subrange_view(v);
+    auto descriptors = descriptor_subrange_view(c);
     using desc_view  = decltype(descriptors);
     using desc_type  = range_value_t<desc_view>;
     static_assert(forward_range<desc_view>, "descriptor_subrange_view is a forward_range");
@@ -883,7 +905,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
         desc_type descriptor = *it;
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.vertex_id() == i);
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i);
         }
         ++i;
       }
@@ -893,7 +915,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
       for (auto&& descriptor : descriptors) {
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.vertex_id() == i);
+          REQUIRE(descriptors.get_vertex_id(descriptor) == i);
         }
         ++i;
       }
@@ -926,9 +948,9 @@ TEMPLATE_TEST_CASE("All simple values",
     edge_reference_t<G> first_ref = *first;
 
     auto  vid = target_id(g, first_ref);
-    auto& v   = *find_vertex(g, vid);
+    auto& c   = *find_vertex(g, vid);
 
-    //auto descriptors = descriptor_view(v);
+    //auto descriptors = descriptor_view(c);
     //using desc_view  = decltype(descriptors);
     //using desc_type  = range_value_t<desc_view>;
     //static_assert(forward_range<desc_view>, "descriptor_view is a forward_range");
@@ -939,7 +961,7 @@ TEMPLATE_TEST_CASE("All simple values",
   }
 
   //SECTION("descriptor_subrange_view") {
-  //  auto descriptors = descriptor_subrange_view(v);
+  //  auto descriptors = descriptor_subrange_view(c);
   //  using desc_view  = decltype(descriptors);
   //  using desc_type  = range_value_t<desc_view>;
   //  static_assert(forward_range<desc_view>, "descriptor_subrange_view is a forward_range");
@@ -952,21 +974,21 @@ TEMPLATE_TEST_CASE("All simple values",
   //}
 }
 
-#if ENABLE_DESCRIPTOR_TESTS
+#  if ENABLE_DESCRIPTOR_TESTS
 TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
   using Container             = TestType;
   using view_type             = descriptor_subrange_view<Container, int64_t>;
-  using Iterator              = descriptor_iterator<Container, int64_t>;
+  using Iterator              = descriptor_iterator<iterator_t<Container>, int64_t>;
   using descriptor_type       = typename view_type::value_type; // integral or iterator
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
-  Container       v           = {5, 4, 3, 2, 1};
-  auto            descriptors = descriptor_subrange_view(v);
+  Container       c           = {5, 4, 3, 2, 1};
+  auto            descriptors = descriptor_subrange_view(c);
   difference_type i           = 5;
 
   SECTION("descriptor std for") {
     for (auto it = begin(descriptors); it != end(descriptors); ++it) {
       const descriptor_type& descriptor = *it;
-      REQUIRE(descriptor.target_id() == i);
+      REQUIRE(descriptors.get_target_id(descriptor) == i);
       if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
         REQUIRE(descriptors.id(descriptor) == i);
       }
@@ -976,9 +998,9 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
 
   SECTION("descriptor range for") {
     for (auto&& descriptor : descriptors) {
-      REQUIRE(descriptor.target_id() == i);
+      REQUIRE(descriptors.get_target_id(descriptor) == i);
       if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-        REQUIRE(descriptors.id(descriptor) == i);
+        REQUIRE(descriptors.get_vertex_id(descriptor) == i);
       }
       --i;
     }
@@ -1004,16 +1026,16 @@ auto b = std::map<int,std::vector<int>>;
 for (auto u = begin(a); u != end(a); ++u) {
   // u is an vector<vector<int>>::iterator
   // *u is a vector<int>
-  for (auto v = begin(*u); v != end(*u); ++v) {
-    // v is a vector<int>::iterator
-    // *v is an int
+  for (auto c = begin(*u); c != end(*u); ++c) {
+    // c is a vector<int>::iterator
+    // *c is an int
   }
 }
 
 for (auto&& u : vertices(a)) {
   // u is a vector<int>&
-  for (auto&& v : edges(g,u)) {
-    // v is an int&
+  for (auto&& c : edges(g,u)) {
+    // c is an int&
   }
 }
 

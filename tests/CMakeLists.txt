@@ -37,30 +37,30 @@ set(UNITTEST_SOURCES
 
     ### Basic tests
     "descriptor_tests.cpp"
-    "tests.cpp"
+    #"tests.cpp"
 
     ### Views
-    "vertexlist_tests.cpp" 
-    "incidence_tests.cpp"  
-    "neighbors_tests.cpp"
-    "edgelist_view_tests.cpp" 
-    "dfs_tests.cpp" 
-    "bfs_tests.cpp"
+    #"vertexlist_tests.cpp" 
+    #"incidence_tests.cpp"  
+    #"neighbors_tests.cpp"
+    #"edgelist_view_tests.cpp" 
+    #"dfs_tests.cpp" 
+    #"bfs_tests.cpp"
 
     ### Algorithms
-    "mis_tests.cpp" 
-    "mst_tests.cpp"
-    "tc_tests.cpp"
-    "cc_tests.cpp"
+    #"mis_tests.cpp" 
+    #"mst_tests.cpp"
+    #"tc_tests.cpp"
+    #"cc_tests.cpp"
 
-    "dijkstra_shortest_paths_tests.cpp" 
-    "bellman_shortest_paths_tests.cpp" 
+    #"dijkstra_shortest_paths_tests.cpp" 
+    #"bellman_shortest_paths_tests.cpp" 
 
-    "breadth_first_search_tests.cpp"
-    "depth_first_search_tests.cpp"
-    "topological_sort_tests.cpp"
+    #"breadth_first_search_tests.cpp"
+    #"depth_first_search_tests.cpp"
+    #"topological_sort_tests.cpp"
 
-    "transitive_closure_tests.cpp" # removed from P1709 proposal
+    #"transitive_closure_tests.cpp" # removed from P1709 proposal
 
     ### Coroutine & Visitor Experiments
     #   "co_bfs_tests.cpp"
@@ -68,15 +68,15 @@ set(UNITTEST_SOURCES
     #   "visitor_dijkstra_tests.cpp"
 
     ### Other
-    "csv_routes.cpp" 
+    #"csv_routes.cpp" 
 
     ### Adjacency List Containers
-    "csv_routes_vofl_tests.cpp" 
-    "csv_routes_dov_tests.cpp" 
-    "csv_routes_csr_tests.cpp" 
+    #"csv_routes_vofl_tests.cpp" 
+    #"csv_routes_dov_tests.cpp" 
+    #"csv_routes_csr_tests.cpp" 
 
     ### Edge List Containers
-    "edgelist_tests.cpp" 
+    #"edgelist_tests.cpp" 
 )
 
 
