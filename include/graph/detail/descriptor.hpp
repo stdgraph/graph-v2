@@ -97,6 +97,11 @@ template <forward_range R, class IdT = range_difference_t<R>>
 class descriptor_subrange_view;
 
 
+// class descriptor(id, first)
+// class descriptor(iterator)
+// class descriptor(iterator, first)
+
+
 //
 // descriptor
 //
@@ -106,7 +111,7 @@ public:
   using view_range       = remove_reference_t<View>;
   using inner_iterator   = InnerIter;
   using inner_value_type = iter_value_t<inner_iterator>;
-  // preserve inner value constancy based on inner_iterator
+  // preserve inner value constness based on inner_iterator
   using inner_reference = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
                                         std::add_lvalue_reference_t<std::add_const_t<inner_value_type>>,
                                         std::add_lvalue_reference_t<inner_value_type>>;
@@ -127,6 +132,10 @@ public:
 
   constexpr descriptor(view_range& owner, value_type v) : view_rng_(&owner), value_(v) {}
   constexpr descriptor(const view_range& owner, value_type v) : view_rng_(const_cast<view_range*>(&owner)), value_(v) {}
+
+  //constexpr descriptor(id_type id, inner_iterator begin);
+  //constexpr descriptor(inner_iterator it, inner_iterator begin);
+  //constexpr descriptor(inner_iterator it);
 
   // for unit testing
   template <forward_range R>
@@ -303,12 +312,12 @@ public:
   using pointer       = std::add_pointer_t<value_type>;
   using const_pointer = std::add_pointer_t<std::add_const_t<value_type>>;
 
-  using reference = std::add_lvalue_reference_t<value_type>;
-  //using reference = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
-  //                                std::add_lvalue_reference_t<std::add_const_t<value_type>>,
-  //                                std::add_lvalue_reference_t<value_type>>;
+  //using reference = std::add_lvalue_reference_t<value_type>;
+  using reference = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
+                                  std::add_lvalue_reference_t<std::add_const_t<value_type>>,
+                                  std::add_lvalue_reference_t<value_type>>;
 
-  using const_reference = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
+  //using const_reference = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
   using difference_type = std::iter_difference_t<InnerIter>;
 
   using iterator_category = std::forward_iterator_tag;
@@ -629,5 +638,11 @@ private:
   inner_range inner_subrange_; // subrange of inner_range_
 };
 } // namespace graph
+
+template <class R, class VId>
+constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_view<R, VId>> = true;
+
+template <class R, class VId>
+constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_subrange_view<R, VId>> = true;
 
 #endif // GRAPH_DESCRIPTOR_HPP

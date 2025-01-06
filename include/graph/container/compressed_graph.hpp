@@ -274,8 +274,12 @@ class csr_col_values {
   using col_index_vector   = std::vector<col_type, col_allocator_type>;
 
 public:
-  using graph_type      = compressed_graph<EV, VV, GV, VId, EIndex, Alloc>;
-  using edge_type       = col_type; // index into v_
+  using graph_type = compressed_graph<EV, VV, GV, VId, EIndex, Alloc>;
+#if USE_EDGE_DESCRIPTOR
+  using edge_type = edge_t<graph_type>;
+#else
+  using edge_type = col_type; // index into v_
+#endif
   using edge_value_type = EV;
   using allocator_type  = typename std::allocator_traits<Alloc>::template rebind_alloc<edge_value_type>;
   using vector_type     = std::vector<edge_value_type, allocator_type>;

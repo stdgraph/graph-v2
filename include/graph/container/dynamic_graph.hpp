@@ -237,18 +237,26 @@ private:
   // target_id(g,uv), target(g,uv)
 #if USE_EDGE_DESCRIPTOR
   // recursive definition error if edge_reference_t is used
-  using edge_desc_type = descriptor<edges_type, vertex_id_type>;
+  //using edge_desc_type = descriptor<edges_type, vertex_id_type>;
+  using edge_desc_view      = descriptor_view<edges_type, vertex_id_type>;
+  using edge_iterator       = typename edge_desc_view::iterator;
+  using const_edge_iterator = typename edge_desc_view::const_iterator;
 
-  friend constexpr vertex_id_type target_id(const graph_type& g, const edge_desc_type& uv) noexcept {
+  template<class View, class I>
+  friend constexpr vertex_id_type
+  target_id(const graph_type& g, const descriptor<View, I, vertex_id_type>& uv) noexcept {
     return uv->target_id_;
   }
 
-  friend constexpr vertex_type& target(graph_type& g, edge_desc_type& uv) noexcept {
+  template <class View, class I>
+  friend constexpr auto& //
+  target(graph_type& g, descriptor<View, I, vertex_id_type>& uv) noexcept {
     return begin(vertices(g))[uv->target_id_];
   }
-  friend constexpr const vertex_type& target(const graph_type& g, const edge_desc_type& uv) noexcept {
-    return begin(vertices(g))[uv->target_id_];
-  }
+  //friend constexpr const vertex_type& //
+  //target(const graph_type& g, const descriptor<edge_desc_view, const_edge_iterator, vertex_id_type>& uv) noexcept {
+  //  return begin(vertices(g))[uv->target_id_];
+  //}
 #else
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.target_id_; }
 
@@ -312,7 +320,9 @@ private:
 private:
   // source_id(g,uv), source(g)
 #ifdef USE_EDGE_DESCRIPTOR
-  friend constexpr vertex_id_type source_id(const graph_type& g, const edge_type& uv) noexcept { return uv->source_id_; }
+  friend constexpr vertex_id_type source_id(const graph_type& g, const edge_type& uv) noexcept {
+    return uv->source_id_;
+  }
 
   friend constexpr vertex_type& source(graph_type& g, edge_type& uv) noexcept {
     return begin(vertices(g))[uv->source_id_];
@@ -408,7 +418,9 @@ private:
 private: // CPO properties
 #if USE_EDGE_DESCRIPTOR
   friend constexpr value_type&       edge_value(graph_type& g, edge_type& uv) noexcept { return uv->value_; }
-  friend constexpr const value_type& edge_value(const graph_type& g, const edge_type& uv) noexcept { return uv->value_; }
+  friend constexpr const value_type& edge_value(const graph_type& g, const edge_type& uv) noexcept {
+    return uv->value_;
+  }
 #else
   friend constexpr value_type&       edge_value(graph_type& g, edge_type& uv) noexcept { return uv.value_; }
   friend constexpr const value_type& edge_value(const graph_type& g, const edge_type& uv) noexcept { return uv.value_; }
