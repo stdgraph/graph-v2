@@ -4,7 +4,7 @@
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/neighbors.hpp"
-#include "graph/container/compressed_graph.hpp"
+#include "graph/container/csr_graph.hpp"
 #include <cassert>
 
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
@@ -43,7 +43,7 @@ using graph::find_vertex_edge;
 using graph::partition_id;
 
 
-using routes_compressed_graph_type = graph::container::compressed_graph<double, std::string, std::string>;
+using routes_csr_graph_type = graph::container2::csr_graph<double, std::string, std::string>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -56,11 +56,11 @@ auto find_frankfurt(G&& g) {
 }
 
 // Things to test
-//  push_back and emplace_back work correctly when adding city names (applies to compressed_graph & dynamic_graph)
+//  push_back and emplace_back work correctly when adding city names (applies to csr_graph & dynamic_graph)
 
 
 TEST_CASE("CSR void EV test", "[csr][capabilities]") {
-  using G = graph::container::compressed_graph<void, std::string, std::string>; // use it because it's easy
+  using G = graph::container2::csr_graph<void, std::string, std::string>; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
   //using init_edge_value = graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
@@ -80,7 +80,7 @@ TEST_CASE("CSR void EV test", "[csr][capabilities]") {
 }
 
 TEST_CASE("CSR void VV test", "[csr][capabilities]") {
-  using G = graph::container::compressed_graph<double, void, std::string>; // use it because it's easy
+  using G = graph::container2::csr_graph<double, void, std::string>; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
   //using init_edge_value = graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
@@ -93,7 +93,7 @@ TEST_CASE("CSR void VV test", "[csr][capabilities]") {
 }
 
 TEST_CASE("CSR graph test", "[csr][capabilities]") {
-  using G = routes_compressed_graph_type; // use it because it's easy
+  using G = routes_csr_graph_type; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
   //using init_edge_value = graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
@@ -212,7 +212,7 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
 TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   init_console();
 
-  using G  = routes_compressed_graph_type;
+  using G  = routes_csr_graph_type;
   auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv", name_order_policy::source_order_found);
   // name_order_policy::source_order_found gives best output with least overlap for germany routes
 
@@ -246,12 +246,12 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   }
 
   SECTION("content") {
-    std::string_view test_name = "Germany Routes using compressed_graph";
+    std::string_view test_name = "Germany Routes using csr_graph";
 #if TEST_OPTION == TEST_OPTION_OUTPUT
     cout << "\n" << test_name << "\n----------------------------------------" << endl << routes_graph(g) << endl;
     int x = 0; // results are identifcal with csv_routes_dov_tests
 
-    //Germany Routes using compressed_graph
+               //Germany Routes using csr_graph
     //----------------------------------------
     //[0 Frankfürt]
     //  --> [1 Mannheim] 85km
