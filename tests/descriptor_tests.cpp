@@ -165,8 +165,8 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     using InnerIter = const_iterator_t<Container>;
 
     using View                  = descriptor_view<Container>;
-    using Iterator              = descriptor_iterator<View, InnerIter>;
-    using Descriptor            = descriptor<View, InnerIter>;
+    using Iterator              = descriptor_iterator<InnerIter>;
+    using Descriptor            = descriptor<InnerIter>;
     using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
 
     Container c = {1, 2, 3, 4, 5};
@@ -206,8 +206,8 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     using InnerIter = iterator_t<Container>;
 
     using View                  = descriptor_view<Container>;
-    using Iterator              = descriptor_iterator<View, InnerIter>;
-    using Descriptor            = descriptor<View, InnerIter>;
+    using Iterator              = descriptor_iterator<InnerIter>;
+    using Descriptor            = descriptor<InnerIter>;
     using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
 
     Container c = {1, 2, 3, 4, 5};
@@ -249,8 +249,8 @@ TEMPLATE_TEST_CASE("Descriptor iterator for contiguous container vector<int>",
                    (const vector<int>)) {
   using Container  = TestType;
   using View       = descriptor_view<Container>;
-  using Iterator   = descriptor_iterator<View, iterator_t<Container>>;
-  using Descriptor = descriptor<View, iterator_t<Container>>;
+  using Iterator   = descriptor_iterator<iterator_t<Container>>;
+  using Descriptor = descriptor<iterator_t<Container>>;
   Container c      = {1, 2, 3, 4, 5};
   View      v(c);
 
@@ -266,14 +266,14 @@ TEMPLATE_TEST_CASE("Descriptor iterator for contiguous container vector<int>",
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, c, 0);
-    Iterator it1(v, c, 1);
+    Iterator it0(c, 0);
+    Iterator it1(c, 1);
     REQUIRE(*it == 0);
     REQUIRE(*it0 == 0);
     REQUIRE(*it1 == 1);
   }
   SECTION("copy") {
-    Iterator it(v, c, 1);
+    Iterator it(c, 1);
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
@@ -282,7 +282,7 @@ TEMPLATE_TEST_CASE("Descriptor iterator for contiguous container vector<int>",
   }
 
   SECTION("move") {
-    Iterator it(v, c, 1);
+    Iterator it(c, 1);
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
@@ -291,7 +291,7 @@ TEMPLATE_TEST_CASE("Descriptor iterator for contiguous container vector<int>",
   }
 
   SECTION("increment and add") {
-    Iterator it(v, c, 1);
+    Iterator it(c, 1);
     REQUIRE(*it == 1);
     REQUIRE(*(it++) == 1);
     REQUIRE(*it == 2);
@@ -316,9 +316,9 @@ TEMPLATE_TEST_CASE("Descriptor iterator for contiguous container vector<int>",
   //}
 
   SECTION("compare equality") {
-    Iterator it(v, c, 1);
-    Iterator it1(v, c, 1);
-    Iterator it2(v, c, 2);
+    Iterator it(c, 1);
+    Iterator it1(c, 1);
+    Iterator it2(c, 2);
     REQUIRE(it == it1);
     REQUIRE(it != it2);
     REQUIRE(it1 == it);
@@ -378,15 +378,15 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, c, 0);
-    Iterator it1(v, c, 1);
+    Iterator it0(c, 0);
+    Iterator it1(c, 1);
     REQUIRE(*it == 0);
     REQUIRE(*it0 == 0);
     REQUIRE(*it1 == 1);
   }
 
   SECTION("copy") {
-    Iterator it(v, c, 1);
+    Iterator it(c, 1);
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
@@ -395,7 +395,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
   }
 
   SECTION("move") {
-    Iterator it(v, c, 1);
+    Iterator it(c, 1);
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
@@ -404,7 +404,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
   }
 
   SECTION("increment and add") {
-    Iterator it(v, c, 1);
+    Iterator it(c, 1);
     REQUIRE(*it == 1);
     REQUIRE(*(it++) == 1);
     REQUIRE(*it == 2);
@@ -429,9 +429,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
   //}
 
   SECTION("compare equality") {
-    Iterator it(v, c, 1);
-    Iterator it1(v, c, 1);
-    Iterator it2(v, c, 2);
+    Iterator it(c, 1);
+    Iterator it1(c, 1);
+    Iterator it2(c, 2);
     REQUIRE(it == it1);
     REQUIRE(it != it2);
     REQUIRE(it1 == it);
@@ -491,14 +491,14 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, c, advance(begin(c), 0));
-    Iterator it1(v, c, advance(begin(c), 1));
+    Iterator it0(c, advance(begin(c), 0));
+    Iterator it1(c, advance(begin(c), 1));
     //REQUIRE(*it == 0);
     REQUIRE(v.get_vertex_id(*it0) == 1);
     REQUIRE(v.get_vertex_id(*it1) == 2);
   }
   SECTION("copy") {
-    Iterator it(v, c, advance(begin(c), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
@@ -507,7 +507,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
   }
 
   SECTION("move") {
-    Iterator it(v, c, advance(begin(c), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
@@ -516,7 +516,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
   }
 
   SECTION("increment and add") {
-    Iterator it(v, c, advance(begin(c), 1));
+    Iterator it(c, advance(begin(c), 1));
     REQUIRE(v.get_vertex_id(*it) == 2);
     REQUIRE(v.get_vertex_id(*it++) == 2);
     REQUIRE(v.get_vertex_id(*it) == 3);
@@ -541,9 +541,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
   //}
 
   SECTION("compare equality") {
-    Iterator it(v, c, advance(begin(c), 1));
-    Iterator it1(v, c, advance(begin(c), 1));
-    Iterator it2(v, c, advance(begin(c), 2));
+    Iterator it(c, advance(begin(c), 1));
+    Iterator it1(c, advance(begin(c), 1));
+    Iterator it2(c, advance(begin(c), 2));
     REQUIRE(it == it1);
     REQUIRE(it != it2);
     REQUIRE(it1 == it);
@@ -603,14 +603,14 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, c, advance(begin(c), 0));
-    Iterator it1(v, c, advance(begin(c), 1));
+    Iterator it0(c, advance(begin(c), 0));
+    Iterator it1(c, advance(begin(c), 1));
     //REQUIRE(*it == 0);
     REQUIRE(v.get_target_id(*it0) == 1);
     REQUIRE(v.get_target_id(*it1) == 2);
   }
   SECTION("copy") {
-    Iterator it(v, c, advance(begin(c), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
@@ -619,7 +619,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
   }
 
   SECTION("move") {
-    Iterator it(v, c, advance(begin(c), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
@@ -628,7 +628,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
   }
 
   SECTION("increment and add") {
-    Iterator it(v, c, advance(begin(c), 1));
+    Iterator it(c, advance(begin(c), 1));
     REQUIRE(v.get_target_id(*it) == 2);
     REQUIRE(v.get_target_id(*it++) == 2);
     REQUIRE(v.get_target_id(*it) == 3);
@@ -653,9 +653,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
   //}
 
   SECTION("compare equality") {
-    Iterator it(v, c, advance(begin(c), 1));
-    Iterator it1(v, c, advance(begin(c), 1));
-    Iterator it2(v, c, advance(begin(c), 2));
+    Iterator it(c, advance(begin(c), 1));
+    Iterator it1(c, advance(begin(c), 1));
+    Iterator it2(c, advance(begin(c), 2));
     REQUIRE(it == it1);
     REQUIRE(it != it2);
     REQUIRE(it1 == it);
@@ -716,14 +716,14 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
 
   SECTION("construction") {
     Iterator it;
-    Iterator it0(v, c, advance(begin(c), 0));
-    Iterator it1(v, c, advance(begin(c), 1));
+    Iterator it0(c, advance(begin(c), 0));
+    Iterator it1(c, advance(begin(c), 1));
     //REQUIRE(*it == 0);
     REQUIRE(v.get_target_id(*it0) == 5);
     REQUIRE(v.get_target_id(*it1) == 4);
   }
   SECTION("copy") {
-    Iterator it(v, c, advance(begin(c), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
@@ -732,7 +732,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
   }
 
   SECTION("move") {
-    Iterator it(v, c, advance(begin(c), 1));
+    Iterator it(c, advance(begin(c), 1));
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
@@ -741,7 +741,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
   }
 
   SECTION("increment and add") {
-    Iterator it(v, c, advance(begin(c), 1));
+    Iterator it(c, advance(begin(c), 1));
     REQUIRE(v.get_target_id(*it) == 4);
     REQUIRE(v.get_target_id(*it++) == 4);
     REQUIRE(v.get_target_id(*it) == 3);
@@ -875,8 +875,8 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
 
   SECTION("descriptor_subrange_view") {
     using View            = descriptor_subrange_view<Container>;
-    using Iterator        = descriptor_iterator<View, iterator_t<Container>>;
-    using Descriptor      = descriptor<View, iterator_t<Container>>;
+    using Iterator        = descriptor_iterator<iterator_t<Container>>;
+    using Descriptor      = descriptor<iterator_t<Container>>;
     using difference_type = range_difference_t<Container>;
     difference_type i     = 0;
 
@@ -983,7 +983,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
 
   SECTION("descriptor_view") {
     using View     = descriptor_view<Container>;
-    using Iterator = descriptor_iterator<View, iterator_t<Container>>;
+    using Iterator = descriptor_iterator<iterator_t<Container>>;
     static_assert(std::default_initializable<Iterator>);
 
     auto descriptors = descriptor_view(c);
