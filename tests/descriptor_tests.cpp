@@ -22,6 +22,9 @@ using std::deque;
 using std::map;
 using std::list;
 using std::forward_list;
+using std::iter_reference_t;
+using std::is_const_v;
+using std::remove_cvref_t;
 
 // concepts
 using std::ranges::contiguous_range;
@@ -46,6 +49,7 @@ using std::disable_sized_sentinel_for;
 using std::ranges::range_value_t;
 using std::ranges::range_size_t;
 using std::ranges::iterator_t;
+using std::ranges::range_reference_t;
 using std::declval;
 
 
@@ -115,29 +119,163 @@ TEST_CASE("Tuple tail") {
 }
 
 
-TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>", "[descriptor]", (vector<int>)
-                   //,(const vector<int>)
-) {
-  using Container = TestType;
-  using View      = descriptor_view<Container>;
-  using Iterator  = descriptor_iterator<View, iterator_t<Container>>;
-  //using difference_type = typename iterator_traits<Iterator>::difference_type;
-  using descriptor_type = descriptor<View, iterator_t<Container>>;
-  Container c           = {1, 2, 3, 4, 5};
+template <class _It>
+concept indirectly_readable_impl =
+      requires(const _It __i) {
+        typename std::iter_value_t<_It>;
+        typename std::iter_reference_t<_It>;
+        typename std::iter_rvalue_reference_t<_It>;
+        { *__i } -> same_as<std::iter_reference_t<_It>>;
+        //{ _RANGES iter_move(__i) } -> same_as<std::iter_rvalue_reference_t<_It>>;
+        true;
+      } && std::common_reference_with<std::iter_reference_t<_It>&&, iter_value_t<_It>&> &&
+      std::common_reference_with<std::iter_reference_t<_It>&&, std::iter_rvalue_reference_t<_It>&&> &&
+      std::common_reference_with<std::iter_rvalue_reference_t<_It>&&, const iter_value_t<_It>&>;
+
+template <class _It>
+concept my_indirectly_readable = indirectly_readable_impl<std::remove_cvref_t<_It>>;
+
+using Cont = vector<int>;
+struct ContDesc {
+  Cont::iterator it;
+
+  int& operator*() const { return *it; }
+  int* operator->() const { return &*it; }
+};
+
+
+TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
+  SECTION("inner_range traits") {
+    using Container = const vector<int>;
+    Container c     = {1, 2, 3, 4, 5};
+
+    using SubRange = subrange<iterator_t<decltype(c)>>;
+    static_assert(!is_const_v<range_value_t<SubRange>>);
+    static_assert(!is_const_v<range_reference_t<SubRange>>);
+
+    subrange sr(c);
+    using SubRange = subrange<iterator_t<decltype(sr)>>;
+    static_assert(!is_const_v<range_value_t<SubRange>>);
+    static_assert(!is_const_v<range_reference_t<SubRange>>);
+    //sr.front() = -1;
+  }
+
+  SECTION("const descriptor traits") {
+    using Container = const vector<int>;
+    using InnerIter = const_iterator_t<Container>;
+
+    using View                  = descriptor_view<Container>;
+    using Iterator              = descriptor_iterator<View, InnerIter>;
+    using Descriptor            = descriptor<View, InnerIter>;
+    using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
+
+    Container c = {1, 2, 3, 4, 5};
+    View      v(c);
+
+    static_assert(forward_range<View::inner_range>);
+    static_assert(!is_const_v<View::inner_range>);
+
+    static_assert(is_same_v<Iterator, View::const_iterator>);
+    static_assert(is_same_v<Iterator, decltype(declval<const View>().begin())>);
+    static_assert(is_same_v<Iterator, decltype(declval<const View>().end())>);
+    static_assert(is_same_v<Iterator, decltype(declval<View>().cbegin())>);
+    static_assert(is_same_v<Iterator, decltype(declval<View>().cend())>);
+    static_assert(!is_const_v<range_reference_t<Container>>);
+
+    static_assert(forward_iterator<Iterator>);
+    static_assert(is_same_v<Descriptor, Iterator::value_type>);
+    static_assert(is_same_v<Descriptor&, iter_reference_t<Iterator>>);
+    static_assert(!is_const_v<iter_reference_t<Iterator::inner_iterator>>);
+
+    static_assert(integral<Descriptor::value_type>);
+    static_assert(is_const_v<remove_reference_t<decltype(*declval<Descriptor>())>>, "inner value returned is const");
+    static_assert(is_same_v<InnerIter, Descriptor::inner_iterator>);
+
+    for (auto&& desc : v) {
+      //desc = 0; // fails
+      //desc.value() = 0; // fails
+      int        i  = *desc;
+      const int* ip = &*desc;
+      auto       t1 = desc.get_vertex_id();
+      auto       t2 = desc.get_target_id();
+      int        id = desc; // implicit conversion to vertex id
+    }
+  }
+  SECTION("descriptor traits") {
+    using Container = vector<int>;
+    using InnerIter = iterator_t<Container>;
+
+    using View                  = descriptor_view<Container>;
+    using Iterator              = descriptor_iterator<View, InnerIter>;
+    using Descriptor            = descriptor<View, InnerIter>;
+    using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
+
+    Container c = {1, 2, 3, 4, 5};
+    View      v(c);
+
+    static_assert(forward_range<View::inner_range>);
+    static_assert(!is_const_v<View::inner_range>);
+
+    static_assert(is_same_v<Iterator, View::iterator>);
+    static_assert(is_same_v<Iterator, decltype(declval<View>().begin())>);
+    static_assert(is_same_v<Iterator, decltype(declval<View>().end())>);
+    static_assert(!is_const_v<range_reference_t<Container>>);
+
+    static_assert(forward_iterator<Iterator>);
+    static_assert(is_same_v<Descriptor, Iterator::value_type>);
+    static_assert(is_same_v<Descriptor&, iter_reference_t<Iterator>>);
+    static_assert(!is_const_v<iter_reference_t<Iterator::inner_iterator>>);
+
+    static_assert(integral<Descriptor::value_type>);
+    static_assert(!is_const_v<remove_reference_t<decltype(*declval<Descriptor>())>>,
+                  "inner value returned is non-const");
+    static_assert(is_same_v<InnerIter, Descriptor::inner_iterator>);
+
+    for (auto&& desc : v) {
+      //desc = 0; // fails
+      //desc.value() = 0; // fails
+      int  i  = *desc;
+      int* ip = &*desc;
+      auto t1 = desc.get_vertex_id();
+      auto t2 = desc.get_target_id();
+      int  id = desc; // implicit conversion to vertex id
+    }
+  }
+}
+
+#if 0
+TEMPLATE_TEST_CASE("Descriptor iterator for contiguous container vector<int>",
+                   "[descriptor]",
+                   //(vector<int>),
+                   (const vector<int>)) {
+  using Container  = TestType;
+  using View       = descriptor_view<Container>;
+  using Iterator   = descriptor_iterator<View, iterator_t<Container>>;
+  using Descriptor = descriptor<View, iterator_t<Container>>;
+  Container c      = {1, 2, 3, 4, 5};
   View      v(c);
 
   SECTION("iterator traits") {
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<iter_value_t<Iterator>, descriptor_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, descriptor_type*>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::reference, descriptor_type&>);
+    static_assert(is_same_v<iter_value_t<Iterator>, Descriptor>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, Descriptor*>);
+    //static_assert(is_same_v<typename iterator_traits<Iterator>::reference, Descriptor&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
     static_assert(is_same_v<typename Iterator::iterator_concept, std::forward_iterator_tag>);
 
     static_assert(random_access_iterator<iterator_t<Container>>);
-    static_assert(integral<typename descriptor_type::value_type>);
+    static_assert(integral<typename Descriptor::value_type>);
     static_assert(is_same_v<Iterator, iterator_t<View>>);
+
+    static_assert(std::is_const_v<Container>);
+    static_assert(is_lvalue_reference_v<iter_reference_t<Iterator>>);
+    static_assert(!is_const_v<iter_reference_t<Iterator>>);
+    static_assert(!is_const_v<decltype(*declval<Iterator>())>);
+    //static_assert(is_same_v<iter_reference_t<Iterator>, Descriptor&>);
+    static_assert(my_indirectly_readable<Iterator>);
+    //static_assert(std::indirectly_readable<Iterator>);
+    //static_assert(forward_iterator<Iterator>);
   }
 
   SECTION("contiguous iterator concept") {
@@ -228,7 +366,6 @@ TEMPLATE_TEST_CASE("Identifier iterator for contiguous container vector<int>", "
   // operator[] is not tested because it will return a reference to a non-existing element for contiguous_iterator
 }
 
-#if 0
 TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
                    "[descriptor]",
                    (deque<int>),
@@ -236,7 +373,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
   using Container       = TestType;
   using View            = descriptor_view<Container>;
   using Iterator        = descriptor_iterator<View, iterator_t<Container>>;
-  using descriptor_type = descriptor<View, iterator_t<Container>>;
+  using Descriptor = descriptor<View, iterator_t<Container>>;
   //using difference_type = iter_difference_t<Iterator>;
   Container v = {1, 2, 3, 4, 5};
 
@@ -245,7 +382,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
 
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor_type>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, Descriptor>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
@@ -347,7 +484,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
   using Container       = TestType;
   using View            = descriptor_view<Container>;
   using Iterator        = descriptor_iterator<View, iterator_t<Container>>;
-  using descriptor_type = descriptor<View, iterator_t<Container>>;
+  using Descriptor = descriptor<View, iterator_t<Container>>;
   //using difference_type = typename iterator_traits<Iterator>::difference_type;
   Container c = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
   View      v(c);
@@ -357,7 +494,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
 
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor_type>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, Descriptor>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
@@ -459,7 +596,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
   using Container       = TestType;
   using View            = descriptor_view<Container>;
   using Iterator        = descriptor_iterator<View, iterator_t<Container>>;
-  using descriptor_type = descriptor<View, iterator_t<Container>>;
+  using Descriptor = descriptor<View, iterator_t<Container>>;
   //using difference_type = typename iterator_traits<Iterator>::difference_type;
   Container c = {1, 2, 3, 4, 5};
   View      v(c);
@@ -469,7 +606,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
 
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor_type>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, Descriptor>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>);
@@ -571,7 +708,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
   using Container       = TestType;
   using View            = descriptor_view<Container>;
   using Iterator        = descriptor_iterator<View, iterator_t<Container>>;
-  using descriptor_type = descriptor<View, iterator_t<Container>>;
+  using Descriptor = descriptor<View, iterator_t<Container>>;
   //using difference_type = iter_difference_t<Iterator>;
   Container c = {5, 4, 3, 2, 1}; // reverse order b/c forward_list adds to the front
   View      v(c);
@@ -581,7 +718,7 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
 
     static_assert(is_same_v<typename iterator_traits<Iterator>::difference_type,
                             typename iterator_traits<iterator_t<Container>>::difference_type>);
-    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, descriptor_type>);
+    static_assert(is_same_v<typename iterator_traits<Iterator>::value_type, Descriptor>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::pointer, const value_type*>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::reference, const value_type&>);
     static_assert(is_same_v<typename iterator_traits<Iterator>::iterator_category,
@@ -735,7 +872,7 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
 
   SECTION("descriptor_view") {
     using View            = descriptor_view<Container>;
-    using descriptor_type = descriptor<View, iterator_t<Container>>;
+    using Descriptor = descriptor<View, iterator_t<Container>>;
     using difference_type = range_difference_t<Container>;
     View            v(c);
     difference_type i = 0;
@@ -762,7 +899,7 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
   SECTION("descriptor_subrange_view") {
     using View            = descriptor_subrange_view<Container>;
     using Iterator        = descriptor_iterator<View, iterator_t<Container>>;
-    using descriptor_type = descriptor<View, iterator_t<Container>>;
+    using Descriptor = descriptor<View, iterator_t<Container>>;
     using difference_type = range_difference_t<Container>;
     difference_type i     = 0;
 
@@ -984,7 +1121,7 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
   using Container             = TestType;
   using view_type             = descriptor_subrange_view<Container, int64_t>;
   using Iterator              = descriptor_iterator<view_type, iterator_t<Container>, int64_t>;
-  using descriptor_type       = typename view_type::value_type; // integral or iterator
+  using Descriptor            = typename view_type::value_type; // integral or iterator
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       c           = {5, 4, 3, 2, 1};
   auto            descriptors = descriptor_subrange_view(c);
@@ -992,7 +1129,7 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
 
   SECTION("descriptor std for") {
     for (auto it = begin(descriptors); it != end(descriptors); ++it) {
-      const descriptor_type& descriptor = *it;
+      const Descriptor& descriptor = *it;
       REQUIRE(descriptors.get_target_id(descriptor) == i);
       if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
         REQUIRE(descriptors.id(descriptor) == i);

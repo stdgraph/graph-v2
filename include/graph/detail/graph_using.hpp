@@ -87,8 +87,20 @@ using std::ranges::subrange;
 
 using std::ranges::iterator_t;
 using std::ranges::sentinel_t;
-//using std::ranges::const_iterator_t; // C++23
-//using std::ranges::const_sentinel_t; // C++23
+#if __cplusplus > 202002L
+using std::iter_const_reference_t;
+using std::ranges::const_iterator_t; // C++23
+using std::ranges::const_sentinel_t; // C++23
+#else
+template <indirectly_readable _It>
+using iter_const_reference_t = std::common_reference_t<const std::iter_value_t<_It>&&, std::iter_reference_t<_It>>;
+
+template <ranges::range R>
+using const_iterator_t = decltype(std::ranges::cbegin(std::declval<R&>()));
+
+template <class _Ty>
+using const_sentinel_t = decltype(std::ranges::cend(std::declval<_Ty&>()));
+#endif
 
 using std::ranges::range_difference_t;
 using std::ranges::range_size_t;
@@ -96,8 +108,16 @@ using std::ranges::range_value_t;
 
 using std::ranges::range_reference_t;
 using std::ranges::range_rvalue_reference_t;
-//using std::ranges::range_const_reference_t;  // C++23
-//using std::ranges::range_common_reference_t; // not in gcc-13 for C++20
+#if __cplusplus > 202002L
+using std::ranges::range_const_reference_t;  // C++23
+using std::ranges::range_common_reference_t; // not in gcc-13 for C++20
+#else
+template <std::ranges::range R>
+using range_const_reference_t = std::iter_const_reference_t<std::ranges::iterator_t<R>>;
+
+template <std::ranges::range R>
+using range_common_reference_t = std::iter_common_reference_t<std::ranges::iterator_t<R>>;
+#endif
 
 // utility functions
 using std::move;
