@@ -129,9 +129,18 @@ public:
   constexpr descriptor(const view_range& owner, value_type v) : view_rng_(const_cast<view_range*>(&owner)), value_(v) {}
 
   // for unit testing
-  template <forward_range InnerRng>
+  template <forward_range R>
   requires is_convertible_v<iterator_t<R>, InnerIter>
-  constexpr descriptor(view_range& owner, InnerRng& inner_range, InnerIter it) : view_rng_(&owner) {
+  constexpr descriptor(view_range& owner, R& inner_range, InnerIter it) : view_rng_(&owner) {
+    if constexpr (integral<value_type>) {
+      value_ = static_cast<value_type>(std::ranges::distance(inner_range.begin(), it));
+    } else {
+      value_ = it;
+    }
+  }
+  template <forward_range R>
+  requires is_convertible_v<iterator_t<R>, InnerIter>
+  constexpr descriptor(view_range& owner, const R& inner_range, InnerIter it) : view_rng_(&owner) {
     if constexpr (integral<value_type>) {
       value_ = static_cast<value_type>(std::ranges::distance(inner_range.begin(), it));
     } else {
@@ -140,9 +149,18 @@ public:
   }
 
   // for unit testing
-  template <forward_range InnerRng>
+  template <forward_range R>
   requires is_convertible_v<iterator_t<R>, InnerIter>
-  constexpr descriptor(view_range& owner, InnerRng& inner_range, id_type id) : view_rng_(&owner) {
+  constexpr descriptor(view_range& owner, R& inner_range, id_type id) : view_rng_(&owner) {
+    if constexpr (integral<value_type>) {
+      value_ = id;
+    } else {
+      value_ = inner_range.begin() + static_cast<difference_type>(id);
+    }
+  }
+  template <forward_range R>
+  requires is_convertible_v<iterator_t<R>, InnerIter>
+  constexpr descriptor(view_range& owner, const R& inner_range, id_type id) : view_rng_(&owner) {
     if constexpr (integral<value_type>) {
       value_ = id;
     } else {
@@ -163,7 +181,7 @@ public:
    *         rather than stored. For example, the vertex id for a vector is the index, but for a map it is the key.
    */
   [[nodiscard]] constexpr id_type get_vertex_id() const
-  requires integral<value_type> || random_access_iterator<inner_iterator> || _is_tuple_like_v<inner_value_type>
+  requires (integral<value_type> || random_access_iterator<inner_iterator> || _is_tuple_like_v<inner_value_type>)
   {
     if constexpr (integral<value_type>) {
       return value_;
@@ -308,11 +326,17 @@ public:
   template <class R>
   requires is_convertible_v<iterator_t<R>, InnerIter>
   constexpr descriptor_iterator(view_type& owner, R& r, id_type id) : descriptor_(owner, r, id) {}
+  template <class R>
+  requires is_convertible_v<iterator_t<R>, InnerIter>
+  constexpr descriptor_iterator(view_type& owner, const R& r, id_type id) : descriptor_(owner, r, id) {}
 
   // for unit testing
   template <class R>
   requires is_convertible_v<iterator_t<R>, InnerIter>
-  constexpr descriptor_iterator(view_type& owner, R& r, InnerIter i) : descriptor_(owner, r, i) {}
+  constexpr descriptor_iterator(view_type& owner, R& r, InnerIter it) : descriptor_(owner, r, it) {}
+  template <class R>
+  requires is_convertible_v<iterator_t<R>, InnerIter>
+  constexpr descriptor_iterator(view_type& owner, const R& r, InnerIter it) : descriptor_(owner, r, it) {}
 
   constexpr descriptor_iterator& operator=(const descriptor_iterator&) = default;
 
@@ -341,8 +365,9 @@ public:
   //
   // operators ==, !=
   //
-  template <class T>
-  [[nodiscard]] constexpr bool operator==(const descriptor_iterator<View, T, IdT>& rhs) const noexcept {
+  template <class I>
+  requires std::equality_comparable_with<I, InnerIter>
+  [[nodiscard]] constexpr bool operator==(const descriptor_iterator<View, I, IdT>& rhs) const noexcept {
     return descriptor_ == rhs.descriptor_;
   }
 
@@ -378,7 +403,7 @@ public:
 
   // Construction/Destruction/Assignment
 public:
-  descriptor_view() = default;
+  constexpr descriptor_view() = default;
 
   constexpr descriptor_view(const R& r) : inner_range_(const_cast<R&>(r)) {}
 
@@ -393,7 +418,15 @@ public:
   [[nodiscard]] constexpr inner_range&       get_inner_range() noexcept { return inner_range_; }
   [[nodiscard]] constexpr const inner_range& get_inner_range() const noexcept { return inner_range_; }
 
-  constexpr const auto get_vertex_id(const value_type& desc) const { return desc.get_vertex_id(); }
+  template<class I>
+  constexpr const auto get_vertex_id(const descriptor<this_type, I, id_type>& desc) const {
+    return desc.get_vertex_id();
+  }
+
+  template <class I>
+  constexpr const auto get_target_id(const descriptor<this_type, I, id_type>& desc) const {
+    return desc.get_target_id();
+  }
 
   // Operations
 public:
@@ -447,6 +480,154 @@ private:
   inner_range inner_range_;
 };
 
+template <forward_range R, class IdT>
+class descriptor_subrange_view : public std::ranges::view_interface<descriptor_subrange_view<R, IdT>> {
+  // Types
+public:
+  using this_type            = descriptor_subrange_view<R, IdT>;
+  using inner_range          = subrange<iterator_t<R>, sentinel_t<R>>; // range of the underlying container
+  using inner_iterator       = iterator_t<R>;
+  using const_inner_iterator = const_iterator_t<R>;
+  using inner_sentinel       = sentinel_t<R>;
+  using const_inner_sentinel = const_sentinel_t<R>;
+  using inner_value_type     = range_value_t<R>;
+
+  using id_type    = IdT;
+  using value_type = descriptor<this_type, inner_iterator, id_type>;
+
+  using iterator = descriptor_iterator<this_type, inner_iterator, id_type>;
+  using sentinel = descriptor_iterator<this_type, inner_sentinel, id_type>;
+
+  using const_iterator = descriptor_iterator<this_type, const_inner_iterator, id_type>;
+  using const_sentinel = descriptor_iterator<this_type, const_inner_sentinel, id_type>;
+
+
+  // Construction/Destruction/Assignment
+public:
+  descriptor_subrange_view() = default;
+
+  constexpr explicit descriptor_subrange_view(const R& r)
+        : inner_range_(const_cast<R&>(r)), inner_subrange_(const_cast<R&>(r)) {}
+
+
+  constexpr descriptor_subrange_view(const R& r, iterator_t<R> first, sentinel_t<R> last)
+        : inner_range_(const_cast<R&>(r)), inner_subrange_(first, last) {}
+
+  constexpr descriptor_subrange_view(const R& r, const subrange<iterator_t<R>, sentinel_t<R>>& subrng)
+        : inner_range_(const_cast<R&>(r)), inner_subrange_(subrng) {}
+
+  constexpr descriptor_subrange_view& operator=(const descriptor_subrange_view&) = default;
+
+  // Properties
+public:
+  auto size() const {
+    using size_type = range_size_t<R>;                  //
+    if constexpr (integral<value_type>) {
+      return static_cast<size_type>(*end() - *begin()); // subtract integral index
+    } else {
+      return static_cast<size_type>(std::ranges::distance(*begin(), *end()));
+    }
+  }
+
+  [[nodiscard]] constexpr inner_range&       get_inner_range() noexcept { return inner_range_; }
+  [[nodiscard]] constexpr const inner_range& get_inner_range() const noexcept { return inner_range_; }
+
+  template <class I>
+  constexpr const auto get_vertex_id(const descriptor<this_type, I, id_type>& desc) const {
+    return desc.get_vertex_id();
+  }
+
+  template <class I>
+  constexpr const auto get_target_id(const descriptor<this_type, I, id_type>& desc) const {
+    return desc.get_target_id();
+  }
+
+
+  // Operations
+public:
+  [[nodiscard]] constexpr iterator begin() {
+    using desc      = descriptor<this_type, inner_iterator, id_type>; // descriptor
+    using desc_type = typename desc::value_type;                      // integer or iterator
+
+    if constexpr (integral<desc_type>) {
+      return iterator(desc(*this, static_cast<id_type>(inner_subrange_.begin() - inner_range_.begin())));
+    } else {
+      return iterator(desc(*this, inner_subrange_.begin()));
+    }
+  }
+  [[nodiscard]] constexpr sentinel end() {
+    using desc      = descriptor<this_type, inner_sentinel, id_type>; // descriptor
+    using desc_type = typename value_type::value_type;                // integer or iterator
+
+    if constexpr (integral<desc_type>) {
+      return sentinel(desc(*this, static_cast<id_type>(inner_subrange_.end() - inner_range_.begin())));
+    } else {
+      return sentinel(desc(*this, inner_subrange_.end()));
+    }
+  }
+
+#  if 0
+  /**
+   * @brief Find an element in the descriptor container, given a descriptor.
+   * 
+   * This assumes that the full range of id's in the container is [0, size(r_)). If a subrange is needed, use 
+   * subrange_find.
+   * 
+   * @param id The id to search for.
+   * @return Descriptor iterator to the element. If the element is not found, the iterator is equal to end().
+   */
+  iterator find(const value_type& desc) const {
+    if constexpr (integral<value_type>) {
+      return iterator(desc);
+    } else if constexpr (random_access_range<R>) {
+      return iterator(inner_range_.begin() + get_vertex_id(desc));
+    } else if constexpr (bidirectional_range<R>) {
+      return iterator(inner_range_.find(get_vertex_id(desc))); // map or set
+    } else {
+      static_assert(random_access_range<R>,
+                    "find(id) cannot be evaluated for a forward range because there is no id/key in the container");
+    }
+    return end();
+  }
+
+  /**
+   * @brief Find an element in a container, given an id, constrained to the range [first_, last_).
+   * 
+   * The id must be in the range [first_, last_) of the container. If it isn't, the iterator will be equal to end()
+   * which is also last_.
+   * 
+   * Note: The first/last constraint is really for edges in a CSR. Vertices in a CSR and edges in vertex<vertex<int>>
+   * will include all elements in the container. Specialization for different conditions could reduce the number of
+   * constraints.
+   * 
+   * @param id The id to search for. It must be in the range [first_, last_) of the container.
+   * @return Descriptor iterator to the element. If the element is not found, the iterator is equal to end().
+   */
+  iterator subrange_find(const id_type& id) const {
+    if constexpr (integral<value_type>) {
+      assert(id >= *begin() && id < *end());
+      return iterator(r_, r_.begin() + id);
+    } else if constexpr (random_access_range<R>) {
+      assert((id >= *inner_subrange_.begin() - inner_range_.begin()) &&
+             (id < *inner_subrange_.end() - inner_range_.begin()));
+      return iterator(*this, inner_range_.begin() + id);
+    } else if constexpr (bidirectional_range<R>) {
+      auto it = r_.find(id);
+      if (it != r_.end()) {
+        return iterator(it);
+      }
+    } else {
+      static_assert(random_access_range<R>,
+                    "find(id) cannot be evaluated for a forward range because there is no id/key in the container");
+    }
+    return end();
+  }
+#  endif
+
+private:
+  inner_range inner_range_;
+  inner_range inner_subrange_; // subrange of inner_range_
+};
 } // namespace graph
 
 #endif // GRAPH_DESCRIPTOR_HPP
