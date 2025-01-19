@@ -87,14 +87,14 @@ inline constexpr bool _is_tuple_like_v = _is_tuple_like<Args...>::value;
 template <forward_iterator InnerIter, class IdT = iter_difference_t<InnerIter>>
 class descriptor;
 
-template <forward_iterator InnerIter, class IdT = iter_difference_t<InnerIter>>
+template <forward_iterator InnerIter, integral IdT = iter_difference_t<InnerIter>>
 class descriptor_iterator;
 
-template <forward_range R, class IdT = range_difference_t<R>>
-class descriptor_view;
-
-template <forward_range R, class IdT = range_difference_t<R>>
-class descriptor_subrange_view;
+//template <forward_iterator I, std::sentinel_for<I> S = I, class IdT = iter_difference_t<I>>
+//class descriptor_view;
+//
+//template <forward_iterator I, std::sentinel_for<I> S = I, class IdT = iter_difference_t<I>>
+//class descriptor_subrange_view;
 
 
 // class descriptor(id, first)
@@ -288,7 +288,7 @@ private:
 //
 // descriptor_iterator
 //
-template <forward_iterator InnerIter, class IdT>
+template <forward_iterator InnerIter, integral IdT>
 class descriptor_iterator {
   // Types
 public:
@@ -323,13 +323,13 @@ public:
   constexpr descriptor_iterator(InnerIter front, id_type id) : descriptor_(front, id) {}
   constexpr descriptor_iterator(InnerIter front, InnerIter it) : descriptor_(front, it) {}
 
-  template <forward_range R>
-  requires is_convertible_v<iterator_t<R>, InnerIter> //
-  constexpr descriptor_iterator(R& r, inner_iterator it = r.begin()) : descriptor_(r, it) {}
+  //template <forward_range R>
+  //requires is_convertible_v<iterator_t<R>, InnerIter> //
+  //constexpr descriptor_iterator(R& r, inner_iterator it = r.begin()) : descriptor_(r, it) {}
 
-  template <forward_range R>
-  requires is_convertible_v<iterator_t<R>, InnerIter> //
-  constexpr descriptor_iterator(R& r, ptrdiff_t id = 0) : descriptor_(r, id) {}
+  //template <forward_range R>
+  //requires is_convertible_v<iterator_t<R>, InnerIter> //
+  //constexpr descriptor_iterator(R& r, ptrdiff_t id = 0) : descriptor_(r, id) {}
 
   constexpr descriptor_iterator& operator=(const descriptor_iterator&) = default;
 
@@ -369,21 +369,35 @@ protected:
   mutable value_type descriptor_ = value_type();
 };
 
+template <forward_iterator I, std::sentinel_for<I> S = I, class IdT = iter_difference_t<I>>
+using descriptor_view = std::ranges::subrange<descriptor_iterator<I, IdT>, descriptor_iterator<S, IdT>>;
 
+namespace views {
+  template <forward_iterator I, std::sentinel_for<I> S = I, class IdT = iter_difference_t<I>>
+  [[nodiscard]] constexpr auto descriptor_range(I first, S last) {
+    return descriptor_view<I, S, IdT>(first, last);
+  }
+
+  template <forward_range R, class IdT = range_difference_t<R>>
+  [[nodiscard]] constexpr auto descriptor_range(R&& r) {
+    return descriptor_view<iterator_t<R>, sentinel_t<R>, IdT>(begin(r), end(r));
+  }
+} // namespace views
+
+
+#  if 0
 //
 // descriptor_view
 //
-template <forward_range R, class IdT>
-class descriptor_view : public std::ranges::view_interface<descriptor_view<R, IdT>> {
+template <forward_iterator I, std::sentinel_for<I> S, class IdT>
+class descriptor_view : public std::ranges::view_interface<descriptor_view<I, S, IdT>> {
   // Types
 public:
-  using this_type            = descriptor_view<R, IdT>;
-  using inner_range          = subrange<iterator_t<R>, sentinel_t<R>>; // range of the underlying container
-  using inner_iterator       = iterator_t<R>;
-  using const_inner_iterator = const_iterator_t<R>;
-  using inner_sentinel       = sentinel_t<R>;
-  using const_inner_sentinel = const_sentinel_t<R>;
-  using inner_value_type     = range_value_t<R>;
+  using this_type        = descriptor_view<I, I, IdT>;
+  using inner_range      = subrange<I, S>; // range of the underlying container
+  using inner_iterator   = I;
+  using inner_sentinel   = S;
+  using inner_value_type = iter_value_t<I>;
 
   using id_type    = IdT;
   using value_type = descriptor<inner_iterator, id_type>;
@@ -391,14 +405,14 @@ public:
   using iterator = descriptor_iterator<inner_iterator, id_type>;
   using sentinel = descriptor_iterator<inner_sentinel, id_type>;
 
-  using const_iterator = descriptor_iterator<const_inner_iterator, id_type>;
-  using const_sentinel = descriptor_iterator<const_inner_sentinel, id_type>;
-
   // Construction/Destruction/Assignment
 public:
   constexpr descriptor_view() = default;
 
-  constexpr descriptor_view(const R& r) : inner_range_(const_cast<R&>(r)) {}
+  constexpr descriptor_view(inner_iterator first, inner_iterator last) : inner_range_(first, last) {}
+
+  template <class R>
+  constexpr explicit descriptor_view(R&& r) : descriptor_view(r.begin(), r.end()) {}
 
   // Properties
 public:
@@ -408,8 +422,7 @@ public:
     return inner_range_.size();
   }
 
-  [[nodiscard]] constexpr inner_range&       get_inner_range() noexcept { return inner_range_; }
-  [[nodiscard]] constexpr const inner_range& get_inner_range() const noexcept { return inner_range_; }
+  [[nodiscard]] constexpr inner_range& get_inner_range() const noexcept { return inner_range_; }
 
   template <class I>
   constexpr const auto get_vertex_id(const descriptor<I, id_type>& desc) const {
@@ -423,7 +436,7 @@ public:
 
   // Operations
 public:
-  [[nodiscard]] constexpr iterator begin() {
+  [[nodiscard]] constexpr iterator begin() const {
     using desc      = descriptor<inner_iterator, id_type>; // descriptor
     using desc_type = typename desc::value_type;           // integer or iterator
 
@@ -433,7 +446,7 @@ public:
       return iterator(desc(inner_range_.begin(), inner_range_.begin()));
     }
   }
-  [[nodiscard]] constexpr sentinel end() {
+  [[nodiscard]] constexpr sentinel end() const {
     using desc      = descriptor<inner_sentinel, id_type>; // descriptor
     using desc_type = typename value_type::value_type;     // integer or iterator
 
@@ -444,46 +457,22 @@ public:
     }
   }
 
-  [[nodiscard]] constexpr const_iterator begin() const {
-    using desc      = descriptor<const_inner_iterator, id_type>; // descriptor
-    using desc_type = typename desc::value_type;                 // integer or iterator
-    if constexpr (integral<desc_type>) {
-      return const_iterator(desc(static_cast<ptrdiff_t>(0)));
-    } else {
-      return const_iterator(desc(inner_range_.begin(), inner_range_.begin()));
-    }
-  }
-  [[nodiscard]] constexpr const_sentinel end() const {
-    using desc      = descriptor<const_inner_sentinel, id_type>; // descriptor
-    using desc_type = typename value_type::value_type;           // integer or iterator
-    if constexpr (integral<desc_type>) {
-      return const_sentinel(desc(static_cast<ptrdiff_t>(inner_range_.size())));
-    } else {
-      return const_sentinel(desc(inner_range_.begin(), inner_range_.end()));
-    }
-  }
-
-  [[nodiscard]] constexpr const_iterator cbegin() const noexcept { return begin(); }
-  [[nodiscard]] constexpr const_sentinel cend() const noexcept { return end(); }
-
   // Operators
 public:
   // Member variables
 private:
-  inner_range inner_range_;
+  mutable inner_range inner_range_;
 };
 
-template <forward_range R, class IdT>
-class descriptor_subrange_view : public std::ranges::view_interface<descriptor_subrange_view<R, IdT>> {
+template <forward_iterator I, std::sentinel_for<I> S, class IdT>
+class descriptor_subrange_view : public std::ranges::view_interface<descriptor_subrange_view<I, S, IdT>> {
   // Types
 public:
-  using this_type            = descriptor_subrange_view<R, IdT>;
-  using inner_range          = subrange<iterator_t<R>, sentinel_t<R>>; // range of the underlying container
-  using inner_iterator       = iterator_t<R>;
-  using const_inner_iterator = const_iterator_t<R>;
-  using inner_sentinel       = sentinel_t<R>;
-  using const_inner_sentinel = const_sentinel_t<R>;
-  using inner_value_type     = range_value_t<R>;
+  using this_type        = descriptor_subrange_view<I, S, IdT>;
+  using inner_range      = subrange<I, S>; // range of the underlying container
+  using inner_iterator   = I;
+  using inner_sentinel   = S;
+  using inner_value_type = iter_value_t<I>;
 
   using id_type    = IdT;
   using value_type = descriptor<inner_iterator, id_type>;
@@ -491,34 +480,40 @@ public:
   using iterator = descriptor_iterator<inner_iterator, id_type>;
   using sentinel = descriptor_iterator<inner_sentinel, id_type>;
 
-  using const_iterator = descriptor_iterator<const_inner_iterator, id_type>;
-  using const_sentinel = descriptor_iterator<const_inner_sentinel, id_type>;
-
-
   // Construction/Destruction/Assignment
 public:
-  descriptor_subrange_view() = default;
+  constexpr descriptor_subrange_view() = default;
 
-  constexpr explicit descriptor_subrange_view(const R& r)
-        : inner_range_(const_cast<R&>(r)), inner_subrange_(const_cast<R&>(r)) {}
+  constexpr descriptor_subrange_view(inner_iterator first, inner_sentinel last)
+        : inner_range_(first, last), inner_subrange_(first, last) {}
+
+  constexpr descriptor_subrange_view(inner_iterator first,
+                                     inner_sentinel last,
+                                     inner_iterator subfirst,
+                                     inner_sentinel sublast)
+        : inner_range_(first, last), inner_subrange_(subfirst, sublast) {}
 
 
-  constexpr descriptor_subrange_view(const R& r, iterator_t<R> first, sentinel_t<R> last)
-        : inner_range_(const_cast<R&>(r)), inner_subrange_(first, last) {}
+  template <class R>
+  constexpr explicit descriptor_subrange_view(const R& r) : descriptor_subrange_view(begin(r), end(r)) {}
 
-  constexpr descriptor_subrange_view(const R& r, const subrange<iterator_t<R>, sentinel_t<R>>& subrng)
-        : inner_range_(const_cast<R&>(r)), inner_subrange_(subrng) {}
+  template <class R>
+  constexpr descriptor_subrange_view(R& r, iterator_t<R> subfirst, sentinel_t<R> sublast)
+        : descriptor_subrange_view(begin(r), end(r), subfirst, sublast) {}
+
+  template <class R>
+  constexpr descriptor_subrange_view(R& r, R& subrng)
+        : descriptor_subrange_view(begin(r), end(r), begin(subrng), end(subrng)) {}
 
   constexpr descriptor_subrange_view& operator=(const descriptor_subrange_view&) = default;
 
   // Properties
 public:
   auto size() const {
-    using size_type = range_size_t<R>;                  //
     if constexpr (integral<value_type>) {
-      return static_cast<size_type>(*end() - *begin()); // subtract integral index
+      return static_cast<size_t>(*end() - *begin()); // subtract integral index
     } else {
-      return static_cast<size_type>(std::ranges::distance(*begin(), *end()));
+      return static_cast<size_t>(std::ranges::distance(*begin(), *end()));
     }
   }
 
@@ -559,7 +554,7 @@ public:
     }
   }
 
-#  if 0
+#    if 0
   /**
    * @brief Find an element in the descriptor container, given a descriptor.
    * 
@@ -615,18 +610,20 @@ public:
     }
     return end();
   }
-#  endif
+#    endif
 
 private:
   inner_range inner_range_;
   inner_range inner_subrange_; // subrange of inner_range_
 };
+#  endif //0
+
 } // namespace graph
 
-template <class R, class VId>
-constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_view<R, VId>> = true;
-
-template <class R, class VId>
-constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_subrange_view<R, VId>> = true;
+//template <class R, class VId>
+//constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_view<R, VId>> = true;
+//
+//template <class R, class VId>
+//constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_subrange_view<R, VId>> = true;
 
 #endif // GRAPH_DESCRIPTOR_HPP

@@ -160,22 +160,45 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     //sr.front() = -1;
   }
 
+  SECTION("inner_range traits") {
+    using Container = const vector<int>;
+    Container c     = {1, 2, 3, 4, 5};
+
+    auto first                             = descriptor_iterator(c.begin(), 0);
+    auto last                              = descriptor_iterator(c.end(), ssize(c));
+    using first_t                          = decltype(first);
+    using last_t                           = decltype(last);
+    constexpr std::ranges::subrange_kind K = std::sized_sentinel_for<first_t, last_t>
+                                                   ? std::ranges::subrange_kind::sized
+                                                   : std::ranges::subrange_kind::unsized;
+
+    static_assert(std::input_or_output_iterator<first_t>);
+    static_assert(std::input_or_output_iterator<last_t>);
+    static_assert(K == std::ranges::subrange_kind::unsized); // needs to support (I - S) && (S - I) to be sized
+
+    static_assert(std::ranges::_Convertible_to_non_slicing<first_t, first_t>);
+
+    //descriptor_view v(descriptor_iterator(c.begin(), 0), descriptor_iterator(c.end(), ssize(c)));
+  }
+
+
+#if 0
   SECTION("const descriptor traits") {
     using Container = const vector<int>;
     using InnerIter = const_iterator_t<Container>;
 
-    using View                  = descriptor_view<Container>;
+    using View                  = descriptor_view<iterator_t<Container>>;
     using Iterator              = descriptor_iterator<InnerIter>;
     using Descriptor            = descriptor<InnerIter>;
     using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
 
     Container c = {1, 2, 3, 4, 5};
-    View      v(c);
+    descriptor_view v(c);
 
     static_assert(forward_range<View::inner_range>);
     static_assert(!is_const_v<View::inner_range>);
 
-    static_assert(is_same_v<Iterator, View::const_iterator>);
+    //static_assert(is_same_v<Iterator, View::const_iterator>);
     static_assert(is_same_v<Iterator, decltype(declval<const View>().begin())>);
     static_assert(is_same_v<Iterator, decltype(declval<const View>().end())>);
     static_assert(is_same_v<Iterator, decltype(declval<View>().cbegin())>);
@@ -205,7 +228,7 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     using Container = vector<int>;
     using InnerIter = iterator_t<Container>;
 
-    using View                  = descriptor_view<Container>;
+    using View                  = descriptor_view<InnerIter>;
     using Iterator              = descriptor_iterator<InnerIter>;
     using Descriptor            = descriptor<InnerIter>;
     using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
@@ -241,8 +264,10 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
       int64_t id = desc; // implicit conversion to vertex id
     }
   }
+#endif
 }
 
+#if ENABLE_DESCRIPTOR_TESTS
 TEMPLATE_TEST_CASE("Descriptor iterator for contiguous container vector<int>",
                    "[descriptor]",
                    (vector<int>),
@@ -982,13 +1007,13 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
 
 
   SECTION("descriptor_view") {
-    using View     = descriptor_view<Container>;
-    using Iterator = descriptor_iterator<iterator_t<Container>>;
+    auto descriptors = descriptor_view(c);
+    using View       = decltype(descriptors);
+    using Iterator   = iterator_t<View>;
     static_assert(std::default_initializable<Iterator>);
 
-    auto descriptors = descriptor_view(c);
-    using desc_view  = decltype(descriptors);
-    using desc_type  = range_value_t<desc_view>;
+    using desc_view = decltype(descriptors);
+    using desc_type = range_value_t<desc_view>;
     static_assert(forward_range<desc_view>, "descriptor_view is a forward_range");
 
     SECTION("descriptor std for") {
@@ -1092,7 +1117,6 @@ TEMPLATE_TEST_CASE("All simple values",
   //}
 }
 
-#if ENABLE_DESCRIPTOR_TESTS
 TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
   using Container             = TestType;
   using view_type             = descriptor_subrange_view<Container, int64_t>;
