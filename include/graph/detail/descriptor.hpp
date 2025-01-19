@@ -101,7 +101,6 @@ class descriptor_iterator;
 // class descriptor(iterator)
 // class descriptor(iterator, first)
 
-
 //
 // descriptor
 //
@@ -133,40 +132,40 @@ public:
   //constexpr descriptor(inner_iterator it, inner_iterator begin);
   //constexpr descriptor(inner_iterator it);
 
-  constexpr descriptor(InnerIter front, InnerIter it) : front_(front) {
+  constexpr descriptor(InnerIter first, InnerIter it) : begin_(first) {
     if constexpr (integral<value_type>) {
-      value_ = static_cast<value_type>(std::ranges::distance(front, it));
+      value_ = static_cast<value_type>(std::ranges::distance(first, it));
     } else {
       value_ = it;
     }
   }
-  constexpr descriptor(InnerIter front, ptrdiff_t id) : front_(front) {
+  constexpr descriptor(InnerIter first, ptrdiff_t id) : begin_(first) {
     if constexpr (integral<value_type>) {
       value_ = id;
     } else {
-      value_ = front + id;
+      value_ = first + id;
     }
   }
 
-  template <forward_range R>
-  requires is_convertible_v<iterator_t<R>, InnerIter>
-  constexpr descriptor(R& r, inner_iterator it = r.begin()) : front_(r.begin()) {
-    if constexpr (integral<value_type>) {
-      value_ = static_cast<value_type>(it - r.begin());
-    } else {
-      value_ = it;
-    }
-  }
+  //template <forward_range R>
+  //requires is_convertible_v<iterator_t<R>, InnerIter>
+  //constexpr descriptor(R& r, inner_iterator it = r.begin()) : begin_(r.begin()) {
+  //  if constexpr (integral<value_type>) {
+  //    value_ = static_cast<value_type>(it - r.begin());
+  //  } else {
+  //    value_ = it;
+  //  }
+  //}
 
-  template <forward_range R>
-  requires is_convertible_v<iterator_t<R>, InnerIter>
-  constexpr descriptor(R& r, std::ptrdiff_t id = 0) : front_(r.begin()) {
-    if constexpr (integral<value_type>) {
-      value_ = id;
-    } else {
-      value_ = front_ + id;
-    }
-  }
+  //template <forward_range R>
+  //requires is_convertible_v<iterator_t<R>, InnerIter>
+  //constexpr descriptor(R& r, std::ptrdiff_t id = 0) : begin_(r.begin()) {
+  //  if constexpr (integral<value_type>) {
+  //    value_ = id;
+  //  } else {
+  //    value_ = begin_ + id;
+  //  }
+  //}
 
   constexpr descriptor& operator=(const descriptor&) = default;
 
@@ -186,7 +185,7 @@ public:
     if constexpr (integral<value_type>) {
       return value_;
     } else if constexpr (random_access_iterator<inner_iterator>) {
-      return static_cast<id_type>(std::ranges::distance(front_, value_)); // value_ is an iterator
+      return static_cast<id_type>(std::ranges::distance(begin_, value_)); // value_ is an iterator
     } else if constexpr (_is_tuple_like_v<inner_value_type>) {
       return std::get<0>(*value_);                                        // e.g., pair::first used for map
     } else {
@@ -227,14 +226,14 @@ private:
    */
   [[nodiscard]] constexpr inner_iterator get_inner_iterator() {
     if constexpr (integral<value_type>) {
-      return front_ + value_;
+      return begin_ + value_;
     } else {
       return value_;
     }
   }
   [[nodiscard]] constexpr inner_iterator get_inner_iterator() const {
     if constexpr (integral<value_type>) {
-      return front_ + value_;
+      return begin_ + value_;
     } else {
       return value_;
     }
@@ -260,12 +259,71 @@ public:
     return tmp;
   }
 
+  constexpr descriptor& operator+=(iter_difference_t<inner_iterator> n)
+  requires random_access_iterator<inner_iterator>
+  {
+    value_ += n;
+    return *this;
+  }
+  constexpr descriptor operator+(iter_difference_t<inner_iterator> n) const
+  requires random_access_iterator<inner_iterator>
+  {
+    descriptor tmp = *this;
+    tmp += n;
+    return tmp;
+  }
+
+  constexpr descriptor& operator--()
+  requires bidirectional_iterator<inner_iterator>
+  {
+    --value_;
+    return *this;
+  }
+  constexpr descriptor operator--(int)
+  requires bidirectional_iterator<inner_iterator>
+  {
+    descriptor tmp = *this;
+    --value_;
+    return tmp;
+  }
+
+  constexpr descriptor& operator-=(iter_difference_t<inner_iterator> n)
+  requires random_access_iterator<inner_iterator>
+  {
+    value_ -= n;
+    return *this;
+  }
+  constexpr descriptor operator-(iter_difference_t<inner_iterator> n) const
+  requires random_access_iterator<inner_iterator>
+  {
+    descriptor tmp = *this;
+    tmp -= n;
+    return tmp;
+  }
+
+  template <class InnerIter2>
+  constexpr iter_difference_t<inner_iterator> operator-(const descriptor<InnerIter2, IdT>& rhs) const
+  requires random_access_iterator<inner_iterator>
+  {
+    return value_ - rhs.value_;
+  }
+
+  constexpr inner_reference operator[](iter_difference_t<inner_iterator> n) const
+  requires random_access_iterator<inner_iterator>
+  {
+    return value_[n];
+  }
+
   //
   // operators ==, !=, <=>
   //
-  constexpr bool operator==(const descriptor& rhs) const noexcept { return value_ == rhs.value_; }
+  template <class InnerIter2>
+  constexpr bool operator==(const descriptor<InnerIter2, IdT>& rhs) const noexcept {
+    return value_ == rhs.value_;
+  }
 
-  constexpr auto operator<=>(const descriptor& rhs) const noexcept
+  template <class InnerIter2>
+  constexpr auto operator<=>(const descriptor<InnerIter2, IdT>& rhs) const noexcept
   requires random_access_iterator<inner_iterator>
   {
     return value_ <=> rhs.value_;
@@ -281,7 +339,7 @@ public:
 
 private:
   value_type     value_ = value_type();     // index or iterator
-  inner_iterator front_ = inner_iterator(); // begin of the inner range
+  inner_iterator begin_ = inner_iterator(); // begin of the inner range
 };
 
 
@@ -309,8 +367,9 @@ public:
   //using const_reference = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
   using difference_type = std::iter_difference_t<InnerIter>;
 
-  using iterator_category = std::forward_iterator_tag;
-  using iterator_concept  = iterator_category;
+  using iterator_category = typename InnerIter::iterator_category;
+  using iterator_concept =
+        conditional_t<contiguous_iterator<inner_iterator>, std::contiguous_iterator_tag, iterator_category>;
 
   // Construction/Destruction/Assignment
 public:
@@ -343,7 +402,7 @@ public:
   [[nodiscard]] constexpr pointer   operator->() const noexcept { return &*this->descriptor_; }
 
   //
-  // operators ++
+  // operators ++ += +
   //
   constexpr descriptor_iterator& operator++() {
     ++this->descriptor_;
@@ -355,12 +414,74 @@ public:
     return tmp;
   }
 
+  constexpr descriptor_iterator operator+=(iter_difference_t<inner_iterator> n)
+  requires random_access_iterator<inner_iterator>
+  {
+    this->descriptor_ += n;
+    return *this;
+  }
+  constexpr descriptor_iterator operator+(iter_difference_t<inner_iterator> n) const
+  requires random_access_iterator<inner_iterator>
+  {
+    descriptor_iterator tmp = *this;
+    tmp += n;
+    return tmp;
+  }
+
+  //
+  // operators -- -= -
+  //
+  constexpr descriptor_iterator& operator--()
+  requires bidirectional_iterator<InnerIter>
+  {
+    --this->descriptor_;
+    return *this;
+  }
+  constexpr descriptor_iterator operator--(int)
+  requires bidirectional_iterator<InnerIter>
+  {
+    descriptor_iterator tmp = *this;
+    --this->descriptor_;
+    return tmp;
+  }
+
+  constexpr descriptor_iterator operator-=(iter_difference_t<inner_iterator> n)
+  requires random_access_iterator<inner_iterator>
+  {
+    this->descriptor_ -= n;
+    return *this;
+  }
+  constexpr descriptor_iterator operator-(iter_difference_t<inner_iterator> n) const
+  requires random_access_iterator<inner_iterator>
+  {
+    descriptor_iterator tmp = *this;
+    tmp -= n;
+    return tmp;
+  }
+
+  template <forward_iterator InnerIter2>
+  constexpr iter_difference_t<inner_iterator> operator-(InnerIter2 rhs) const
+  requires random_access_iterator<inner_iterator>
+  {
+    return this->descriptor_ - rhs.descriptor_;
+  }
+
+  //
+  // operators []
+  //
+  constexpr reference operator[](iter_difference_t<inner_iterator> n) const
+  requires random_access_iterator<inner_iterator>
+  {
+    return descriptor_[n];
+  }
+
+
   //
   // operators ==, !=
   //
-  template <class I>
-  requires std::equality_comparable_with<I, InnerIter>
-  [[nodiscard]] constexpr bool operator==(const descriptor_iterator<I, IdT>& rhs) const noexcept {
+  template <class InnerIter2>
+  //requires std::equality_comparable_with<InnerIter, InnerIter2>
+  [[nodiscard]] constexpr bool operator==(const descriptor_iterator<InnerIter2, IdT>& rhs) const noexcept {
     return descriptor_ == rhs.descriptor_;
   }
 
@@ -369,20 +490,29 @@ protected:
   mutable value_type descriptor_ = value_type();
 };
 
+
 template <forward_iterator I, std::sentinel_for<I> S = I, class IdT = iter_difference_t<I>>
-using descriptor_view = std::ranges::subrange<descriptor_iterator<I, IdT>, descriptor_iterator<S, IdT>>;
-
-namespace views {
-  template <forward_iterator I, std::sentinel_for<I> S = I, class IdT = iter_difference_t<I>>
-  [[nodiscard]] constexpr auto descriptor_range(I first, S last) {
-    return descriptor_view<I, S, IdT>(first, last);
+[[nodiscard]] constexpr auto descriptor_view(I first, S last) {
+  if constexpr (random_access_iterator<I>) {
+    return std::ranges::subrange(descriptor_iterator(first, IdT(0)), descriptor_iterator(first, IdT(last - first)));
+  } else {
+    return std::ranges::subrange(descriptor_iterator(first, first), descriptor_iterator(first, last));
   }
+}
 
-  template <forward_range R, class IdT = range_difference_t<R>>
-  [[nodiscard]] constexpr auto descriptor_range(R&& r) {
-    return descriptor_view<iterator_t<R>, sentinel_t<R>, IdT>(begin(r), end(r));
+template <forward_range R, class IdT = range_difference_t<R>>
+[[nodiscard]] constexpr auto descriptor_view(R&& r) {
+  if constexpr (random_access_range<R>) {
+    return std::ranges::subrange(descriptor_iterator(begin(r), IdT(0)), descriptor_iterator(begin(r), IdT(size(r))));
+  } else {
+    return std::ranges::subrange(descriptor_iterator(begin(r), begin(r)), descriptor_iterator(begin(r), end(r)));
   }
-} // namespace views
+}
+
+template <forward_range R, class IdT = range_difference_t<R>>
+using descriptor_view_t = decltype(descriptor_view(std::declval<R>()));
+
+//} // namespace views
 
 
 #  if 0
@@ -625,5 +755,11 @@ private:
 //
 //template <class R, class VId>
 //constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_subrange_view<R, VId>> = true;
+
+//template <class I, class S, class VId>
+//constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_view<I, S, VId>> = true;
+
+//template <class R, class VId>
+//constexpr bool std::ranges::enable_borrowed_range<graph::descriptor_view2<R, VId>> = true;
 
 #endif // GRAPH_DESCRIPTOR_HPP

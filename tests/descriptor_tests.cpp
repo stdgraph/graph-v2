@@ -148,37 +148,53 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
   SECTION("inner_range traits") {
     using Container = const vector<int>;
     Container c     = {1, 2, 3, 4, 5};
+    auto&&    v     = descriptor_view(c);
 
-    using SubRange = subrange<iterator_t<decltype(c)>>;
-    static_assert(!is_const_v<range_value_t<SubRange>>);
-    static_assert(!is_const_v<range_reference_t<SubRange>>);
+    auto first = v.begin();
+    auto last  = v.end();
+    using I = decltype(first);
+    using S = decltype(last);
+    static_assert(is_same_v<I, S>);
 
-    subrange sr(c);
-    using SubRange = subrange<iterator_t<decltype(sr)>>;
-    static_assert(!is_const_v<range_value_t<SubRange>>);
-    static_assert(!is_const_v<range_reference_t<SubRange>>);
-    //sr.front() = -1;
+    static_assert(forward_iterator<I>);
+
+    constexpr std::ranges::subrange_kind K = std::sized_sentinel_for<I, S> //
+                                                   ? std::ranges::subrange_kind::sized
+                                                   : std::ranges::subrange_kind::unsized;
+    assert(K == std::ranges::subrange_kind::sized);
+
+    // constness of container passed through to members?
+    static_assert(is_const_v<remove_reference_t<decltype(*first)>>);
+    static_assert(is_const_v<remove_reference_t<decltype(**first)>>);
+
+    static_assert(is_const_v<remove_reference_t<decltype(*last)>>);
+    static_assert(is_const_v<remove_reference_t<decltype(**last)>>);
   }
 
   SECTION("inner_range traits") {
-    using Container = const vector<int>;
+    using Container = vector<int>;
     Container c     = {1, 2, 3, 4, 5};
+    auto&&    v     = descriptor_view(c);
 
-    auto first                             = descriptor_iterator(c.begin(), 0);
-    auto last                              = descriptor_iterator(c.end(), ssize(c));
-    using first_t                          = decltype(first);
-    using last_t                           = decltype(last);
-    constexpr std::ranges::subrange_kind K = std::sized_sentinel_for<first_t, last_t>
+    auto first = v.begin();
+    auto last  = v.end();
+    using I = decltype(first);
+    using S = decltype(last);
+    static_assert(is_same_v<I, S>);
+
+    static_assert(forward_iterator<I>);
+
+    constexpr std::ranges::subrange_kind K = std::sized_sentinel_for<I, S> //
                                                    ? std::ranges::subrange_kind::sized
                                                    : std::ranges::subrange_kind::unsized;
+    assert(K == std::ranges::subrange_kind::sized);
 
-    static_assert(std::input_or_output_iterator<first_t>);
-    static_assert(std::input_or_output_iterator<last_t>);
-    static_assert(K == std::ranges::subrange_kind::unsized); // needs to support (I - S) && (S - I) to be sized
+    // constness of container passed through to members?
+    static_assert(!is_const_v<remove_reference_t<decltype(*first)>>);
+    static_assert(!is_const_v<remove_reference_t<decltype(**first)>>);
 
-    static_assert(std::ranges::_Convertible_to_non_slicing<first_t, first_t>);
-
-    //descriptor_view v(descriptor_iterator(c.begin(), 0), descriptor_iterator(c.end(), ssize(c)));
+    static_assert(!is_const_v<remove_reference_t<decltype(*last)>>);
+    static_assert(!is_const_v<remove_reference_t<decltype(**last)>>);
   }
 
 
