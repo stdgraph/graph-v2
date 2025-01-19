@@ -147,25 +147,28 @@ public:
     }
   }
 
-  //template <forward_range R>
-  //requires is_convertible_v<iterator_t<R>, InnerIter>
-  //constexpr descriptor(R& r, inner_iterator it = r.begin()) : begin_(r.begin()) {
-  //  if constexpr (integral<value_type>) {
-  //    value_ = static_cast<value_type>(it - r.begin());
-  //  } else {
-  //    value_ = it;
-  //  }
-  //}
+  // for testing
+  template <forward_range R>
+  requires is_convertible_v<iterator_t<R>, InnerIter>
+  constexpr descriptor(R& r, inner_iterator it = r.begin()) : begin_(r.begin()) {
+    if constexpr (integral<value_type>) {
+      value_ = static_cast<value_type>(it - r.begin());
+    } else {
+      value_ = it;
+    }
+  }
 
-  //template <forward_range R>
-  //requires is_convertible_v<iterator_t<R>, InnerIter>
-  //constexpr descriptor(R& r, std::ptrdiff_t id = 0) : begin_(r.begin()) {
-  //  if constexpr (integral<value_type>) {
-  //    value_ = id;
-  //  } else {
-  //    value_ = begin_ + id;
-  //  }
-  //}
+  // for testing
+  template <forward_range R>
+  requires is_convertible_v<iterator_t<R>, InnerIter>
+  constexpr descriptor(R& r, std::ptrdiff_t id = 0) : begin_(r.begin()) {
+    if constexpr (integral<value_type>) {
+      value_ = id;
+    } else {
+      value_ = begin_;
+      std::advance(value_, ptrdiff_t(id));
+    }
+  }
 
   constexpr descriptor& operator=(const descriptor&) = default;
 
@@ -317,12 +320,19 @@ public:
   //
   // operators ==, !=, <=>
   //
-  template <class InnerIter2>
+  template <forward_iterator InnerIter2>
   constexpr bool operator==(const descriptor<InnerIter2, IdT>& rhs) const noexcept {
     return value_ == rhs.value_;
   }
+  // for testing; useful in general?
+  template <forward_iterator InnerIter2>
+  constexpr bool operator==(const InnerIter2& rhs) const noexcept 
+  requires std::equality_comparable_with<inner_iterator, InnerIter2>
+  {
+    return value_ == rhs;
+  }
 
-  template <class InnerIter2>
+  template <random_access_iterator InnerIter2>
   constexpr auto operator<=>(const descriptor<InnerIter2, IdT>& rhs) const noexcept
   requires random_access_iterator<inner_iterator>
   {
@@ -335,7 +345,11 @@ public:
    * This is a convenience function to allow the descriptor to be used as a vertex id for the
    * outer (vertex) range, where operator[] is often used for indexing.
    */
-  constexpr operator id_type() const noexcept { return get_vertex_id(); }
+  constexpr operator id_type() const noexcept 
+  requires(integral<value_type> || random_access_iterator<inner_iterator> || _is_tuple_like_v<inner_value_type>)
+  {
+    return get_vertex_id();
+  }
 
 private:
   value_type     value_ = value_type();     // index or iterator
@@ -350,6 +364,8 @@ template <forward_iterator InnerIter, integral IdT>
 class descriptor_iterator {
   // Types
 public:
+  using this_type        = descriptor_iterator<InnerIter, IdT>;
+
   using inner_iterator   = InnerIter;
   using inner_value_type = iter_value_t<inner_iterator>; //
 
@@ -382,13 +398,15 @@ public:
   constexpr descriptor_iterator(InnerIter front, id_type id) : descriptor_(front, id) {}
   constexpr descriptor_iterator(InnerIter front, InnerIter it) : descriptor_(front, it) {}
 
-  //template <forward_range R>
-  //requires is_convertible_v<iterator_t<R>, InnerIter> //
-  //constexpr descriptor_iterator(R& r, inner_iterator it = r.begin()) : descriptor_(r, it) {}
+  // for testing
+  template <forward_range R>
+  requires is_convertible_v<iterator_t<R>, InnerIter> //
+  constexpr descriptor_iterator(R& r, inner_iterator it = r.begin()) : descriptor_(r, it) {}
 
-  //template <forward_range R>
-  //requires is_convertible_v<iterator_t<R>, InnerIter> //
-  //constexpr descriptor_iterator(R& r, ptrdiff_t id = 0) : descriptor_(r, id) {}
+  // for testing
+  template <forward_range R>
+  requires is_convertible_v<iterator_t<R>, InnerIter> //
+  constexpr descriptor_iterator(R& r, ptrdiff_t id = 0) : descriptor_(r, id) {}
 
   constexpr descriptor_iterator& operator=(const descriptor_iterator&) = default;
 
@@ -398,8 +416,8 @@ public:
 public:
   // Operators
 public:
-  [[nodiscard]] constexpr reference operator*() const noexcept { return this->descriptor_; }
-  [[nodiscard]] constexpr pointer   operator->() const noexcept { return &*this->descriptor_; }
+  [[nodiscard]] constexpr reference operator*() const noexcept { return descriptor_; }
+  [[nodiscard]] constexpr pointer   operator->() const noexcept { return &*descriptor_; }
 
   //
   // operators ++ += +
