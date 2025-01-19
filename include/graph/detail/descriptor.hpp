@@ -414,7 +414,7 @@ public:
     return tmp;
   }
 
-  constexpr descriptor_iterator operator+=(iter_difference_t<inner_iterator> n)
+  constexpr descriptor_iterator& operator+=(iter_difference_t<inner_iterator> n)
   requires random_access_iterator<inner_iterator>
   {
     this->descriptor_ += n;
@@ -427,6 +427,15 @@ public:
     tmp += n;
     return tmp;
   }
+
+  friend constexpr descriptor_iterator operator+(iter_difference_t<inner_iterator> n, const descriptor_iterator& it)
+  requires random_access_iterator<inner_iterator>
+  {
+    descriptor_iterator<InnerIter, IdT> tmp = it;
+    tmp += n;
+    return tmp;
+  }
+
 
   //
   // operators -- -= -
@@ -445,7 +454,7 @@ public:
     return tmp;
   }
 
-  constexpr descriptor_iterator operator-=(iter_difference_t<inner_iterator> n)
+  constexpr descriptor_iterator& operator-=(iter_difference_t<inner_iterator> n)
   requires random_access_iterator<inner_iterator>
   {
     this->descriptor_ -= n;
@@ -477,12 +486,19 @@ public:
 
 
   //
-  // operators ==, !=
+  // operators ==, !=, <=>
   //
   template <class InnerIter2>
   //requires std::equality_comparable_with<InnerIter, InnerIter2>
   [[nodiscard]] constexpr bool operator==(const descriptor_iterator<InnerIter2, IdT>& rhs) const noexcept {
     return descriptor_ == rhs.descriptor_;
+  }
+
+  template <class InnerIter2>
+  constexpr auto operator<=>(const descriptor_iterator<InnerIter2, IdT>& rhs) const noexcept
+  requires random_access_iterator<inner_iterator>
+  {
+    return descriptor_ <=> rhs.descriptor_;
   }
 
   // Member variables

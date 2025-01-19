@@ -152,11 +152,11 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
 
     auto first = v.begin();
     auto last  = v.end();
-    using I = decltype(first);
-    using S = decltype(last);
+    using I    = decltype(first);
+    using S    = decltype(last);
     static_assert(is_same_v<I, S>);
 
-    static_assert(forward_iterator<I>);
+    static_assert(random_access_iterator<I>);
 
     constexpr std::ranges::subrange_kind K = std::sized_sentinel_for<I, S> //
                                                    ? std::ranges::subrange_kind::sized
@@ -164,11 +164,11 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     assert(K == std::ranges::subrange_kind::sized);
 
     // constness of container passed through to members?
-    static_assert(is_const_v<remove_reference_t<decltype(*first)>>);
-    static_assert(is_const_v<remove_reference_t<decltype(**first)>>);
+    static_assert(is_const_v<remove_reference_t<decltype(*first)>>);  // descriptor
+    static_assert(is_const_v<remove_reference_t<decltype(**first)>>); // inner value
 
-    static_assert(is_const_v<remove_reference_t<decltype(*last)>>);
-    static_assert(is_const_v<remove_reference_t<decltype(**last)>>);
+    static_assert(is_const_v<remove_reference_t<decltype(*last)>>);   // descriptor
+    static_assert(is_const_v<remove_reference_t<decltype(**last)>>);  // inner value
   }
 
   SECTION("inner_range traits") {
@@ -178,11 +178,11 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
 
     auto first = v.begin();
     auto last  = v.end();
-    using I = decltype(first);
-    using S = decltype(last);
+    using I    = decltype(first);
+    using S    = decltype(last);
     static_assert(is_same_v<I, S>);
 
-    static_assert(forward_iterator<I>);
+    static_assert(random_access_iterator<I>);
 
     constexpr std::ranges::subrange_kind K = std::sized_sentinel_for<I, S> //
                                                    ? std::ranges::subrange_kind::sized
@@ -190,31 +190,27 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     assert(K == std::ranges::subrange_kind::sized);
 
     // constness of container passed through to members?
-    static_assert(!is_const_v<remove_reference_t<decltype(*first)>>);
-    static_assert(!is_const_v<remove_reference_t<decltype(**first)>>);
+    static_assert(!is_const_v<remove_reference_t<decltype(*first)>>);  // descriptor
+    static_assert(!is_const_v<remove_reference_t<decltype(**first)>>); // inner value
 
-    static_assert(!is_const_v<remove_reference_t<decltype(*last)>>);
-    static_assert(!is_const_v<remove_reference_t<decltype(**last)>>);
+    static_assert(!is_const_v<remove_reference_t<decltype(*last)>>);   // descriptor
+    static_assert(!is_const_v<remove_reference_t<decltype(**last)>>);  // inner value
   }
 
-
-#if 0
   SECTION("const descriptor traits") {
     using Container = const vector<int>;
     using InnerIter = const_iterator_t<Container>;
 
-    using View                  = descriptor_view<iterator_t<Container>>;
+    using View                  = descriptor_view_t<Container>;
     using Iterator              = descriptor_iterator<InnerIter>;
     using Descriptor            = descriptor<InnerIter>;
     using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
 
     Container c = {1, 2, 3, 4, 5};
-    descriptor_view v(c);
+    View      v = descriptor_view(c);
 
-    static_assert(forward_range<View::inner_range>);
-    static_assert(!is_const_v<View::inner_range>);
+    static_assert(random_access_range<View>);
 
-    //static_assert(is_same_v<Iterator, View::const_iterator>);
     static_assert(is_same_v<Iterator, decltype(declval<const View>().begin())>);
     static_assert(is_same_v<Iterator, decltype(declval<const View>().end())>);
     static_assert(is_same_v<Iterator, decltype(declval<View>().cbegin())>);
@@ -244,18 +240,17 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     using Container = vector<int>;
     using InnerIter = iterator_t<Container>;
 
-    using View                  = descriptor_view<InnerIter>;
+    using View                  = descriptor_view_t<Container>;
     using Iterator              = descriptor_iterator<InnerIter>;
     using Descriptor            = descriptor<InnerIter>;
     using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
 
     Container c = {1, 2, 3, 4, 5};
-    View      v(c);
+    auto&&    v = descriptor_view(c);
 
-    static_assert(forward_range<View::inner_range>);
-    static_assert(!is_const_v<View::inner_range>);
+    static_assert(random_access_range<View>);
+    static_assert(!is_const_v<View>);
 
-    static_assert(is_same_v<Iterator, View::iterator>);
     static_assert(is_same_v<Iterator, decltype(declval<View>().begin())>);
     static_assert(is_same_v<Iterator, decltype(declval<View>().end())>);
     static_assert(!is_const_v<range_reference_t<Container>>);
@@ -280,7 +275,6 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
       int64_t id = desc; // implicit conversion to vertex id
     }
   }
-#endif
 }
 
 #if ENABLE_DESCRIPTOR_TESTS
