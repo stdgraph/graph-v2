@@ -147,7 +147,8 @@ public:
   // for testing
   template <forward_range R>
   requires is_convertible_v<iterator_t<R>, InnerIter>
-  constexpr descriptor(R& r, inner_iterator it = r.begin()) : begin_(r.begin()) {
+  constexpr descriptor(R& r, inner_iterator it /*= r.begin()*/) : begin_(r.begin()) {
+    //it = r.begin();
     if constexpr (integral<value_type>) {
       value_ = static_cast<value_type>(it - r.begin());
     } else {
@@ -317,22 +318,30 @@ public:
   //
   // operators ==, !=, <=>
   //
+  constexpr bool operator==(const descriptor& rhs) const noexcept { //
+    return value_ == rhs.value_;
+  }
+
   template <forward_iterator InnerIter2>
+  requires std::equality_comparable_with<InnerIter, InnerIter2>
   constexpr bool operator==(const descriptor<InnerIter2, IdT>& rhs) const noexcept {
     return value_ == rhs.value_;
   }
+
   // for testing; useful in general?
   template <forward_iterator InnerIter2>
-  constexpr bool operator==(const InnerIter2& rhs) const noexcept
-  requires std::equality_comparable_with<inner_iterator, InnerIter2>
-  {
+  requires std::equality_comparable_with<InnerIter, InnerIter2>
+  constexpr bool operator==(const InnerIter2& rhs) const noexcept {
     return value_ == rhs;
   }
 
+  constexpr auto operator<=>(const descriptor& rhs) const noexcept { //
+    return value_ <=> rhs.value_;
+  }
+
   template <random_access_iterator InnerIter2>
-  constexpr auto operator<=>(const descriptor<InnerIter2, IdT>& rhs) const noexcept
-  requires random_access_iterator<inner_iterator>
-  {
+  requires std::three_way_comparable_with<InnerIter, InnerIter2>
+  constexpr auto operator<=>(const descriptor<InnerIter2, IdT>& rhs) const noexcept {
     return value_ <=> rhs.value_;
   }
 
@@ -398,7 +407,7 @@ public:
   // for testing
   template <forward_range R>
   requires is_convertible_v<iterator_t<R>, InnerIter> //
-  constexpr descriptor_iterator(R& r, inner_iterator it = r.begin()) : descriptor_(r, it) {}
+  constexpr descriptor_iterator(R& r, inner_iterator it /*= r.begin()*/) : descriptor_(r, it) {}
 
   // for testing
   template <forward_range R>
@@ -503,13 +512,22 @@ public:
   //
   // operators ==, !=, <=>
   //
-  template <class InnerIter2>
-  //requires std::equality_comparable_with<InnerIter, InnerIter2>
+  [[nodiscard]] constexpr bool operator==(const descriptor_iterator& rhs) const noexcept {
+    return descriptor_ == rhs.descriptor_;
+  }
+  template <forward_iterator InnerIter2>
+  requires std::equality_comparable_with<InnerIter, InnerIter2>
   [[nodiscard]] constexpr bool operator==(const descriptor_iterator<InnerIter2, IdT>& rhs) const noexcept {
     return descriptor_ == rhs.descriptor_;
   }
 
-  template <class InnerIter2>
+  constexpr auto operator<=>(const descriptor_iterator& rhs) const noexcept
+  requires random_access_iterator<inner_iterator>
+  {
+    return descriptor_ <=> rhs.descriptor_;
+  }
+
+  template <forward_iterator InnerIter2>
   constexpr auto operator<=>(const descriptor_iterator<InnerIter2, IdT>& rhs) const noexcept
   requires random_access_iterator<inner_iterator>
   {

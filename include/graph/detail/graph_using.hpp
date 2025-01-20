@@ -92,10 +92,10 @@ using std::iter_const_reference_t;
 using std::ranges::const_iterator_t; // C++23
 using std::ranges::const_sentinel_t; // C++23
 #else
-template <indirectly_readable _It>
+template <std::indirectly_readable _It>
 using iter_const_reference_t = std::common_reference_t<const std::iter_value_t<_It>&&, std::iter_reference_t<_It>>;
 
-template <ranges::range R>
+template <std::ranges::range R>
 using const_iterator_t = decltype(std::ranges::cbegin(std::declval<R&>()));
 
 template <class _Ty>
@@ -113,7 +113,7 @@ using std::ranges::range_const_reference_t;  // C++23
 using std::ranges::range_common_reference_t; // not in gcc-13 for C++20
 #else
 template <std::ranges::range R>
-using range_const_reference_t = std::iter_const_reference_t<std::ranges::iterator_t<R>>;
+using range_const_reference_t = iter_const_reference_t<std::ranges::iterator_t<R>>;
 
 template <std::ranges::range R>
 using range_common_reference_t = std::iter_common_reference_t<std::ranges::iterator_t<R>>;

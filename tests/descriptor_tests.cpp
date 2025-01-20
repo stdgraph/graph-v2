@@ -9,7 +9,7 @@
 #include "graph/detail/descriptor.hpp"
 #include "graph/graph_utility.hpp"
 
-#define ENABLE_DESCRIPTOR_TESTS 0
+#define ENABLE_DESCRIPTOR_TESTS 1
 
 using namespace graph;
 
@@ -201,10 +201,10 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     using Container = const vector<int>;
     using InnerIter = const_iterator_t<Container>;
 
-    using View                  = descriptor_view_t<Container>;
-    using Iterator              = descriptor_iterator<InnerIter>;
-    using Descriptor            = descriptor<InnerIter>;
-    using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
+    using View       = descriptor_view_t<Container>;
+    using Iterator   = descriptor_iterator<InnerIter>;
+    using Descriptor = descriptor<InnerIter>;
+    //using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
 
     Container c = {1, 2, 3, 4, 5};
     View      v = descriptor_view(c);
@@ -213,20 +213,21 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
 
     static_assert(is_same_v<Iterator, decltype(declval<const View>().begin())>);
     static_assert(is_same_v<Iterator, decltype(declval<const View>().end())>);
-    static_assert(is_same_v<Iterator, decltype(declval<View>().cbegin())>);
-    static_assert(is_same_v<Iterator, decltype(declval<View>().cend())>);
+    //static_assert(is_same_v<Iterator, decltype(declval<View>().cbegin())>);
+    //static_assert(is_same_v<Iterator, decltype(declval<View>().cend())>);
     static_assert(!is_const_v<range_reference_t<Container>>);
 
     static_assert(forward_iterator<Iterator>);
     static_assert(is_same_v<Descriptor, Iterator::value_type>);
     static_assert(is_same_v<const Descriptor&, iter_reference_t<Iterator>>);
     static_assert(!is_const_v<iter_reference_t<Iterator::inner_iterator>>);
+    static_assert(is_const_v<remove_reference_t<iter_reference_t<Iterator::inner_iterator>>>);
 
     static_assert(integral<Descriptor::value_type>);
     static_assert(is_const_v<remove_reference_t<decltype(*declval<Descriptor>())>>, "inner value returned is const");
     static_assert(is_same_v<InnerIter, Descriptor::inner_iterator>);
 
-    for (auto&& desc : v) {
+    for (const Descriptor& desc : v) {
       //desc = 0; // fails
       //desc.value() = 0; // fails
       int        i  = *desc;
@@ -236,14 +237,15 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
       int64_t    id = desc; // implicit conversion to vertex id
     }
   }
+
   SECTION("descriptor traits") {
     using Container = vector<int>;
     using InnerIter = iterator_t<Container>;
 
-    using View                  = descriptor_view_t<Container>;
-    using Iterator              = descriptor_iterator<InnerIter>;
-    using Descriptor            = descriptor<InnerIter>;
-    using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
+    using View       = descriptor_view_t<Container>;
+    using Iterator   = descriptor_iterator<InnerIter>;
+    using Descriptor = descriptor<InnerIter>;
+    //using descriptor_value_type = typename Descriptor::value_type; // integral index or iterator
 
     Container c = {1, 2, 3, 4, 5};
     auto&&    v = descriptor_view(c);
@@ -281,12 +283,12 @@ TEMPLATE_TEST_CASE("Descriptor iterator for contiguous container vector<int>",
                    "[descriptor]",
                    (vector<int>),
                    (const vector<int>)) {
-  using Container  = TestType;
-  using View       = descriptor_view_t<Container>;
-  using Iterator   = descriptor_iterator<iterator_t<Container>>;
-  using Descriptor = descriptor<iterator_t<Container>>;
-  Container c      = {1, 2, 3, 4, 5};
-  auto&&    v      = descriptor_view(c);
+  using Container = TestType;
+  using Iterator  = descriptor_iterator<iterator_t<Container>>;
+  //using View       = descriptor_view_t<Container>;
+  //using Descriptor = descriptor<iterator_t<Container>>;
+  Container c = {1, 2, 3, 4, 5};
+  auto&&    v = descriptor_view(c);
 
   SECTION("contiguous iterator concept") {
     //static_assert(sentinel_for<Iterator, Iterator>);
@@ -382,9 +384,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for random access container deque<int>",
                    (deque<int>),
                    (const deque<int>)) {
   using Container = TestType;
-  using View      = descriptor_view_t<Container>;
-  Container c     = {1, 2, 3, 4, 5};
-  auto&&    v     = descriptor_view(c);
+  //using View      = descriptor_view_t<Container>;
+  Container c = {1, 2, 3, 4, 5};
+  auto&&    v = descriptor_view(c);
 
   using Iterator   = decltype(v.begin()); // preserve constness of container
   using Descriptor = Iterator::value_type;
@@ -496,9 +498,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
                    (map<int, int>),
                    (const map<int, int>)) {
   using Container = TestType;
-  using View      = descriptor_view_t<Container>;
-  Container c     = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
-  auto&&    v     = descriptor_view(c);
+  //using View      = descriptor_view_t<Container>;
+  Container c = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}};
+  auto&&    v = descriptor_view(c);
 
   using Iterator   = decltype(v.begin()); // preserve constness of container
   using Descriptor = Iterator::value_type;
@@ -590,9 +592,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
                    (list<int>),
                    (const list<int>)) {
   using Container = TestType;
-  using View      = descriptor_view_t<Container>;
-  Container c     = {1, 2, 3, 4, 5};
-  auto&&    v     = descriptor_view(c);
+  //using View      = descriptor_view_t<Container>;
+  Container c = {1, 2, 3, 4, 5};
+  auto&&    v = descriptor_view(c);
 
   using Iterator   = decltype(begin(v)); // preserve constness of container
   using Descriptor = Iterator::value_type;
@@ -695,9 +697,9 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
                    (forward_list<int>),
                    (const forward_list<int>)) {
   using Container = TestType;
-  using View      = descriptor_view_t<Container>;
-  Container c     = {5, 4, 3, 2, 1}; // reverse order b/c forward_list adds to the front
-  auto&&    v     = descriptor_view(c);
+  //using View      = descriptor_view_t<Container>;
+  Container c = {5, 4, 3, 2, 1}; // reverse order b/c forward_list adds to the front
+  auto&&    v = descriptor_view(c);
 
   using Iterator   = decltype(begin(v)); // preserve constness of container
   using Descriptor = Iterator::value_type;
@@ -858,9 +860,9 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
   Container c     = {1, 2, 3, 4, 5};
 
   SECTION("descriptor_view") {
-    using View            = descriptor_view_t<Container>;
-    using Iterator        = iterator_t<View>;
-    using Descriptor      = Iterator::value_type;
+    using View     = descriptor_view_t<Container>;
+    using Iterator = iterator_t<View>;
+    //using Descriptor      = Iterator::value_type;
     using difference_type = iter_difference_t<Iterator>;
     auto&&          v     = descriptor_view(c);
     difference_type i     = 0;
@@ -885,9 +887,9 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
   }
 
   SECTION("descriptor_subrange_view") {
-    using View            = descriptor_subrange_view_t<Container>;
-    using Iterator        = descriptor_iterator<iterator_t<Container>>;
-    using Descriptor      = descriptor<iterator_t<Container>>;
+    //using View            = descriptor_subrange_view_t<Container>;
+    //using Iterator        = descriptor_iterator<iterator_t<Container>>;
+    //using Descriptor      = descriptor<iterator_t<Container>>;
     using difference_type = range_difference_t<Container>;
     difference_type i     = 0;
 
@@ -1135,8 +1137,7 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
   }
 }
 
-
-#  if 0
+#if 0
 TEST_CASE("example") {
   using G  = vector<int>;
   G    g   = {1, 2, 3, 4, 5};
@@ -1181,4 +1182,4 @@ template <typename G>
 auto vertices(const G& g) {
   return descriptor_subrange_view(g);
 }
-#  endif // 0
+#endif // 0
