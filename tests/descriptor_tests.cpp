@@ -1107,8 +1107,8 @@ TEMPLATE_TEST_CASE("All simple values",
 
 TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
   using Container             = TestType;
-  using view_type             = descriptor_subrange_view_t<Container, int64_t>;
-  using Iterator              = descriptor_iterator<iterator_t<Container>, int64_t>;
+  using view_type             = descriptor_subrange_view_t<Container>;
+  using Iterator              = descriptor_iterator<iterator_t<Container>>;
   using Descriptor            = typename view_type::value_type; // integral or iterator
   using difference_type       = typename iterator_traits<Iterator>::difference_type;
   Container       c           = {5, 4, 3, 2, 1};
