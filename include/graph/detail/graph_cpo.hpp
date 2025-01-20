@@ -74,6 +74,28 @@ template <class _G>
 concept _al_tuple_id = _al_adjlist<_G> && integral<std::tuple_element_t<0, _al_edge_t<_G>>>;
 
 
+// _al_vertex_id<G> is used to determine default vertex_id type for a range-of-ranges adjacency list
+template <class _G>
+struct _al_vertex_id {
+  using type = size_t; // default vertex_id is size_t
+};
+
+template <_al_simple_id _G>
+struct _al_vertex_id<_G> {
+  using type = _al_edge_t<_G>; // The target id type is a single integral value, eg. vector<vector<int>>
+};
+
+template <_al_tuple_id _G>
+struct _al_vertex_id<_G> {
+  using type =
+        tuple_element_t<0,
+                        _al_edge_t<_G>>; // The target id is the first element of a single integral value of a tuple
+};
+
+template <class _G>
+using _al_vertex_id_t = typename _al_vertex_id<_G>::type;
+
+
 //
 // Support the use of std containers, tuple and pair for edgelist definitions (e.g. vector<tuple<T,T,T>>)
 //
@@ -226,7 +248,11 @@ namespace _Vertices {
         //static_assert(is_reference_v<decltype(vertices(__g))>);
         return vertices(__g);         // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+#  if USE_VERTEX_DESCRIPTOR
+        return descriptor_view<_G, vertex_id_t<_G>>(u); // default impl
+#else
         return std::forward<_G>(__g); // intentional ADL
+#endif
       } else {
         static_assert(_AlwaysFalse<_G>, "vertices(g) is not defined");
       }
@@ -314,26 +340,6 @@ namespace _Vertex_id {
 
     template <class _G>
     static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
-
-    template <class _G>
-    struct _al_vertex_id {
-      using type = size_t; // default vertex_id is size_t
-    };
-
-    template <_al_simple_id _G>
-    struct _al_vertex_id<_G> {
-      using type = _al_edge_t<_G>; // The target id type is a single integral value, eg. vector<vector<int>>
-    };
-
-    template <_al_tuple_id _G>
-    struct _al_vertex_id<_G> {
-      using type =
-            tuple_element_t<0,
-                            _al_edge_t<_G>>; // The target id is the first element of a single integral value of a tuple
-    };
-
-    template <class _G>
-    using _al_vertex_id_t = typename _al_vertex_id<_G>::type;
 
 
     // The vertex_id type is defined using the following criteria, with the first one found will be used

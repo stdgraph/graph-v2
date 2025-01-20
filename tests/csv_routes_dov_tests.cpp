@@ -190,7 +190,7 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     deg = degree(g2, id);
     REQUIRE(1 == deg);
 
-    auto& uu = edges(g2, *uit);
+    auto&& uu = edges(g2, *uit);
     REQUIRE(1 == std::ranges::size(uu));
     auto& uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g2, uv));

@@ -238,19 +238,22 @@ private:
 #if USE_EDGE_DESCRIPTOR
   // recursive definition error if edge_reference_t is used
   //using edge_desc_type = descriptor<edges_type, vertex_id_type>;
-  using edge_desc_view      = descriptor_view<edges_type, vertex_id_type>;
-  using edge_iterator       = typename edge_desc_view::iterator;
-  using const_edge_iterator = typename edge_desc_view::const_iterator;
+  //using edge_desc_view = descriptor_view_t<edges_type, vertex_id_type>;
+  //using edge_iterator  = iterator_t<edge_desc_view>;
 
-  template<class View, class I>
-  friend constexpr vertex_id_type
-  target_id(const graph_type& g, const descriptor<View, I, vertex_id_type>& uv) noexcept {
+  template <class I>
+  friend constexpr vertex_id_type target_id(const graph_type& g, const descriptor<I, vertex_id_type>& uv) noexcept {
     return uv->target_id_;
   }
 
-  template <class View, class I>
+  template <class I>
   friend constexpr auto& //
-  target(graph_type& g, descriptor<View, I, vertex_id_type>& uv) noexcept {
+  target(graph_type& g, descriptor<I, vertex_id_type>& uv) noexcept {
+    return begin(vertices(g))[uv->target_id_];
+  }
+  template <class I>
+  friend constexpr auto& //
+  target(const graph_type& g, descriptor<I, vertex_id_type>& uv) noexcept {
     return begin(vertices(g))[uv->target_id_];
   }
   //friend constexpr const vertex_type& //
@@ -395,6 +398,7 @@ public:
   using graph_type  = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
   using vertex_type = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
   using edge_type   = dynamic_edge_value<EV, VV, GV, VId, Sourced, Traits>;
+  using edges_type  = typename Traits::edges_type;
 
 public:
   constexpr dynamic_edge_value(const value_type& value) : value_(value) {}
@@ -417,8 +421,14 @@ private:
 
 private: // CPO properties
 #if USE_EDGE_DESCRIPTOR
-  friend constexpr value_type&       edge_value(graph_type& g, edge_type& uv) noexcept { return uv->value_; }
-  friend constexpr const value_type& edge_value(const graph_type& g, const edge_type& uv) noexcept {
+  using edge_iterator = vertex_edge_iterator_t<graph_type>;
+  using edge_desc     = typename edge_iterator::descriptor_type;
+
+  friend constexpr value_type& edge_value(graph_type& g, edge_reference_t<graph_type> uv) noexcept {
+    return uv->value_;
+  }
+
+  friend constexpr const value_type& edge_value(const graph_type& g, edge_reference_t<const graph_type> uv) noexcept {
     return uv->value_;
   }
 #else
@@ -710,8 +720,8 @@ public:
   constexpr dynamic_vertex_base(allocator_type alloc) : edges_(alloc) {}
 
 public:
-  constexpr edges_type&       edges() noexcept { return edges_; }
-  constexpr const edges_type& edges() const noexcept { return edges_; }
+  constexpr edges_type&       get_edges() noexcept { return edges_; }
+  constexpr const edges_type& get_edges() const noexcept { return edges_; }
 
   constexpr auto begin() noexcept { return edges_.begin(); }
   constexpr auto begin() const noexcept { return edges_.begin(); }
@@ -726,11 +736,15 @@ private:
 
 private: // CPO properties
 #if USE_EDGE_DESCRIPTOR
-  friend constexpr auto edges(graph_type& g, vertex_type& u) {
-    return descriptor_view<edges_type, vertex_id_type>(u.edges_);
+  friend constexpr auto edges(graph_type& g, vertex_reference_t<graph_type> u) {
+    using edge_iter_t = iterator_t<edges_type>;
+    using edge_sent_t = sentinel_t<edges_type>;
+    return graph::descriptor_view<edge_iter_t, edge_sent_t, vertex_id_type>(u.edges_.begin(), u.edges_.end());
   }
-  friend constexpr auto edges(const graph_type& g, const vertex_type& u) {
-    return descriptor_view<edges_type, vertex_id_type>(u.edges_);
+  friend constexpr auto edges(const graph_type& g, vertex_reference_t<const graph_type> u) {
+    using edge_iter_t = iterator_t<const edges_type>;
+    using edge_sent_t = sentinel_t<const edges_type>;
+    return graph::descriptor_view<edge_iter_t, edge_sent_t, vertex_id_type>(u.edges_.begin(), u.edges_.end());
   }
 #else
   friend constexpr edges_type&       edges(graph_type& g, vertex_type& u) { return u.edges_; }
@@ -797,7 +811,7 @@ public:
   constexpr dynamic_vertex& operator=(dynamic_vertex&&)      = default;
 
 public:
-  using base_type::edges;
+  using base_type::get_edges;
 
   constexpr value_type&       value() noexcept { return value_; }
   constexpr const value_type& value() const noexcept { return value_; }
@@ -1178,7 +1192,7 @@ public: // Load operations
         throw std::runtime_error("target id exceeds the number of vertices in load_edges");
       }
 
-      auto&& edge_adder = push_or_insert(vertices_[e.source_id].edges());
+      auto&& edge_adder = push_or_insert(vertices_[e.source_id].get_edges());
       if constexpr (Sourced) {
         if constexpr (is_void_v<EV>) {
           edge_adder(edge_type(std::move(e.source_id), std::move(e.target_id)));
@@ -1246,7 +1260,7 @@ public: // Load operations
         throw std::runtime_error("target id exceeds the number of vertices in load_edges");
       }
 
-      auto&& edge_adder = push_or_insert(vertices_[e.source_id].edges());
+      auto&& edge_adder = push_or_insert(vertices_[e.source_id].get_edges());
       if constexpr (Sourced) {
         if constexpr (is_void_v<EV>) {
           edge_adder(edge_type(std::move(e.source_id), std::move(e.target_id)));
@@ -1345,10 +1359,10 @@ private:                       // CPO properties
   }
 
   friend constexpr edges_type& edges(graph_type& g, const vertex_id_type uid) { //
-    return g.vertices_[uid].edges();
+    return g.vertices_[uid].get_edges();
   }
   friend constexpr const edges_type& edges(const graph_type& g, const vertex_id_type uid) {
-    return g.vertices_[uid].edges();
+    return g.vertices_[uid].get_edges();
   }
 
   friend constexpr auto num_partitions(const graph_type& g) {

@@ -72,8 +72,8 @@ set(UNITTEST_SOURCES
 
     ### Adjacency List Containers
     #"csv_routes_vofl_tests.cpp" 
-    #"csv_routes_dov_tests.cpp" 
-    "csv_routes_csr_tests.cpp" 
+    "csv_routes_dov_tests.cpp" 
+    #"csv_routes_csr_tests.cpp" 
 
     ### Edge List Containers
     #"edgelist_tests.cpp" 
