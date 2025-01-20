@@ -174,7 +174,7 @@ public:
    * @return id_type with a value of the vertex id. This is always a value type because it may be calculated
    *         rather than stored. For example, the vertex id for a vector is the index, but for a map it is the key.
    */
-  [[nodiscard]] constexpr id_type get_vertex_id() const
+  [[nodiscard]] constexpr id_type vertex_index() const
   requires(integral<value_type> || random_access_iterator<inner_iterator> || _is_tuple_like_v<inner_value_type>)
   {
     if constexpr (integral<value_type>) {
@@ -348,7 +348,7 @@ public:
   constexpr operator id_type() const noexcept
   requires(integral<value_type> || random_access_iterator<inner_iterator> || _is_tuple_like_v<inner_value_type>)
   {
-    return get_vertex_id();
+    return vertex_index();
   }
 
 private:

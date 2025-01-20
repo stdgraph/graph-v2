@@ -232,7 +232,7 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
       //desc.value() = 0; // fails
       int        i  = *desc;
       const int* ip = &*desc;
-      auto       t1 = desc.get_vertex_id();
+      auto       t1 = desc.vertex_index();
       auto       t2 = desc.get_target_id();
       int64_t    id = desc; // implicit conversion to vertex id
     }
@@ -272,7 +272,7 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
       //desc.value() = 0; // fails
       int     i  = *desc;
       int*    ip = &*desc;
-      auto    t1 = desc.get_vertex_id();
+      auto    t1 = desc.vertex_index();
       auto    t2 = desc.get_target_id();
       int64_t id = desc; // implicit conversion to vertex id
     }
@@ -532,16 +532,16 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
     Iterator it0(c, advance(begin(c), 0));
     Iterator it1(c, advance(begin(c), 1));
     //REQUIRE(*it == 0);
-    REQUIRE((*it0).get_vertex_id() == 1);
-    REQUIRE((*it1).get_vertex_id() == 2);
+    REQUIRE((*it0).vertex_index() == 1);
+    REQUIRE((*it1).vertex_index() == 2);
   }
   SECTION("copy") {
     Iterator it(c, advance(begin(c), 1));
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
-    REQUIRE((*it1).get_vertex_id() == 2);
-    REQUIRE((*it2).get_vertex_id() == 2);
+    REQUIRE((*it1).vertex_index() == 2);
+    REQUIRE((*it2).vertex_index() == 2);
   }
 
   SECTION("move") {
@@ -549,17 +549,17 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container map<int,int>
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
-    REQUIRE((*it1).get_vertex_id() == 2);
-    REQUIRE((*it2).get_vertex_id() == 2);
+    REQUIRE((*it1).vertex_index() == 2);
+    REQUIRE((*it2).vertex_index() == 2);
   }
 
   SECTION("increment and add") {
     Iterator it(c, advance(begin(c), 1));
-    REQUIRE((*it).get_vertex_id() == 2);
-    REQUIRE((*it++).get_vertex_id() == 2);
-    REQUIRE((*it).get_vertex_id() == 3);
-    REQUIRE((*++it).get_vertex_id() == 4);
-    REQUIRE((*it).get_vertex_id() == 4);
+    REQUIRE((*it).vertex_index() == 2);
+    REQUIRE((*it++).vertex_index() == 2);
+    REQUIRE((*it).vertex_index() == 3);
+    REQUIRE((*++it).vertex_index() == 4);
+    REQUIRE((*it).vertex_index() == 4);
   }
 
   SECTION("decrement and subtract") {
@@ -819,14 +819,14 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
         auto& desc = *it;
         REQUIRE(desc == i);
         //REQUIRE(descriptors[i] == i + 1);
-        REQUIRE(desc.get_vertex_id() == i);
+        REQUIRE(desc.vertex_index() == i);
         ++i;
       }
     }
 
     SECTION("descriptor range for") {
       for (auto& desc : descriptors) {
-        REQUIRE(desc.get_vertex_id() == i);
+        REQUIRE(desc.vertex_index() == i);
         //REQUIRE(descriptors[i] == i + 1);
         ++i;
       }
@@ -839,7 +839,7 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
     SECTION("descriptor std for") {
       for (auto it = begin(descriptors); it != end(descriptors); ++it) {
         auto& desc = *it;
-        REQUIRE(desc.get_vertex_id() == i);
+        REQUIRE(desc.vertex_index() == i);
         //REQUIRE(descriptors[i] == i + 1);
         ++i;
       }
@@ -847,7 +847,7 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
 
     SECTION("descriptor range for") {
       for (auto&& desc : descriptors) {
-        REQUIRE(desc.get_vertex_id() == i);
+        REQUIRE(desc.vertex_index() == i);
         //REQUIRE(descriptors[i] == i + 1);
         ++i;
       }
@@ -938,7 +938,7 @@ TEMPLATE_TEST_CASE("All simple values",
         const desc_type& descriptor = *it; // descriptor is integral or iterator
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.get_vertex_id() == i); // e.g. vertex_id(descriptor)
+          REQUIRE(descriptor.vertex_index() == i); // e.g. vertex_id(descriptor)
         }
         ++i;
       }
@@ -949,7 +949,7 @@ TEMPLATE_TEST_CASE("All simple values",
       for (auto&& descriptor : descriptors) {
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.get_vertex_id() == i); // e.g. vertex_id(descriptor) == i
+          REQUIRE(descriptor.vertex_index() == i); // e.g. vertex_id(descriptor) == i
         }
         ++i;
       }
@@ -968,7 +968,7 @@ TEMPLATE_TEST_CASE("All simple values",
         const desc_type& descriptor = *it; // descriptor is integral or iterator
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.get_vertex_id() == i); // e.g. vertex_id(descriptor)
+          REQUIRE(descriptor.vertex_index() == i); // e.g. vertex_id(descriptor)
         }
         ++i;
       }
@@ -979,7 +979,7 @@ TEMPLATE_TEST_CASE("All simple values",
       for (auto&& descriptor : descriptors) {
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.get_vertex_id() == i); // e.g. vertex_id(descriptor) == i
+          REQUIRE(descriptor.vertex_index() == i); // e.g. vertex_id(descriptor) == i
         }
         ++i;
       }
@@ -1009,7 +1009,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
         desc_type descriptor = *it;
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.get_vertex_id() == i);
+          REQUIRE(descriptor.vertex_index() == i);
         }
         ++i;
       }
@@ -1019,7 +1019,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
       for (auto&& descriptor : descriptors) {
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.get_vertex_id() == i);
+          REQUIRE(descriptor.vertex_index() == i);
         }
         ++i;
       }
@@ -1036,7 +1036,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
         desc_type descriptor = *it;
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.get_vertex_id() == i);
+          REQUIRE(descriptor.vertex_index() == i);
         }
         ++i;
       }
@@ -1046,7 +1046,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
       for (auto&& descriptor : descriptors) {
         //REQUIRE(descriptors[descriptor] == i + 1);
         if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-          REQUIRE(descriptor.get_vertex_id() == i);
+          REQUIRE(descriptor.vertex_index() == i);
         }
         ++i;
       }
@@ -1120,7 +1120,7 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
       const Descriptor& descriptor = *it;
       REQUIRE(descriptor.get_target_id() == i);
       if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-        REQUIRE(descriptor.get_vertex_id() == i);
+        REQUIRE(descriptor.vertex_index() == i);
       }
       --i;
     }
@@ -1130,7 +1130,7 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
     for (auto&& descriptor : descriptors) {
       REQUIRE(descriptor.get_target_id() == i);
       if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
-        REQUIRE(descriptor.get_vertex_id() == i);
+        REQUIRE(descriptor.vertex_index() == i);
       }
       --i;
     }

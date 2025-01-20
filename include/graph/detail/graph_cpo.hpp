@@ -173,6 +173,7 @@ inline constexpr bool is_adjacency_matrix_v = is_adjacency_matrix<G>::value;
 template <class G>
 concept adjacency_matrix = is_adjacency_matrix_v<G>;
 
+
 //
 // vertices(g) -> vertex_range_t<G>
 //
@@ -246,13 +247,13 @@ namespace _Vertices {
         return __g.vertices();
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         //static_assert(is_reference_v<decltype(vertices(__g))>);
-        return vertices(__g);         // intentional ADL
+        return vertices(__g); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
 #  if USE_VERTEX_DESCRIPTOR
         return descriptor_view<_G, vertex_id_t<_G>>(u); // default impl
-#else
+#  else
         return std::forward<_G>(__g); // intentional ADL
-#endif
+#  endif
       } else {
         static_assert(_AlwaysFalse<_G>, "vertices(g) is not defined");
       }
@@ -637,7 +638,7 @@ namespace _Edges {
         return edges(__g, u); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
 #  if USE_EDGE_DESCRIPTOR
-        return descriptor_view<vertex_reference_t<_G>, vertex_id_t<_G>>(u); // default impl
+        return descriptor_view<vertex_reference_t<_G>>(u); // default impl
 #  else
         return u;                      // default impl
 #  endif
@@ -668,7 +669,7 @@ namespace _Edges {
         return edges(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
 #  if USE_EDGE_DESCRIPTOR
-        return descriptor_view<vertex_reference_t<_G>, vertex_id_t<_G>>(*find_vertex(__g, uid)); // default impl
+        return descriptor_view<vertex_reference_t<_G>>(*find_vertex(__g, uid)); // default impl
 #  else
         return *find_vertex(__g, uid); // default impl
 #  endif
