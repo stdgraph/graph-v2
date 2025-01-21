@@ -88,8 +88,8 @@ void kosaraju(G&&        g,        // graph
 template <adjacency_list      G,
           random_access_range Component>
 requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
-void connected_components(G&&        g,        // graph
-                          Component& component // out: connected component assignment
+size_t connected_components(G&&        g,        // graph
+                            Component& component // out: connected component assignment
 ) {
   size_t            N(size(vertices(g)));
   std::vector<bool> visited(N, false);
@@ -114,6 +114,7 @@ void connected_components(G&&        g,        // graph
     }
     ++cid;
   }
+  return cid;
 }
 
 } // namespace graph

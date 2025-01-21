@@ -19,7 +19,7 @@ TEST_CASE("triangle counting test", "[tc]") {
   init_console();
 
   using G  = routes_vol_graph_type;
-  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "tc_test.csv", name_order_policy::alphabetical, true);
+  auto&& g = load_ordered_graph<G>(TEST_DATA_ROOT_DIR "tc_test.csv", name_order_policy::alphabetical);
 
   size_t triangles = graph::triangle_count(g);
   REQUIRE(triangles == 11);
