@@ -6,10 +6,10 @@ A,E,1
 B,C,1
 B,D,1
 B,E,1
-C,D,1
-E,C,1
-D,E,1
 B,F,1
+C,D,1
+C,E,1
+D,E,1
 E,F,1
 E,G,1
 F,H,1

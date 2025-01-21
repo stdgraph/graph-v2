@@ -42,10 +42,6 @@ size_t triangle_count(G&& g) {
     auto                         ie = end(edges(g, uid));
     while (i != ie) {
       auto&& [vid, uv] = *i;
-      if (vid < uid) {
-        ++i;
-        continue;
-      }
       graph::incidence_iterator<G> j(g, vid);
 
       auto je = end(edges(g, vid));
