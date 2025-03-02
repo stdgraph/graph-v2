@@ -1,3 +1,5 @@
+﻿#pragma once
+
 #include <graph/detail/graph_using.hpp>
 
 #ifndef GRAPH_DESCRIPTOR_HPP
@@ -205,7 +207,7 @@ public:
    * @param desc The descriptor. This must refer to a valid element in the container.
    * @return target id.
    */
-  constexpr const id_type get_target_id() const {
+  constexpr const auto get_target_id() const {
     if constexpr (_is_tuple_like_v<inner_value_type>) {
       return std::get<0>(*get_inner_iterator()); // e.g., pair::first used for map, or vector<tuple<int,double>>
     } else {
@@ -417,7 +419,7 @@ public:
   // Operators
 public:
   [[nodiscard]] constexpr reference operator*() const noexcept { return descriptor_; }
-  [[nodiscard]] constexpr pointer   operator->() const noexcept { return &*descriptor_; }
+  [[nodiscard]] constexpr pointer   operator->() const noexcept { return &descriptor_; }
 
   //
   // operators ++ += +

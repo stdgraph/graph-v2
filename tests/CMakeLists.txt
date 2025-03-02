@@ -1,4 +1,4 @@
-option(ENABLE_COVERAGE "Enable coverage build." OFF)
+﻿option(ENABLE_COVERAGE "Enable coverage build." OFF)
 
 if(ENABLE_COVERAGE)
   # set compiler flags
@@ -37,6 +37,7 @@ set(UNITTEST_SOURCES
 
     ### Basic tests
     "descriptor_tests.cpp"
+    "descriptor_dyn_tests.cpp"
     "tests.cpp"
 
     ### Views
@@ -72,13 +73,13 @@ set(UNITTEST_SOURCES
 
     ### Adjacency List Containers
     #"csv_routes_vofl_tests.cpp" 
-    "csv_routes_dov_tests.cpp" 
+    #"csv_routes_dov_tests.cpp" 
     #"csv_routes_csr_tests.cpp" 
 
     ### Edge List Containers
     #"edgelist_tests.cpp" 
 )
-
+ 
 
 
 

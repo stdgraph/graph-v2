@@ -6,6 +6,9 @@
 #include <functional>
 #include <optional>
 
+#ifndef GRAPH_USING_HPP
+#  define GRAPH_USING_HPP
+
 namespace graph {
 // Containers are not included to avoid potential conflicts: vector, list, string, etc.
 
@@ -87,11 +90,11 @@ using std::ranges::subrange;
 
 using std::ranges::iterator_t;
 using std::ranges::sentinel_t;
-#if __cplusplus > 202002L
+#  if __cplusplus > 202002L
 using std::iter_const_reference_t;
 using std::ranges::const_iterator_t; // C++23
 using std::ranges::const_sentinel_t; // C++23
-#else
+#  else
 template <std::indirectly_readable _It>
 using iter_const_reference_t = std::common_reference_t<const std::iter_value_t<_It>&&, std::iter_reference_t<_It>>;
 
@@ -100,7 +103,7 @@ using const_iterator_t = decltype(std::ranges::cbegin(std::declval<R&>()));
 
 template <class _Ty>
 using const_sentinel_t = decltype(std::ranges::cend(std::declval<_Ty&>()));
-#endif
+#  endif
 
 using std::ranges::range_difference_t;
 using std::ranges::range_size_t;
@@ -108,16 +111,16 @@ using std::ranges::range_value_t;
 
 using std::ranges::range_reference_t;
 using std::ranges::range_rvalue_reference_t;
-#if __cplusplus > 202002L
+#  if __cplusplus > 202002L
 using std::ranges::range_const_reference_t;  // C++23
 using std::ranges::range_common_reference_t; // not in gcc-13 for C++20
-#else
+#  else
 template <std::ranges::range R>
 using range_const_reference_t = iter_const_reference_t<std::ranges::iterator_t<R>>;
 
 template <std::ranges::range R>
 using range_common_reference_t = std::iter_common_reference_t<std::ranges::iterator_t<R>>;
-#endif
+#  endif
 
 // utility functions
 using std::move;
@@ -131,3 +134,5 @@ using std::tuple_cat;
 using std::max;
 using std::min;
 } // namespace graph
+
+#endif // GRAPH_USING_HPP
