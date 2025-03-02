@@ -117,8 +117,14 @@ public:
   using id_type    = ptrdiff_t;
   using value_type = conditional_t<random_access_iterator<inner_iterator>, ptrdiff_t, inner_iterator>;
 
-  using pointer         = std::add_pointer_t<value_type>;
-  using reference       = std::add_lvalue_reference_t<value_type>;
+  // preserve value constness based on inner_iterator. This is needed to follow the ranges concepts, but isn't
+  // strictly necessary in practice.
+  using pointer         = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
+                                std::add_pointer_t<std::add_const_t<value_type>>,
+                                std::add_pointer_t<value_type>>;
+  using reference       = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
+                                  std::add_lvalue_reference_t<std::add_const_t<value_type>>,
+                                  std::add_const_t<value_type>>;
   using difference_type = std::iter_difference_t<inner_iterator>;
 
   constexpr descriptor()                  = default;
@@ -168,7 +174,7 @@ public:
 
   // Properies
 public:
-  constexpr const value_type& value() const noexcept { return value_; }
+  constexpr value_type& value() const noexcept { return value_; }
 
   /**
    * @brief Get the vertex id for a descriptor on an outer range.
@@ -240,8 +246,10 @@ public:
   //
   // dereference
   //
-  [[nodiscard]] constexpr inner_reference operator*() const noexcept { return *get_inner_iterator(); }
-  [[nodiscard]] constexpr inner_pointer   operator->() const noexcept { return &*get_inner_iterator(); }
+
+  // range concept requirement: decltype(*descriptor) == value_type&
+  [[nodiscard]] constexpr reference operator*() const noexcept { return value_; }
+  [[nodiscard]] constexpr pointer   operator->() const noexcept { return &value_; }
 
   //
   // operator ++
@@ -331,12 +339,15 @@ public:
     return value_ == rhs;
   }
 
-  constexpr auto operator<=>(const descriptor& rhs) const noexcept { //
+  constexpr auto operator<=>(const descriptor& rhs) const noexcept
+  requires std::integral<value_type> || std::random_access_iterator<inner_iterator>
+  { //
     return value_ <=> rhs.value_;
   }
 
   template <random_access_iterator InnerIter2>
-  requires std::three_way_comparable_with<InnerIter, InnerIter2>
+  requires std::three_way_comparable_with<InnerIter, InnerIter2> &&
+           (std::integral<value_type> || random_access_iterator<inner_iterator>)
   constexpr auto operator<=>(const descriptor<InnerIter2>& rhs) const noexcept {
     return value_ <=> rhs.value_;
   }
@@ -371,7 +382,7 @@ public:
   using inner_iterator   = InnerIter;
   using inner_value_type = iter_value_t<inner_iterator>; //
 
-  using value_type = descriptor<inner_iterator>; // descriptor
+  using value_type = descriptor<inner_iterator>;         // descriptor
   using id_type    = typename value_type::id_type;
 
   using pointer       = std::add_pointer_t<value_type>;
@@ -540,7 +551,8 @@ template <forward_iterator I, std::sentinel_for<I> S = I>
 [[nodiscard]] constexpr auto descriptor_view(I first, S last) {
   using id_type = ptrdiff_t;
   if constexpr (random_access_iterator<I>) {
-    return std::ranges::subrange(descriptor_iterator(first, id_type(0)), descriptor_iterator(first, id_type(last - first)));
+    return std::ranges::subrange(descriptor_iterator(first, id_type(0)),
+                                 descriptor_iterator(first, id_type(last - first)));
   } else {
     return std::ranges::subrange(descriptor_iterator(first, first), descriptor_iterator(first, last));
   }
