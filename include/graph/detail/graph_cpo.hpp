@@ -8,7 +8,7 @@
 #  define GRAPH_CPO_HPP
 
 #  define USE_VERTEX_DESCRIPTOR 0
-#  define USE_EDGE_DESCRIPTOR 0
+#  define USE_EDGE_DESCRIPTOR 1
 
 namespace graph {
 // edge_descriptor_t&

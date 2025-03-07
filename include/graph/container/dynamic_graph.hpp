@@ -419,16 +419,18 @@ public:
 private:
   value_type value_ = value_type();
 
-private: // CPO properties
+private
+      : // CPO properties
 #if USE_EDGE_DESCRIPTOR
-  using edge_iterator = vertex_edge_iterator_t<graph_type>;
-  using edge_desc     = typename edge_iterator::descriptor_type;
+        //using edge_iterator = vertex_edge_iterator_t<graph_type>;
+  //using edge_desc     = typename edge_iterator::descriptor_type;
 
-  friend constexpr value_type& edge_value(graph_type& g, edge_reference_t<graph_type> uv) noexcept {
-    return uv->value_;
-  }
+  using edge_desc_view = descriptor_view_t<edges_type>;
+  using edge_desc      = std::ranges::range_value_t<edge_desc_view>;
 
-  friend constexpr const value_type& edge_value(const graph_type& g, edge_reference_t<const graph_type> uv) noexcept {
+  friend constexpr value_type& edge_value(graph_type& g, edge_desc& uv) noexcept { return uv->value_; }
+
+  friend constexpr const value_type& edge_value(const graph_type& g, const edge_desc& uv) noexcept {
     return uv->value_;
   }
 #else
@@ -736,10 +738,8 @@ private:
 
 private: // CPO properties
 #if USE_EDGE_DESCRIPTOR
-  friend constexpr auto edges(graph_type& g, vertex_reference_t<graph_type> u) {
-    return graph::descriptor_view(g.get_edges());
-  }
-  friend constexpr auto edges(const graph_type& g, vertex_reference_t<const graph_type> u) {
+  friend constexpr auto edges(graph_type& g, vertex_type& u) { return graph::descriptor_view(u.get_edges()); }
+  friend constexpr auto edges(const graph_type& g, const vertex_type& u) {
     return graph::descriptor_view(u.get_edges());
   }
 #else
@@ -1390,7 +1390,7 @@ private:                       // CPO properties
   }
 };
 
- /**
+/**
  * @ingroup graph_containers
  * @brief dynamic_graph defines a graph with a variety characteristics including edge, vertex 
  * and graph value types, whether edges are sourced or not, the vertex id type, and selection 
