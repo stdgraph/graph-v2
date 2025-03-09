@@ -233,7 +233,7 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
       int64_t        i  = *desc;
       const int64_t* ip = &*desc;
       auto           t1 = desc.vertex_index();
-      auto           t2 = desc.get_target_id();
+      auto           t2 = desc.edge_target_id();
       int64_t        id = desc; // implicit conversion to vertex id
     }
   }
@@ -273,7 +273,7 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
       const int64_t& i  = *desc;
       //const int64_t* ip = &(*desc);
       auto           t1 = desc.vertex_index();
-      auto           t2 = desc.get_target_id();
+      auto           t2 = desc.edge_target_id();
       int64_t        id = desc; // implicit conversion to vertex id
     }
   }
@@ -626,16 +626,16 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
     Iterator it0(c, advance(begin(c), 0));
     Iterator it1(c, advance(begin(c), 1));
     //REQUIRE(*it == 0);
-    REQUIRE((*it0).get_target_id() == 1);
-    REQUIRE((*it1).get_target_id() == 2);
+    REQUIRE((*it0).edge_target_id() == 1);
+    REQUIRE((*it1).edge_target_id() == 2);
   }
   SECTION("copy") {
     Iterator it(c, advance(begin(c), 1));
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
-    REQUIRE((*it1).get_target_id() == 2);
-    REQUIRE((*it2).get_target_id() == 2);
+    REQUIRE((*it1).edge_target_id() == 2);
+    REQUIRE((*it2).edge_target_id() == 2);
   }
 
   SECTION("move") {
@@ -643,17 +643,17 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container list<int>",
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
-    REQUIRE((*it1).get_target_id() == 2);
-    REQUIRE((*it2).get_target_id() == 2);
+    REQUIRE((*it1).edge_target_id() == 2);
+    REQUIRE((*it2).edge_target_id() == 2);
   }
 
   SECTION("increment and add") {
     Iterator it(c, advance(begin(c), 1));
-    REQUIRE((*it).get_target_id() == 2);
-    REQUIRE((*it++).get_target_id() == 2);
-    REQUIRE((*it).get_target_id() == 3);
-    REQUIRE((*++it).get_target_id() == 4);
-    REQUIRE((*it).get_target_id() == 4);
+    REQUIRE((*it).edge_target_id() == 2);
+    REQUIRE((*it++).edge_target_id() == 2);
+    REQUIRE((*it).edge_target_id() == 3);
+    REQUIRE((*++it).edge_target_id() == 4);
+    REQUIRE((*it).edge_target_id() == 4);
   }
 
   SECTION("decrement and subtract") {
@@ -732,16 +732,16 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
     Iterator it0(c, advance(begin(c), 0));
     Iterator it1(c, advance(begin(c), 1));
     //REQUIRE(*it == 0);
-    REQUIRE((*it0).get_target_id() == 5);
-    REQUIRE((*it1).get_target_id() == 4);
+    REQUIRE((*it0).edge_target_id() == 5);
+    REQUIRE((*it1).edge_target_id() == 4);
   }
   SECTION("copy") {
     Iterator it(c, advance(begin(c), 1));
     Iterator it1(it);
     Iterator it2;
     it2 = it1;
-    REQUIRE((*it1).get_target_id() == 4);
-    REQUIRE((*it2).get_target_id() == 4);
+    REQUIRE((*it1).edge_target_id() == 4);
+    REQUIRE((*it2).edge_target_id() == 4);
   }
 
   SECTION("move") {
@@ -749,17 +749,17 @@ TEMPLATE_TEST_CASE("Identifier iterator for bidirectional container",
     Iterator it1(move(it));
     Iterator it2;
     it2 = move(it1);
-    REQUIRE((*it1).get_target_id() == 4);
-    REQUIRE((*it2).get_target_id() == 4);
+    REQUIRE((*it1).edge_target_id() == 4);
+    REQUIRE((*it2).edge_target_id() == 4);
   }
 
   SECTION("increment and add") {
     Iterator it(c, advance(begin(c), 1));
-    REQUIRE((*it).get_target_id() == 4);
-    REQUIRE((*it++).get_target_id() == 4);
-    REQUIRE((*it).get_target_id() == 3);
-    REQUIRE((*++it).get_target_id() == 2);
-    REQUIRE((*it).get_target_id() == 2);
+    REQUIRE((*it).edge_target_id() == 4);
+    REQUIRE((*it++).edge_target_id() == 4);
+    REQUIRE((*it).edge_target_id() == 3);
+    REQUIRE((*++it).edge_target_id() == 2);
+    REQUIRE((*it).edge_target_id() == 2);
     //REQUIRE(*(it + 2) == advance(begin(c), 5));
     //REQUIRE(*(2 + it) == advance(begin(c), 5));
     //REQUIRE(*(it += 2) == advance(begin(c), 5));
@@ -873,14 +873,14 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
       for (auto it = begin(descriptors); it != end(descriptors); ++it) {
         auto descriptor = *it;
         //const int& value      = descriptors[descriptor];
-        REQUIRE(descriptor.get_target_id() == i + 1);
+        REQUIRE(descriptor.edge_target_id() == i + 1);
         ++i;
       }
     }
 
     SECTION("descriptor range for") {
       for (auto descriptor : descriptors) {
-        REQUIRE(descriptor.get_target_id() == i + 1);
+        REQUIRE(descriptor.edge_target_id() == i + 1);
         ++i;
       }
     }
@@ -899,14 +899,14 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
       for (auto it = begin(descriptors); it != end(descriptors); ++it) {
         auto descriptor = *it;
         //const int& value      = descriptors[descriptor];
-        REQUIRE(descriptor.get_target_id() == i + 1);
+        REQUIRE(descriptor.edge_target_id() == i + 1);
         ++i;
       }
     }
 
     SECTION("descriptor range for") {
       for (auto descriptor : descriptors) {
-        REQUIRE(descriptor.get_target_id() == i + 1);
+        REQUIRE(descriptor.edge_target_id() == i + 1);
         ++i;
       }
     }
@@ -1118,7 +1118,7 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
   SECTION("descriptor std for") {
     for (auto it = begin(descriptors); it != end(descriptors); ++it) {
       const Descriptor& descriptor = *it;
-      REQUIRE(descriptor.get_target_id() == i);
+      REQUIRE(descriptor.edge_target_id() == i);
       if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
         REQUIRE(descriptor.vertex_index() == i);
       }
@@ -1128,7 +1128,7 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
 
   SECTION("descriptor range for") {
     for (auto&& descriptor : descriptors) {
-      REQUIRE(descriptor.get_target_id() == i);
+      REQUIRE(descriptor.edge_target_id() == i);
       if constexpr (random_access_range<Container> || _is_tuple_like_v<range_value_t<Container>>) {
         REQUIRE(descriptor.vertex_index() == i);
       }

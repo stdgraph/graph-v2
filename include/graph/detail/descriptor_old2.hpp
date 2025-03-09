@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <graph/detail/graph_using.hpp>
 
@@ -180,7 +180,7 @@ public:
    * @param desc The descriptor. This must refer to a valid element in the container.
    * @return target id.
    */
-  constexpr const id_type get_target_id() const {
+  constexpr const id_type edge_target_id() const {
     if constexpr (_is_tuple_like_v<inner_value_type>) {
       return std::get<0>(*inner_value()); // e.g., pair::first used for map, or vector<tuple<int,double>>
     } else {
@@ -397,7 +397,7 @@ public:
    * @param desc The descriptor. This must refer to a valid element in the container.
    * @return target id.
    */
-  constexpr const auto get_target_id(const value_type& desc) const { return desc.get_target_id(); }
+  constexpr const auto edge_target_id(const value_type& desc) const { return desc.edge_target_id(); }
 
   // Operators
 public:
@@ -500,7 +500,7 @@ public:
    * @param desc The descriptor. This must refer to a valid element in the container.
    * @return target id.
    */
-  constexpr const auto get_target_id(const value_type& desc) const {
+  constexpr const auto edge_target_id(const value_type& desc) const {
     if constexpr (integral<value_type>) {
       if constexpr (_is_tuple_like_v<inner_value_type>) {
         return std::get<0>(inner_range_[*desc]); // e.g., pair::first used for map, or vector<tuple<int,double>>

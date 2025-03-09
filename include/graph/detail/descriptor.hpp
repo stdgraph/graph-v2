@@ -94,13 +94,18 @@ template <forward_range R>
 class descriptor_subrange_view_impl;
 
 
-// class descriptor(id, first)
-// class descriptor(iterator)
-// class descriptor(iterator, first)
-
-//
-// descriptor
-//
+/**
+ * @brief A descriptor used for a vertex or edge
+ * 
+ * This class provides an abstraction for a vertex or edge in a graph that hides the use of an index or an iterator.
+ * This helps create generic algorithms that work with both random-access and non-random-access containers.
+ * 
+ * It's tempting to break this into separate index_descriptor and iterator_descriptor classes. If that were done,
+ * the iterator_descriptor class would not require the begin_ member variable. However, this would remove the 
+ * convenience of the vertex_index() function, which requires it.
+ * 
+ * @tparam InnerIter The iterator for the inner (raw) type that's being referenced.
+ */
 template <forward_iterator InnerIter>
 class descriptor {
 public:
@@ -114,8 +119,9 @@ public:
                                       std::add_pointer_t<std::add_const_t<inner_value_type>>,
                                       std::add_pointer_t<inner_value_type>>;
 
+  // Determine if this an index-based or iterator-based descriptor
   using id_type    = ptrdiff_t;
-  using value_type = conditional_t<random_access_iterator<inner_iterator>, ptrdiff_t, inner_iterator>;
+  using value_type = conditional_t<random_access_iterator<inner_iterator>, id_type, inner_iterator>;
 
   // preserve value constness based on inner_iterator. This is needed to follow the ranges concepts, but isn't
   // strictly necessary in practice.
@@ -174,7 +180,16 @@ public:
 
   // Properies
 public:
+  /**
+   * @brief Get the descriptor value.
+   * @return The descriptor value, either an index or an iterator.
+   */
   constexpr value_type&     value() const noexcept { return value_; }
+
+  /**
+   * @brief Get a reference to the inner value referenced by the descriptor.
+   * @return The inner value referenced by the descriptor.
+   */
   constexpr inner_reference inner_value() const noexcept {
     if constexpr (integral<value_type>) {
       return begin_[value_];
@@ -184,7 +199,7 @@ public:
   }
 
   /**
-   * @brief Get the vertex id for a descriptor on an outer range.
+   * @brief Get the vertex id for a vertex descriptor.
    * 
    * @return id_type with a value of the vertex id. This is always a value type because it may be calculated
    *         rather than stored. For example, the vertex id for a vector is the index, but for a map it is the key.
@@ -207,7 +222,7 @@ public:
   }
 
   /**
-   * @brief Get the target id for a descriptor in the owning range.
+   * @brief Get the target id for an edge descriptor.
    * 
    * If the inner value is a tuple or pair, the first element is used as the target id. Examples:
    *    vector<pair<int,double>>
@@ -215,12 +230,12 @@ public:
    *    map<int,double>
    * Otherwise, the value itself is used as the target id. In some cases this is OK (e.g. set<int>).
    * In more complex cases, the target id may be a struct and the caller needs to determine what to do
-   * with it.
+   * with it by defining the target_id() for their graph container.
    * 
    * @param desc The descriptor. This must refer to a valid element in the container.
    * @return target id.
    */
-  constexpr const auto get_target_id() const {
+  constexpr const auto edge_target_id() const {
     if constexpr (_is_tuple_like_v<inner_value_type>) {
       return std::get<0>(inner_value()); // e.g., pair::first used for map, or vector<tuple<int,double>>
     } else {
@@ -228,17 +243,18 @@ public:
     }
   }
 
+  // Operators
 public:
   //
   // dereference
   //
 
-  // range concept requirement: decltype(*descriptor) == value_type&
+  // Note: range concept requirement: decltype(*descriptor) == value_type&
   [[nodiscard]] constexpr reference operator*() const noexcept { return value_; }
   [[nodiscard]] constexpr pointer   operator->() const noexcept { return &value_; }
 
   //
-  // operator ++
+  // operator ++ += +
   //
   constexpr descriptor& operator++() {
     ++value_;
@@ -264,6 +280,9 @@ public:
     return tmp;
   }
 
+  //
+  // operator -- -= -
+  //
   constexpr descriptor& operator--()
   requires bidirectional_iterator<inner_iterator>
   {
@@ -299,6 +318,9 @@ public:
     return value_ - rhs.value_;
   }
 
+  //
+  // operator []
+  //
   constexpr inner_reference operator[](iter_difference_t<inner_iterator> n) const
   requires random_access_iterator<inner_iterator>
   {

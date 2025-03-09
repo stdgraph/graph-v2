@@ -943,13 +943,13 @@ namespace _Target_id {
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Basic_id) {
 #  if USE_EDGE_DESCRIPTOR
         using vid_t = vertex_id_t<_G>; // target_id may be diff than the type defined for vertex_id_t<G>
-        return static_cast<vid_t>(uv.get_target_id());
+        return static_cast<vid_t>(uv.edge_target_id());
 #  else
         return uv;
 #  endif
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Tuple_id) {
 #  if USE_EDGE_DESCRIPTOR
-        return uv.get_target_id();
+        return uv.edge_target_id();
 #  else
         return get<0>(uv);
 #  endif
