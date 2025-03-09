@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
@@ -61,7 +61,18 @@ auto find_frankfurt(G&& g) {
 
 TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstra][clrs]") {
   init_console();
-  using G  = routes_volf_graph_type;
+  using G = routes_volf_graph_type;
+
+  //using dgraph_traits = graph::container::vofl_graph_traits<double, std::string, std::string, uint32_t, false>;
+  //using dedge_value =
+  //      graph::container::dynamic_edge_value<double, std::string, std::string, uint32_t, false, dgraph_traits>;
+  //dedge_value dvalue;
+
+
+  //using edge_desc_view = graph::descriptor_view_t<typename G::edges_type>;
+  //static_assert(forward_range<edge_desc_view>);
+  //static_assert(false, "marker for end of previous statement");
+
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   auto frankfurt      = find_frankfurt(g);
@@ -75,7 +86,7 @@ TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstr
   std::vector<std::remove_reference_t<edge_value_t<G>>> distances(size(g));
 
   auto&& ee  = graph::edges(g, frankfurt_id);
-  auto&& uv  = *std::ranges::begin(ee);
+  auto   uv  = *std::ranges::begin(ee);
   auto&& vid = graph::target_id(g, uv);
 
   static_assert(graph::vertex_range<G>);
@@ -149,9 +160,9 @@ TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
     //auto deg = degree(g, *uit); // forward_list doesn't have size()
     //REQUIRE(1 == deg);
 
-    auto& uu = edges(g, *uit);
+    auto uu = edges(g, *uit);
     //REQUIRE(1 == std::ranges::size(uu)); // forward_list doesn't have size()
-    auto& uv = *std::ranges::begin(uu);
+    auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g, uv));
     REQUIRE(250.0 == edge_value(g, uv));
     auto& v = target(g, uv);
@@ -184,9 +195,9 @@ TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
     //auto deg = degree(g2, *uit); // forward_list doesn't have size()
     //REQUIRE(1 == deg);
 
-    auto& uu = edges(g2, *uit);
+    auto uu = edges(g2, *uit);
     //REQUIRE(1 == std::ranges::size(uu)); // forward_list doesn't have size()
-    auto& uv = *std::ranges::begin(uu);
+    auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g2, uv));
     REQUIRE(250.0 == edge_value(g2, uv));
     auto& v = target(g2, uv);

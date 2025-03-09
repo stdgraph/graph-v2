@@ -174,7 +174,14 @@ public:
 
   // Properies
 public:
-  constexpr value_type& value() const noexcept { return value_; }
+  constexpr value_type&     value() const noexcept { return value_; }
+  constexpr inner_reference inner_value() const noexcept {
+    if constexpr (integral<value_type>) {
+      return begin_[value_];
+    } else {
+      return *value_;
+    }
+  }
 
   /**
    * @brief Get the vertex id for a descriptor on an outer range.
@@ -320,7 +327,7 @@ public:
   }
 
   //
-  // operators ==, !=, <=>
+  // operators ==, <=>
   //
   constexpr bool operator==(const descriptor& rhs) const noexcept { //
     return value_ == rhs.value_;

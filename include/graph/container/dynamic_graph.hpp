@@ -243,22 +243,22 @@ private:
 
   template <class I>
   friend constexpr vertex_id_type target_id(const graph_type& g, const descriptor<I>& uv) noexcept {
-    return uv->target_id_;
+    return uv.inner_value().target_id_;
   }
 
   template <class I>
   friend constexpr auto& //
   target(graph_type& g, descriptor<I>& uv) noexcept {
-    return begin(vertices(g))[uv->target_id_];
+    return begin(vertices(g))[uv.inner_value().target_id_];
   }
   template <class I>
   friend constexpr auto& //
   target(const graph_type& g, descriptor<I>& uv) noexcept {
-    return begin(vertices(g))[uv->target_id_];
+    return begin(vertices(g))[uv.inner_value().target_id_];
   }
   //friend constexpr const vertex_type& //
   //target(const graph_type& g, const descriptor<edge_desc_view, const_edge_iterator, vertex_id_type>& uv) noexcept {
-  //  return begin(vertices(g))[uv->target_id_];
+  //  return begin(vertices(g))[uv.inner_value().target_id_];
   //}
 #else
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.target_id_; }
@@ -323,16 +323,24 @@ private:
 private:
   // source_id(g,uv), source(g)
 #ifdef USE_EDGE_DESCRIPTOR
-  friend constexpr vertex_id_type source_id(const graph_type& g, const edge_type& uv) noexcept {
-    return uv->source_id_;
+  template <class I>
+  friend constexpr vertex_id_type source_id(const graph_type& g, const descriptor<I>& uv) noexcept {
+    return uv.inner_value().source_id_;
   }
 
-  friend constexpr vertex_type& source(graph_type& g, edge_type& uv) noexcept {
-    return begin(vertices(g))[uv->source_id_];
+  template <class I>
+  friend constexpr auto& //
+  source(graph_type& g, descriptor<I>& uv) noexcept {
+    return begin(vertices(g))[uv.inner_value().source_id_];
   }
-  friend constexpr const vertex_type& source_fn(const graph_type& g, const edge_type& uv) noexcept {
-    return begin(vertices(g))[uv->source_id_];
+  template <class I>
+  friend constexpr auto& //
+  source(const graph_type& g, descriptor<I>& uv) noexcept {
+    return begin(vertices(g))[uv.inner_value().source_id_];
   }
+  //friend constexpr const vertex_type& source_fn(const graph_type& g, const edge_type& uv) noexcept {
+  //  return begin(vertices(g))[uv.source_id_];
+  //}
 #else
   friend constexpr vertex_id_type source_id(const graph_type& g, const edge_type& uv) noexcept { return uv.source_id_; }
 
@@ -425,13 +433,17 @@ private
         //using edge_iterator = vertex_edge_iterator_t<graph_type>;
   //using edge_desc     = typename edge_iterator::descriptor_type;
 
-  using edge_desc_view = descriptor_view_t<edges_type>;
-  using edge_desc      = std::ranges::range_value_t<edge_desc_view>;
+  //using edge_desc_view = descriptor_view_t<edges_type>;
+  //using edge_desc      = std::ranges::range_value_t<edge_desc_view>;
 
-  friend constexpr value_type& edge_value(graph_type& g, edge_desc& uv) noexcept { return uv->value_; }
+  template <class I>
+  friend constexpr auto& edge_value(graph_type& g, descriptor<I>& uv) noexcept {
+    return uv.inner_value().value_;
+  }
 
-  friend constexpr const value_type& edge_value(const graph_type& g, const edge_desc& uv) noexcept {
-    return uv->value_;
+  template <class I>
+  friend constexpr const auto& edge_value(const graph_type& g, const descriptor<I>& uv) noexcept {
+    return uv.inner_value().value_;
   }
 #else
   friend constexpr value_type&       edge_value(graph_type& g, edge_type& uv) noexcept { return uv.value_; }
