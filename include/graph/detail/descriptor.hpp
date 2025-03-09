@@ -222,30 +222,9 @@ public:
    */
   constexpr const auto get_target_id() const {
     if constexpr (_is_tuple_like_v<inner_value_type>) {
-      return std::get<0>(*get_inner_iterator()); // e.g., pair::first used for map, or vector<tuple<int,double>>
+      return std::get<0>(inner_value()); // e.g., pair::first used for map, or vector<tuple<int,double>>
     } else {
-      return *get_inner_iterator();              // default to the value itself, e.g. set<int>
-    }
-  }
-
-private:
-  /**
-   * @brief Get an iterator to the element in the underlying container.
-   * @param desc The descriptor. This must refer to a valid element in the container.
-   * @return An iterator to the underlying container.
-   */
-  [[nodiscard]] constexpr inner_iterator get_inner_iterator() {
-    if constexpr (integral<value_type>) {
-      return begin_ + value_;
-    } else {
-      return value_;
-    }
-  }
-  [[nodiscard]] constexpr inner_iterator get_inner_iterator() const {
-    if constexpr (integral<value_type>) {
-      return begin_ + value_;
-    } else {
-      return value_;
+      return inner_value();              // default to the value itself, e.g. set<int>
     }
   }
 
