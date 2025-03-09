@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
@@ -153,9 +153,9 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     auto deg = degree(g, *uit);
     REQUIRE(1 == deg);
 
-    auto& uu = edges(g, *uit);
+    auto uu = edges(g, *uit);
     REQUIRE(1 == std::ranges::size(uu));
-    auto& uv = *std::ranges::begin(uu);
+    auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g, uv));
     REQUIRE(250.0 == edge_value(g, uv));
     auto& v = target(g, uv);
@@ -192,7 +192,7 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
 
     auto&& uu = edges(g2, *uit);
     REQUIRE(1 == std::ranges::size(uu));
-    auto& uv = *std::ranges::begin(uu);
+    auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g2, uv));
     REQUIRE(250.0 == edge_value(g2, uv));
     auto& v = target(g2, uv);
