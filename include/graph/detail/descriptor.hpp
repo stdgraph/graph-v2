@@ -554,6 +554,9 @@ protected:
 };
 
 
+//
+// descriptor_view
+//
 template <forward_iterator I, std::sentinel_for<I> S = I>
 [[nodiscard]] constexpr auto descriptor_view(I first, S last) {
   using id_type = ptrdiff_t;
@@ -580,6 +583,9 @@ template <forward_range R>
 using descriptor_view_t = decltype(descriptor_view(std::declval<R>()));
 
 
+//
+// descriptor_subrange_view
+//
 template <forward_range R>
 class descriptor_subrange_view_impl : public std::ranges::view_interface<descriptor_subrange_view_impl<R>> {
   // Types

@@ -236,22 +236,20 @@ private:
 private:
   // target_id(g,uv), target(g,uv)
 #if USE_EDGE_DESCRIPTOR
-  // recursive definition error if edge_reference_t is used
-  //using edge_desc_type = descriptor<edges_type, vertex_id_type>;
-  //using edge_desc_view = descriptor_view_t<edges_type, vertex_id_type>;
-  //using edge_iterator  = iterator_t<edge_desc_view>;
+  // Use of template<I> required to wait until dynamic_edge is fully defined
+  // E.g. uv.inner_value() requires dynamic_edge to be defined
 
-  template <class I>
+  template <forward_iterator I>
   friend constexpr vertex_id_type target_id(const graph_type& g, const descriptor<I>& uv) noexcept {
     return uv.inner_value().target_id_;
   }
 
-  template <class I>
+  template <forward_iterator I>
   friend constexpr auto& //
   target(graph_type& g, descriptor<I>& uv) noexcept {
     return begin(vertices(g))[uv.inner_value().target_id_];
   }
-  template <class I>
+  template <forward_iterator I>
   friend constexpr auto& //
   target(const graph_type& g, descriptor<I>& uv) noexcept {
     return begin(vertices(g))[uv.inner_value().target_id_];
@@ -323,17 +321,20 @@ private:
 private:
   // source_id(g,uv), source(g)
 #ifdef USE_EDGE_DESCRIPTOR
-  template <class I>
+  // Use of template<I> required to wait until dynamic_edge is fully defined
+  // E.g. uv.inner_value() requires dynamic_edge to be defined
+
+  template <forward_iterator I>
   friend constexpr vertex_id_type source_id(const graph_type& g, const descriptor<I>& uv) noexcept {
     return uv.inner_value().source_id_;
   }
 
-  template <class I>
+  template <forward_iterator I>
   friend constexpr auto& //
   source(graph_type& g, descriptor<I>& uv) noexcept {
     return begin(vertices(g))[uv.inner_value().source_id_];
   }
-  template <class I>
+  template <forward_iterator I>
   friend constexpr auto& //
   source(const graph_type& g, descriptor<I>& uv) noexcept {
     return begin(vertices(g))[uv.inner_value().source_id_];
@@ -430,18 +431,15 @@ private:
 private
       : // CPO properties
 #if USE_EDGE_DESCRIPTOR
-        //using edge_iterator = vertex_edge_iterator_t<graph_type>;
-  //using edge_desc     = typename edge_iterator::descriptor_type;
+  // Use of template<I> required to wait until dynamic_edge is fully defined
+  // E.g. uv.inner_value() requires dynamic_edge to be defined
 
-  //using edge_desc_view = descriptor_view_t<edges_type>;
-  //using edge_desc      = std::ranges::range_value_t<edge_desc_view>;
-
-  template <class I>
+  template <forward_iterator I>
   friend constexpr auto& edge_value(graph_type& g, descriptor<I>& uv) noexcept {
     return uv.inner_value().value_;
   }
 
-  template <class I>
+  template <forward_iterator I>
   friend constexpr const auto& edge_value(const graph_type& g, const descriptor<I>& uv) noexcept {
     return uv.inner_value().value_;
   }
