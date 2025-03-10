@@ -227,8 +227,7 @@ public:
   constexpr dynamic_edge_target& operator=(dynamic_edge_target&&)      = default;
 
 public:
-  //constexpr vertex_id_type target_id() const { return target_id_; }
-  //constexpr vertex_id_type source_id() const { return source_id_; }
+  constexpr vertex_id_type target_id() const { return target_id_; }
 
 private:
   vertex_id_type target_id_ = vertex_id_type();
@@ -755,10 +754,12 @@ private
   using const_vertex_desc_type = descriptor<iterator_t<const vertices_type>>;
 
 
-  friend constexpr auto edges(graph_type& g, vertex_desc_type& u) {
+  template <typename I>
+  friend constexpr auto edges(graph_type& g, descriptor<I>& u) {
     return graph::descriptor_view(u.inner_value().get_edges());
   }
-  friend constexpr auto edges(const graph_type& g, const_vertex_desc_type& u) {
+  template <typename I>
+  friend constexpr auto edges(const graph_type& g, const descriptor<I>& u) {
     return graph::descriptor_view(u.inner_value().get_edges());
   }
 #elif USE_EDGE_DESCRIPTOR
@@ -771,6 +772,21 @@ private
   friend constexpr const edges_type& edges(const graph_type& g, const vertex_type& u) { return u.edges_; }
 #endif
 
+#if USE_VERTEX_DESCRIPTOR
+  friend constexpr auto find_vertex_edge(graph_type& g, vertex_id_type uid, vertex_id_type vid) {
+    edges_type&            edges = g[uid].edges_;
+    iterator_t<edges_type> it =
+          std::ranges::find(edges, [&vid](const auto& uv) -> bool { return uv.target_id() == vid; });
+    return descriptor(edges.begin(), it);
+  }
+  friend constexpr typename edges_type::const_iterator
+  find_vertex_edge(const graph_type& g, vertex_id_type uid, vertex_id_type vid) {
+    const edges_type&            edges = g[uid].edges_;
+    iterator_t<const edges_type> it =
+          std::ranges::find(edges, [&vid](const auto& uv) -> bool { return uv.target_id() == vid; });
+    return descriptor(edges.begin(), it);
+  }
+#else
   friend constexpr typename edges_type::iterator
   find_vertex_edge(graph_type& g, vertex_id_type uid, vertex_id_type vid) {
     return std::ranges::find(g[uid].edges_,
@@ -781,6 +797,7 @@ private
     return std::ranges::find(g[uid].edges_,
                              [&g, &vid](const edge_type& uv) -> bool { return target_id(g, uv) == vid; });
   }
+#endif
 };
 
 
@@ -841,15 +858,17 @@ private:
 
 private: // CPO properties
 #if USE_VERTEX_DESCRIPTOR
-  friend constexpr value_type& vertex_value(graph_type& g, vertex_reference_t<graph_type> u) {
+  template <forward_iterator I>
+  friend constexpr value_type& vertex_value(graph_type& g, descriptor<I>& u) {
     return u.inner_value().value_;
   }
-  friend constexpr const value_type& vertex_value(const graph_type& g, vertex_reference_t<const graph_type> u) {
+  template <forward_iterator I>
+  friend constexpr const value_type& vertex_value(const graph_type& g, descriptor<I>& u) {
     return u.inner_value().value_;
   }
 #else
-  friend constexpr value_type&          vertex_value(graph_type& g, vertex_type& u) { return u.value_; }
-  friend constexpr const value_type&    vertex_value(const graph_type& g, const vertex_type& u) { return u.value_; }
+  friend constexpr value_type&       vertex_value(graph_type& g, vertex_type& u) { return u.value_; }
+  friend constexpr const value_type& vertex_value(const graph_type& g, const vertex_type& u) { return u.value_; }
 #endif
 };
 
@@ -1376,21 +1395,36 @@ private:                       // Member Variables
                                // holds +1 extra terminating partition
   size_t edge_count_ = 0;      // total number of edges in the graph
 
-private:                       // CPO properties
+  // CPO properties
 #if USE_VERTEX_DESCRIPTOR
-  friend constexpr auto vertices(graph_type& g) { return graph::descriptor_view(g.vertices_); }
-  friend constexpr auto vertices(const graph_type& g) { return graph::descriptor_view(g.vertices_); }
+public:
+  // member function works with CPOs better than friend functions
+  [[nodiscard]] constexpr vertices_type&       vertices() noexcept { return vertices_; }
+  [[nodiscard]] constexpr const vertices_type& vertices() const noexcept { return vertices_; }
+
+private:
+  //friend constexpr auto vertices(graph_type& g) { return graph::descriptor_view(g.vertices_); }
+  //friend constexpr auto vertices(const graph_type& g) { return graph::descriptor_view(g.vertices_); }
 #else
+private:
   friend constexpr vertices_type&       vertices(graph_type& g) noexcept { return g.vertices_; }
   friend constexpr const vertices_type& vertices(const graph_type& g) noexcept { return g.vertices_; }
 #endif
 
+private:
   friend auto num_edges(const graph_type& g) noexcept { return g.edge_count_; }
   friend bool has_edge(const graph_type& g) noexcept { return g.edge_count_ > 0; }
 
-  friend vertex_id_type vertex_id(const graph_type& g, typename vertices_type::const_iterator ui) {
+#if USE_VERTEX_DESCRIPTOR
+  template<typename I>
+  friend vertex_id_type vertex_id(const graph_type& g, descriptor<I>& u) {
+    return static_cast<vertex_id_type>(u.vertex_index());
+  }
+#else
+  friend vertex_id_type                 vertex_id(const graph_type& g, typename vertices_type::const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
   }
+#endif
 
 #if USE_EDGE_DESCRIPTOR
   friend constexpr auto edges(graph_type& g, vertex_id_type uid) {
@@ -1400,7 +1434,7 @@ private:                       // CPO properties
     return graph::descriptor_view(g.vertices_[uid].get_edges());
   }
 #else
-  friend constexpr edges_type&          edges(graph_type& g, const vertex_id_type uid) { //
+  friend constexpr edges_type& edges(graph_type& g, const vertex_id_type uid) { //
     return g.vertices_[uid].get_edges();
   }
   friend constexpr const edges_type& edges(const graph_type& g, const vertex_id_type uid) {

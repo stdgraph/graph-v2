@@ -527,7 +527,11 @@ public:
   constexpr reference operator[](iter_difference_t<inner_iterator> n) const
   requires random_access_iterator<inner_iterator>
   {
-    return descriptor_[n];
+    // do not use
+    // This exists to satisfy the random_access_iterator concept only.
+    // It would be preferable to return a reference to the inner_value, but that violates the concept.
+    assert(false);
+    //return descriptor_; // ideally would be: return descriptor_[n];
   }
 
 

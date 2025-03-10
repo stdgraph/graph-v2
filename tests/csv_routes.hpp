@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // Includes csv_parser/single_include/csv.hpp and wraps it pragma to disable distracting warnings
 #ifdef _MSC_VER
@@ -6,7 +6,7 @@
 #  pragma warning(disable : 4458) // declaration of 'value' hides class member
 #  pragma warning(disable : 4244) // conversion from 'double' to 'unsigned __int64', possible loss of data
 #  pragma warning(                                                                                                     \
-        disable : 4996) // 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+              disable : 4996) // 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
 #else
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -109,7 +109,7 @@ auto unique_vertex_labels2(csv::string_view        csv_file,
                            ColNumOrName            col1,
                            ColNumOrName            col2,
                            const name_order_policy order_policy) {
-  csv::CSVReader reader(csv_file); // CSV file reader
+  csv::CSVReader reader(csv_file);                 // CSV file reader
 
   using label_id_map = std::map<std::string, VId>; // label, vertex id
   label_id_map lbls;
@@ -165,7 +165,7 @@ auto max_vertex_id(csv::string_view csv_file, ColNumOrName col1, ColNumOrName co
 
   return std::pair(max_id, reader.n_rows()); // return (max_id, num rows read)
 }
-#endif // FUTURE
+#endif                                       // FUTURE
 
 
 template <typename G>
@@ -189,16 +189,22 @@ std::optional<graph::vertex_iterator_t<G>> find_city(G&& g, std::string_view cit
 
 template <typename G>
 graph::vertex_id_t<G> find_city_id(G&& g, std::string_view city_name) {
-#if 1
+#if USE_VERTEX_DESCRIPTOR
+  auto it = std::ranges::find_if(graph::vertices(g),
+                                 [&g, &city_name](auto&& u) { return graph::vertex_value(g, u) == city_name; });
+  return graph::vertex_id(g, *it);
+#else
+#  if 1
   auto it = std::ranges::find_if(graph::vertices(g),
                                  [&g, &city_name](auto& u) { return graph::vertex_value(g, u) == city_name; });
-#else
+#  else
   auto vertex_to_name = [&g](graph::vertex_reference_t<G> u) { return graph::vertex_value<G>(g, u); };
   auto it = std::ranges::lower_bound(graph::vertices(g), city_name, std::less<std::string_view>(), vertex_to_name);
   if (it != end(graph::vertices(g)) && graph::vertex_value(g, *it) != city_name)
     it = end(graph::vertices(g));
-#endif
+#  endif
   return static_cast<graph::vertex_id_t<G>>(it - begin(graph::vertices(g))); // == size(vertices(g)) if not found
+#endif
 }
 
 /**

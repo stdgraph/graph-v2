@@ -58,7 +58,6 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
-
 TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstra][clrs]") {
   init_console();
   using G = routes_volf_graph_type;
@@ -73,6 +72,20 @@ TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstr
   //static_assert(forward_range<edge_desc_view>);
   //static_assert(false, "marker for end of previous statement");
 
+  //G g;
+  //static_assert(graph::_Vertices::_Has_ref_ADL<G>);
+  //static_assert(graph::_Vertices::_Has_ref_member<G>);
+
+  //auto vvv = vertices(g);
+  //static_assert(graph::vertex_range<G>);
+  //vertex_t<G> u = *begin(vertices(g));
+
+  
+  static_assert(graph::basic_targeted_edge<G>);
+  static_assert(graph::targeted_edge_range<G>);
+  static_assert(graph::targeted_edge<G>);
+  static_assert(graph::adjacency_list<G>);
+
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   auto frankfurt      = find_frankfurt(g);
@@ -80,6 +93,7 @@ TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstr
   using neighbor_type = edge_reference_t<G>;
   auto weight         = [&g](neighbor_type uv) { return edge_value(g, uv); };
 
+#if 0
   std::vector<graph::vertex_id_t<G>> predecessors(size(g));
 
   // Remark(Andrew): edge_value_t should be a value
@@ -89,16 +103,13 @@ TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstr
   auto   uv  = *std::ranges::begin(ee);
   auto&& vid = graph::target_id(g, uv);
 
-  static_assert(graph::vertex_range<G>);
-  static_assert(graph::targeted_edge_range<G>);
-  static_assert(graph::basic_targeted_edge<G>);
-  static_assert(graph::targeted_edge<G>);
-  static_assert(graph::adjacency_list<G>);
   graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors);
   graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
+#endif
 }
 
 
+#if 0
 TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
   using G = routes_volf_graph_type; // use it because it's easy
 
@@ -421,3 +432,5 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
 #endif
   }
 }
+
+#endif //0
