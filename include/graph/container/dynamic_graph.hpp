@@ -431,7 +431,7 @@ private:
 private
       : // CPO properties
 #if USE_EDGE_DESCRIPTOR
-  // Use of template<I> required to wait until dynamic_edge is fully defined
+        // Use of template<I> required to wait until dynamic_edge is fully defined
   // E.g. uv.inner_value() requires dynamic_edge to be defined
 
   template <forward_iterator I>
@@ -716,6 +716,7 @@ public:
   using value_type     = VV;
   using graph_type     = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
   using vertex_type    = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
+  using vertices_type  = typename Traits::vertices_type;
   using edge_type      = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
   using edges_type     = typename Traits::edges_type;
   using allocator_type = typename edges_type::allocator_type;
@@ -746,8 +747,21 @@ public:
 private:
   edges_type edges_;
 
-private: // CPO properties
-#if USE_EDGE_DESCRIPTOR
+private
+      : // CPO properties
+#if USE_VERTEX_DESCRIPTOR
+        // descriptor<iterator_t<vertices_type>> == vertex_t<G>
+  using vertex_desc_type       = descriptor<iterator_t<vertices_type>>;
+  using const_vertex_desc_type = descriptor<iterator_t<const vertices_type>>;
+
+
+  friend constexpr auto edges(graph_type& g, vertex_desc_type& u) {
+    return graph::descriptor_view(u.inner_value().get_edges());
+  }
+  friend constexpr auto edges(const graph_type& g, const_vertex_desc_type& u) {
+    return graph::descriptor_view(u.inner_value().get_edges());
+  }
+#elif USE_EDGE_DESCRIPTOR
   friend constexpr auto edges(graph_type& g, vertex_type& u) { return graph::descriptor_view(u.get_edges()); }
   friend constexpr auto edges(const graph_type& g, const vertex_type& u) {
     return graph::descriptor_view(u.get_edges());
@@ -826,8 +840,17 @@ private:
   value_type value_ = value_type();
 
 private: // CPO properties
-  friend constexpr value_type&       vertex_value(graph_type& g, vertex_type& u) { return u.value_; }
-  friend constexpr const value_type& vertex_value(const graph_type& g, const vertex_type& u) { return u.value_; }
+#if USE_VERTEX_DESCRIPTOR
+  friend constexpr value_type& vertex_value(graph_type& g, vertex_reference_t<graph_type> u) {
+    return u.inner_value().value_;
+  }
+  friend constexpr const value_type& vertex_value(const graph_type& g, vertex_reference_t<const graph_type> u) {
+    return u.inner_value().value_;
+  }
+#else
+  friend constexpr value_type&          vertex_value(graph_type& g, vertex_type& u) { return u.value_; }
+  friend constexpr const value_type&    vertex_value(const graph_type& g, const vertex_type& u) { return u.value_; }
+#endif
 };
 
 
@@ -1354,8 +1377,13 @@ private:                       // Member Variables
   size_t edge_count_ = 0;      // total number of edges in the graph
 
 private:                       // CPO properties
+#if USE_VERTEX_DESCRIPTOR
+  friend constexpr auto vertices(graph_type& g) { return graph::descriptor_view(g.vertices_); }
+  friend constexpr auto vertices(const graph_type& g) { return graph::descriptor_view(g.vertices_); }
+#else
   friend constexpr vertices_type&       vertices(graph_type& g) noexcept { return g.vertices_; }
   friend constexpr const vertices_type& vertices(const graph_type& g) noexcept { return g.vertices_; }
+#endif
 
   friend auto num_edges(const graph_type& g) noexcept { return g.edge_count_; }
   friend bool has_edge(const graph_type& g) noexcept { return g.edge_count_ > 0; }
@@ -1372,7 +1400,7 @@ private:                       // CPO properties
     return graph::descriptor_view(g.vertices_[uid].get_edges());
   }
 #else
-  friend constexpr edges_type&       edges(graph_type& g, const vertex_id_type uid) { //
+  friend constexpr edges_type&          edges(graph_type& g, const vertex_id_type uid) { //
     return g.vertices_[uid].get_edges();
   }
   friend constexpr const edges_type& edges(const graph_type& g, const vertex_id_type uid) {
@@ -1395,6 +1423,7 @@ private:                       // CPO properties
   }
 
   friend constexpr auto vertices(const graph_type& g, partition_id_type pid) {
+    assert(USE_VERTEX_DESCRIPTOR == 0); // need to implement for USE_VERTEX_DESCRIPTOR using descriptor_subrange_view
     assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
     return subrange(g.vertices_.begin() + g.partition_[pid], g.vertices_.begin() + g.partition_[pid + 1]);
   }

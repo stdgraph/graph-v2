@@ -45,6 +45,11 @@ namespace graph {
 // 6. inner_value_type: vertex or edge value
 // 7. inner_id_type: index or key
 
+// Future Tasks
+// 1. Implement descriptore_subrange_view & use with compressed_graph
+// 2. Consolidate use of _Is_basic_id_adj & _Is_tuple_id_adj to use descriptor in CPOs (one definition)
+//
+
 // This is a limited form of tuple-like described in https://en.cppreference.com/w/cpp/utility/tuple/tuple-like.
 // It only detects pair<T0,T1> and tuple<T0,T1,...>. It doesn't handle array or subrange.
 //
@@ -135,6 +140,7 @@ public:
 
   constexpr descriptor()                  = default;
   constexpr descriptor(const descriptor&) = default;
+  constexpr descriptor(descriptor&&) = default;
   constexpr ~descriptor() noexcept        = default;
 
   constexpr descriptor(InnerIter first, InnerIter it) : begin_(first) {
@@ -177,6 +183,7 @@ public:
   }
 
   constexpr descriptor& operator=(const descriptor&) = default;
+  constexpr descriptor& operator=(descriptor&&) = default;
 
   // Properies
 public:
@@ -184,7 +191,7 @@ public:
    * @brief Get the descriptor value.
    * @return The descriptor value, either an index or an iterator.
    */
-  constexpr value_type&     value() const noexcept { return value_; }
+  constexpr value_type& value() const noexcept { return value_; }
 
   /**
    * @brief Get a reference to the inner value referenced by the descriptor.

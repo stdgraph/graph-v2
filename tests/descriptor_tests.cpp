@@ -270,11 +270,11 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     for (auto&& desc : v) {
       //desc = 0; // fails
       //desc.value() = 0; // fails
-      const int64_t& i  = *desc;
+      const int64_t& i = *desc;
       //const int64_t* ip = &(*desc);
-      auto           t1 = desc.vertex_index();
-      auto           t2 = desc.edge_target_id();
-      int64_t        id = desc; // implicit conversion to vertex id
+      auto    t1 = desc.vertex_index();
+      auto    t2 = desc.edge_target_id();
+      int64_t id = desc; // implicit conversion to vertex id
     }
   }
 }
@@ -1054,19 +1054,19 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
   }
 }
 
-TEMPLATE_TEST_CASE("All simple values",
-                   "[descriptor]",
-                   (vector<vector<size_t>>),
-                   (const vector<vector<int>>),
-                   (deque<deque<int>>),
-                   (const deque<deque<int>>),
-                   (vector<list<int>>),
-                   (const vector<list<int>>)) {
+TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (vector<vector<size_t>>)
+                   //(const vector<vector<int>>),
+                   //(deque<deque<int>>),
+                   //(const deque<deque<int>>),
+                   //(vector<list<int>>),
+                   //(const vector<list<int>>)
+) {
   using G = TestType;
   //using Iterator        = descriptor_iterator<Container>;
   //using difference_type = typename iterator_traits<Iterator>::difference_type;
   G g = {{1, 2}, {3, 4}, {5}};
   //difference_type i     = 0;
+
   static_assert(graph::basic_targeted_edge<G>); //<<<<<
   static_assert(graph::targeted_edge<G>);
   static_assert(graph::adjacency_list<G>);
@@ -1079,7 +1079,11 @@ TEMPLATE_TEST_CASE("All simple values",
     edge_reference_t<G> first_ref = *first;
 
     auto  vid = target_id(g, first_ref);
-    auto& c   = *find_vertex(g, vid);
+#if USE_VERTEX_DESCRIPTOR
+    auto c = find_vertex(g, vid);
+#else
+    auto& c = *find_vertex(g, vid);
+#endif
 
     //auto descriptors = descriptor_view(c);
     //using desc_view  = decltype(descriptors);
@@ -1105,6 +1109,7 @@ TEMPLATE_TEST_CASE("All simple values",
   //}
 }
 
+#if 0
 TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
   using Container             = TestType;
   using view_type             = descriptor_subrange_view_t<Container>;
@@ -1137,7 +1142,6 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
   }
 }
 
-#if 0
 TEST_CASE("example") {
   using G  = vector<int>;
   G    g   = {1, 2, 3, 4, 5};

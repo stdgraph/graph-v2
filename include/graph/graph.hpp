@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /**
  * @defgroup general_concepts   Concepts
@@ -116,9 +116,15 @@ concept sourced_targeted_edge = targeted_edge<G> && sourced_edge<G>;
  * 
  * @tparam G The graph type.
  */
+#  if USE_VERTEX_DESCRIPTOR
+template <class G>                                               // (exposition only)
+concept _common_vertex_range = sized_range<vertex_range_t<G>> && //
+                               requires(G&& g, vertex_t<G> u) { vertex_id(g, u); };
+#  else
 template <class G>                                               // (exposition only)
 concept _common_vertex_range = sized_range<vertex_range_t<G>> && //
                                requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
+#endif
 
 template <class G>                                                // For exposition only
 concept vertex_range = _common_vertex_range<vertex_range_t<G>> && //
