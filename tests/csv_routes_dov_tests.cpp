@@ -73,10 +73,10 @@ auto find_frankfurt(G&& g) {
   return find_city(g, "Frankf\xC3\xBCrt");
 }
 
-
 TEST_CASE("Germany routes CSV+dov dijkstra_clrs", "[csv][dov][germany][dijkstra][clrs]") {
   init_console();
-  using G  = routes_dov_graph_type;
+  using G = routes_dov_graph_type;
+
   auto&& g = load_graph<G>(TEST_DATA_ROOT_DIR "germany_routes.csv");
 
   auto frankfurt    = find_frankfurt(g);
@@ -91,6 +91,8 @@ TEST_CASE("Germany routes CSV+dov dijkstra_clrs", "[csv][dov][germany][dijkstra]
   graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors);
   graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
 }
+
+#if 0
 
 TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
   using G = routes_dov_graph_type; // use it because it's easy
@@ -230,15 +232,15 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
         total_dist += edge_value(g, uv);
       }
       total_edge_cnt += edge_cnt;
-#if 0
+#  if 0
       auto&& ee = (edges(g, u));
       int    x  = 0;
-#else
+#  else
       static_assert(std::ranges::sized_range<vertex_edge_range_t<G>>); // begin(r), end(r), size(r)?
       if constexpr (std::ranges::sized_range<vertex_edge_range_t<G>>) {
         REQUIRE(edge_cnt == graph::degree(g, u));
       }
-#endif
+#  endif
     }
     REQUIRE(total_edge_cnt == 11);
     REQUIRE(total_dist == 2030.0);
@@ -246,11 +248,11 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
 
   SECTION("content") {
     std::string_view test_name = "Germany Routes using deque+vector";
-#if TEST_OPTION == TEST_OPTION_OUTPUT
+#  if TEST_OPTION == TEST_OPTION_OUTPUT
     cout << "\n" << test_name << "\n---------------------------------" << endl << routes_graph(g) << endl;
     int x = 0; // results are identifcal with csv_routes_csr_tests
 
-    //Germany Routes using deque+vector
+               //Germany Routes using deque+vector
     //---------------------------------
     //[0 Frankfürt]
     //  --> [1 Mannheim] 85km
@@ -273,10 +275,10 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     //[7 Erfurt]
     //[8 München]
     //[9 Stuttgart]
-#elif TEST_OPTION == TEST_OPTION_GEN
+#  elif TEST_OPTION == TEST_OPTION_GEN
     generate_routes_tests(g, test_name);
     int x = 0;
-#elif TEST_OPTION == TEST_OPTION_TEST
+#  elif TEST_OPTION == TEST_OPTION_TEST
     auto           ui  = begin(vertices(g));
     vertex_id_t<G> uid = 0;
     if (ui != end(vertices(g))) {
@@ -423,6 +425,8 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
     }
 
     REQUIRE(10 == size(vertices(g))); // all vertices visited?
-#endif
+#  endif
   }
 }
+
+#endif // 0

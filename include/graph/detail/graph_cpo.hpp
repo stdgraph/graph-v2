@@ -7,7 +7,7 @@
 #ifndef GRAPH_CPO_HPP
 #  define GRAPH_CPO_HPP
 
-#  define USE_VERTEX_DESCRIPTOR 0
+#  define USE_VERTEX_DESCRIPTOR 1
 #  define USE_EDGE_DESCRIPTOR 1
 
 namespace graph {
@@ -244,7 +244,11 @@ namespace _Vertices {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
+#  if USE_VERTEX_DESCRIPTOR
         return descriptor_view(__g.vertices());
+#  else
+        return __g.vertices();
+#  endif
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
         //static_assert(is_reference_v<decltype(vertices(__g))>);
         return vertices(__g); // intentional ADL

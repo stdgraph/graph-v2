@@ -125,22 +125,21 @@ public:
                                       std::add_pointer_t<inner_value_type>>;
 
   // Determine if this an index-based or iterator-based descriptor
-  using id_type    = ptrdiff_t;
+  using id_type    = ptrdiff_t; // signed integer type for adding to, or subtracting from, an iterator
   using value_type = conditional_t<random_access_iterator<inner_iterator>, id_type, inner_iterator>;
 
-  // preserve value constness based on inner_iterator. This is needed to follow the ranges concepts, but isn't
-  // strictly necessary in practice.
-  using pointer         = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
-                                std::add_pointer_t<std::add_const_t<value_type>>,
-                                std::add_pointer_t<value_type>>;
-  using reference       = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
-                                  std::add_lvalue_reference_t<std::add_const_t<value_type>>,
-                                  std::add_const_t<value_type>>;
+  // Honor the const/non-const contract for the value type
+  using pointer       = std::add_pointer_t<value_type>;
+  using const_pointer = std::add_pointer_t<std::add_const_t<value_type>>;
+
+  using reference       = std::add_lvalue_reference_t<value_type>;
+  using const_reference = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
+
   using difference_type = std::iter_difference_t<inner_iterator>;
 
   constexpr descriptor()                  = default;
   constexpr descriptor(const descriptor&) = default;
-  constexpr descriptor(descriptor&&) = default;
+  constexpr descriptor(descriptor&&)      = default;
   constexpr ~descriptor() noexcept        = default;
 
   constexpr descriptor(InnerIter first, InnerIter it) : begin_(first) {
@@ -183,7 +182,7 @@ public:
   }
 
   constexpr descriptor& operator=(const descriptor&) = default;
-  constexpr descriptor& operator=(descriptor&&) = default;
+  constexpr descriptor& operator=(descriptor&&)      = default;
 
   // Properies
 public:
@@ -257,8 +256,11 @@ public:
   //
 
   // Note: range concept requirement: decltype(*descriptor) == value_type&
-  [[nodiscard]] constexpr reference operator*() const noexcept { return value_; }
-  [[nodiscard]] constexpr pointer   operator->() const noexcept { return &value_; }
+  [[nodiscard]] constexpr reference       operator*() noexcept { return value_; }
+  [[nodiscard]] constexpr const_reference operator*() const noexcept { return value_; }
+
+  [[nodiscard]] constexpr pointer       operator->() noexcept { return &value_; }
+  [[nodiscard]] constexpr const_pointer operator->() const noexcept { return &value_; }
 
   //
   // operator ++ += +
@@ -569,16 +571,16 @@ protected:
 //
 // descriptor_view
 //
-template <forward_iterator I, std::sentinel_for<I> S = I>
-[[nodiscard]] constexpr auto descriptor_view(I first, S last) {
-  using id_type = ptrdiff_t;
-  if constexpr (random_access_iterator<I>) {
-    return std::ranges::subrange(descriptor_iterator(first, id_type(0)),
-                                 descriptor_iterator(first, id_type(last - first)));
-  } else {
-    return std::ranges::subrange(descriptor_iterator(first, first), descriptor_iterator(first, last));
-  }
-}
+//template <forward_iterator I, std::sentinel_for<I> S = I>
+//[[nodiscard]] constexpr auto descriptor_view(I first, S last) {
+//  using id_type = ptrdiff_t;
+//  if constexpr (random_access_iterator<I>) {
+//    return std::ranges::subrange(descriptor_iterator(first, id_type(0)),
+//                                 descriptor_iterator(first, id_type(last - first)));
+//  } else {
+//    return std::ranges::subrange(descriptor_iterator(first, first), descriptor_iterator(first, last));
+//  }
+//}
 
 template <forward_range R>
 [[nodiscard]] constexpr auto descriptor_view(R&& r) {

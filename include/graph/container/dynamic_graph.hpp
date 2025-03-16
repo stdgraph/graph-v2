@@ -750,9 +750,8 @@ private
       : // CPO properties
 #if USE_VERTEX_DESCRIPTOR
         // descriptor<iterator_t<vertices_type>> == vertex_t<G>
-  using vertex_desc_type       = descriptor<iterator_t<vertices_type>>;
-  using const_vertex_desc_type = descriptor<iterator_t<const vertices_type>>;
-
+  //using vertex_desc_type       = descriptor<iterator_t<vertices_type>>;
+  //using const_vertex_desc_type = descriptor<iterator_t<const vertices_type>>;
 
   template <typename I>
   friend constexpr auto edges(graph_type& g, descriptor<I>& u) {
@@ -863,7 +862,7 @@ private: // CPO properties
     return u.inner_value().value_;
   }
   template <forward_iterator I>
-  friend constexpr const value_type& vertex_value(const graph_type& g, descriptor<I>& u) {
+  friend constexpr const value_type& vertex_value(const graph_type& g, const descriptor<I>& u) {
     return u.inner_value().value_;
   }
 #else
@@ -871,7 +870,6 @@ private: // CPO properties
   friend constexpr const value_type& vertex_value(const graph_type& g, const vertex_type& u) { return u.value_; }
 #endif
 };
-
 
 /**
  * @ingroup graph_containers
@@ -1398,11 +1396,16 @@ private:                       // Member Variables
   // CPO properties
 #if USE_VERTEX_DESCRIPTOR
 public:
-  // member function works with CPOs better than friend functions
   [[nodiscard]] constexpr vertices_type&       vertices() noexcept { return vertices_; }
   [[nodiscard]] constexpr const vertices_type& vertices() const noexcept { return vertices_; }
 
 private:
+  //template <class EV2, class VV2, class GV2, class VId2, bool Sourced2, class Traits2>
+  //friend constexpr vertices_type& vertices(dynamic_graph<EV2, VV2, GV2, VId2, Sourced, Traits2>& g);
+
+  //template <class EV2, class VV2, class GV2, class VId2, bool Sourced2, class Traits2>
+  //friend constexpr const vertices_type& vertices(const dynamic_graph<EV2, VV2, GV2, VId2, Sourced2, Traits2>& g);
+
   //friend constexpr auto vertices(graph_type& g) { return graph::descriptor_view(g.vertices_); }
   //friend constexpr auto vertices(const graph_type& g) { return graph::descriptor_view(g.vertices_); }
 #else
@@ -1416,8 +1419,8 @@ private:
   friend bool has_edge(const graph_type& g) noexcept { return g.edge_count_ > 0; }
 
 #if USE_VERTEX_DESCRIPTOR
-  template<typename I>
-  friend vertex_id_type vertex_id(const graph_type& g, descriptor<I>& u) {
+  template <typename I>
+  friend vertex_id_type vertex_id(const graph_type& g, const descriptor<I>& u) {
     return static_cast<vertex_id_type>(u.vertex_index());
   }
 #else
@@ -1462,6 +1465,18 @@ private:
     return subrange(g.vertices_.begin() + g.partition_[pid], g.vertices_.begin() + g.partition_[pid + 1]);
   }
 };
+
+#if USE_VERTEX_DESCRIPTOR
+//template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
+//constexpr auto vertices(dynamic_graph<EV, VV, GV, VId, Sourced, Traits>& g) {
+//  return graph::descriptor_view(g.get_vertices());
+//}
+//
+//template <class EV, class VV, class GV, class VId, bool Sourced, class Traits>
+//constexpr const auto vertices(const dynamic_graph<EV, VV, GV, VId, Sourced, Traits>& g) {
+//  return graph::descriptor_view(g.get_vertices());
+//}
+#endif
 
 /**
  * @ingroup graph_containers
