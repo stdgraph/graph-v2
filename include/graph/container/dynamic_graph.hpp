@@ -244,14 +244,14 @@ private:
   }
 
   template <forward_iterator I>
-  friend constexpr auto& //
+  friend constexpr auto //
   target(graph_type& g, descriptor<I>& uv) noexcept {
-    return begin(vertices(g))[uv.inner_value().target_id_];
+    return *(begin(vertices(g)) + uv.inner_value().target_id_);
   }
   template <forward_iterator I>
-  friend constexpr auto& //
+  friend constexpr auto //
   target(const graph_type& g, descriptor<I>& uv) noexcept {
-    return begin(vertices(g))[uv.inner_value().target_id_];
+    return *(begin(vertices(g)) + uv.inner_value().target_id_);
   }
   //friend constexpr const vertex_type& //
   //target(const graph_type& g, const descriptor<edge_desc_view, const_edge_iterator, vertex_id_type>& uv) noexcept {
@@ -434,12 +434,12 @@ private
   // E.g. uv.inner_value() requires dynamic_edge to be defined
 
   template <forward_iterator I>
-  friend constexpr auto& edge_value(graph_type& g, descriptor<I>& uv) noexcept {
+  friend constexpr auto& edge_value(graph_type& g, descriptor<I> uv) noexcept {
     return uv.inner_value().value_;
   }
 
   template <forward_iterator I>
-  friend constexpr const auto& edge_value(const graph_type& g, const descriptor<I>& uv) noexcept {
+  friend constexpr const auto& edge_value(const graph_type& g, const descriptor<I> uv) noexcept {
     return uv.inner_value().value_;
   }
 #else
@@ -772,19 +772,19 @@ private
 #endif
 
 #if USE_VERTEX_DESCRIPTOR
-  friend constexpr auto find_vertex_edge(graph_type& g, vertex_id_type uid, vertex_id_type vid) {
-    edges_type&            edges = g[uid].edges_;
-    iterator_t<edges_type> it =
-          std::ranges::find(edges, [&vid](const auto& uv) -> bool { return uv.target_id() == vid; });
-    return descriptor(edges.begin(), it);
-  }
-  friend constexpr typename edges_type::const_iterator
-  find_vertex_edge(const graph_type& g, vertex_id_type uid, vertex_id_type vid) {
-    const edges_type&            edges = g[uid].edges_;
-    iterator_t<const edges_type> it =
-          std::ranges::find(edges, [&vid](const auto& uv) -> bool { return uv.target_id() == vid; });
-    return descriptor(edges.begin(), it);
-  }
+  //friend constexpr auto find_vertex_edge(graph_type& g, vertex_id_type uid, vertex_id_type vid) {
+  //  edges_type&            edges = g[uid].edges_;
+  //  iterator_t<edges_type> it =
+  //        std::ranges::find(edges, [&vid](const auto& uv) -> bool { return uv.target_id() == vid; });
+  //  return descriptor(edges.begin(), it);
+  //}
+  //friend constexpr typename edges_type::const_iterator
+  //find_vertex_edge(const graph_type& g, vertex_id_type uid, vertex_id_type vid) {
+  //  const edges_type&            edges = g[uid].edges_;
+  //  iterator_t<const edges_type> it =
+  //        std::ranges::find(edges, [&vid](const auto& uv) -> bool { return uv.target_id() == vid; });
+  //  return descriptor(edges.begin(), it);
+  //}
 #else
   friend constexpr typename edges_type::iterator
   find_vertex_edge(graph_type& g, vertex_id_type uid, vertex_id_type vid) {
@@ -858,11 +858,11 @@ private:
 private: // CPO properties
 #if USE_VERTEX_DESCRIPTOR
   template <forward_iterator I>
-  friend constexpr value_type& vertex_value(graph_type& g, descriptor<I>& u) {
+  friend constexpr value_type& vertex_value(graph_type& g, descriptor<I> u) {
     return u.inner_value().value_;
   }
   template <forward_iterator I>
-  friend constexpr const value_type& vertex_value(const graph_type& g, const descriptor<I>& u) {
+  friend constexpr const value_type& vertex_value(const graph_type& g, const descriptor<I> u) {
     return u.inner_value().value_;
   }
 #else

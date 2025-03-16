@@ -93,7 +93,6 @@ TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstr
   using neighbor_type = edge_reference_t<G>;
   auto weight         = [&g](neighbor_type uv) { return edge_value(g, uv); };
 
-#if 0
   std::vector<graph::vertex_id_t<G>> predecessors(size(g));
 
   // Remark(Andrew): edge_value_t should be a value
@@ -105,11 +104,9 @@ TEST_CASE("Germany routes CSV+vofl dijkstra_clrs", "[csv][vofl][germany][dijkstr
 
   graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors);
   graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
-#endif
 }
 
 
-#if 0
 TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
   using G = routes_volf_graph_type; // use it because it's easy
 
@@ -162,7 +159,7 @@ TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
     REQUIRE(has_edge(g) == true);
 
     auto uit = std::ranges::begin(vertices(g)) + 2;
-    auto id  = vertex_id(g, uit);
+    auto id  = vertex_id(g, *uit);
     REQUIRE(id == 2);
     REQUIRE(std::is_same_v<id_type, decltype(id)>);
     auto& uval = vertex_value(g, *uit);
@@ -176,13 +173,16 @@ TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
     auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g, uv));
     REQUIRE(250.0 == edge_value(g, uv));
-    auto& v = target(g, uv);
+    auto v = target(g, uv);
     REQUIRE(vertex_value(g, v) == "Augsburg");
 
     auto vit = find_vertex(g, 4);
-    REQUIRE(4 == vit - std::ranges::begin(vertices(g)));
-    auto uvit = find_vertex_edge(g, *vit, 7);
-    REQUIRE(edge_value(g, *uvit) == 186.0);
+    int  i   = 0;
+    //static_assert(std::ranges::iterator_t<decltype(vit)>);
+
+    //REQUIRE(4 == *vit - *std::ranges::begin(vertices(g)));
+    //auto uvit = find_vertex_edge(g, *vit, 7);
+    //REQUIRE(edge_value(g, *uvit) == 186.0);
   }
 
   SECTION("const functions") {
@@ -197,7 +197,7 @@ TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
     REQUIRE(has_edge(g2) == true);
 
     auto uit = std::ranges::begin(vertices(g2)) + 2;
-    auto id  = vertex_id(g2, uit);
+    auto id  = vertex_id(g2, *uit);
     REQUIRE(id == 2);
     REQUIRE(std::is_same_v<id_type, decltype(id)>);
     auto& uval = vertex_value(g2, *uit);
@@ -211,7 +211,7 @@ TEST_CASE("Dynamic graph vofl test", "[vofl][capabilities]") {
     auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g2, uv));
     REQUIRE(250.0 == edge_value(g2, uv));
-    auto& v = target(g2, uv);
+    auto v = target(g2, uv);
     REQUIRE(vertex_value(g2, v) == "Augsburg");
 
     auto vit = find_vertex(g2, 4);
@@ -292,6 +292,8 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
       auto   uvi    = begin(edges(g, *ui));
       size_t uv_cnt = 0;
       REQUIRE(6 == target_id(g, *uvi));
+      //auto v = target(g, *uvi);
+      //REQUIRE("Kassel" == vertex_value(g, v));
       REQUIRE("Kassel" == vertex_value(g, target(g, *uvi)));
       REQUIRE(173 == edge_value(g, *uvi));
       ++uv_cnt;
@@ -433,4 +435,3 @@ TEST_CASE("Germany routes CSV+vofl test", "[vofl][csv][germany]") {
   }
 }
 
-#endif //0

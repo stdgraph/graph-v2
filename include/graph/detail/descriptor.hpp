@@ -49,6 +49,15 @@ namespace graph {
 // 1. Implement descriptore_subrange_view & use with compressed_graph
 // 2. Consolidate use of _Is_basic_id_adj & _Is_tuple_id_adj to use descriptor in CPOs (one definition)
 //
+// NOTES
+// 1. descriptor_iterator[] always returns a reference to the iterators's value, not the nth descriptor in the range.
+//    because there is no such object. This will cause unexpected behavior if callers rely on it.
+// 2. graph.vertices() is assumed to return a native value, so the CPO does descriptor_view(vertices(g)).
+//    Conversely, a free function vertices(g) is assumed to be an overridden function and return a descriptor_view
+//    already.
+// 3. vertex_reference_t<G> won't work when a temporary is passed to it (e.g. vertex_value(g, *find_vertex(g,uid)))
+//    because only const values can be passed to it.
+//
 
 // This is a limited form of tuple-like described in https://en.cppreference.com/w/cpp/utility/tuple/tuple-like.
 // It only detects pair<T0,T1> and tuple<T0,T1,...>. It doesn't handle array or subrange.
@@ -198,7 +207,7 @@ public:
    */
   constexpr inner_reference inner_value() const noexcept {
     if constexpr (integral<value_type>) {
-      return begin_[value_];
+      return *(begin_ + value_);
     } else {
       return *value_;
     }
@@ -533,7 +542,7 @@ public:
     // This exists to satisfy the random_access_iterator concept only.
     // It would be preferable to return a reference to the inner_value, but that violates the concept.
     assert(false);
-    //return descriptor_; // ideally would be: return descriptor_[n];
+    return descriptor_; // ideally would be: return descriptor_[n], but that's a non-existant object.
   }
 
 
@@ -596,6 +605,14 @@ template <forward_range R>
 template <forward_range R>
 using descriptor_view_t = decltype(descriptor_view(std::declval<R>()));
 
+template <forward_range R>
+bool is_end(const descriptor_view_t<R>& r, const descriptor<iterator_t<R>>& desc) {
+  if constexpr (integral<typename descriptor<iterator_t<R>>::value_type>) {
+    return *desc == std::ranges::ssize(r);
+  } else {
+    return *desc == std::ranges::end(r);
+  }
+}
 
 //
 // descriptor_subrange_view
@@ -649,6 +666,8 @@ requires std::equality_comparable_with<iterator_t<R1>, iterator_t<R2>>
 
 template <forward_range R>
 using descriptor_subrange_view_t = decltype(descriptor_subrange_view(std::declval<R>(), std::declval<R>()));
+
+
 
 } // namespace graph
 

@@ -92,8 +92,6 @@ TEST_CASE("Germany routes CSV+dov dijkstra_clrs", "[csv][dov][germany][dijkstra]
   graph::dijkstra_clrs(g, frankfurt_id, distances, predecessors, weight);
 }
 
-#if 0
-
 TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
   using G = routes_dov_graph_type; // use it because it's easy
 
@@ -146,7 +144,7 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     REQUIRE(has_edge(g) == true);
 
     auto uit = std::ranges::begin(vertices(g)) + 2;
-    auto id  = vertex_id(g, uit);
+    auto id  = vertex_id(g, *uit);
     REQUIRE(id == 2);
     REQUIRE(std::is_same_v<id_type, decltype(id)>);
     auto& uval = vertex_value(g, *uit);
@@ -160,15 +158,18 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g, uv));
     REQUIRE(250.0 == edge_value(g, uv));
-    auto& v = target(g, uv);
+    auto v = target(g, uv);
+#if 0
     REQUIRE(vertex_value(g, v) == "Augsburg");
 
     auto vit = find_vertex(g, 4);
-    REQUIRE(4 == vit - std::ranges::begin(vertices(g)));
-    auto uvit = find_vertex_edge(g, *vit, 7);
+    REQUIRE(4 == (vit - *std::ranges::begin(vertices(g))));
+    auto uvit = find_vertex_edge(g, *vit, find_vertex(g, 7));
     REQUIRE(edge_value(g, *uvit) == 186.0);
+#endif
   }
 
+#if 0
   SECTION("const functions") {
     const G& g2   = g;
     using id_type = uint32_t;
@@ -181,7 +182,7 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     REQUIRE(has_edge(g2) == true);
 
     auto uit = std::ranges::begin(vertices(g2)) + 2;
-    auto id  = vertex_id(g2, uit);
+    auto id  = vertex_id(g2, *uit);
     REQUIRE(id == 2);
     REQUIRE(std::is_same_v<id_type, decltype(id)>);
     auto& uval = vertex_value(g2, *uit);
@@ -197,15 +198,18 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g2, uv));
     REQUIRE(250.0 == edge_value(g2, uv));
-    auto& v = target(g2, uv);
+    auto v = target(g2, uv);
     REQUIRE(vertex_value(g2, v) == "Augsburg");
 
     auto vit = find_vertex(g2, 4);
-    REQUIRE(4 == vit - std::ranges::begin(vertices(g2)));
+    REQUIRE(4 == (vit - *std::ranges::begin(vertices(g2))));
     auto uvit = find_vertex_edge(g2, *vit, 7);
     REQUIRE(edge_value(g2, *uvit) == 186.0);
   }
+#endif
 };
+
+#if 0
 
 TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
   init_console();

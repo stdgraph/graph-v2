@@ -299,7 +299,7 @@ using vertex_reference_t = range_reference_t<vertex_range_t<G>>;
 
 
 //
-// vertex_id(g,ui) -> vertex_id_t<G>
+// vertex_id(g,u) -> vertex_id_t<G>
 //      default = ui - begin(vertices(g)), if random_access_iterator<ui>
 //
 namespace _Vertex_id {
@@ -531,7 +531,7 @@ namespace _Find_vertex {
     */
 #  if USE_VERTEX_DESCRIPTOR
     template <class _G>
-    [[nodiscard]] constexpr vertex_t<_G> operator()(_G&& __g, const vertex_id_t<_G>& uid) const
+    [[nodiscard]] constexpr vertex_iterator_t<_G> operator()(_G&& __g, const vertex_id_t<_G>& uid) const
           noexcept(_Choice<_G&>._No_throw)
 #  else
     template <class _G>
@@ -546,17 +546,6 @@ namespace _Find_vertex {
         return find_vertex(__g, uid); // intentional ADL
       } else if constexpr (random_access_iterator<vertex_iterator_t<_G>>) {
         auto uid_diff = static_cast<range_difference_t<vertex_range_t<_G>>>(uid);
-#  if USE_VERTEX_DESCRIPTOR
-        if (uid_diff < ssize(vertices(__g))) {
-          return *(begin(vertices(__g)) + uid_diff);
-        } else {
-          return *end(vertices(__g));
-        }
-      } else {
-        static_assert(_AlwaysFalse<_G>,
-                      "find_vertex(g,uid) has not been defined and the default implemenation cannot be evaluated");
-      }
-#  else
         if (uid_diff < ssize(vertices(__g)))
           return begin(vertices(__g)) + uid_diff;
         else
@@ -565,7 +554,6 @@ namespace _Find_vertex {
         static_assert(_AlwaysFalse<_G>,
                       "find_vertex(g,uid) has not been defined and the default implemenation cannot be evaluated");
       }
-#  endif
     }
   };
 } // namespace _Find_vertex
@@ -711,7 +699,7 @@ namespace _Edges {
 #  elif USE_EDGE_DESCRIPTOR
         return descriptor_view(u);                      // default impl
 #  else
-          return u;                      // default impl
+        return u;                      // default impl
 #  endif
       } else {
         static_assert(_AlwaysFalse<_G>, "edges(g,u) is not defined and the default implementation cannot be evaluated");
@@ -740,11 +728,11 @@ namespace _Edges {
         return edges(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
 #  if USE_VERTEX_DESCRIPTOR
-        return descriptor_view(find_vertex(__g, uid).inner_value()); // default impl
+        return descriptor_view(find_vertex(__g, uid)->inner_value()); // default impl
 #  elif USE_EDGE_DESCRIPTOR
         return descriptor_view(*find_vertex(__g, uid)); // default impl
 #  else
-          return *find_vertex(__g, uid); // default impl
+        return *find_vertex(__g, uid); // default impl
 #  endif
       } else {
         static_assert(_AlwaysFalse<_G>,
@@ -1326,7 +1314,7 @@ namespace _Target {
         return target(__g, uv); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
 #  if USE_VERTEX_DESCRIPTOR
-        return find_vertex(__g, target_id(__g, uv));
+        return *find_vertex(__g, target_id(__g, uv));
 #  else
         return *find_vertex(__g, target_id(__g, uv));
 #  endif
@@ -1555,7 +1543,17 @@ namespace _Find_vertex_edge {
       } else if constexpr (_Strat == _St_ref::_Non_member) {
         return find_vertex_edge(__g, u, vid); // intentional ADL
       } else if constexpr (_Strat == _St_ref::_Auto_eval) {
+#  ifdef USE_EDGE_DESCRIPTOR
+        //auto ee = edges(__g, u);
+        //auto it = std::ranges::find_if(ee, [&__g, &vid](auto&& uv) { return target_id(__g, uv) == vid; });
+
+        //// The edges descriptor_view is a temporary object, and its iterator is invalidate after the view goes out of scope.
+        //// The descriptor (a member of the descriptor_iterator) is returned instead.
+        //return *it;
         return std::ranges::find_if(edges(__g, u), [&__g, &vid](auto&& uv) { return target_id(__g, uv) == vid; });
+#  else
+        return std::ranges::find_if(edges(__g, u), [&__g, &vid](auto&& uv) { return target_id(__g, uv) == vid; });
+#  endif
       } else {
         static_assert(_AlwaysFalse<_G>,
                       "find_vertex_edge(g,uid) has not been defined and the default implemenation cannot be evaluated");
@@ -2190,7 +2188,7 @@ namespace _Vertex_value {
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_t<_G> u) const
           noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
@@ -2336,7 +2334,7 @@ namespace _Edge_value {
     */
     template <class _G>
     requires(_Choice_adjl_ref<_G&>._Strategy != _St_adjl_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_t<_G> uv) const
           noexcept(_Choice_adjl_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_adjl_ref _Strat_ref = _Choice_adjl_ref<_G&>._Strategy;
 
@@ -2346,7 +2344,7 @@ namespace _Edge_value {
         return edge_value(__g, uv); // intentional ADL
       } else if constexpr (_Strat_ref == _St_adjl_ref::_Auto_eval) {
 #  if USE_EDGE_DESCRIPTOR
-        return *uv; // default impl
+        return uv.inner_value(); // default impl
 #  else
         return uv;                                                   // default impl
 #  endif
