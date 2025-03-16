@@ -55,8 +55,12 @@ namespace graph {
 // 2. graph.vertices() is assumed to return a native value, so the CPO does descriptor_view(vertices(g)).
 //    Conversely, a free function vertices(g) is assumed to be an overridden function and return a descriptor_view
 //    already.
-// 3. vertex_reference_t<G> won't work when a temporary is passed to it (e.g. vertex_value(g, *find_vertex(g,uid)))
+// 3. vertex_reference_t<G> won't work when a temporary descriptor is passed to it (e.g. vertex_value(g, *find_vertex(g,uid)))
 //    because only const values can be passed to it.
+// 4. Use of descripotr<I> for public friend functions for dynamic_graph is required instead of graph type aliases because 
+//    types aren't fully formed yet. This is awkward. Need to find a better solution. Options to investigate:
+//        a. Define them as free functions at the end of the file.
+//        b. Use member functions that the CPOs can find naturally.
 //
 
 // This is a limited form of tuple-like described in https://en.cppreference.com/w/cpp/utility/tuple/tuple-like.

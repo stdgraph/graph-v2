@@ -159,17 +159,14 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     REQUIRE(3 == target_id(g, uv));
     REQUIRE(250.0 == edge_value(g, uv));
     auto v = target(g, uv);
-#if 0
     REQUIRE(vertex_value(g, v) == "Augsburg");
 
     auto vit = find_vertex(g, 4);
-    REQUIRE(4 == (vit - *std::ranges::begin(vertices(g))));
-    auto uvit = find_vertex_edge(g, *vit, find_vertex(g, 7));
+    REQUIRE(4 == (vit - std::ranges::begin(vertices(g))));
+    auto uvit = find_vertex_edge(g, *vit, 7);
     REQUIRE(edge_value(g, *uvit) == 186.0);
-#endif
   }
 
-#if 0
   SECTION("const functions") {
     const G& g2   = g;
     using id_type = uint32_t;
@@ -202,14 +199,11 @@ TEST_CASE("Dynamic graph dov test", "[dov][capabilities]") {
     REQUIRE(vertex_value(g2, v) == "Augsburg");
 
     auto vit = find_vertex(g2, 4);
-    REQUIRE(4 == (vit - *std::ranges::begin(vertices(g2))));
+    REQUIRE(4 == (vit - std::ranges::begin(vertices(g2))));
     auto uvit = find_vertex_edge(g2, *vit, 7);
     REQUIRE(edge_value(g2, *uvit) == 186.0);
   }
-#endif
 };
-
-#if 0
 
 TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
   init_console();
@@ -432,5 +426,3 @@ TEST_CASE("Germany routes CSV+dov test", "[csv][dov][germany]") {
 #  endif
   }
 }
-
-#endif // 0

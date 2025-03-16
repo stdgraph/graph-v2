@@ -430,7 +430,7 @@ private:
 private
       : // CPO properties
 #if USE_EDGE_DESCRIPTOR
-        // Use of template<I> required to wait until dynamic_edge is fully defined
+  // Use of template<I> required to wait until dynamic_edge is fully defined
   // E.g. uv.inner_value() requires dynamic_edge to be defined
 
   template <forward_iterator I>
