@@ -245,16 +245,15 @@ namespace _Vertices {
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
 #  if USE_VERTEX_DESCRIPTOR
-        return descriptor_view(__g.vertices());
+        return make_descriptor_view(__g.vertices());
 #  else
         return __g.vertices();
 #  endif
       } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        //static_assert(is_reference_v<decltype(vertices(__g))>);
-        return vertices(__g); // intentional ADL
+        return make_descriptor_view(vertices(__g)); // intentional ADL
       } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
 #  if USE_VERTEX_DESCRIPTOR
-        return descriptor_view(__g); // default impl
+        return make_descriptor_view(__g); // default impl
 #  else
         return std::forward<_G>(__g); // intentional ADL
 #  endif

@@ -834,7 +834,7 @@ TEMPLATE_TEST_CASE("continuous descriptor range vector<int>", "[descriptor]", (v
   }
 
   SECTION("descriptor_subrange_view") {
-    auto descriptors = descriptor_subrange_view(c);
+    auto descriptors = descriptor_subrange_view(c, c);
 
     SECTION("descriptor std for") {
       for (auto it = begin(descriptors); it != end(descriptors); ++it) {
@@ -893,7 +893,7 @@ TEMPLATE_TEST_CASE("bidirectional descriptor range list<int>", "[descriptor]", (
     using difference_type = range_difference_t<Container>;
     difference_type i     = 0;
 
-    auto&& descriptors = descriptor_subrange_view(c);
+    auto&& descriptors = descriptor_subrange_view(c, c);
 
     SECTION("descriptor std for") {
       for (auto it = begin(descriptors); it != end(descriptors); ++it) {
@@ -957,7 +957,7 @@ TEMPLATE_TEST_CASE("All simple values",
   }
 
   SECTION("descriptor_subrange_view") {
-    auto descriptors = descriptor_subrange_view(c);
+    auto descriptors = descriptor_subrange_view(c, c);
     using desc_view  = decltype(descriptors);
     using desc_type  = range_value_t<desc_view>;
     static_assert(forward_range<desc_view>, "descriptor_subrange_view is a forward_range");
@@ -1026,7 +1026,7 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
     }
   }
   SECTION("descriptor_subrange_view") {
-    auto descriptors = descriptor_subrange_view(c);
+    auto descriptors = descriptor_subrange_view(c, c);
     using desc_view  = decltype(descriptors);
     using desc_type  = range_value_t<desc_view>;
     static_assert(forward_range<desc_view>, "descriptor_subrange_view is a forward_range");
@@ -1054,18 +1054,19 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
   }
 }
 
-TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (vector<vector<size_t>>)
+TEMPLATE_TEST_CASE("All simple values",
+                   "[descriptor]",
+                   //(vector<vector<size_t>>),
                    //(const vector<vector<int>>),
                    //(deque<deque<int>>),
                    //(const deque<deque<int>>),
-                   //(vector<list<int>>),
+                   (vector<list<int>>)
                    //(const vector<list<int>>)
 ) {
-  using G = TestType;
-  //using Iterator        = descriptor_iterator<Container>;
-  //using difference_type = typename iterator_traits<Iterator>::difference_type;
-  G g = {{1, 2}, {3, 4}, {5}};
-  //difference_type i     = 0;
+  using G               = TestType;
+  using Iterator        = descriptor_iterator<iterator_t<G>>;
+  using difference_type = iter_difference_t<Iterator>;
+  G g                   = {{1, 2}, {3, 4}, {5, 6}};
 
   static_assert(graph::basic_targeted_edge<G>); //<<<<<
   static_assert(graph::targeted_edge<G>);
@@ -1078,39 +1079,99 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (vector<vector<size_t>>)
 
     edge_reference_t<G> first_ref = *first;
 
-    auto  vid = target_id(g, first_ref);
+    auto vid = target_id(g, first_ref);
 #if USE_VERTEX_DESCRIPTOR
     auto c = find_vertex(g, vid);
 #else
     auto& c = *find_vertex(g, vid);
 #endif
-
-    //auto descriptors = descriptor_view(c);
-    //using desc_view  = decltype(descriptors);
-    //using desc_type  = range_value_t<desc_view>;
-    //static_assert(forward_range<desc_view>, "descriptor_view is a forward_range");
-
-    SECTION("descriptor std for") {}
-
-    SECTION("descriptor range for") {}
   }
 
-  //SECTION("descriptor_subrange_view") {
-  //  auto descriptors = descriptor_subrange_view(c);
-  //  using desc_view  = decltype(descriptors);
-  //  using desc_type  = range_value_t<desc_view>;
-  //  static_assert(forward_range<desc_view>, "descriptor_subrange_view is a forward_range");
+  //auto descriptors = descriptor_view(c);
+  //using desc_view  = decltype(descriptors);
+  //using desc_type  = range_value_t<desc_view>;
+  //static_assert(forward_range<desc_view>, "descriptor_view is a forward_range");
 
-  //  SECTION("descriptor std for") {
-  //  }
+  SECTION("descriptor std for") {
+    difference_type id = 0;
+    for (auto uit = begin(vertices(g)); uit != end(vertices(g)); ++uit, ++id) {
+      auto u_desc = *uit;
+      if constexpr (random_access_range<G> || _is_tuple_like_v<range_value_t<G>>) {
+        REQUIRE(u_desc.vertex_index() == id); // e.g. vertex_id(descriptor)
+      }
 
-  //  SECTION("descriptor range for") {
-  //  }
-  //}
+      size_t uv_cnt = 0;
+      for (auto uvit = begin(edges(g, u_desc)); uvit != end(edges(g, u_desc)); ++uvit, ++uv_cnt) {
+        auto uv_desc = *uvit;
+        auto v_id    = target_id(g, uv_desc);
+        auto v_desc  = *find_vertex(g, v_id);
+      }
+      REQUIRE(uv_cnt == 2);
+    }
+    REQUIRE(id == 3);
+  }
+
+  SECTION("descriptor range for") {
+    difference_type id = 0;
+    for (auto&& u_desc : vertices(g)) {
+      if constexpr (random_access_range<G> || _is_tuple_like_v<range_value_t<G>>) {
+        REQUIRE(u_desc.vertex_index() == id); // e.g. vertex_id(descriptor)
+      }
+      ++id;
+
+      size_t uv_cnt = 0;
+      for (auto&& uv_desc : edges(g, u_desc)) {
+        auto v_id   = target_id(g, uv_desc);
+        auto v_desc = *find_vertex(g, v_id);
+        ++uv_cnt;
+      }
+      REQUIRE(uv_cnt == 2);
+    }
+    REQUIRE(id == 3);
+  }
+
+  SECTION("descriptor_subrange_view") {
+    auto sr = subrange(++begin(g), --end(g)); // skip over first & last elements
+    auto gs = descriptor_subrange_view(g, sr);
+    static_assert(forward_range<decltype(gs)>, "descriptor_subrange_view is a forward_range");
+
+    SECTION("descriptor std for") {
+      difference_type id = 1;
+      for (auto uit = begin(vertices(gs)); uit != end(vertices(gs)); ++uit, ++id) {
+        auto u_desc = *uit;
+        if constexpr (random_access_range<G> || _is_tuple_like_v<range_value_t<G>>) {
+          REQUIRE(u_desc.vertex_index() == id); // e.g. vertex_id(descriptor)
+        }
+
+        auto&    inner_rng = u_desc.inner_value();
+        subrange inner_subrange(inner_rng.begin(), inner_rng.end());
+        auto     edge_subrng = descriptor_subrange_view(inner_rng, inner_subrange);
+        size_t   uv_cnt      = 0;
+        for (auto uvit = begin(edge_subrng); uvit != end(edge_subrng); ++uvit, ++uv_cnt) {
+          auto uv_desc = *uvit;
+          auto v_id    = target_id(g, uv_desc);
+          auto v_desc  = *find_vertex(g, v_id);
+        }
+        REQUIRE(uv_cnt == 2);
+      }
+      REQUIRE(id == 2);
+    }
+
+    SECTION("descriptor range for") {
+      difference_type id = 0;
+      for (auto&& u_desc : vertices(g)) {
+        if constexpr (random_access_range<G> || _is_tuple_like_v<range_value_t<G>>) {
+          REQUIRE(u_desc.vertex_index() == id); // e.g. vertex_id(descriptor)
+        }
+        ++id;
+      }
+      REQUIRE(id == 3);
+    }
+  }
 }
 
 #if 0
-TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
+TEMPLATE_TEST_CASE("descriptor_subrange_view subrange", "[descriptor]", (forward_list<int>), (const forward_list<int>)) {
   using Container             = TestType;
   using view_type             = descriptor_subrange_view_t<Container>;
   using Iterator              = descriptor_iterator<iterator_t<Container>>;
@@ -1143,18 +1204,19 @@ TEMPLATE_TEST_CASE("All simple values", "[descriptor]", (forward_list<int>), (co
 }
 
 TEST_CASE("example") {
-  using G  = vector<int>;
-  G    g   = {1, 2, 3, 4, 5};
-  auto V = descriptor_subrange_view(g);
+  using C    = vector<int>;
+  C        c = {1, 2, 3, 4, 5};
+  subrange cs(begin(c) + 1, end(c) - 1);
+  auto     sr = descriptor_subrange_view(c,cs);
 
-  for (auto&& uid : V) {
+  for (auto&& uid : sr) {
     auto id = vertex_id(g, uid);
-    for (auto&& uv : edges(g,uid)) {
+    for (auto&& uv : edges(g, uid)) {
     }
   }
 }
 auto a = std::vector<std::vector<int>>;
-auto b = std::map<int,std::vector<int>>;
+auto b = std::map<int, std::vector<int>>;
 
 for (auto u = begin(a); u != end(a); ++u) {
   // u is an vector<vector<int>>::iterator
@@ -1167,7 +1229,7 @@ for (auto u = begin(a); u != end(a); ++u) {
 
 for (auto&& u : vertices(a)) {
   // u is a vector<int>&
-  for (auto&& c : edges(g,u)) {
+  for (auto&& c : edges(g, u)) {
     // c is an int&
   }
 }
@@ -1175,7 +1237,7 @@ for (auto&& u : vertices(a)) {
 // for(auto&& u : descriptor_subrange_view(a))
 for (auto&& u : vertices(a)) {
   // u is a vertex descriptor/descriptor = index/iterator = graph_traits<G>::vertex_info
-  for (auto&& uv : edges(a,u)) {
+  for (auto&& uv : edges(a, u)) {
     // uv is an edge descriptor/descriptor = index/iterator = graph_traits<G>::edge_info
     auto&& uu = source(g, uv);
     //uu is graph_traits<G>::vertex_info
@@ -1186,4 +1248,4 @@ template <typename G>
 auto vertices(const G& g) {
   return descriptor_subrange_view(g);
 }
-#endif // 0
+#endif //0

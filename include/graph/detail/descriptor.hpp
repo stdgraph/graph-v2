@@ -57,7 +57,7 @@ namespace graph {
 //    already.
 // 3. vertex_reference_t<G> won't work when a temporary descriptor is passed to it (e.g. vertex_value(g, *find_vertex(g,uid)))
 //    because only const values can be passed to it.
-// 4. Use of descripotr<I> for public friend functions for dynamic_graph is required instead of graph type aliases because 
+// 4. Use of descripotr<I> for public friend functions for dynamic_graph is required instead of graph type aliases because
 //    types aren't fully formed yet. This is awkward. Need to find a better solution. Options to investigate:
 //        a. Define them as free functions at the end of the file.
 //        b. Use member functions that the CPOs can find naturally.
@@ -204,6 +204,14 @@ public:
    * @return The descriptor value, either an index or an iterator.
    */
   constexpr value_type& value() const noexcept { return value_; }
+
+  constexpr inner_iterator get_inner_iterator() const {
+    if constexpr (integral<value_type>) {
+      return begin_ + value_;
+    } else {
+      return value_;
+    }
+  }
 
   /**
    * @brief Get a reference to the inner value referenced by the descriptor.
@@ -411,8 +419,9 @@ public:
 
   using inner_iterator   = InnerIter;
   using inner_value_type = iter_value_t<inner_iterator>; //
+  using descriptor_type  = descriptor<inner_iterator>;
 
-  using value_type = descriptor<inner_iterator>;         // descriptor
+  using value_type = descriptor_type; // descriptor
   using id_type    = typename value_type::id_type;
 
   using pointer       = std::add_pointer_t<value_type>;
@@ -621,57 +630,84 @@ bool is_end(const descriptor_view_t<R>& r, const descriptor<iterator_t<R>>& desc
 //
 // descriptor_subrange_view
 //
-template <forward_range R>
-class descriptor_subrange_view_impl : public std::ranges::view_interface<descriptor_subrange_view_impl<R>> {
-  // Types
-public:
-  using range_type    = decltype(subrange(declval<R>().begin(), declval<R>().end()));
-  using subrange_type = descriptor_view_t<R>;
-  using value_type    = range_value_t<subrange_type>; // descriptor<inner_iterator, id_type>
-
-  // Construction/Destruction/Assignment
-public:
-  descriptor_subrange_view_impl() = default;
-
-  template <forward_range R2>
-  requires std::equality_comparable_with<iterator_t<R2>, iterator_t<range_type>>
-  descriptor_subrange_view_impl(R&& rng, R2&& subrng) : range_(subrange(rng)) {
-    subrange_ = std::move(std::ranges::subrange(descriptor_iterator(rng.begin(), subrng.begin()),
-                                                descriptor_iterator(rng.begin(), subrng.end())));
-  }
-
-  descriptor_subrange_view_impl(R&& rng) : descriptor_subrange_view_impl(forward<R>(rng), forward<R>(rng)) {}
-
-  // Properties
-public:
-  // Operations
-public:
-  auto begin() { return subrange_.begin(); }
-  auto end() { return subrange_.end(); }
-
-  // Operators
-public:
-  // Member variables
-protected:
-  range_type    range_;
-  subrange_type subrange_;
-};
-
-template <forward_range R>
-[[nodiscard]] constexpr auto descriptor_subrange_view(R&& rng) {
-  return descriptor_subrange_view_impl<R>(std::forward<R>(rng), std::forward<R>(rng));
-}
+//template <forward_range R1>
+//[[nodiscard]] constexpr auto descriptor_subrange_view(R1&& rng, R1&& subrng) {
+//  // Is subrng truly a subrange in rng?
+//  if constexpr (random_access_range<R1>) {
+//    assert(std::ranges::begin(rng) <= std::ranges::begin(subrng) && std::ranges::end(subrng) <= std::ranges::end(rng));
+//  }
+//
+//    // beginning of rng is used to calculate the id correctly with the subrng iterator
+//  return std::ranges::subrange(descriptor_iterator(rng.begin(), subrng.begin()),
+//                               descriptor_iterator(rng.begin(), subrng.end()));
+//}
 
 template <forward_range R1, forward_range R2>
 requires std::equality_comparable_with<iterator_t<R1>, iterator_t<R2>>
 [[nodiscard]] constexpr auto descriptor_subrange_view(R1&& rng, R2&& subrng) {
-  return descriptor_subrange_view_impl<R1>(std::forward<R1>(rng), std::forward<R2>(subrng));
+  // Is subrng truly a subrange in rng?
+  if constexpr (random_access_range<R1>) {
+    assert(std::ranges::begin(rng) <= std::ranges::begin(subrng) && std::ranges::end(subrng) <= std::ranges::end(rng));
+  }
+
+  // beginning of rng is used to calculate the id correctly with the subrng iterator
+  return std::ranges::subrange(descriptor_iterator(rng.begin(), subrng.begin()),
+                               descriptor_iterator(rng.begin(), subrng.end()));
 }
+
+//template <forward_range R>
+//[[nodiscard]] constexpr auto descriptor_subrange_view(R&& rng, pair<ptrdiff_t, ptrdiff_t> subrng) {
+//  // Is subrng truly a subrange in rng?
+//  if constexpr (random_access_range<R>) {
+//    //assert(std::ranges::begin(rng) <= std::ranges::begin(subrng) && std::ranges::end(subrng) <= std::ranges::end(rng));
+//  }
+//
+//  // beginning of rng is used to calculate the id correctly with the subrng iterator
+//  return std::ranges::subrange(descriptor_iterator(rng.begin(), subrng.first),
+//                               descriptor_iterator(rng.begin(), subrng.second));
+//}
 
 template <forward_range R>
 using descriptor_subrange_view_t = decltype(descriptor_subrange_view(std::declval<R>(), std::declval<R>()));
 
 
+/**
+ * @brief Is a range a descripor_view or descriptor_subrange_view?
+ */
+template <typename R>
+concept descriptor_range = forward_range<R> &&
+                           requires()
+{
+  typename iterator_t<R>::descriptor_type; // successful for both descriptor_view and descriptor_subrange_view
+};
+
+/**
+ * @brief Create a descriptor_view from a range.
+ * 
+ * If R is already a descriptor range, it is returned as-is. Otherwise, a descriptor_view is created from the range.
+ * 
+ * @tparam R Range type
+ * @param r Range
+ * @return descriptor_view(r) or r, if it is already a descriptor range.
+ */
+template <typename R>
+auto make_descriptor_view(R&& r) -> decltype(auto) {
+  if constexpr (descriptor_range<R>) {
+    return forward<R&&>(r);
+  } else {
+    return descriptor_view(forward<R&&>(r));
+  }
+}
+
+// Graph container must return descriptor_subrange_view
+//template <typename R>
+//auto make_descriptor_subrange_view(R&& r, R&& sr) -> decltype(auto) {
+//  if constexpr (descriptor_range<R>) {
+//    return forward<R&&>(r);
+//  } else {
+//    return descriptor_view(forward<R&&>(r));
+//  }
+//}
 
 } // namespace graph
 
