@@ -40,8 +40,8 @@ set(UNITTEST_SOURCES
     "tests.cpp"
 
     ### Views
-    "vertexlist_tests.cpp" 
-    "incidence_tests.cpp"  
+    "vertexlist_tests.cpp"
+    "incidence_tests.cpp"
     #"neighbors_tests.cpp"
     #"edgelist_view_tests.cpp" 
     #"dfs_tests.cpp" 

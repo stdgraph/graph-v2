@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file bellman_ford_shortest_paths.hpp
  * 
  * @brief Single-Source Shortest paths and shortest distances algorithms using Bellman-Ford's algorithm.
@@ -13,7 +13,6 @@
  */
 
 #include "graph/graph.hpp"
-#include "graph/views/incidence.hpp"
 #include "graph/views/edgelist.hpp"
 #include "graph/algorithm/common_shortest_paths.hpp"
 

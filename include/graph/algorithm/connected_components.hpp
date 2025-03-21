@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file connected_components.hpp
  * 
  * @brief Single-Source Shortest paths and shortest sistances algorithms using Dijkstra & 
@@ -15,7 +15,6 @@
  */
 
 #include "graph/graph.hpp"
-#include "graph/views/incidence.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/depth_first_search.hpp"
 #include "graph/views/breadth_first_search.hpp"
