@@ -239,7 +239,7 @@ namespace _Vertices {
      * @param g A graph instance
     */
     template <class _G>
-    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+    //requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
     [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 

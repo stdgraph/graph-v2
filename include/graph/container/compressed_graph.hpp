@@ -208,6 +208,22 @@ public:
   constexpr const_reference operator[](size_type pos) const { return v_[pos]; }
 
 private:
+#if USE_VERTEX_DESCRIPTOR
+  template <class I>
+  friend constexpr vertex_value_type& vertex_value(graph_type& g, descriptor<I>& u) {
+    static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
+    auto            uidx     = g.index_of(u.inner_value());
+    csr_row_values& row_vals = g;
+    return row_vals.v_[uidx];
+  }
+  template <class I>
+  friend constexpr const vertex_value_type& vertex_value(const graph_type& g, const descriptor<I>& u) {
+    static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
+    auto                  uidx     = g.index_of(u.inner_value());
+    const csr_row_values& row_vals = g;
+    return row_vals.v_[uidx];
+  }
+#else
   friend constexpr vertex_value_type& vertex_value(graph_type& g, vertex_type& u) {
     static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
     auto            uidx     = g.index_of(u);
@@ -220,6 +236,7 @@ private:
     const csr_row_values& row_vals = g;
     return row_vals.v_[uidx];
   }
+#endif
 
 private:
   vector_type v_;
@@ -275,7 +292,9 @@ class csr_col_values {
 
 public:
   using graph_type = compressed_graph<EV, VV, GV, VId, EIndex, Alloc>;
-#if USE_EDGE_DESCRIPTOR
+#if USE_VERTEX_DESCRIPTOR
+  // don't use edge_t<G>
+#elif USE_EDGE_DESCRIPTOR
   using edge_type = edge_t<graph_type>;
 #else
   using edge_type = col_type; // index into v_
@@ -326,24 +345,42 @@ public:
 
 private:
   // edge_value(g,uv)
+#if USE_VERTEX_DESCRIPTOR
+  template <class I>
+  friend constexpr edge_value_type& edge_value(graph_type& g, descriptor<I>& uv) {
+    auto            uv_idx   = g.index_of(uv.inner_value());
+    csr_col_values& col_vals = g;
+    return col_vals.v_[uv_idx];
+  }
+  template <class I>
+  friend constexpr const edge_value_type& edge_value(const graph_type& g, const descriptor<I>& uv) {
+    auto                  uv_idx   = g.index_of(uv.inner_value());
+    const csr_col_values& col_vals = g;
+    return col_vals.v_[uv_idx];
+  }
+#elif USE_EDGE_DESCRIPTOR
   friend constexpr edge_value_type& edge_value(graph_type& g, edge_type& uv) {
-#if USE_EDGE_DESCRIPTOR
-    auto uv_idx = g.index_of(*uv);
-#else
-    auto uv_idx = g.index_of(uv);
-#endif
+    auto            uv_idx   = g.index_of(*uv);
     csr_col_values& col_vals = g;
     return col_vals.v_[uv_idx];
   }
   friend constexpr const edge_value_type& edge_value(const graph_type& g, const edge_type& uv) {
-#if USE_EDGE_DESCRIPTOR
-    auto uv_idx = g.index_of(*uv);
-#else
-    auto uv_idx = g.index_of(uv);
-#endif
+    auto                  uv_idx   = g.index_of(*uv);
     const csr_col_values& col_vals = g;
     return col_vals.v_[uv_idx];
   }
+#else
+  friend constexpr edge_value_type& edge_value(graph_type& g, edge_type& uv) {
+    auto            uv_idx   = g.index_of(uv);
+    csr_col_values& col_vals = g;
+    return col_vals.v_[uv_idx];
+  }
+  friend constexpr const edge_value_type& edge_value(const graph_type& g, const edge_type& uv) {
+    auto                  uv_idx   = g.index_of(uv);
+    const csr_col_values& col_vals = g;
+    return col_vals.v_[uv_idx];
+  }
+#endif
 
 private:
   vector_type v_;
@@ -408,7 +445,8 @@ class compressed_graph_base
   using col_index_vector   = std::vector<col_type, col_allocator_type>;
 
 public: // Types
-  using graph_type = compressed_graph_base<EV, VV, GV, VId, EIndex, Alloc>;
+  using graph_type = compressed_graph<EV, VV, GV, VId, EIndex, Alloc>;
+  using base_type  = compressed_graph_base<EV, VV, GV, VId, EIndex, Alloc>;
 
   using partition_id_type = VId;
   using partition_vector  = std::vector<VId>;
@@ -798,10 +836,15 @@ protected:
   }
 
 public: // Operations
+#if USE_VERTEX_DESCRIPTOR
+  constexpr auto find_vertex(vertex_id_type id) noexcept { return descriptor_iterator(row_index_.begin(), id); }
+  constexpr auto find_vertex(vertex_id_type id) const noexcept { return descriptor_iterator(row_index_.begin(), id); }
+#else
   constexpr iterator_t<row_index_vector> find_vertex(vertex_id_type id) noexcept { return row_index_.begin() + id; }
   constexpr iterator_t<const row_index_vector> find_vertex(vertex_id_type id) const noexcept {
     return row_index_.begin() + id;
   }
+#endif
 
   constexpr edge_index_type index_of(const row_type& u) const noexcept {
     return static_cast<edge_index_type>(&u - row_index_.data());
@@ -824,13 +867,13 @@ private:                       // Member variables
   //row_values_type  row_value_; // row_value_[r] holds the value for row_index_[r], for VV!=void
 
 private: // CPO properties
-  friend constexpr vertices_type vertices(compressed_graph_base& g) {
+  friend constexpr vertices_type vertices(graph_type& g) {
     if (g.row_index_.empty())
       return vertices_type(g.row_index_);                                 // really empty
     else
       return vertices_type(g.row_index_.begin(), g.row_index_.end() - 1); // don't include terminating row
   }
-  friend constexpr const_vertices_type vertices(const compressed_graph_base& g) {
+  friend constexpr const_vertices_type vertices(const graph_type& g) {
     if (g.row_index_.empty())
       return const_vertices_type(g.row_index_);                                 // really empty
     else
@@ -842,11 +885,65 @@ private: // CPO properties
   }
   friend constexpr bool has_edge(const compressed_graph_base& g) { return g.col_index_.size() > 0; }
 
+#if USE_VERTEX_DESCRIPTOR
+  template <class I>
+  friend vertex_id_type vertex_id(const compressed_graph_base& g, const descriptor<I>& u) {
+    return static_cast<vertex_id_type>(u.vertex_index());
+  }
+#else
   friend vertex_id_type vertex_id(const compressed_graph_base& g, const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.row_index_.begin());
   }
+#endif
 
-#if USE_EDGE_DESCRIPTOR
+#if USE_VERTEX_DESCRIPTOR
+  template <class I>
+  friend constexpr auto edges(graph_type& g, descriptor<I>& u) {
+    static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
+    vertex_type* u1 = &u.inner_value();
+    vertex_type* u2 = u1 + 1;
+    assert(static_cast<size_t>(u2 - u1) < g.row_index_.size());    // in row_index_ bounds?
+    assert(static_cast<size_t>(u1->index) <= g.col_index_.size() &&
+           static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
+    //return edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
+    return descriptor_subrange_view(g.col_index_,
+                                    subrange(g.col_index_.begin() + u1->index, g.col_index_.begin() + u2->index));
+  }
+  template <class I>
+  friend constexpr auto edges(const graph_type& g, const descriptor<I>& u) {
+    static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
+    const vertex_type* u1 = &u.inner_value();
+    const vertex_type* u2 = u1 + 1;
+    assert(static_cast<size_t>(u2 - u1) < g.row_index_.size());    // in row_index_ bounds?
+    assert(static_cast<size_t>(u1->index) <= g.col_index_.size() &&
+           static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
+    //return const_edges_type(g.col_index_.begin() + u1.index, g.col_index_.begin() + u2->index);
+    return descriptor_subrange_view(g.col_index_,
+                                    subrange(g.col_index_.begin() + u1->index, g.col_index_.begin() + u2->index));
+  }
+
+  friend constexpr auto edges(graph_type& g, const vertex_id_type uid) {
+    assert(static_cast<size_t>(uid + 1) < g.row_index_.size()); // in row_index_ bounds?
+    assert(static_cast<size_t>(g.row_index_[static_cast<size_t>(uid) + 1].index) <=
+           g.col_index_.size());                                // in col_index_ bounds?
+    //return edges_type(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
+    //                  g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index);
+    return descriptor_subrange_view(
+          g.col_index_, //
+          subrange(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
+                   g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index));
+  }
+  friend constexpr auto edges(const graph_type& g, const vertex_id_type uid) {
+    assert(static_cast<size_t>(uid + 1) < g.row_index_.size());                      // in row_index_ bounds?
+    assert(static_cast<size_t>(g.row_index_[uid + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
+    //return const_edges_type(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
+    //                        g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index);
+    return descriptor_subrange_view(
+          g.col_index_, //
+          subrange(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
+                   g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index));
+  }
+#elif USE_EDGE_DESCRIPTOR
   friend constexpr auto edges(graph_type& g, vertex_type& u) {
     static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
     vertex_type* u2 = &u + 1;
@@ -854,8 +951,8 @@ private: // CPO properties
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     //return edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
-    return descriptor_subrange_view<col_index_vector, vertex_id_type>(g.col_index_, g.col_index_.begin() + u.index,
-                                                                      g.col_index_.begin() + u2->index);
+    return descriptor_subrange_view(g.col_index_,
+                                    subrange(col_index_.begin() + u.index, g.col_index_.begin() + u2->index));
   }
   friend constexpr const_edges_type edges(const graph_type& g, const vertex_type& u) {
     static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to get next row");
@@ -864,8 +961,8 @@ private: // CPO properties
     assert(static_cast<size_t>(u.index) <= g.col_index_.size() &&
            static_cast<size_t>(u2->index) <= g.col_index_.size()); // in col_index_ bounds?
     //return const_edges_type(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index);
-    return descriptor_subrange_view<col_index_vector, vertex_id_type>(g.col_index_, g.col_index_.begin() + u.index,
-                                                                      g.col_index_.begin() + u2->index);
+    return descriptor_subrange_view(g.col_index_,
+                                    subrange(g.col_index_.begin() + u.index, g.col_index_.begin() + u2->index));
   }
 
   friend constexpr edges_type edges(graph_type& g, const vertex_id_type uid) {
@@ -874,20 +971,20 @@ private: // CPO properties
            g.col_index_.size());                                // in col_index_ bounds?
     //return edges_type(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
     //                  g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index);
-    return descriptor_subrange_view<col_index_vector, vertex_id_type>(
+    return descriptor_subrange_view(
           g.col_index_, //
-          g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
-          g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index);
+          subrange(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
+                   g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index));
   }
   friend constexpr const_edges_type edges(const graph_type& g, const vertex_id_type uid) {
     assert(static_cast<size_t>(uid + 1) < g.row_index_.size());                      // in row_index_ bounds?
     assert(static_cast<size_t>(g.row_index_[uid + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
     //return const_edges_type(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
     //                        g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index);
-    return descriptor_subrange_view<col_index_vector, vertex_id_type>(
+    return descriptor_subrange_view(
           g.col_index_, //
-          g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
-          g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index);
+          subrange(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
+                   g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index));
   }
 #else
   friend constexpr edges_type edges(graph_type& g, vertex_type& u) {
@@ -924,6 +1021,43 @@ private: // CPO properties
 
 
   // target_id(g,uv), target(g,uv)
+#if USE_VERTEX_DESCRIPTOR
+public:
+  template <class I>
+  constexpr auto get_target_id(const graph_type& g, const descriptor<I>& uv) const noexcept {
+    return uv.inner_value().index; // -> vertex_id_type
+  }
+
+private:
+  template <class I>
+  friend constexpr auto target_id(const graph_type& g, const descriptor<I>& uv) noexcept {
+    return uv.inner_value().index; // -> vertex_id_type
+  }
+
+  template <class I>
+  friend constexpr auto target(graph_type& g, descriptor<I>& uv) noexcept {
+    return descriptor(g.row_index_.begin(), static_cast<ptrdiff_t>(uv.inner_value().index));
+  }
+  template <class I>
+  friend constexpr auto target(const graph_type& g, const descriptor<I>& uv) noexcept {
+    return descriptor(g.row_index_.begin(), static_cast<ptrdiff_t>(uv.inner_value().index));
+  }
+#elif USE_EDGE_DESCRIPTOR
+  friend constexpr vertex_id_type target_id(const graph_type& g, edge_reference_t<const graph_type> uv) noexcept {
+    return uv.edge_target_id();
+  }
+
+  template <class I>
+  friend constexpr auto target(graph_type& g, descriptor<I>& uv) noexcept {
+    //return vertex_t<graph_type>(g.row_index_.begin(), uv.edge_target_id());
+    return descriptor(g.row_index_.begin(), uv.edge_target_id());
+  }
+  template <class I>
+  friend constexpr auto target(const graph_type& g, descriptor<I>& uv) noexcept {
+    //return vertex_t<graph_type>(g.row_index_.begin(), uv.edge_target_id());
+    return descriptor(g.row_index_.begin(), uv.edge_target_id());
+  }
+#else
   friend constexpr vertex_id_type target_id(const graph_type& g, const edge_type& uv) noexcept { return uv.index; }
 
   friend constexpr vertex_type& target(graph_type& g, edge_type& uv) noexcept {
@@ -932,13 +1066,15 @@ private: // CPO properties
   friend constexpr const vertex_type& target(const graph_type& g, const edge_type& uv) noexcept {
     return g.row_index_[static_cast<size_type>(uv.index)];
   }
+#endif
 
   friend constexpr auto num_partitions(const compressed_graph_base& g) {
     return static_cast<partition_id_type>(g.partition_.size() - 1);
   }
 
-  friend constexpr auto partition_id(const compressed_graph_base& g, vertex_id_type uid) {
-    auto it = std::upper_bound(g.partition_.begin(), g.partition_.end(), uid);
+  template <class I>
+  friend constexpr auto partition_id(const compressed_graph_base& g, const descriptor<I>& u) {
+    auto it = std::upper_bound(g.partition_.begin(), g.partition_.end(), u.vertex_index());
     return static_cast<partition_id_type>(it - g.partition_.begin() - 1);
   }
 
@@ -947,10 +1083,19 @@ private: // CPO properties
     g.partition_[pid + 1] - g.partition_[pid];
   }
 
+#if USE_VERTEX_DESCRIPTOR
+  friend constexpr auto vertices(const compressed_graph_base& g, partition_id_type pid) {
+    assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
+    //return subrange(g.row_index_.begin() + g.partition_[pid], g.row_index_.begin() + g.partition_[pid + 1]);
+    return descriptor_subrange_view(g.row_index_, subrange(g.row_index_.begin() + g.partition_[pid],
+                                                           g.row_index_.begin() + g.partition_[pid + 1]));
+  }
+#else
   friend constexpr auto vertices(const compressed_graph_base& g, partition_id_type pid) {
     assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
     return subrange(g.row_index_.begin() + g.partition_[pid], g.row_index_.begin() + g.partition_[pid + 1]);
   }
+#endif
 
   friend row_values_base;
   friend col_values_base;
@@ -984,6 +1129,8 @@ public: // Types
   using value_type        = GV;
 
   using vertex_id_type = VId;
+
+  //using base_type::vertices;
 
 public: // Construction/Destruction
   constexpr compressed_graph()                        = default;
@@ -1128,6 +1275,8 @@ public: // Types
 
   using graph_value_type = void;
   using value_type       = void;
+
+  using base_type::vertices;
 
 public: // Construction/Destruction
   constexpr compressed_graph()                        = default;

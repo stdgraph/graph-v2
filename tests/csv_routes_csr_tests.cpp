@@ -4,7 +4,7 @@
 #include "graph/graph.hpp"
 #include "graph/views/vertexlist.hpp"
 #include "graph/views/neighbors.hpp"
-#include "graph/container/csr_graph.hpp"
+#include "graph/container/compressed_graph.hpp"
 #include <cassert>
 
 #define TEST_OPTION_OUTPUT (1) // output tests for visual inspection
@@ -43,7 +43,7 @@ using graph::find_vertex_edge;
 using graph::partition_id;
 
 
-using routes_csr_graph_type = graph::container2::csr_graph<double, std::string, std::string>;
+using routes_csr_graph_type = graph::container::compressed_graph<double, std::string, std::string>;
 
 template <typename G>
 constexpr auto find_frankfurt_id(const G& g) {
@@ -56,14 +56,24 @@ auto find_frankfurt(G&& g) {
 }
 
 // Things to test
-//  push_back and emplace_back work correctly when adding city names (applies to csr_graph & dynamic_graph)
+//  push_back and emplace_back work correctly when adding city names (applies to compressed_graph & dynamic_graph)
 
+TEST_CASE("CSR void EV test construct", "[csr][capabilities]") {
+  std::vector<int> v = {1, 2, 3, 4, 5};
+  auto             d = graph::descriptor_view(std::ranges::subrange(++v.begin(), --v.end()));
+}
 
 TEST_CASE("CSR void EV test", "[csr][capabilities]") {
-  using G = graph::container2::csr_graph<void, std::string, std::string>; // use it because it's easy
+  using G = graph::container::compressed_graph<double, std::string, std::string>; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
   //using init_edge_value = graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
+
+  //static_assert(graph::_Vertices::_Has_ref_ADL<G>);
+  //static_assert(graph::_Vertices::_Has_ref_member<G>);
+
+  //using ee = graph::vertex_range_t<G>;
+  //G g;
 
   // Define the graph. It's the same as the germany routes using source_order_found
   G g = {{0, 1}, {0, 4}, {0, 6}, {1, 2}, {2, 3}, {3, 8}, {4, 5}, {4, 7}, {5, 8}, {5, 9}, {6, 8}};
@@ -80,7 +90,7 @@ TEST_CASE("CSR void EV test", "[csr][capabilities]") {
 }
 
 TEST_CASE("CSR void VV test", "[csr][capabilities]") {
-  using G = graph::container2::csr_graph<double, void, std::string>; // use it because it's easy
+  using G = graph::container::compressed_graph<double, void, std::string>; // use it because it's easy
 
   // This is the type the initializer_list is expecting:
   //using init_edge_value = graph::views::copyable_edge_t<vertex_id_t<G>, edge_value_t<G>>;
@@ -111,6 +121,20 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
   });
 
   graph_value(g) = "Germany Routes";
+
+  SECTION("debug") {
+    auto u  = *(std::ranges::begin(vertices(g)) + 2);
+    auto ee = edges(g, u);
+
+    //auto uvi = begin(edges(g, u));
+    //auto uv  = *uvi;
+
+    double total_dist = 0;
+    for (auto&& uv : edges(g, u)) {
+      total_dist += edge_value(g, uv);
+    }
+    int z = 0;
+  }
 
   SECTION("metadata") {
     // Do a simple check
@@ -143,7 +167,7 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
     REQUIRE(has_edge(g) == true);
 
     auto uit = std::ranges::begin(vertices(g)) + 2;
-    auto id  = vertex_id(g, uit);
+    auto id  = vertex_id(g, *uit);
     REQUIRE(id == 2);
     REQUIRE(std::is_same_v<id_type, decltype(id)>);
     auto& uval = vertex_value(g, *uit);
@@ -161,10 +185,10 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
 
     auto&& uu = edges(g, *uit);
     REQUIRE(1 == std::ranges::size(uu));
-    auto& uv = *std::ranges::begin(uu);
+    auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g, uv));
     REQUIRE(250.0 == edge_value(g, uv));
-    auto& v = target(g, uv);
+    auto v = target(g, uv);
     REQUIRE(vertex_value(g, v) == "Augsburg");
 
     auto vit = find_vertex(g, 4);
@@ -183,7 +207,7 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
     REQUIRE(has_edge(g2) == true);
 
     auto uit = std::ranges::begin(vertices(g2)) + 2;
-    auto id  = vertex_id(g2, uit);
+    auto id  = vertex_id(g2, *uit);
     REQUIRE(id == 2);
     REQUIRE(std::is_same_v<id_type, decltype(id)>);
     auto& uval = vertex_value(g2, *uit);
@@ -196,10 +220,10 @@ TEST_CASE("CSR graph test", "[csr][capabilities]") {
 
     auto&& uu = edges(g2, *uit);
     REQUIRE(1 == std::ranges::size(uu));
-    auto& uv = *std::ranges::begin(uu);
+    auto uv = *std::ranges::begin(uu);
     REQUIRE(3 == target_id(g2, uv));
     REQUIRE(250.0 == edge_value(g2, uv));
-    auto& v = target(g2, uv);
+    auto v = target(g2, uv);
     REQUIRE(vertex_value(g2, v) == "Augsburg");
 
     auto vit = find_vertex(g2, 4);
@@ -246,12 +270,12 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
   }
 
   SECTION("content") {
-    std::string_view test_name = "Germany Routes using csr_graph";
-#if TEST_OPTION == TEST_OPTION_OUTPUT
+    std::string_view test_name = "Germany Routes using compressed_graph";
+#  if TEST_OPTION == TEST_OPTION_OUTPUT
     cout << "\n" << test_name << "\n----------------------------------------" << endl << routes_graph(g) << endl;
     int x = 0; // results are identifcal with csv_routes_dov_tests
 
-               //Germany Routes using csr_graph
+               //Germany Routes using compressed_graph
     //----------------------------------------
     //[0 Frankfürt]
     //  --> [1 Mannheim] 85km
@@ -274,10 +298,10 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     //[7 Erfurt]
     //[8 München]
     //[9 Stuttgart]
-#elif TEST_OPTION == TEST_OPTION_GEN
+#  elif TEST_OPTION == TEST_OPTION_GEN
     generate_routes_tests(g, test_name);
     int x = 0;
-#elif TEST_OPTION == TEST_OPTION_TEST
+#  elif TEST_OPTION == TEST_OPTION_TEST
     auto           ui  = begin(vertices(g));
     vertex_id_t<G> uid = 0;
     if (ui != end(vertices(g))) {
@@ -424,6 +448,6 @@ TEST_CASE("Germany routes CSV+csr test", "[csv][csr][germany]") {
     }
 
     REQUIRE(10 == size(vertices(g))); // all vertices visited?
-#endif
+#  endif
   }
 }
