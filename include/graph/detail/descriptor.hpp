@@ -194,8 +194,21 @@ public:
     }
   }
 
+#  if 0
+  // The following is intended to assign an iterator to a const_iterator, but it generates many errors I haven't had time to resolve.
+  template <class InnerIter2>
+  requires convertible_to<InnerIter2, InnerIter>
+  constexpr descriptor& operator=(const descriptor<InnerIter2>& rhs) {
+    if (&rhs != this) {
+      begin_ = rhs.begin_;
+      value_ = rhs.value_;
+    }
+    return *this;
+  }
+#  else
   constexpr descriptor& operator=(const descriptor&) = default;
-  constexpr descriptor& operator=(descriptor&&)      = default;
+#  endif
+  constexpr descriptor& operator=(descriptor&&) = default;
 
   // Properies
 public:
@@ -603,6 +616,7 @@ protected:
 //    return std::ranges::subrange(descriptor_iterator(first, first), descriptor_iterator(first, last));
 //  }
 //}
+
 
 template <forward_range R>
 [[nodiscard]] constexpr auto descriptor_view(R&& r) {

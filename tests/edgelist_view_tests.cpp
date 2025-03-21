@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
@@ -154,7 +154,11 @@ TEST_CASE("edgelist view test", "[csr][edgelist]") {
     G2& g2   = g;
     static_assert(std::is_const_v<std::remove_reference_t<decltype(g2)>>, "graph must be const");
 
+#if USE_VERTEX_DESCRIPTOR
+    vertex_t<G2> u = **find_frankfurt(g2);
+#else
     vertex_reference_t<G2> u = **frankfurt;
+#endif
 
     //graph::edgelist_iterator<G2> i0; // default construction
     graph::edgelist_iterator<G2> i1(g2);
@@ -237,7 +241,11 @@ TEST_CASE("edgelist view test", "[csr][edgelist]") {
   SECTION("const edgelist view") {
     using G2                  = const G;
     G2&                    g2 = g;
-    vertex_reference_t<G2> u  = **frankfurt;
+#if USE_VERTEX_DESCRIPTOR
+    vertex_t<G2> u = **find_frankfurt(g2);
+#else
+    vertex_reference_t<G2> u = **frankfurt;
+#endif
 
     using view_t = decltype(graph::views::edgelist(g2));
     static_assert(forward_range<view_t>, "edgelist(g) is not a forward_range");
@@ -279,7 +287,11 @@ TEST_CASE("edgelist view test", "[csr][edgelist]") {
     // Note: must include trailing return type on lambda
     using G2                   = const G;
     G2&                    g2  = g;
+#if USE_VERTEX_DESCRIPTOR
+    vertex_t<G2> u = **find_frankfurt(g2);
+#else
     vertex_reference_t<G2> u   = **frankfurt;
+#endif
     auto                   evf = [&g2](edge_reference_t<G2> uv) -> const double& { return edge_value(g2, uv); };
     size_t                 cnt = 0;
     for (auto&& [uid, vid, uv, val] : graph::views::edgelist(g2, evf)) {

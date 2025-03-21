@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include "csv_routes.hpp"
 #include "graph/graph.hpp"
@@ -233,6 +233,9 @@ TEST_CASE("neighbors test", "[csr][neighbors]") {
     for (auto&& [vid, v] : graph::views::neighbors(g2, uid)) {
       ++cnt;
     }
+    // descriptor's implicit conversion to id_type is evaluated, and then calling into edges(g,id) causing
+    //   warning C4244: 'argument': conversion from 'graph::descriptor<_It>::id_type' to 'const unsigned int', possible loss of data
+    // Consider removing edges(g,id), or refactor to use explicit conversion
     REQUIRE(cnt == size(edges(g2, u)));
   }
 
