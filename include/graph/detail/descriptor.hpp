@@ -723,6 +723,7 @@ auto make_descriptor_view(R&& r) -> decltype(auto) {
 //  }
 //}
 
+
 } // namespace graph
 
 #endif // GRAPH_DESCRIPTOR_HPP

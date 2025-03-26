@@ -698,11 +698,11 @@ public:                            // Operations
       assert(edge.source_id >= last_uid);   // ordered by uid? (requirement)
       row_index_.resize(static_cast<size_t>(edge.source_id) + 1,
                         vertex_type{static_cast<vertex_id_type>(col_index_.size())});
-      col_index_.push_back(edge_type{edge.target_id});
+      col_index_.push_back(edge_type{static_cast<vertex_id_type>(edge.target_id)});
       if constexpr (!is_void_v<EV>)
         static_cast<col_values_base&>(*this).emplace_back(move(edge.value));
-      last_uid = edge.source_id;
-      max_vid  = max(max_vid, edge.target_id);
+      last_uid = static_cast<vertex_id_type>(edge.source_id);
+      max_vid  = std::max(max_vid, static_cast<vertex_id_type>(edge.target_id));
     }
 
     // uid and vid may refer to rows that exceed the value evaluated for vertex_count (if any)
@@ -819,7 +819,7 @@ protected:
         auto lastIt = end(erng);
         --lastIt;
         auto&& e = eprojection(*lastIt); // copyable_edge
-        last_id  = max(e.source_id, e.target_id);
+        last_id  = std::max(e.source_id, e.target_id);
       }
     }
     return last_id;
@@ -886,9 +886,11 @@ private: // CPO properties
   friend constexpr bool has_edge(const compressed_graph_base& g) { return g.col_index_.size() > 0; }
 
 #if USE_VERTEX_DESCRIPTOR
-  template <class I>
-  friend vertex_id_type vertex_id(const compressed_graph_base& g, const descriptor<I>& u) {
-    return static_cast<vertex_id_type>(u.vertex_index());
+  //template <class I>
+  friend vertex_id_type vertex_id(const compressed_graph_base& g, descriptor<iterator_t<const row_index_vector>> u) {
+    return static_cast<vertex_id_type>(g.index_of(u.inner_value()));
+    //static_assert(std::integral<decltype(u.value())>);
+    //return static_cast<vertex_id_type>(u.value()); // index is kept on descriptor for random access ranges
   }
 #else
   friend vertex_id_type vertex_id(const compressed_graph_base& g, const_iterator ui) {
@@ -922,7 +924,7 @@ private: // CPO properties
                                     subrange(g.col_index_.begin() + u1->index, g.col_index_.begin() + u2->index));
   }
 
-  friend constexpr auto edges(graph_type& g, const vertex_id_type uid) {
+  friend constexpr auto edges(graph_type& g, vertex_id_type uid) {
     assert(static_cast<size_t>(uid + 1) < g.row_index_.size()); // in row_index_ bounds?
     assert(static_cast<size_t>(g.row_index_[static_cast<size_t>(uid) + 1].index) <=
            g.col_index_.size());                                // in col_index_ bounds?
@@ -933,7 +935,7 @@ private: // CPO properties
           subrange(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,
                    g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid + 1)].index));
   }
-  friend constexpr auto edges(const graph_type& g, const vertex_id_type uid) {
+  friend constexpr auto edges(const graph_type& g, vertex_id_type uid) {
     assert(static_cast<size_t>(uid + 1) < g.row_index_.size());                      // in row_index_ bounds?
     assert(static_cast<size_t>(g.row_index_[uid + 1].index) <= g.col_index_.size()); // in col_index_ bounds?
     //return const_edges_type(g.col_index_.begin() + g.row_index_[static_cast<size_type>(uid)].index,

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <concepts>
 #include "detail/graph_using.hpp"
 
@@ -43,6 +43,32 @@ struct vertex_info<VId, void, void> {
   using value_type  = void;
 
   id_type id;
+};
+
+template <class V, class VV>
+struct vertex_info<void, V, VV> {
+  using id_type     = void; // e.g. vertex_id_t<G>
+  using vertex_type = V;   // e.g. vertex_reference_t<G>
+  using value_type  = VV;  // e.g. vertex_value_t<G>
+
+  vertex_type vertex;
+  value_type  value;
+};
+template <class V>
+struct vertex_info<void, V, void> {
+  using id_type     = void; // e.g. vertex_id_t<G>
+  using vertex_type = V;   // e.g. vertex_reference_t<G>
+  using value_type  = void;  // e.g. vertex_value_t<G>
+
+  vertex_type vertex;
+};
+template <class VV>
+struct vertex_info<void, void, VV> {
+  using id_type     = void; // e.g. vertex_id_t<G>
+  using vertex_type = void;   // e.g. vertex_reference_t<G>
+  using value_type  = VV;  // e.g. vertex_value_t<G>
+
+  value_type  value;
 };
 
 template <class VId, class VV>

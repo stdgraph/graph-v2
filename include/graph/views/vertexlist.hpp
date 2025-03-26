@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "graph/graph.hpp"
 #include "graph/graph_utility.hpp"
 #include <functional>
@@ -34,14 +34,14 @@ public:
   using graph_type            = G;
   using vertex_id_type        = vertex_id_t<graph_type>;
   using vertex_range_type     = vertex_range_t<graph_type>;
-  using vertex_iterator_type  = iterator_t<vertex_range_type>;
+  using vertex_iterator_type  = vertex_iterator_t<graph_type>;
   using vertex_type           = vertex_t<graph_type>;
-  using vertex_reference_type = range_reference_t<vertex_range_type>;
+  using vertex_reference_type = vertex_reference_t<graph_type>;
   using vertex_value_func     = VVF;
   using vertex_value_type     = invoke_result_t<VVF, vertex_type&>;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = vertex_info<const vertex_id_t<graph_type>, vertex_reference_type, vertex_value_type>;
+  using value_type        = vertex_info<void, vertex_type, vertex_value_type>;
   using difference_type   = range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -51,24 +51,22 @@ public:
 protected:
   // use of shadow_vertex_type avoids difficulty in undefined vertex reference value in value_type
   // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
-  using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
   using shadow_value_type =
-        vertex_info<vertex_id_t<graph_type>, shadow_vertex_type*, _detail::ref_to_ptr<vertex_value_type>>;
+        vertex_info<void, vertex_type, _detail::ref_to_ptr<vertex_value_type>>;
 
   union internal_value {
     value_type        value_;
     shadow_value_type shadow_;
 
-    internal_value(vertex_id_type start_at) : shadow_{} { shadow_.id = start_at; }
-    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
+    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     ~internal_value() {}
     internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
   };
 
 public:
-  vertexlist_iterator(graph_type& g, const VVF& value_fn, vertex_iterator_type iter, vertex_id_type start_at = 0)
-        : value_{start_at}, iter_(iter), value_fn_(&value_fn) {}
+  vertexlist_iterator(vertex_iterator_type iter, const VVF& value_fn)
+        : iter_(iter), value_fn_(&value_fn) {}
 
   constexpr vertexlist_iterator()                           = default;
   constexpr vertexlist_iterator(const vertexlist_iterator&) = default;
@@ -80,7 +78,7 @@ public:
 
 public:
   constexpr reference operator*() const {
-    value_.shadow_.vertex = &*iter_;
+    value_.shadow_.vertex = *iter_;
     if constexpr (!is_void_v<vertex_value_type>)
       value_.shadow_.value = invoke(*this->value_fn_, *iter_);
     return value_.value_;
@@ -88,7 +86,6 @@ public:
 
   constexpr vertexlist_iterator& operator++() {
     ++iter_;
-    ++value_.shadow_.id;
     // leave value_.vertex as-is to avoid dereferencing iter_ when it's at end()
     return *this;
   }
@@ -116,14 +113,14 @@ public:
   using graph_type            = G;
   using vertex_id_type        = vertex_id_t<graph_type>;
   using vertex_range_type     = vertex_range_t<graph_type>;
-  using vertex_iterator_type  = iterator_t<vertex_range_type>;
+  using vertex_iterator_type  = vertex_iterator_t<graph_type>;
   using vertex_type           = vertex_t<graph_type>;
-  using vertex_reference_type = range_reference_t<vertex_range_type>;
+  using vertex_reference_type = vertex_reference_t<graph_type>;
   using vertex_value_func     = void;
   using vertex_value_type     = void;
 
   using iterator_category = forward_iterator_tag;
-  using value_type        = vertex_info<const vertex_id_type, vertex_reference_type, void>;
+  using value_type        = vertex_info<void, vertex_type, void>;
   using difference_type   = range_difference_t<vertex_range_type>;
   using pointer           = value_type*;
   using const_pointer     = const value_type*;
@@ -133,24 +130,22 @@ public:
 
 protected:
   // avoid difficulty in undefined vertex reference value in value_type
-  // shadow_vertex_value_type: ptr if vertex_value_type is ref or ptr, value otherwise
-  using shadow_vertex_type = remove_reference_t<vertex_reference_type>;
-  using shadow_value_type  = vertex_info<vertex_id_type, shadow_vertex_type*, void>;
+  // public & shadow vertions are identical when vertex_value_type is void
+  using shadow_value_type  = vertex_info<void, vertex_type, void>;
 
   union internal_value {
     value_type        value_;
     shadow_value_type shadow_;
 
-    internal_value(vertex_id_type start_at) : shadow_{start_at, nullptr} {}
-    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
+    internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     ~internal_value() {}
     internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
   };
 
 public:
   vertexlist_iterator(graph_type& g) : iter_(begin(vertices(const_cast<graph_type&>(g)))) {}
-  vertexlist_iterator(vertex_iterator_type iter, vertex_id_type start_at = 0) : value_{start_at}, iter_(iter) {}
+  vertexlist_iterator(vertex_iterator_type iter) : iter_(iter) {}
 
   constexpr vertexlist_iterator()                           = default;
   constexpr vertexlist_iterator(const vertexlist_iterator&) = default;
@@ -162,7 +157,7 @@ public:
 
 public:
   constexpr reference operator*() const {
-    value_.shadow_.vertex = &*iter_;
+    value_.shadow_.vertex = *iter_;
     if constexpr (!is_void_v<vertex_value_type>)
       value_.shadow_.value = this->value_fn_(*iter_);
     return value_.value_;
@@ -170,7 +165,6 @@ public:
 
   constexpr vertexlist_iterator& operator++() {
     ++iter_;
-    ++value_.shadow_.id;
     // leave value_.vertex as-is to avoid dereferencing iter_ to get value_.vertex when it's at end()
     return *this;
   }
@@ -364,10 +358,14 @@ namespace views {
           return vertexlist(__g, vvf); // intentional ADL
         } else if constexpr (_Strat_all == _St_all::_Auto_eval) {
           using view_type     = vertexlist_view<_G, VVF>;
-          using iterator_type = vertexlist_iterator<_G, VVF>;
+          using view_iterator = vertexlist_iterator<_G, VVF>;
+#if USE_VERTEX_DESCRIPTOR
+          return view_type(view_iterator(begin(vertices(__g)), vvf), end(vertices(__g)));
+#else
           auto first          = begin(vertices(forward<_G>(__g)));
           auto last           = end(vertices(forward<_G>(__g)));
-          return view_type(iterator_type(forward<_G>(__g), vvf, first), last);
+          return view_type(view_iterator(forward<_G>(__g), vvf, first), last);
+#endif
         } else {
           static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g,vvf) is not defined and the default implementation cannot be evaluated");
@@ -395,11 +393,15 @@ namespace views {
           return vertexlist(forward<_G>(__g), forward<Rng>(vr)); // intentional ADL
         } else if constexpr (_Strat_rng == _St_rng::_Auto_eval) {
           using view_type     = vertexlist_view<_G, void>;
-          using iterator_type = vertexlist_iterator<_G>;
+          using view_iterator = vertexlist_iterator<_G>;
+#if USE_VERTEX_DESCRIPTOR
+          return view_type(view_iterator(begin(vr)), end(vr));
+#else
           auto first          = begin(vr);
           auto last           = end(vr);
           auto first_id       = static_cast<vertex_id_t<_G>>(first - begin(vertices(__g)));
-          return view_type(iterator_type(first, first_id), last);
+          return view_type(view_iterator(first, first_id), last);
+#endif
         } else {
           static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g,vr) is not defined and the default implementation cannot be evaluated");
@@ -416,11 +418,15 @@ namespace views {
           return vertexlist(forward<_G>(__g), forward<Rng>(vr), vvf); // intentional ADL
         } else if constexpr (_Strat_rng == _St_rng::_Auto_eval) {
           using view_type     = vertexlist_view<_G, VVF>;
-          using iterator_type = vertexlist_iterator<_G, VVF>;
+          using view_iterator = vertexlist_iterator<_G, VVF>;
+#if USE_VERTEX_DESCRIPTOR
+          return view_type(view_iterator(begin(vr), vvf), end(vertices(vr)));
+#else
           auto first          = begin(vr);
           auto last           = end(vr);
           auto first_id       = static_cast<vertex_id_t<_G>>(first - begin(vertices(__g)));
-          return view_type(iterator_type(forward<_G>(__g), vvf, first, first_id), last);
+          return view_type(view_iterator(forward<_G>(__g), vvf, first, first_id), last);
+#endif
         } else {
           static_assert(_AlwaysFalse<_G>,
                         "vertexlist(g,vr,vvf) is not defined and the default implementation cannot be evaluated");

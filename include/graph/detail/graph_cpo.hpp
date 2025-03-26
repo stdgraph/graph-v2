@@ -414,8 +414,8 @@ namespace _Vertex_id {
 #  if USE_VERTEX_DESCRIPTOR
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const
-          noexcept(_Choice_ref<_G&>._No_throw) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_t<_G&&> u) const
+          noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
@@ -2187,8 +2187,8 @@ namespace _Vertex_value {
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_t<_G> u) const
-          noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_t<_G> u) const noexcept(_Choice_ref<_G&>._No_throw)
+          -> decltype(auto) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
@@ -2333,8 +2333,8 @@ namespace _Edge_value {
     */
     template <class _G>
     requires(_Choice_adjl_ref<_G&>._Strategy != _St_adjl_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_t<_G> uv) const
-          noexcept(_Choice_adjl_ref<_G&>._No_throw) -> decltype(auto) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_t<_G> uv) const noexcept(_Choice_adjl_ref<_G&>._No_throw)
+          -> decltype(auto) {
       constexpr _St_adjl_ref _Strat_ref = _Choice_adjl_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_adjl_ref::_Member) {
