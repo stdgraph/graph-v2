@@ -118,16 +118,14 @@ size_t connected_components(G&&        g,        // graph
   return cid;
 }
 
-template <typename vertex_id_t,
-          random_access_range Component>
-static void link( vertex_id_t u, vertex_id_t v, Component& component)
-{
+template <typename vertex_id_t, random_access_range Component>
+static void link(vertex_id_t u, vertex_id_t v, Component& component) {
   vertex_id_t p1 = component[u];
   vertex_id_t p2 = component[v];
 
-  while( p1 != p2 ) {
-    vertex_id_t high = std::max(p1, p2);
-    vertex_id_t low = p1 + (p2 - high);
+  while (p1 != p2) {
+    vertex_id_t high   = std::max(p1, p2);
+    vertex_id_t low    = p1 + (p2 - high);
     vertex_id_t p_high = component[high];
     if (p_high == low)
       break;
@@ -135,8 +133,7 @@ static void link( vertex_id_t u, vertex_id_t v, Component& component)
       if (component[high] == high) {
         component[high] = low;
         break;
-      }
-      else {
+      } else {
         high = low;
       }
     }
@@ -145,9 +142,8 @@ static void link( vertex_id_t u, vertex_id_t v, Component& component)
   }
 }
 
-template<random_access_range Component>
-static void compress( Component& component
-) {
+template <random_access_range Component>
+static void compress(Component& component) {
   for (size_t i = 0; i < component.size(); ++i) {
     if (component[i] != component[component[i]]) {
       component[i] = component[component[i]];
@@ -155,12 +151,10 @@ static void compress( Component& component
   }
 }
 
-template< typename vertex_id_t, random_access_range Component>
-static vertex_id_t sample_frequent_element( Component& component,
-                                  size_t num_samples = 1024
-) {
+template <typename vertex_id_t, random_access_range Component>
+static vertex_id_t sample_frequent_element(Component& component, size_t num_samples = 1024) {
   std::unordered_map<vertex_id_t, int>       counts(32);
-  std::mt19937                                  gen;
+  std::mt19937                               gen;
   std::uniform_int_distribution<vertex_id_t> distribution(0, component.size() - 1);
 
   for (size_t i = 0; i < num_samples; ++i) {
@@ -168,20 +162,19 @@ static vertex_id_t sample_frequent_element( Component& component,
     counts[component[sample]]++;
   }
 
-  auto&& [num, count] = *std::max_element(counts.begin(), counts.end(), [](auto&& a, auto&& b) { return std::get<1>(a) < std::get<1>(b); });
+  auto&& [num, count] = *std::max_element(counts.begin(), counts.end(),
+                                          [](auto&& a, auto&& b) { return std::get<1>(a) < std::get<1>(b); });
   return num;
 }
 
-template <adjacency_list      G,
-          random_access_range Component>
+template <adjacency_list G, random_access_range Component>
 requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-std::convertible_to<range_value_t<Component>,vertex_id_t<G>> &&
-std::convertible_to<vertex_id_t<G>,range_value_t<Component>>
-size_t afforest(G&&        g,                 // graph
-                Component& component,         // out: connected component assignment
-                const size_t neighbor_rounds = 2
-) {
-  size_t            N(size(vertices(g)));
+         std::convertible_to<range_value_t<Component>, vertex_id_t<G>> &&
+         std::convertible_to<vertex_id_t<G>, range_value_t<Component>>
+size_t afforest(G&&          g,         // graph
+                Component&   component, // out: connected component assignment
+                const size_t neighbor_rounds = 2) {
+  size_t N(size(vertices(g)));
   std::iota(component.begin(), component.end(), 0);
 
   for (size_t r = 0; r < neighbor_rounds; ++r) {
@@ -196,32 +189,32 @@ size_t afforest(G&&        g,                 // graph
   }
 
   vertex_id_t<G> c = sample_frequent_element<vertex_id_t<G>>(component);
-  
+
   for (auto&& [uid, u] : views::vertexlist(g)) {
-    if ( component[uid] == c ) {
+    if (component[uid] == c) {
       continue;
     }
     if (neighbor_rounds < edges(g, uid).size()) {
       auto it = edges(g, u).begin();
       std::advance(it, neighbor_rounds);
-      for ( ; it != edges(g, u).end(); ++it) {
+      for (; it != edges(g, u).end(); ++it) {
         link(uid, target_id(g, *it), component);
       }
     }
   }
 
   compress(component);
-  vertex_id_t<G> target_id = 0;
-  std::map<vertex_id_t<G>,vertex_id_t<G>> reindex;
+  vertex_id_t<G>                           target_id = 0;
+  std::map<vertex_id_t<G>, vertex_id_t<G>> reindex;
   for (vertex_id_t<G> vtx = 0; vtx < N; ++vtx) {
-    if(!reindex.empty()) {
+    if (!reindex.empty()) {
       auto it = reindex.find(component[vtx]);
       if (it != reindex.end()) {
         component[vtx] = (*it).second;
       }
     } else if (component[vtx] == target_id) {
       ++target_id;
-    } else if(component[vtx] > target_id) {
+    } else if (component[vtx] > target_id) {
       reindex.insert(pair(component[vtx], target_id));
       component[vtx] = target_id;
       ++target_id;
@@ -231,18 +224,15 @@ size_t afforest(G&&        g,                 // graph
   return target_id;
 }
 
-template <adjacency_list      G,
-	  adjacency_list      GT,
-	  random_access_range Component>
+template <adjacency_list G, adjacency_list GT, random_access_range Component>
 requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
-std::convertible_to<range_value_t<Component>,vertex_id_t<G>> &&
-std::convertible_to<vertex_id_t<G>,range_value_t<Component>>
-size_t afforest(G&&        g,                 // graph
-	        GT&&       g_t,               // graph transpose
-	        Component& component,         // out: connected component assignment
-                const size_t neighbor_rounds = 2
-) {
-  size_t            N(size(vertices(g)));
+         std::convertible_to<range_value_t<Component>, vertex_id_t<G>> &&
+         std::convertible_to<vertex_id_t<G>, range_value_t<Component>>
+size_t afforest(G&&          g,         // graph
+                GT&&         g_t,       // graph transpose
+                Component&   component, // out: connected component assignment
+                const size_t neighbor_rounds = 2) {
+  size_t N(size(vertices(g)));
   std::iota(component.begin(), component.end(), 0);
 
   for (size_t r = 0; r < neighbor_rounds; ++r) {
@@ -257,35 +247,35 @@ size_t afforest(G&&        g,                 // graph
   }
 
   vertex_id_t<G> c = sample_frequent_element<vertex_id_t<G>>(component);
-  
+
   for (auto&& [uid, u] : views::vertexlist(g)) {
-    if ( component[uid] == c ) {
+    if (component[uid] == c) {
       continue;
     }
     if (neighbor_rounds < edges(g, uid).size()) {
       auto it = edges(g, u).begin();
       std::advance(it, neighbor_rounds);
-      for ( ; it != edges(g, u).end(); ++it) {
+      for (; it != edges(g, u).end(); ++it) {
         link(uid, target_id(g, *it), component);
       }
     }
-    for ( auto it2 = edges(g_t, u).begin(); it2 != edges(g_t, u).end(); ++it2) {
+    for (auto it2 = edges(g_t, u).begin(); it2 != edges(g_t, u).end(); ++it2) {
       link(uid, target_id(g_t, *it2), component);
     }
   }
 
   compress(component);
-  vertex_id_t<G> target_id = 0;
-  std::map<vertex_id_t<G>,vertex_id_t<G>> reindex;
+  vertex_id_t<G>                           target_id = 0;
+  std::map<vertex_id_t<G>, vertex_id_t<G>> reindex;
   for (vertex_id_t<G> vtx = 0; vtx < N; ++vtx) {
-    if(!reindex.empty()) {
+    if (!reindex.empty()) {
       auto it = reindex.find(component[vtx]);
       if (it != reindex.end()) {
         component[vtx] = (*it).second;
       }
     } else if (component[vtx] == target_id) {
       ++target_id;
-    } else if(component[vtx] > target_id) {
+    } else if (component[vtx] > target_id) {
       reindex.insert(pair(component[vtx], target_id));
       component[vtx] = target_id;
       ++target_id;

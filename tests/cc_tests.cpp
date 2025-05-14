@@ -98,7 +98,7 @@ TEST_CASE("afforest test", "[afforest cc]") {
   gt.load_edges(reverse, edge_proj, N);
 
   std::vector<vertex_id_t<G>> component(size(vertices(g)));
-  auto components = graph::afforest(g, component);
+  auto                        components = graph::afforest(g, component);
   REQUIRE(components == 3);
   REQUIRE(*std::ranges::max_element(component) == 2);
 }
@@ -131,7 +131,7 @@ TEST_CASE("afforest test weak", "[afforest weak_cc]") {
   gt.load_edges(reverse, edge_proj, N);
 
   std::vector<vertex_id_t<G>> component(size(vertices(g)));
-  auto components = graph::afforest(g, gt, component);
+  auto                        components = graph::afforest(g, gt, component);
   REQUIRE(components == 1);
   REQUIRE(*std::ranges::max_element(component) == 0);
 }
