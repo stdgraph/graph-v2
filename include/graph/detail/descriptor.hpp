@@ -48,6 +48,7 @@ namespace graph {
 // Future Tasks
 // 1. Implement descriptore_subrange_view & use with compressed_graph
 // 2. Consolidate use of _Is_basic_id_adj & _Is_tuple_id_adj to use descriptor in CPOs (one definition)
+// 3. The end of a descriptor_view only needs to be a value_type. It doesn't need the begin_ member.
 //
 // NOTES
 // 1. descriptor_iterator[] always returns a reference to the iterators's value, not the nth descriptor in the range.
@@ -111,7 +112,6 @@ class descriptor_iterator;
 template <forward_range R>
 class descriptor_subrange_view_impl;
 
-
 /**
  * @brief A descriptor used for a vertex or edge
  * 
@@ -120,7 +120,9 @@ class descriptor_subrange_view_impl;
  * 
  * It's tempting to break this into separate index_descriptor and iterator_descriptor classes. If that were done,
  * the iterator_descriptor class would not require the begin_ member variable. However, this would remove the 
- * convenience of the vertex_index() function, which requires it.
+ * convenience of the vertex_index() function, which requires it. (Note: that's only if the inner_iterator is
+ * random-access, which should never occur because the value_type should be an integral index. That option only
+ * exists to experiment with using an iterator for a random-access container.)
  * 
  * @tparam InnerIter The iterator for the inner (raw) type that's being referenced.
  */
@@ -230,6 +232,14 @@ public:
    * @brief Get a reference to the inner value referenced by the descriptor.
    * @return The inner value referenced by the descriptor.
    */
+  constexpr inner_reference inner_value() noexcept {
+    if constexpr (integral<value_type>) {
+      return *(begin_ + value_);
+    } else {
+      return *value_;
+    }
+  }
+
   constexpr inner_reference inner_value() const noexcept {
     if constexpr (integral<value_type>) {
       return *(begin_ + value_);
@@ -259,6 +269,27 @@ public:
             "id cannot be determined for a forward range or a bidirectional range without a tuple-like value type");
       return id_type();
     }
+  }
+
+  /**
+   * @brief Gets the default edges for a vertex descriptor.
+   * 
+   * This is only available when the inner value is a forward range. The edges are the default edges for the vertex.
+   * 
+   * inner_reference is either const or non-const based on the inner_iterator.
+   * 
+   * @return A range of edges.
+   */
+  constexpr inner_reference inner_range()
+  requires forward_range<inner_value_type>
+  {
+    return inner_value();
+  }
+
+  constexpr inner_reference inner_range() const
+  requires forward_range<inner_value_type>
+  {
+    return inner_value();
   }
 
   /**
@@ -367,6 +398,7 @@ public:
   constexpr inner_reference operator[](iter_difference_t<inner_iterator> n) const
   requires random_access_iterator<inner_iterator>
   {
+    assert(false); // do not use; n/a for descriptor
     return value_[n];
   }
 

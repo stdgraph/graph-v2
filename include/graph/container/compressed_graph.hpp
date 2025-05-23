@@ -131,6 +131,7 @@ public:
   using allocator_type    = typename std::allocator_traits<Alloc>::template rebind_alloc<vertex_value_type>;
   using vector_type       = std::vector<vertex_value_type, allocator_type>;
 
+
   using value_type      = VV;
   using size_type       = size_t; //VId;
   using difference_type = typename vector_type::difference_type;
@@ -211,18 +212,27 @@ private:
 #if USE_VERTEX_DESCRIPTOR
   template <class I>
   friend constexpr vertex_value_type& vertex_value(graph_type& g, descriptor<I>& u) {
-    static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
-    auto            uidx     = g.index_of(u.inner_value());
+    auto            uidx     = u.vertex_index();
     csr_row_values& row_vals = g;
     return row_vals.v_[uidx];
   }
   template <class I>
-  friend constexpr const vertex_value_type& vertex_value(const graph_type& g, const descriptor<I>& u) {
-    static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
-    auto                  uidx     = g.index_of(u.inner_value());
+  friend constexpr const vertex_value_type& vertex_value(const graph_type& g, descriptor<I>& u) {
+    auto                  uidx     = u.vertex_index();
     const csr_row_values& row_vals = g;
     return row_vals.v_[uidx];
   }
+  //friend constexpr vertex_value_type& vertex_value(graph_type& g, descriptor<iterator_t<row_index_vector>>& u) {
+  //  auto            uidx     = u.vertex_index();
+  //  csr_row_values& row_vals = g;
+  //  return row_vals.v_[uidx];
+  //}
+  //friend constexpr const vertex_value_type& vertex_value(const graph_type&                               g,
+  //                                                       descriptor<iterator_t<const row_index_vector>>& u) {
+  //  auto                  uidx     = u.vertex_index();
+  //  const csr_row_values& row_vals = g;
+  //  return row_vals.v_[uidx];
+  //}
 #else
   friend constexpr vertex_value_type& vertex_value(graph_type& g, vertex_type& u) {
     static_assert(contiguous_range<row_index_vector>, "row_index_ must be a contiguous range to evaluate uidx");
@@ -887,8 +897,13 @@ private: // CPO properties
 
 #if USE_VERTEX_DESCRIPTOR
   //template <class I>
+  friend vertex_id_type vertex_id(compressed_graph_base& g, descriptor<iterator_t<row_index_vector>> u) {
+    return static_cast<vertex_id_type>(u.vertex_index());
+    //static_assert(std::integral<decltype(u.value())>);
+    //return static_cast<vertex_id_type>(u.value()); // index is kept on descriptor for random access ranges
+  }
   friend vertex_id_type vertex_id(const compressed_graph_base& g, descriptor<iterator_t<const row_index_vector>> u) {
-    return static_cast<vertex_id_type>(g.index_of(u.inner_value()));
+    return static_cast<vertex_id_type>(u.vertex_index());
     //static_assert(std::integral<decltype(u.value())>);
     //return static_cast<vertex_id_type>(u.value()); // index is kept on descriptor for random access ranges
   }

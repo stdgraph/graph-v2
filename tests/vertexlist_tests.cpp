@@ -72,6 +72,8 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
       auto&& [u] = *i1;
       static_assert(!is_const_v<remove_reference_t<decltype(u.inner_value())>>, "vertex must be non-const");
       REQUIRE(vertex_id(g, u) == 0);
+      static_assert(std::is_integral_v<decltype(vertex_id(g, u))>, "vertex id must be integral");
+      static_assert(std::is_same_v<decltype(vertex_id(g, u)), uint32_t>);
     }
     {
       auto&& [u] = *++i1;
@@ -144,14 +146,13 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
 
       static_assert(!std::is_lvalue_reference_v<decltype(u)>, "vertex must not be a reference");
       static_assert(is_const_v<remove_reference_t<decltype(u.inner_value())>>, "vertex must be const");
-      static_assert(!std::integral<decltype(vertex_id(g, u))>, "vertex id must be integral");
-      //auto id = vertex_id(g, u);
-      //REQUIRE(vertex_id(g, u) == 0);
+      static_assert(std::is_integral_v<decltype(vertex_id(g2, u))>, "vertex id must be integral");
+      auto id = vertex_id(g2, u);
+      REQUIRE(vertex_id(g2, u) == 0);
     }
-#if 0
     {
       auto&& [u] = *++i1;
-      REQUIRE(vertex_id(g, u) == 1);
+      REQUIRE(vertex_id(g2, u) == 1);
       auto i1b = i1;
       REQUIRE(i1b == i1);
     }
@@ -160,29 +161,28 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
     {
       auto&& [u] = *i2;
       static_assert(is_const_v<remove_reference_t<decltype(u.inner_value())>>, "vertex must be const");
-      REQUIRE(vertex_id(g, u) == 0);
+      REQUIRE(vertex_id(g2, u) == 0);
     }
     {
       auto&& [u] = *++i2;
-      REQUIRE(vertex_id(g,u) == 1);
+      REQUIRE(vertex_id(g2, u) == 1);
       auto i2b = i2;
       REQUIRE(i2b == i2);
     }
 
-    auto vvf  = [&g](vertex_t<G>& u) -> std::string& { return vertex_value(g, u); };
+    auto vvf  = [&g2](vertex_reference_t<G2>& u) -> std::string& { return vertex_value(g2, u); };
     using VVF = decltype(vvf);
-    graph::vertexlist_iterator<G, VVF> i3(g, vvf, begin(vertices(g)));
+    graph::vertexlist_iterator<G2, VVF> i3(begin(vertices(g2)), vvf);
     {
       auto&& [u, name] = *i3;
-      REQUIRE(vertex_id(g, u) == 0);
+      REQUIRE(vertex_id(g2, u) == 0);
       REQUIRE(name == "Frankf\xC3\xBCrt");
     }
     {
       auto&& [u, name] = *++i3;
-      REQUIRE(vertex_id(g, u) == 1);
+      REQUIRE(vertex_id(g2, u) == 1);
       REQUIRE(name == "Mannheim");
     }
-#endif
   }
 
   SECTION("non-const vertexlist") {
@@ -236,10 +236,10 @@ TEST_CASE("vertexlist test", "[csr][vertexlist]") {
   }
   SECTION("const vertexlist with vertex_fn") {
     // Note: must include trailing return type on lambda
-    using G2         = const G;
-    G2&    g2        = g;
-    size_t cnt       = 0;
-    auto   vertex_fn = [&g2](vertex_reference_t<G2> u) -> const std::string& { return vertex_value(g2, u); };
+    using G2            = const G;
+    const G2& g2        = g;
+    size_t    cnt       = 0;
+    auto      vertex_fn = [&g2](vertex_reference_t<G2> u) -> const std::string& { return vertex_value(g2, u); };
     for (auto&& [u, val] : graph::views::vertexlist(g2, vertex_fn)) {
       ++cnt;
     }
