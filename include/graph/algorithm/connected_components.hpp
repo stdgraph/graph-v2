@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file connected_components.hpp
  * 
  * @brief Single-Source Shortest paths and shortest sistances algorithms using Dijkstra & 
@@ -21,6 +21,7 @@
 #include "graph/views/breadth_first_search.hpp"
 #include <stack>
 #include <random>
+#include <numeric>
 
 #ifndef GRAPH_CC_HPP
 #  define GRAPH_CC_HPP
@@ -155,7 +156,7 @@ template <typename vertex_id_t, random_access_range Component>
 static vertex_id_t sample_frequent_element(Component& component, size_t num_samples = 1024) {
   std::unordered_map<vertex_id_t, int>       counts(32);
   std::mt19937                               gen;
-  std::uniform_int_distribution<vertex_id_t> distribution(0, component.size() - 1);
+  std::uniform_int_distribution<vertex_id_t> distribution(0, static_cast<vertex_id_t>(component.size() - 1));
 
   for (size_t i = 0; i < num_samples; ++i) {
     vertex_id_t sample = distribution(gen);
