@@ -25,6 +25,7 @@ using std::forward_list;
 using std::iter_reference_t;
 using std::is_const_v;
 using std::remove_cvref_t;
+using std::remove_reference_t;
 
 // concepts
 using std::ranges::contiguous_range;
@@ -1063,13 +1064,33 @@ TEMPLATE_TEST_CASE("All simple values",
                    (vector<list<int>>)
                    //(const vector<list<int>>)
 ) {
-  using G               = TestType;
-  using Iterator        = descriptor_iterator<iterator_t<G>>;
-  using difference_type = iter_difference_t<Iterator>;
-  G g                   = {{1, 2}, {3, 4}, {5, 6}};
+  using G                  = TestType;
+  using Iterator           = descriptor_iterator<iterator_t<G>>;
+  using difference_type    = iter_difference_t<Iterator>;
+  G                    g   = {{1, 2}, {3, 4}, {5, 6}};
+  vertex_iterator_t<G> v0i = find_vertex(g, 0);
+  vertex_t<G>          v0  = v0i;
 
-  static_assert(graph::basic_targeted_edge<G>); //<<<<<
+  using Ga                  = const G;
+  Ga&                  ga   = g; // const reference to G
+  vertex_iterator_t<G> v0ai = find_vertex(ga, 0);
+  vertex_t<Ga>         v0a  = *v0ai;
+  //vertex_iterator_t<G> v0bi = begin(vertices(ga));
+
+  static_assert(!is_const_v<remove_reference_t<decltype(**v0i)>>);
+  static_assert(is_const_v<remove_reference_t<decltype(**v0ai)>>); // should be const?
+
+  static_assert(graph::basic_targeted_edge<G>);                        //<<<<<
   static_assert(graph::targeted_edge<G>);
+
+
+  //vertex_id_t<G> uid = 0;
+  auto ee = edges(g, v0);
+  static_assert(graph::_Edges::_Can_ref_eval<G>, "_Can_ref_eval<G>");
+  static_assert(!graph::_Edges::_Has_ref_ADL<G>, "!_Has_ref_ADL<G>");
+  static_assert(graph::_Edges::_Can_id_eval<G>, "_Can_id_eval<G>"); // Should be true
+  static_assert(!graph::_Edges::_Has_id_ADL<G>, "!_Has_id_ADL<G>");
+
   static_assert(graph::adjacency_list<G>);
 
   SECTION("descriptor_view") {

@@ -593,7 +593,7 @@ namespace _Edges {
   };
   template <class _G>
   concept _Has_ref_ADL = _HasClassOrEnumType<_G>                  //
-                         && requires(_G&& __g, const vertex_reference_t<_G>& u) {
+                         && requires(_G&& __g, vertex_reference_t<_G> u) {
                               { _Fake_copy_init(edges(__g, u)) }; // intentional ADL
                             };
 #  if USE_VERTEX_DESCRIPTOR
@@ -610,9 +610,10 @@ namespace _Edges {
                              { _Fake_copy_init(edges(__g, uid)) }; // intentional ADL
                            };
   template <class _G>
-  concept _Can_id_eval = _HasClassOrEnumType<_G>                                       //
-                         && requires(_G&& __g, vertex_id_t<_G> uid) {
-                              { _Fake_copy_init(edges(__g, *find_vertex(__g, uid))) }; // recursive call for edges(g,u)
+  concept _Can_id_eval = _HasClassOrEnumType<_G>                  //
+                         && requires(_G&& __g, vertex_id_t<_G> uid, vertex_t<_G> u, vertex_iterator_t<_G> ui) {
+                              //{ _Fake_copy_init(edges(__g, *find_vertex(__g, uid))) }; // call for edges(g,uid)
+                              { _Fake_copy_init(edges(__g, *ui)) }; // call for edges(g,uid)
                             };
 
   class _Cpo {
@@ -2193,8 +2194,8 @@ namespace _Vertex_value {
     */
     template <class _G>
     requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const noexcept(_Choice_ref<_G&>._No_throw)
-          -> decltype(auto) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const
+          noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_ref::_Member) {
@@ -2280,9 +2281,9 @@ namespace _Edge_value {
     [[nodiscard]] static consteval _Choice_t<_St_adjl_ref> _Choose_adjl_ref() noexcept {
       static_assert(is_lvalue_reference_v<_G>);
       if constexpr (_Has_adjl_ref_member<_G>) {
-        return {
-              _St_adjl_ref::_Member,
-              noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().inner_value().edge_value(declval<graph_reference_t<_G>>())))};
+        return {_St_adjl_ref::_Member,
+                noexcept(_Fake_copy_init(
+                      declval<edge_reference_t<_G>>().inner_value().edge_value(declval<graph_reference_t<_G>>())))};
       } else if constexpr (_Has_adjl_ref_ADL<_G>) {
         return {
               _St_adjl_ref::_Non_member,
@@ -2339,8 +2340,8 @@ namespace _Edge_value {
     */
     template <class _G>
     requires(_Choice_adjl_ref<_G&>._Strategy != _St_adjl_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const noexcept(_Choice_adjl_ref<_G&>._No_throw)
-          -> decltype(auto) {
+    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+          noexcept(_Choice_adjl_ref<_G&>._No_throw) -> decltype(auto) {
       constexpr _St_adjl_ref _Strat_ref = _Choice_adjl_ref<_G&>._Strategy;
 
       if constexpr (_Strat_ref == _St_adjl_ref::_Member) {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file dijkstra_shortest_paths.hpp
  * 
  * @brief Single-Source & multi-source shortest paths & shortest distances algorithms using Dijkstra's algorithm.
@@ -267,7 +267,7 @@ template <index_adjacency_list G,
           class Combine = plus<range_value_t<Distances>>>
 requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> && //
          sized_range<Distances> &&                                 //
-         is_arithmetic_v<range_value_t<Distances>> &&              //
+         is_arithmetic_v<range_value_t<Distances>> &&              // 
          basic_edge_weight_function<G, WF, range_value_t<Distances>, Compare, Combine>
 constexpr void dijkstra_shortest_distances(
       G&&            g,
