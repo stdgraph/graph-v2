@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file connected_components.hpp
  * 
  * @brief Single-Source Shortest paths and shortest sistances algorithms using Dijkstra & 
@@ -21,7 +21,6 @@
 #include "graph/views/breadth_first_search.hpp"
 #include <stack>
 #include <random>
-#include <numeric>
 
 #ifndef GRAPH_CC_HPP
 #  define GRAPH_CC_HPP
@@ -94,25 +93,32 @@ size_t connected_components(G&&        g,        // graph
                             Component& component // out: connected component assignment
 ) {
   size_t            N(size(vertices(g)));
-  std::vector<bool> visited(N, false);
   using CT = typename std::decay<decltype(*component.begin())>::type;
   std::fill(component.begin(), component.end(), std::numeric_limits<CT>::max());
 
+  std::stack<vertex_id_t<G>> S;
   CT cid = 0;
-  for (auto&& [uid, u] : views::vertexlist(g)) {
-    if (visited[uid]) {
+  for (vertex_id_t<G> uid = 0; uid < N; ++uid) {
+    if (component[uid] < std::numeric_limits<CT>::max()) {
       continue;
     }
-    visited[uid]   = true;
+    
+    if (!size(edges(g, uid))) {
+      component[uid] = cid++;
+      continue;
+    }
+    
     component[uid] = cid;
-    if (!size(edges(g, u))) {
-      ++cid;
-      continue;
-    }
-    vertices_breadth_first_search_view<G, void> bfs(g, uid);
-    for (auto&& [vid, v] : bfs) {
-      component[vid] = cid;
-      visited[vid]   = true;
+    S.push(uid);
+    while (!S.empty()) {
+      auto vid = S.top();
+      S.pop();
+      for (auto&& [wid, vw] : views::incidence(g, vid)) {
+	if (component[wid] == std::numeric_limits<CT>::max()) {
+	  component[wid] = cid;
+	  S.push(wid);
+	}
+      }
     }
     ++cid;
   }
@@ -156,7 +162,7 @@ template <typename vertex_id_t, random_access_range Component>
 static vertex_id_t sample_frequent_element(Component& component, size_t num_samples = 1024) {
   std::unordered_map<vertex_id_t, int>       counts(32);
   std::mt19937                               gen;
-  std::uniform_int_distribution<vertex_id_t> distribution(0, static_cast<vertex_id_t>(component.size() - 1));
+  std::uniform_int_distribution<vertex_id_t> distribution(0, component.size() - 1);
 
   for (size_t i = 0; i < num_samples; ++i) {
     vertex_id_t sample = distribution(gen);
@@ -172,9 +178,9 @@ template <adjacency_list G, random_access_range Component>
 requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
          std::convertible_to<range_value_t<Component>, vertex_id_t<G>> &&
          std::convertible_to<vertex_id_t<G>, range_value_t<Component>>
-size_t afforest(G&&          g,         // graph
-                Component&   component, // out: connected component assignment
-                const size_t neighbor_rounds = 2) {
+void afforest(G&&          g,         // graph
+              Component&   component, // out: connected component assignment
+              const size_t neighbor_rounds = 2) {
   size_t N(size(vertices(g)));
   std::iota(component.begin(), component.end(), 0);
 
@@ -205,34 +211,16 @@ size_t afforest(G&&          g,         // graph
   }
 
   compress(component);
-  vertex_id_t<G>                           target_id = 0;
-  std::map<vertex_id_t<G>, vertex_id_t<G>> reindex;
-  for (vertex_id_t<G> vtx = 0; vtx < N; ++vtx) {
-    if (!reindex.empty()) {
-      auto it = reindex.find(component[vtx]);
-      if (it != reindex.end()) {
-        component[vtx] = (*it).second;
-      }
-    } else if (component[vtx] == target_id) {
-      ++target_id;
-    } else if (component[vtx] > target_id) {
-      reindex.insert(pair(component[vtx], target_id));
-      component[vtx] = target_id;
-      ++target_id;
-    }
-  }
-
-  return target_id;
 }
 
 template <adjacency_list G, adjacency_list GT, random_access_range Component>
 requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>> &&
          std::convertible_to<range_value_t<Component>, vertex_id_t<G>> &&
          std::convertible_to<vertex_id_t<G>, range_value_t<Component>>
-size_t afforest(G&&          g,         // graph
-                GT&&         g_t,       // graph transpose
-                Component&   component, // out: connected component assignment
-                const size_t neighbor_rounds = 2) {
+void afforest(G&&          g,         // graph
+              GT&&         g_t,       // graph transpose
+              Component&   component, // out: connected component assignment
+              const size_t neighbor_rounds = 2) {
   size_t N(size(vertices(g)));
   std::iota(component.begin(), component.end(), 0);
 
@@ -266,24 +254,6 @@ size_t afforest(G&&          g,         // graph
   }
 
   compress(component);
-  vertex_id_t<G>                           target_id = 0;
-  std::map<vertex_id_t<G>, vertex_id_t<G>> reindex;
-  for (vertex_id_t<G> vtx = 0; vtx < N; ++vtx) {
-    if (!reindex.empty()) {
-      auto it = reindex.find(component[vtx]);
-      if (it != reindex.end()) {
-        component[vtx] = (*it).second;
-      }
-    } else if (component[vtx] == target_id) {
-      ++target_id;
-    } else if (component[vtx] > target_id) {
-      reindex.insert(pair(component[vtx], target_id));
-      component[vtx] = target_id;
-      ++target_id;
-    }
-  }
-
-  return target_id;
 }
 
 } // namespace graph
