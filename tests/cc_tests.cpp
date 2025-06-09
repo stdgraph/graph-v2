@@ -141,7 +141,7 @@ TEST_CASE("afforest test weak", "[afforest weak_cc]") {
     componentIds.insert(component[vtx]);
   }
   auto components = componentIds.size();
-  
+
   REQUIRE(components == 1);
 }
 #endif

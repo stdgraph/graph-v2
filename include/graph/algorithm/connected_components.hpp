@@ -92,32 +92,32 @@ requires random_access_range<vertex_range_t<G>> && integral<vertex_id_t<G>>
 size_t connected_components(G&&        g,        // graph
                             Component& component // out: connected component assignment
 ) {
-  size_t            N(size(vertices(g)));
+  size_t N(size(vertices(g)));
   using CT = typename std::decay<decltype(*component.begin())>::type;
   std::fill(component.begin(), component.end(), std::numeric_limits<CT>::max());
 
   std::stack<vertex_id_t<G>> S;
-  CT cid = 0;
+  CT                         cid = 0;
   for (vertex_id_t<G> uid = 0; uid < N; ++uid) {
     if (component[uid] < std::numeric_limits<CT>::max()) {
       continue;
     }
-    
+
     if (!size(edges(g, uid))) {
       component[uid] = cid++;
       continue;
     }
-    
+
     component[uid] = cid;
     S.push(uid);
     while (!S.empty()) {
       auto vid = S.top();
       S.pop();
       for (auto&& [wid, vw] : views::incidence(g, vid)) {
-	if (component[wid] == std::numeric_limits<CT>::max()) {
-	  component[wid] = cid;
-	  S.push(wid);
-	}
+        if (component[wid] == std::numeric_limits<CT>::max()) {
+          component[wid] = cid;
+          S.push(wid);
+        }
       }
     }
     ++cid;
