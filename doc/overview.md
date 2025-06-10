@@ -184,9 +184,45 @@ assert((path(0, 5) == std::vector{3, 4, 1, 2, 5}));
 The algorithms in this library are described in section [Algorithms](./algorithms.md).
 
 
+
+## Containers
+
+This library comes with an efficient graph container that uses 
+[Compressed Sparse Row](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_%28CSR%2C_CRS_or_Yale_format%29) 
+(CSR) format: `compressed_graph`.
+
+```c++
+#include <graph/container/compressed_graph.hpp>
+
+int main()
+{
+  std::vector<graph::copyable_edge_t<unsigned, double>> ve {
+    {0, 1, 0.8}, {0, 2, 0.4}, {1, 3, 0.1}, {2, 3, 0.2}   // edges with weights
+  };
+  
+  std::vector<graph::copyable_vertex_t<unsigned, std::string>> vv {
+    {0, "A"}, {1, "B"}, {2, "C"}, {3, "D"}               // vertices with names
+  };
+  
+  using graph_t = graph::container::compressed_graph<
+    double,      // type of edge value
+    std::string  // type of vertex value
+  >;
+  
+  const graph_t g(ve, vv);
+    
+  std::vector<std::string> vertex_names;
+  
+  for (graph_t::vertex_type const& u : vertices(g))       // use graph interface
+    vertex_names.push_back(vertex_value(g, u));           //
+        
+  assert((vertex_names == std::vector<std::string>{"A", "B", "C", "D"}));
+}
+```
+
+
 ------
 
 TODO:
 
 - Adapting
-- use our container
