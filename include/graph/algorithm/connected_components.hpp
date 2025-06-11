@@ -21,6 +21,7 @@
 #include "graph/views/breadth_first_search.hpp"
 #include <stack>
 #include <random>
+#include <numeric>
 
 #ifndef GRAPH_CC_HPP
 #  define GRAPH_CC_HPP

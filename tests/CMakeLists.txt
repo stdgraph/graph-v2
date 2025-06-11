@@ -62,6 +62,7 @@ set(UNITTEST_SOURCES
 
     "descriptor_tests.cpp"
     "tests.cpp"
+    "compressed_graph_tests.cpp"
 )
 
 foreach(SOURCE IN LISTS UNITTEST_SOURCES)
