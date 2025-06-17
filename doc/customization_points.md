@@ -3,9 +3,13 @@
 The algorithms and views in this library operate on graph representations via _Customization Point Objects_ (CPO). 
 A user-defined graph representation `G` is adapted for use with this library by making sure that the necessary CPOs are _valid_ for `G`. 
 
+A CPO is a function object, so it can be passed as an argument to functions.
+
 Each customization point specifies individually what it takes to make it valid. 
 A customization point can be made valid in a number of ways. 
-For each customization point we provide an ordered list of ways in which it can be made valid. The order in this list matters: the match for validity is performed in order and if a given customization is determined to be valid, the subsequent ways, even if they would be valid, are ignored.
+For each customization point we provide an ordered list of ways in which it can be made valid.
+The order in this list matters: the match for validity is performed in order,
+and if a given customization is determined to be valid, the subsequent ways, even if they would be valid, are ignored.
 
 Often, the last item from the list serves the purpose of a "fallback" or "default" customization.
 
@@ -13,6 +17,7 @@ If none of the customization ways is valid for a given type, or set of types, th
 The property or being valid or invalid can be statically tested in the program via SFINAE (like `enable_if`) tricks or `requires`-expressions.
 
 All the customization points in this library are defined in namespace `::graph` and brought into the program code via including header  `<graph/graph.hpp>`.
+
 
 ## The list of customization points
 
@@ -56,6 +61,7 @@ We also use its return type to determine the type of the vertex id: `vertex_id_t
     * `I`, when the type of `G` matches pattern `ranges::forward_list<ranges::forward_list<I>>` and `I` is `std::integral`,
     * `I0`, when the type of `G` matches pattern <code>ranges::forward_list&lt;ranges::forward_list&lt;<em>tuple-like</em>&lt;I0, ...&gt;&gt;&gt;</code> and `I0` is `std::integral`,
     * `std::size_t` otherwise.
+
 
 ### `find_vertex`
 
