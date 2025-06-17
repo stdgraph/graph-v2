@@ -2,7 +2,7 @@
 
 What this library has to offer:
 
- 1. A number of ready-to-use algoritms, like Dijkstra's shortest paths computation.
+ 1. A number of ready-to-use algorithms, like Dijkstra's shortest paths computation.
  2. Make it easier for you to write your own graph algorithms: we provide a _view_ for traversing your graph in the preferred order (depth-first, breadth-first, topological), and you specify what is processed in each traversal step.
  3. Customization of your graph representation, so that it can be used with our algorithms and views.
  4. Our own container for representing a graph.  
@@ -31,7 +31,7 @@ This representation allows the algorithms to:
  3. For each edge to to look up its target vertex in constant time.
 
 Algorithms in this library express the requirements on the adjacency list representations via concept `graph::index_adjacency_list`.
-This concept expresses its syntactic requirments mostly via [_customization points_](./customization_points.md).
+This concept expresses its syntactic requirements mostly via [_customization points_](./customization_points.md).
 We use the following notation to represent the constraints:
 
 | Symbol | Meaning                                                 |
@@ -60,7 +60,7 @@ The following customization points must be valid and their return type shall sat
  * `graph::edges(g, uid)`,
  * `graph::edges(g, u)`.
 
-The algorithms will use this function to iterate over out edges of the vertex represended by either `uid` or `u`.
+The algorithms will use this function to iterate over out edges of the vertex represented by either `uid` or `u`.
 
 
 ### Linking from target edges back to vertices
@@ -137,17 +137,17 @@ Let's, reuse the same graph topology, but use a different adjacency-list represe
 
 ```c++
 std::vector<std::vector<std::tuple<int, double>>> g {
-  /*0*/ {{(1), 9.1}, {(3), 1.1}            }, //           9.1       2.2
-  /*1*/ {{(0), 9.1}, {(2), 2.2}, {(4), 3.5}}, //      (0)-------(1)-------(2)
-  /*2*/ {{(1), 2.2}, {(5), 1.0}            }, //       |         |         |
-  /*3*/ {{(0), 1.1}, {(4), 2.0}            }, //       |1.1      |3.5      |1.0
-  /*4*/ {{(1), 3.5}, {(3), 2.0}            }, //       |   2.0   |         |   0.5
-  /*5*/ {{(2), 1.0}, {(6), 0.5}            }, //      (3)-------(4)       (5)-------(6)
-  /*6*/ {{(5), 0.5}}                          //
+  /*0*/ { {(1), 9.1}, {(3), 1.1}             }, //           9.1       2.2
+  /*1*/ { {(0), 9.1}, {(2), 2.2}, {(4), 3.5} }, //      (0)-------(1)-------(2)
+  /*2*/ { {(1), 2.2}, {(5), 1.0}             }, //       |         |         |
+  /*3*/ { {(0), 1.1}, {(4), 2.0}             }, //       |1.1      |3.5      |1.0
+  /*4*/ { {(1), 3.5}, {(3), 2.0}             }, //       |   2.0   |         |   0.5
+  /*5*/ { {(2), 1.0}, {(6), 0.5}             }, //      (3)-------(4)       (5)-------(6)
+  /*6*/ { {(5), 0.5}                         }  //
 };
 ```
 
-Now, let's use Dijkstra's Shortest Paths algorithm to determine the distance from vertex `0` to each vertex in `g`, and also to determine these paths. The pathst are not obtained directly, but instead the list of predecessors is returned for each vertex:
+Now, let's use Dijkstra's Shortest Paths algorithm to determine the distance from vertex `0` to each vertex in `g`, and also to determine these paths. The paths are not obtained directly, but instead the list of predecessors is returned for each vertex:
 
 ```c++
 auto weight = [](std::tuple<int, double> const& uv) {

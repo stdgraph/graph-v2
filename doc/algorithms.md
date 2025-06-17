@@ -32,32 +32,28 @@ TODO: list and describe all possible visitation events
 Header `<graph/algorithm/dijkstra_shortest_paths.hpp>`
 
 ```c++
-template <class G,
-          class Distances,
-          class Predecessors,
-          class WF      = function<range_value_t<Distances>(edge_reference_t<G>)>,
+template <index_adjacency_list             G,
+          std::ranges::random_access_range Distances,
+          std::ranges::random_access_range Predecessors,
+          class WF      = function<std::ranges::range_value_t<Distances>(edge_reference_t<G>)>,
           class Visitor = empty_visitor,
-          class Compare = less<range_value_t<Distances>>,
-          class Combine = plus<range_value_t<Distances>>>
+          class Compare = less<std::ranges::range_value_t<Distances>>,
+          class Combine = plus<std::ranges::range_value_t<Distances>>>
+requires std::is_arithmetic_v<std::ranges::range_value_t<Distances>> &&
+         std::ranges::sized_range<Distances> && 
+         std::ranges::sized_range<Predecessors> && 
+         convertible_to<vertex_id_t<G>, std::ranges::range_value_t<Predecessors>> &&
+         basic_edge_weight_function<G, WF, std::ranges::range_value_t<Distances>, Compare, Combine>
 constexpr void dijkstra_shortest_distances(
       G&&            g,
       vertex_id_t<G> source,
       Distances&     distances,
       Predecessors&  predecessor,
-      WF&&      weight  = [](edge_reference_t<G> uv) { return range_value_t<Distances>(1); }, // default weight(uv) -> 1
+      WF&&      weight  = [](edge_reference_t<G> uv) { return std::ranges::range_value_t<Distances>(1); },
       Visitor&& visitor = empty_visitor(),
-      Compare&& compare = less<range_value_t<Distances>>(),
-      Combine&& combine = plus<range_value_t<Distances>>());
+      Compare&& compare = less<std::ranges::range_value_t<Distances>>(),
+      Combine&& combine = plus<std::ranges::range_value_t<Distances>>());
 ```
-*Constraints:*
-  * `index_adjacency_list<G>` is `true`,
-  * `std::ranges::random_access_range<Distances>` is `true`,
-  * `std::ranges::sized_range<Distances>` is `true`,
-  * `std::ranges::random_access_range<Predecessors>` is `true`,
-  * `std::ranges::sized_range<Predecessors>` is `true`,
-  * `std::is_arithmetic_v<std::ranges::range_value_t<Distances>>` is `true`,
-  * `std::convertible_to<vertex_id_t<G>, std::ranges::range_value_t<Predecessors>>` is `true`,
-  * `basic_edge_weight_function<G, WF, std::ranges::range_value_t<Distances>, Compare, Combine>` is `true`.
 
 *Preconditions:* 
   * <code>distances[<i>i</i>] == shortest_path_infinite_distance&lt;range_value_t&lt;Distances&gt;&gt;()</code> for each <code><i>i</i></code> in range [`0`; `num_vertices(g)`),
