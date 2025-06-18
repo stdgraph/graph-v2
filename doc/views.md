@@ -20,12 +20,11 @@ Header `<graph/views/breadth_first_search.hpp>` defines three view factories in 
 They all give you a view of vertices in the order of the breadth-first traversal. 
 They differ by the element type they produce.
 
-### vertices_breadth_first_search
 
 ```c++
 template <index_adjacency_list G, 
           vertex_id_t<G> VI, 
-          typename Alloc = std::allocator<vertex_id_t<G>>>>
+          typename Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
 vertices_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
@@ -76,7 +75,7 @@ Parameters:
 ```c++
 template <index_adjacency_list G, 
           vertex_id_t<G>       VI, 
-          typename             Alloc = std::allocator<vertex_id_t<G>>>>
+          typename             Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
 edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
@@ -99,7 +98,7 @@ Parameters:
 template <index_adjacency_list                G, 
           vertex_id_t<G>                      VI, 
           std::invocable<edge_reference_t<G>> EVF,
-          typename                            Alloc = std::allocator<vertex_id_t<G>>>>
+          typename                            Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
 edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
@@ -124,7 +123,7 @@ edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```c++
 template <index_adjacency_list G, 
           vertex_id_t<G>       VI, 
-          typename             Alloc = std::allocator<vertex_id_t<G>>>>
+          typename             Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto& 
 sourced_edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
@@ -147,7 +146,7 @@ sourced_edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc())
 template <index_adjacency_list                G, 
           vertex_id_t<G>                      VI, 
           std::invocable<edge_reference_t<G>> EVF,
-          typename                            Alloc = std::allocator<vertex_id_t<G>>>>
+          typename                            Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
 sourced_edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
@@ -189,6 +188,74 @@ for (auto [vid, uv, val]      : edges_breadth_first_search(g, seed, evf))       
 
 for (auto [uid, vid, uv]      : sourced_edges_depth_first_search(g, seed))      {}
 for (auto [uid, vid, uv, val] : sourced_edges_depth_first_search(g, seed, evf)) {}
+```
+
+
+## Incidence view
+
+Header `<graph/views/incidence.hpp>` defines two view factories in namespace `graph`:
+
+* `incidence`,
+* `basic_incidence`
+
+These offer a forward iteration over vertices incident with a given input vertex.
+
+```c++
+template <index_adjacency_list G, vertex_id_t<G> VI>
+std::ranges::forward_range auto incidence(G&& g, const VI& uid);
+```
+
+*Parameters:*
+
+ * `g` – the graph representation,
+ * `uid` – the initial vertex.
+
+*Hardened preconditions:* `find_vertex(g, uid) != nullptr`.
+ 
+*Returns:* A view with the value type 
+         `edge_info<const vertex_id_t<G>, false, edge_reference_t<G>, void>`.
+         
+
+```c++
+template <index_adjacency_list G, vertex_id_t<G> VI, std::invocable<edge_reference_t<G>> EVF>
+std::ranges::forward_range auto incidence(G&& g, const VI& uid, EFV evf);
+```
+
+*Parameters:*
+
+ * `g` – the graph representation,
+ * `uid` – the initial vertex.
+
+*Hardened preconditions:* `find_vertex(g, uid) != nullptr`.
+ 
+*Returns:* A view with the value type 
+         `edge_info<const vertex_id_t<G>, false, edge_reference_t<G>, std::invoke_result_t<EVF, edge_reference_t<G>>>`.
+ 
+
+```c++
+template <index_adjacency_list G, vertex_id_t<G> VI>
+std::ranges::forward_range auto basic_incidence(G&& g, const VI& uid);
+```
+
+*Parameters:*
+
+ * `g` – the graph representation,
+ * `uid` – the initial vertex.
+
+*Hardened preconditions:* `find_vertex(g, uid) != nullptr`.
+ 
+*Returns:* A view with the value type 
+         `edge_info<const vertex_id_t<G>, false, void, void>`. 
+
+
+### Usage patterns
+
+The intended usage for the above views:
+ 
+```c++
+for (auto [vid, uv]      : incidence(g, uid))       {}
+for (auto [vid, uv, val] : incidence(g, uid, evf))  {}
+for (auto [vid]          : basic_incidence(g, uid)) {}
 ```
 
 ## TODO: other viwes
