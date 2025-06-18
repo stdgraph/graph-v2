@@ -5,6 +5,10 @@ a graph or parts thereof as _views_ over vertices or edges. Using these views yo
 define your own algorithms more conveniently.
 
 
+## The "info" classes
+
+TODO: describe `vertex_info` and `edge_info`.
+
 ## Breadth-first search views
 
 Header `<graph/views/breadth_first_search.hpp>` defines three view factories in namespace `graph`:
@@ -21,7 +25,7 @@ They differ by the element type they produce.
 ```c++
 template <index_adjacency_list G, 
           vertex_id_t<G> VI, 
-          typename Alloc>
+          typename Alloc = std::allocator<vertex_id_t<G>>>>
 std::ranges::input_range auto&
 vertices_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
@@ -47,7 +51,7 @@ vertices_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 template <index_adjacency_list         G, 
           vertex_id_t<G>               VI, 
           std::invocable<vertex_t<G>&> VVF, 
-          typename                     Alloc>
+          typename                     Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
 vertices_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
@@ -58,8 +62,12 @@ Parameters:
  * `seed` – the initial vertex,
  * `vvf` – vertex value function,
  * `alloc` – allocator to be used for the internal storage.
+
+*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+
+*Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
  
-Returns: A view  with the value type 
+*Returns:* A view  with the value type 
          `vertex_info<const vertex_id_t<G>, vertex_t<G>&, std::invoke_result_t<VVF, vertex_t<G>&>>`.
          The third argument is the result of invoking `vvf` with the vertex reference.
 
@@ -68,7 +76,7 @@ Returns: A view  with the value type
 ```c++
 template <index_adjacency_list G, 
           vertex_id_t<G>       VI, 
-          typename             Alloc>
+          typename             Alloc = std::allocator<vertex_id_t<G>>>>
 std::ranges::input_range auto&
 edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
@@ -78,8 +86,12 @@ Parameters:
  * `g` – the graph representation,
  * `seed` – the initial vertex,
  * `alloc` – allocator to be used for the internal storage.
+
+*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+
+*Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
  
-Returns: A view with the value type 
+*Returns:* A view with the value type 
          `edge_info<const vertex_id_t<G>, false, edge_reference_t<G>, void>`.
  
  
@@ -87,19 +99,23 @@ Returns: A view with the value type
 template <index_adjacency_list                G, 
           vertex_id_t<G>                      VI, 
           std::invocable<edge_reference_t<G>> EVF,
-          typename                            Alloc>
+          typename                            Alloc = std::allocator<vertex_id_t<G>>>>
 std::ranges::input_range auto&
 edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
 
-Parameters:
+*Parameters:*
 
  * `g` – the graph representation,
  * `seed` – the initial vertex,
  * `evf` – edge value function,
  * `alloc` – allocator to be used for the internal storage.
+
+*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+
+*Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
  
-Returns: A view with the value type 
+*Returns:* A view with the value type 
          `edge_info<const vertex_id_t<G>, false, edge_reference_t<G>, std::invoke_result_t<EVF, edge_reference_t<G>>>`.
          The fourth argument is the result of invoking `evf` with the edge reference.
 
@@ -108,18 +124,22 @@ Returns: A view with the value type
 ```c++
 template <index_adjacency_list G, 
           vertex_id_t<G>       VI, 
-          typename             Alloc>
+          typename             Alloc = std::allocator<vertex_id_t<G>>>>
 std::ranges::input_range auto& 
 sourced_edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
  
-Parameters:
+*Parameters:*
 
  * `g` – the graph representation,
  * `seed` – the initial vertex,
  * `alloc` – allocator to be used for the internal storage.
  
-Returns: A view with the value type 
+*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+
+*Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
+
+*Returns:* A view with the value type 
          `edge_info<const vertex_id_t<G>, true, edge_reference_t<G>, void>`.
  
  
@@ -127,19 +147,23 @@ Returns: A view with the value type
 template <index_adjacency_list                G, 
           vertex_id_t<G>                      VI, 
           std::invocable<edge_reference_t<G>> EVF,
-          typename                            Alloc>
+          typename                            Alloc = std::allocator<vertex_id_t<G>>>>
 std::ranges::input_range auto&
 sourced_edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
 ```
 
-Parameters:
+*Parameters:*
 
  * `g` – the graph representation,
  * `seed` – the initial vertex,
  * `evf` – edge value function,
  * `alloc` – allocator to be used for the internal storage.
  
-Returns: A view with the value type 
+*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+
+*Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
+
+*Returns:* A view with the value type 
          `edge_info<const vertex_id_t<G>, true, edge_reference_t<G>, std::invoke_result_t<EVF, edge_reference_t<G>>>`.
          The fourth argument is the result of invoking `evf` with the edge reference.
 
