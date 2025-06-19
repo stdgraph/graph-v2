@@ -548,12 +548,22 @@ namespace _Find_vertex {
         return __g.find_vertex(uid);
       } else if constexpr (_Strat == _St::_Non_member) {
         return find_vertex(__g, uid); // intentional ADL
-      } else if constexpr (random_access_iterator<vertex_iterator_t<_G>>) {
+      }
+#  if USE_VERTEX_DESCRIPTOR
+      else if constexpr (random_access_range<_G>) {
+        auto uid_diff = static_cast<range_difference_t<vertex_range_t<_G>>>(uid);
+        if (uid_diff < ssize(vertices(__g)))
+          return descriptor_iterator(begin(__g), uid);
+        else
+          return descriptor_iterator(begin(__g), ssize(__g));
+#  else
+      else if constexpr (random_access_iterator<vertex_iterator_t<_G>>) {
         auto uid_diff = static_cast<range_difference_t<vertex_range_t<_G>>>(uid);
         if (uid_diff < ssize(vertices(__g)))
           return begin(vertices(__g)) + uid_diff;
         else
           return end(vertices(__g));
+#  endif
       } else {
         static_assert(_AlwaysFalse<_G>,
                       "find_vertex(g,uid) has not been defined and the default implemenation cannot be evaluated");
@@ -610,10 +620,11 @@ namespace _Edges {
                              { _Fake_copy_init(edges(__g, uid)) }; // intentional ADL
                            };
   template <class _G>
-  concept _Can_id_eval = _HasClassOrEnumType<_G>                  //
-                         && requires(_G&& __g, vertex_id_t<_G> uid, vertex_t<_G> u, vertex_iterator_t<_G> ui) {
-                              //{ _Fake_copy_init(edges(__g, *find_vertex(__g, uid))) }; // call for edges(g,uid)
-                              { _Fake_copy_init(edges(__g, *ui)) }; // call for edges(g,uid)
+  concept _Can_id_eval = _HasClassOrEnumType<_G> //
+                         && requires(_G&& __g, vertex_id_t<_G> uid, vertex_reference_t<_G> u) {
+                              { _Fake_copy_init(find_vertex(__g, uid)) };
+                              { _Fake_copy_init(edges(__g, u)) };
+                              //{ _Fake_copy_init(edges(__g, *ui)) }; // call for edges(g,uid)
                             };
 
   class _Cpo {
@@ -705,7 +716,7 @@ namespace _Edges {
 #  elif USE_EDGE_DESCRIPTOR
         return descriptor_view(u);                      // default impl
 #  else
-        return u;                      // default impl
+      return u;                      // default impl
 #  endif
       } else {
         static_assert(_AlwaysFalse<_G>, "edges(g,u) is not defined and the default implementation cannot be evaluated");
@@ -738,7 +749,7 @@ namespace _Edges {
 #  elif USE_EDGE_DESCRIPTOR
         return descriptor_view(*find_vertex(__g, uid)); // default impl
 #  else
-        return *find_vertex(__g, uid); // default impl
+      return *find_vertex(__g, uid); // default impl
 #  endif
       } else {
         static_assert(_AlwaysFalse<_G>,

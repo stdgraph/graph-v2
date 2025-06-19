@@ -165,11 +165,11 @@ TEST_CASE("Descriptor for contiguous container vector<int>", "[descriptor]") {
     assert(K == std::ranges::subrange_kind::sized);
 
     // constness of container passed through to members?
-    static_assert(is_const_v<remove_reference_t<decltype(*first)>>); // descriptor
-    //static_assert(is_const_v<remove_reference_t<decltype(**first)>>); // inner value
+    static_assert(is_const_v<remove_reference_t<decltype(*first)>>);  // descriptor
+    static_assert(is_const_v<remove_reference_t<decltype(**first)>>); // inner value
 
-    static_assert(is_const_v<remove_reference_t<decltype(*last)>>); // descriptor
-    //static_assert(is_const_v<remove_reference_t<decltype(**last)>>);  // inner value
+    static_assert(is_const_v<remove_reference_t<decltype(*last)>>);   // descriptor
+    static_assert(is_const_v<remove_reference_t<decltype(**last)>>);  // inner value
   }
 
   SECTION("inner_range traits") {
@@ -1055,6 +1055,17 @@ TEMPLATE_TEST_CASE("All map-like containers", "[descriptor]", (map<int, int>), (
   }
 }
 
+TEST_CASE("Iterator value constness") {
+  using G = const vector<list<int>>;
+  G g     = {{1, 2}, {3, 4}, {5, 6}};
+  static_assert(is_const_v<remove_reference_t<iter_reference_t<decltype(begin(g))>>>);
+  vertex_iterator_t<G> v0i = find_vertex(g, 0);
+  auto&&               v0  = *v0i;
+  static_assert(is_const_v<remove_reference_t<decltype(v0)>>);
+  //static_assert(is_const_v<decltype(v0)>); // must remove reference to get constness
+  //static_assert(is_const_v<iter_value_t<vertex_iterator_t<G>>>); // can't rely on value_type definition on iterator for constness
+}
+
 TEMPLATE_TEST_CASE("All simple values",
                    "[descriptor]",
                    //(vector<vector<size_t>>),
@@ -1071,21 +1082,42 @@ TEMPLATE_TEST_CASE("All simple values",
   vertex_iterator_t<G> v0i = find_vertex(g, 0);
   vertex_t<G>          v0  = v0i;
 
-  using Ga                  = const G;
-  Ga&                  ga   = g; // const reference to G
-  vertex_iterator_t<G> v0ai = find_vertex(ga, 0);
-  vertex_t<Ga>         v0a  = *v0ai;
+  using Ga                   = const G;
+  Ga&                   ga   = g; // const reference to G
+  vertex_iterator_t<Ga> v0ai = find_vertex(ga, 0);
+  vertex_t<Ga>          v0a  = *v0ai;
+
+  //static_assert(!is_const_v<decltype(v0a)>);
+  //static_assert(is_const_v<typename decltype(v0a)::reference_type>);
+
   //vertex_iterator_t<G> v0bi = begin(vertices(ga));
 
-  static_assert(!is_const_v<remove_reference_t<decltype(**v0i)>>);
+  static_assert(!is_const_v<decltype(v0i->inner_value())>);
+  //static_assert(is_const_v<decltype(v0ai->inner_value())>);
+
+  using inner_iterator = typename decltype(v0a)::inner_iterator;
+  static_assert(is_const_v<remove_reference_t<iter_reference_t<inner_iterator>>>);
+
+  static_assert(decltype(v0a)::is_const_inner);
+  static_assert(integral<remove_cvref_t<typename decltype(v0a)::value_type>>);
+  //static_assert(forward_iterator<typename decltype(v0a)::value_type>);
+  static_assert(is_const_v<remove_reference_t<decltype(*v0a)>>);
+  static_assert(integral<remove_reference_t<decltype(*v0a)>>);
+
+  static_assert(decltype(v0ai)::is_const_inner);
+  static_assert(integral<remove_reference_t<decltype(**v0ai)>>);
   static_assert(is_const_v<remove_reference_t<decltype(**v0ai)>>); // should be const?
 
-  static_assert(graph::basic_targeted_edge<G>);                        //<<<<<
+  static_assert(integral<remove_reference_t<decltype(**v0i)>>);
+  static_assert(!is_const_v<remove_reference_t<decltype(**v0i)>>);
+
+  static_assert(graph::basic_targeted_edge<G>); //<<<<<
   static_assert(graph::targeted_edge<G>);
 
 
   //vertex_id_t<G> uid = 0;
   auto ee = edges(g, v0);
+  ee      = edges(g, *find_vertex(g, 0));
   static_assert(graph::_Edges::_Can_ref_eval<G>, "_Can_ref_eval<G>");
   static_assert(!graph::_Edges::_Has_ref_ADL<G>, "!_Has_ref_ADL<G>");
   static_assert(graph::_Edges::_Can_id_eval<G>, "_Can_id_eval<G>"); // Should be true

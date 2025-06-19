@@ -132,10 +132,11 @@ public:
   using inner_iterator   = InnerIter;
   using inner_value_type = iter_value_t<inner_iterator>;
   // preserve inner value constness based on inner_iterator
-  using inner_reference = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
+  constexpr static bool is_const_inner = std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>;
+  using inner_reference                = conditional_t<is_const_inner,
                                         std::add_lvalue_reference_t<std::add_const_t<inner_value_type>>,
                                         std::add_lvalue_reference_t<inner_value_type>>;
-  using inner_pointer   = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
+  using inner_pointer                  = conditional_t<is_const_inner,
                                       std::add_pointer_t<std::add_const_t<inner_value_type>>,
                                       std::add_pointer_t<inner_value_type>>;
 
@@ -144,11 +145,11 @@ public:
   using value_type = conditional_t<random_access_iterator<inner_iterator>, id_type, inner_iterator>;
 
   // Honor the const/non-const contract for the value type
-  using pointer       = std::add_pointer_t<value_type>;
   using const_pointer = std::add_pointer_t<std::add_const_t<value_type>>;
+  using pointer       = conditional_t<is_const_inner, const_pointer, std::add_pointer_t<value_type>>;
 
-  using reference       = std::add_lvalue_reference_t<value_type>;
   using const_reference = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
+  using reference       = conditional_t<is_const_inner, const_reference, std::add_lvalue_reference_t<value_type>>;
 
   using difference_type = std::iter_difference_t<inner_iterator>;
 
@@ -233,6 +234,7 @@ public:
    * @return The inner value referenced by the descriptor.
    */
   constexpr inner_reference inner_value() noexcept {
+    //static_assert(!std::is_const_v<std::remove_reference_t<decltype(*std::declval<inner_iterator>())>>, "inner_iterator must deference to non-const value");
     if constexpr (integral<value_type>) {
       return *(begin_ + value_);
     } else {
@@ -321,10 +323,18 @@ public:
   //
 
   // Note: range concept requirement: decltype(*descriptor) == value_type&
-  [[nodiscard]] constexpr reference       operator*() noexcept { return value_; }
+  [[nodiscard]] constexpr reference operator*() noexcept
+  requires !is_const_inner
+  {
+    return value_;
+  }
   [[nodiscard]] constexpr const_reference operator*() const noexcept { return value_; }
 
-  [[nodiscard]] constexpr pointer       operator->() noexcept { return &value_; }
+  [[nodiscard]] constexpr pointer operator->() noexcept
+  requires !is_const_inner
+  {
+    return &value_;
+  }
   [[nodiscard]] constexpr const_pointer operator->() const noexcept { return &value_; }
 
   //
@@ -462,22 +472,20 @@ class descriptor_iterator {
 public:
   using this_type = descriptor_iterator<InnerIter>;
 
-  using inner_iterator   = InnerIter;
-  using inner_value_type = iter_value_t<inner_iterator>; //
-  using descriptor_type  = descriptor<inner_iterator>;
+  using inner_iterator                 = InnerIter;
+  using inner_value_type               = iter_value_t<inner_iterator>; //
+  using descriptor_type                = descriptor<inner_iterator>;
+  constexpr static bool is_const_inner = std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>;
 
   using value_type = descriptor_type; // descriptor
   using id_type    = typename value_type::id_type;
 
-  using pointer       = std::add_pointer_t<value_type>;
   using const_pointer = std::add_pointer_t<std::add_const_t<value_type>>;
+  using pointer       = conditional_t<is_const_inner, const_pointer, std::add_pointer_t<value_type>>;
 
-  //using reference = std::add_lvalue_reference_t<value_type>;
-  using reference = conditional_t<std::is_const_v<remove_reference_t<decltype(*declval<inner_iterator>())>>,
-                                  std::add_lvalue_reference_t<std::add_const_t<value_type>>,
-                                  std::add_lvalue_reference_t<value_type>>;
+  using const_reference = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
+  using reference       = conditional_t<is_const_inner, const_reference, std::add_lvalue_reference_t<value_type>>;
 
-  //using const_reference = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
   using difference_type = std::iter_difference_t<InnerIter>;
 
   using iterator_category = typename InnerIter::iterator_category;
@@ -496,14 +504,14 @@ public:
   constexpr descriptor_iterator(InnerIter front, InnerIter it) : descriptor_(front, it) {}
 
   // for testing
-  template <forward_range R>
-  requires is_convertible_v<iterator_t<R>, InnerIter> //
-  constexpr descriptor_iterator(R& r, inner_iterator it /*= r.begin()*/) : descriptor_(r, it) {}
+  //template <forward_range R>
+  //requires is_convertible_v<iterator_t<R>, InnerIter> //
+  constexpr descriptor_iterator(InnerIter& beg, InnerIter it /*= beg*/) : descriptor_(beg, it) {}
 
   // for testing
-  template <forward_range R>
-  requires is_convertible_v<iterator_t<R>, InnerIter> //
-  constexpr descriptor_iterator(R& r, ptrdiff_t id = 0) : descriptor_(r, id) {}
+  //template <forward_range R>
+  //requires is_convertible_v<iterator_t<R>, InnerIter> //
+  constexpr descriptor_iterator(InnerIter& beg, ptrdiff_t id = 0) : descriptor_(beg, id) {}
 
   constexpr descriptor_iterator& operator=(const descriptor_iterator&) = default;
 
