@@ -110,7 +110,23 @@ This happens in shortest paths algorithms that accept negative weights, and mean
 no finite minimum exists.
 
 
-## `dijkstra_shortest_paths` (single source)
+## `dijkstra_shortest_paths` 
+
+The shortest paths algorithm builds on the idea that each edge in a graph has its associated _weight_.
+A path _distance_ is determined by the composition of weights of edges that constitute the path.
+
+By default the composition of the edge weights is summation and the default weight is 1, 
+so the path distance is the number of edges that it comprises.
+
+Dijkstra's shortest paths algorithm also makes an assumption that appending an edge to a path _increases_ 
+the path's distance. In terms of the default composition and weight this assumption is expressed as `weight(uv) >= 0`.
+
+The distances of each path are returned directly vie the output function argument. 
+The paths themselves, if requested, are only returned indirectly by providing for each vertex
+its predecessor in any shortest path. 
+
+
+### The single source version
 
 Header `<graph/algorithm/dijkstra_shortest_paths.hpp>`
 
@@ -161,6 +177,7 @@ constexpr void dijkstra_shortest_distances(
 *Complexity:* Either 𝒪((|_E_| + |_V_|)⋅log |_V_|) or 𝒪(|_E_| + |_V_|⋅log |_V_|), depending on the implementation.
 
 *Remarks:* Duplicate sources do not affect the algorithm’s complexity or correctness.
+
 
 ## TODO
 
