@@ -324,14 +324,14 @@ public:
 
   // Note: range concept requirement: decltype(*descriptor) == value_type&
   [[nodiscard]] constexpr reference operator*() noexcept
-  requires !is_const_inner
+  requires (!is_const_inner)
   {
     return value_;
   }
   [[nodiscard]] constexpr const_reference operator*() const noexcept { return value_; }
 
   [[nodiscard]] constexpr pointer operator->() noexcept
-  requires !is_const_inner
+  requires (!is_const_inner)
   {
     return &value_;
   }
@@ -512,6 +512,16 @@ public:
   //template <forward_range R>
   //requires is_convertible_v<iterator_t<R>, InnerIter> //
   constexpr descriptor_iterator(InnerIter& beg, ptrdiff_t id = 0) : descriptor_(beg, id) {}
+
+  // for testing
+  template <forward_range R>
+  //requires is_convertible_v<iterator_t<R>, InnerIter> //
+  constexpr descriptor_iterator(R&& r, ptrdiff_t id) : descriptor_(std::ranges::begin(r), id) {}
+
+  // for testing
+  template <forward_range R>
+  //requires is_convertible_v<iterator_t<R>, InnerIter> //
+  constexpr descriptor_iterator(R&& r, iterator_t<R> it) : descriptor_(std::ranges::begin(r), it) {}
 
   constexpr descriptor_iterator& operator=(const descriptor_iterator&) = default;
 

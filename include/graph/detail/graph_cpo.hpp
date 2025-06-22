@@ -576,6 +576,11 @@ inline namespace _Cpos {
   inline constexpr _Find_vertex::_Cpo find_vertex;
 }
 
+
+namespace _Edges {
+  class _Cpo;
+}
+
 //
 // edges(g,u)  -> vertex_edge_range_t<G>
 // edges(g,uid) -> vertex_edge_range_t<G>
@@ -586,7 +591,7 @@ inline namespace _Cpos {
 // edge_t                    = ranges::range_value_t<vertex_edge_range_t<G>>
 // edge_reference_t          = ranges::range_reference_t<vertex_edge_range_t<G>>
 //
-namespace _Edges {
+namespace _EdgesRef {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void edges() = delete;                     // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
@@ -628,32 +633,9 @@ namespace _Edges {
                             };
 
   class _Cpo {
+    friend _Edges::_Cpo;
   private:
-    enum class _St_id { _None, _Non_member, _Auto_eval };
     enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
-
-    template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
-      if constexpr (_Has_id_ADL<_G>) {
-        return {_St_id::_Non_member,
-                noexcept(_Fake_copy_init(edges(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
-      } else if constexpr (_Can_id_eval<_G>) {
-#  if USE_VERTEX_DESCRIPTOR
-        return {_St_id::_Auto_eval,
-                noexcept(_Fake_copy_init(
-                      edges(declval<_G>(), *find_vertex(declval<_G>(), declval<vertex_id_t<_G>>()))))}; // default impl
-#  else
-        return {_St_id::_Auto_eval,
-                noexcept(_Fake_copy_init(*find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))}; // default impl
-#  endif
-      } else {
-        return {_St_id::_None};
-      }
-    }
-
-    template <class _G>
-    static constexpr _Choice_t<_St_id> _Choice_id = _Choose_id<_G>();
 
     template <class _G>
     [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
@@ -716,11 +698,97 @@ namespace _Edges {
 #  elif USE_EDGE_DESCRIPTOR
         return descriptor_view(u);                      // default impl
 #  else
-      return u;                      // default impl
+        return u;                      // default impl
 #  endif
       } else {
         static_assert(_AlwaysFalse<_G>, "edges(g,u) is not defined and the default implementation cannot be evaluated");
       }
+    }
+  };
+} // namespace _Edges
+
+inline namespace _Cpos {
+  inline constexpr _EdgesRef::_Cpo _edges_ref;
+}
+
+
+
+//
+// edges(g,u)  -> vertex_edge_range_t<G>
+// edges(g,uid) -> vertex_edge_range_t<G>
+//      default = edges(g,*find_vertex(g,uid)) if the vertex is a range
+//
+// vertex_edge_range_t<G>    = edges(g,u)
+// vertex_edge_iterator_t<G> = ranges::iterator_t<vertex_edge_range_t<G>>
+// edge_t                    = ranges::range_value_t<vertex_edge_range_t<G>>
+// edge_reference_t          = ranges::range_reference_t<vertex_edge_range_t<G>>
+//
+namespace _Edges {
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+  //void edges() = delete;                     // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
+  //void edges();
+#  endif                                     // ^^^ workaround ^^^
+
+  template <class _G>
+  concept _Has_id_ADL = _HasClassOrEnumType<_G>                    //
+                        && requires(_G&& __g, const vertex_id_t<_G>& uid) {
+                             { _Fake_copy_init(edges(__g, uid)) }; // intentional ADL
+                           };
+  template <class _G>
+  concept _Can_id_eval = _HasClassOrEnumType<_G> //
+                         && requires(_G&& __g, vertex_id_t<_G> uid, vertex_reference_t<_G> u) {
+                              { _Fake_copy_init(find_vertex(__g, uid)) };
+                              { _Fake_copy_init(_edges_ref(__g, u)) };
+                              //{ _Fake_copy_init(edges(__g, *ui)) }; // call for edges(g,uid)
+                            };
+
+  class _Cpo {
+  private:
+    enum class _St_id { _None, _Non_member, _Auto_eval };
+
+    template <class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
+      static_assert(is_lvalue_reference_v<_G>);
+      if constexpr (_Has_id_ADL<_G>) {
+        return {_St_id::_Non_member,
+                noexcept(_Fake_copy_init(edges(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
+      } else if constexpr (_Can_id_eval<_G>) {
+#  if USE_VERTEX_DESCRIPTOR
+        return {_St_id::_Auto_eval,
+                noexcept(_Fake_copy_init(
+                      edges(declval<_G>(), declval<vertex_id_t<_G>>())))}; // default impl
+#  else
+        return {_St_id::_Auto_eval,
+                noexcept(_Fake_copy_init(*find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))}; // default impl
+#  endif
+      } else {
+        return {_St_id::_None};
+      }
+    }
+
+    template <class _G>
+    static constexpr _Choice_t<_St_id> _Choice_id = _Choose_id<_G>();
+
+  public:
+    /**
+     * @brief The number of outgoing edges of a vertex.
+     * 
+     * Complexity: O(1)
+     * 
+     * Default implementation: vertex() if the vertex is a range; otherwise it must be overridden by the graph
+     * 
+     * @tparam G The graph type.
+     * @param g A graph instance.
+     * @param u A vertex instance.
+     * @return The number of outgoing edges of vertex u.
+    */
+    template <class _G>
+    requires(_EdgesRef::_Cpo::_Choice_ref<_G&>._Strategy != _EdgesRef::_Cpo::_St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const
+          noexcept(_EdgesRef::_Cpo::_Choice_ref<_G&>._No_throw) -> decltype(auto) {
+
+        return _edges_ref(__g, u);
     }
 
     /**
@@ -745,7 +813,7 @@ namespace _Edges {
         return edges(__g, uid); // intentional ADL
       } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
 #  if USE_VERTEX_DESCRIPTOR
-        return descriptor_view(find_vertex(__g, uid)->inner_value()); // default impl
+        return descriptor_view((*find_vertex(__g, uid)).inner_value()); // default impl
 #  elif USE_EDGE_DESCRIPTOR
         return descriptor_view(*find_vertex(__g, uid)); // default impl
 #  else
