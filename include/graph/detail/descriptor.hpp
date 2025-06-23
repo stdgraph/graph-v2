@@ -169,7 +169,7 @@ public:
     if constexpr (integral<value_type>) {
       value_ = id;
     } else {
-      value_ = first + id;
+      value_ = std::next(first, id);
     }
   }
 
