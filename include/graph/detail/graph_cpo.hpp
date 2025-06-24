@@ -757,7 +757,7 @@ namespace _Edges {
 #  if USE_VERTEX_DESCRIPTOR
         return {_St_id::_Auto_eval,
                 noexcept(_Fake_copy_init(
-                      edges(declval<_G>(), declval<vertex_id_t<_G>>())))}; // default impl
+                      *find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))};
 #  else
         return {_St_id::_Auto_eval,
                 noexcept(_Fake_copy_init(*find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))}; // default impl
