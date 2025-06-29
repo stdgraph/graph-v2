@@ -23,6 +23,7 @@
 #include <concepts>
 #include <type_traits>
 #include <stdexcept>
+#include <cassert>
 
 #include "graph_info.hpp"
 #include "detail/graph_cpo.hpp"
@@ -274,15 +275,15 @@ template <typename Cont, typename G>
 concept record_for = adjacency_list<G>
 && requires(Cont& cont, vertex_id_t<G>& id)
 {
-  vertex_record(cont, id);
-  //TODO: say that it returns a mutable reference
+  vertex_record(cont, id); // TODO: say that it returns a mutable reference
 
- // requires requires(G g) // semantic requirements
- // {
- //     for (vertex_iterator_t<G> it : vertices(g))
- //       assert(vertex_record(cont, vertex_id(g, it)) != nullptr); 
- //    
- // };
+  [](G& g) // semantic requirements
+  {
+    auto&& vtcs = vertices(g);
+    for (vertex_iterator_t<G> it = std::ranges::begin(vtcs), 
+                            iend = std::ranges::end(vtcs); it != iend; ++it)
+      assert(vertex_record(cont, vertex_id(g, it)) != nullptr); 
+  };
 };
 
 //----------------------------------------------------------------------------------------
