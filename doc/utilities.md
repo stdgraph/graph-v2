@@ -1,7 +1,7 @@
 # Utilities
 
 Some components in this library, such as graph traversal views or visitors, 
-need to represent a number of properties of a graph vertes at once, like vertex id,
+need to represent a number of properties of a graph vertex at once, like vertex id,
 vertex reference, and vertex value. For this purpose class template `vertex_info` is used.
 
 ```c++
@@ -13,7 +13,7 @@ template <class VId, class V, class VV>
 struct vertex_info {
   using id_type     = VId; // usually vertex_id_t<G>
   using vertex_type = V;   // usually vertex_reference_t<G>
-  using value_type  = VV;  // result of coputing the value of a vertex
+  using value_type  = VV;  // result of computing the value of a vertex
 
   id_type     id;          // absent when `VId` is `void`
   vertex_type vertex;      // absent when `V` is `void`
@@ -23,9 +23,9 @@ struct vertex_info {
 }
 ```
 
-This class template comes with a number of specializations which make certain data members disappear when the corresponding teplate parameter is `void`.
+This class template comes with a number of specializations which make certain data members disappear when the corresponding template parameter is `void`.
 
-Thre is an analogous utility class for representing edge information.
+There is an analogous utility class for representing edge information.
 
 ```c++
 // header <graph/graph_info.hpp>
