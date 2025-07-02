@@ -171,8 +171,8 @@ public: // Operations
   //requires views::copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV>
   constexpr void load_row_values(const VRng& vrng, VProj projection, size_type vertex_count) {
     if constexpr (sized_range<VRng>)
-      vertex_count = max(vertex_count, size(vrng));
-    resize(size(vrng));
+      vertex_count = max(vertex_count, std::ranges::size(vrng));
+    resize(std::ranges::size(vrng));
 
     for (auto&& vtx : vrng) {
       const auto& [id, value] = projection(vtx);
@@ -745,14 +745,11 @@ public: // Operations
    * @param vrng            Input vertex range
    * @param eprojection     Edge projection function object
    * @param vprojection     Vertex projection function object
-   * @param partition_start_ids  Range of starting vertex ids for each partition. If empty, all vertices are in partition 0.
   */
   template <forward_range ERng,
             forward_range VRng,
-            forward_range PartRng,
             class EProj = identity,
             class VProj = identity>
-  requires convertible_to<range_value_t<PartRng>, VId>
   //requires views::copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
   //      views::copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV>
   constexpr void load(const ERng& erng, const VRng& vrng, EProj eprojection = {}, VProj vprojection = {}) {

@@ -82,8 +82,8 @@ constexpr auto push_or_insert(C& container) {
 template <class C, class K>
 requires has_array_operator<C, K>
 constexpr auto assign_or_insert(C& container) {
-  if constexpr (random_access_range<C>) {
-    static_assert(sized_range<C>, "random_access container is assumed to have size()");
+  if constexpr (::std::ranges::random_access_range<C>) {
+    static_assert(::std::ranges::sized_range<C>, "random_access container is assumed to have size()");
     return [&container](const K& id, typename C::value_type&& value) {
       typename C::size_type k = static_cast<typename C::size_type>(id);
       assert(k < container.size());
@@ -99,8 +99,8 @@ constexpr auto assign_or_insert(C& container) {
 // ERng is a forward_range because it is traversed twice; once to get the max vertex_id
 // and a second time to load the edges.
 template <class ERng, class EIdFnc, class EValueFnc>
-concept edge_value_extractor = forward_range<ERng> && invocable<EIdFnc, typename ERng::value_type> &&
-                               invocable<EValueFnc, typename ERng::value_type>;
+concept edge_value_extractor = std::ranges::forward_range<ERng> && ::std::invocable<EIdFnc, typename ERng::value_type> &&
+                               ::std::invocable<EValueFnc, typename ERng::value_type>;
 
 namespace detail {
   //--------------------------------------------------------------------------------------
