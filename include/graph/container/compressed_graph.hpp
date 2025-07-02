@@ -746,10 +746,7 @@ public: // Operations
    * @param eprojection     Edge projection function object
    * @param vprojection     Vertex projection function object
   */
-  template <forward_range ERng,
-            forward_range VRng,
-            class EProj = identity,
-            class VProj = identity>
+  template <forward_range ERng, forward_range VRng, class EProj = identity, class VProj = identity>
   //requires views::copyable_edge<invoke_result_t<EProj, range_value_t<ERng>>, VId, EV> &&
   //      views::copyable_vertex<invoke_result_t<VProj, range_value_t<VRng>>, VId, VV>
   constexpr void load(const ERng& erng, const VRng& vrng, EProj eprojection = {}, VProj vprojection = {}) {

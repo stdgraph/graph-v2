@@ -99,8 +99,9 @@ constexpr auto assign_or_insert(C& container) {
 // ERng is a forward_range because it is traversed twice; once to get the max vertex_id
 // and a second time to load the edges.
 template <class ERng, class EIdFnc, class EValueFnc>
-concept edge_value_extractor = std::ranges::forward_range<ERng> && ::std::invocable<EIdFnc, typename ERng::value_type> &&
-                               ::std::invocable<EValueFnc, typename ERng::value_type>;
+concept edge_value_extractor =
+      std::ranges::forward_range<ERng> && ::std::invocable<EIdFnc, typename ERng::value_type> &&
+      ::std::invocable<EValueFnc, typename ERng::value_type>;
 
 namespace detail {
   //--------------------------------------------------------------------------------------
