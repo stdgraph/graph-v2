@@ -158,6 +158,8 @@ public:
   _null_range_type(_null_range_type&& other) noexcept {}
   _null_range_type(_null_range_type&& other, const Allocator& alloc) {}
   _null_range_type(std::initializer_list<T> init, const Allocator& alloc = Allocator()) {}
+  
+  size_t* vertex_record(_null_range_type& cont, size_t const& id) { return nullptr; }
 };
 
 inline static _null_range_type _null_predecessors;
