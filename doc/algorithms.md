@@ -48,7 +48,7 @@ vis.on_discover_vertex(vd)
 If valid, it is called whenever a new vertex is identified for future examination in the 
 course of executing an algorithm. 
 
-(Note: the vertices provided as _seeds_ to algorithms are initially discovered.)
+(Note: the vertices provided as _sources_ to algorithms are initially discovered.)
 
 ```c++
 vis.on_examine_vertex(vd)
@@ -83,7 +83,7 @@ vis.on_edge_relaxed(ed)
 ```
 
 If valid, it is called whenever an edge is _relaxed_. Relaxing an edge means reducing 
-the stored minimum accumulated distance found so far from the given seed to the target 
+the stored minimum accumulated distance found so far from the given source to the target 
 of the examined edge `ed`.
 
 

@@ -36,7 +36,7 @@ We use the following notation to represent the customization points:
 
 ### `vertices`
 
-The CPO `vertices(g)` is used to obtain the list of all vertices, in form of a `std::ranges::random_access_range`, from the graph-representing object `g`.
+The CPO `vertices(g)` is used to obtain the range of all vertices, in form of a `std::ranges::random_access_range`, from the graph-representing object `g`.
 We also use its return type to determine the type of the vertex: `vertex_t<G>`.
 
 #### Customization

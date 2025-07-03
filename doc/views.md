@@ -14,14 +14,14 @@ TODO: describe `vertex_info` and `edge_info`.
 Header `<graph/views/breadth_first_search.hpp>` defines view factories in namespace `graph`:
 
 ```c++
-for (auto [vid, v]            : vertices_breadth_first_search(g, seed))         {}
-for (auto [vid, v, val]       : vertices_breadth_first_search(g, seed, vvf))    {}
+for (auto [vid, v]            : vertices_breadth_first_search(g, source))         {}
+for (auto [vid, v, val]       : vertices_breadth_first_search(g, source, vvf))    {}
 
-for (auto [vid, uv]           : edges_breadth_first_search(g, seed))            {}
-for (auto [vid, uv, val]      : edges_breadth_first_search(g, seed, evf))       {}
+for (auto [vid, uv]           : edges_breadth_first_search(g, source))            {}
+for (auto [vid, uv, val]      : edges_breadth_first_search(g, source, evf))       {}
 
-for (auto [uid, vid, uv]      : sourced_edges_depth_first_search(g, seed))      {}
-for (auto [uid, vid, uv, val] : sourced_edges_depth_first_search(g, seed, evf)) {}
+for (auto [uid, vid, uv]      : sourced_edges_depth_first_search(g, source))      {}
+for (auto [uid, vid, uv, val] : sourced_edges_depth_first_search(g, source, evf)) {}
 ```
 
 They all give you a view of vertices in the order of the breadth-first traversal. 
@@ -29,8 +29,8 @@ They differ by the element type they produce.
 
 Breadth-first traversal offers the following properties in terms of rendered vertices:
 
- * Vertex `seed` is never rendered.
- * Every vertex other than `seed` reachable from `seed` is rendered.
+ * Vertex `source` is never rendered.
+ * Every vertex other than `source` reachable from `source` is rendered.
  * For three vertices `u`, `v`, `w`, if 
    * `u` is rendered before `v` and `w` and 
    * there is an edge from `u` to `v` and
@@ -44,24 +44,24 @@ template <index_adjacency_list G,
           vertex_id_t<G> VI, 
           typename Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
-vertices_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
+vertices_breadth_first_search(G&& g, const VI& source, Alloc alloc = Alloc());
 ```
 
  
 *Parameters:*
 
  * `g` – the graph representation,
- * `seed` – the initial vertex,
+ * `source` – the initial vertex,
  * `alloc` – allocator to be used for the internal storage.
 
-*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+*Hardened preconditions:* `find_vertex(g, source) != nullptr`.
 
 *Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
  
 *Returns:* A view with the value type 
          `vertex_info<const vertex_id_t<G>, vertex_t<G>&, void>`.
          
-*Remarks:* The vertex corresponding to vertex id `seed` is not an element in the returned range.
+*Remarks:* The vertex corresponding to vertex id `source` is not an element in the returned range.
  
  
 ```c++
@@ -70,17 +70,17 @@ template <index_adjacency_list         G,
           std::invocable<vertex_t<G>&> VVF, 
           typename                     Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
-vertices_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
+vertices_breadth_first_search(G&& g, const VI& source, Alloc alloc = Alloc());
 ```
 
 Parameters:
 
  * `g` – the graph representation,
- * `seed` – the initial vertex,
+ * `source` – the initial vertex,
  * `vvf` – vertex value function,
  * `alloc` – allocator to be used for the internal storage.
 
-*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+*Hardened preconditions:* `find_vertex(g, source) != nullptr`.
 
 *Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
  
@@ -88,23 +88,23 @@ Parameters:
          `vertex_info<const vertex_id_t<G>, vertex_t<G>&, std::invoke_result_t<VVF, vertex_t<G>&>>`.
          The third argument is the result of invoking `vvf` with the vertex reference.
 
-*Remarks:* The vertex corresponding to vertex id `seed` is not an element in the returned range.
+*Remarks:* The vertex corresponding to vertex id `source` is not an element in the returned range.
 
 ```c++
 template <index_adjacency_list G, 
           vertex_id_t<G>       VI, 
           typename             Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
-edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
+edges_breadth_first_search(G&& g, const VI& source, Alloc alloc = Alloc());
 ```
  
 Parameters:
 
  * `g` – the graph representation,
- * `seed` – the initial vertex,
+ * `source` – the initial vertex,
  * `alloc` – allocator to be used for the internal storage.
 
-*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+*Hardened preconditions:* `find_vertex(g, source) != nullptr`.
 
 *Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
  
@@ -118,17 +118,17 @@ template <index_adjacency_list                G,
           std::invocable<edge_reference_t<G>> EVF,
           typename                            Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
-edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
+edges_breadth_first_search(G&& g, const VI& source, Alloc alloc = Alloc());
 ```
 
 *Parameters:*
 
  * `g` – the graph representation,
- * `seed` – the initial vertex,
+ * `source` – the initial vertex,
  * `evf` – edge value function,
  * `alloc` – allocator to be used for the internal storage.
 
-*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+*Hardened preconditions:* `find_vertex(g, source) != nullptr`.
 
 *Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
  
@@ -143,16 +143,16 @@ template <index_adjacency_list G,
           vertex_id_t<G>       VI, 
           typename             Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto& 
-sourced_edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
+sourced_edges_breadth_first_search(G&& g, const VI& source, Alloc alloc = Alloc());
 ```
  
 *Parameters:*
 
  * `g` – the graph representation,
- * `seed` – the initial vertex,
+ * `source` – the initial vertex,
  * `alloc` – allocator to be used for the internal storage.
  
-*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+*Hardened preconditions:* `find_vertex(g, source) != nullptr`.
 
 *Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
 
@@ -166,17 +166,17 @@ template <index_adjacency_list                G,
           std::invocable<edge_reference_t<G>> EVF,
           typename                            Alloc = std::allocator<vertex_id_t<G>>>
 std::ranges::input_range auto&
-sourced_edges_breadth_first_search(G&& g, const VI& seed, Alloc alloc = Alloc());
+sourced_edges_breadth_first_search(G&& g, const VI& source, Alloc alloc = Alloc());
 ```
 
 *Parameters:*
 
  * `g` – the graph representation,
- * `seed` – the initial vertex,
+ * `source` – the initial vertex,
  * `evf` – edge value function,
  * `alloc` – allocator to be used for the internal storage.
  
-*Hardened preconditions:* `find_vertex(g, seed) != nullptr`.
+*Hardened preconditions:* `find_vertex(g, source) != nullptr`.
 
 *Mandates:* `alloc` satisfies [<code><em>Cpp17Allocator</em></code>](https://eel.is/c++draft/allocator.requirements) requirements.
 
@@ -256,4 +256,4 @@ std::ranges::forward_range auto basic_incidence(G&& g, const VI& uid);
 
 
 
-## TODO: other viwes
+## TODO: document other views
