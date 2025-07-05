@@ -26,6 +26,11 @@ A number of functions in this section take a _visitor_ as an optional argument.
 As different _events_, related to vertices and edges, occur during the execution of an algorithm,
 a corresponding member function, if present, is called for the visitor.
 
+Each algorithm defines the events that it supports. Visitor functions corresponding to not supported events, even if present in the visitor are ignored.
+
+If an algorithm supports a given event but the specified visitor does not provide the corresponding valid member function, no runtime overhead related to processing this event is incurred.
+
+
 ### <code><em>GraphVisitor</em></code> requirements
 
 The following lists the visitation events and the corresponding visitor member functions.
@@ -108,6 +113,9 @@ vis.on_edge_not_minimized(ed)
 If valid, it is called when a cycles have been detected while examining the edge `ed`.
 This happens in shortest paths algorithms that accept negative weights, and means that 
 no finite minimum exists.
+
+
+NOTE: This set of visitors is map
 
 
 ## `dijkstra_shortest_paths` 
