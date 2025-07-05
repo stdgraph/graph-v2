@@ -115,7 +115,17 @@ This happens in shortest paths algorithms that accept negative weights, and mean
 no finite minimum exists.
 
 
-NOTE: This set of visitors is map
+### `empty_visitor`
+
+This library comes with an empty class `empty_visitor`:
+
+```c++
+namespace graph {
+  struct empty_visitor{};
+}
+```
+
+It is used as the default visitor type for the algorithms. This visitor supports no events, and therefore triggers no runtime overhead on any event.
 
 
 ## `dijkstra_shortest_paths` 

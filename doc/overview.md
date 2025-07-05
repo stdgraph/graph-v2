@@ -154,10 +154,12 @@ auto weight = [](std::tuple<int, double> const& uv) {
   return std::get<1>(uv);
 };  
 
+std::vector<double> distances(g.size());   // we will store the distance to each vertex here
 std::vector<int> predecessors(g.size()); // we will store the predecessor of each vertex here
 
-std::vector<double> distances(g.size()); // we will store the distance to each vertex here
-graph::init_shortest_paths(distances);   // fill with `infinity`
+// fill `distances` with `infinity`
+// fill `predecessors` at index `i` with value `i`
+graph::init_shortest_paths(distances, predecessors);   
 
 graph::dijkstra_shortest_paths(g, 0, distances, predecessors, weight); // from vertex 0
 
