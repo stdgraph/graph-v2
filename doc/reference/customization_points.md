@@ -114,7 +114,7 @@ The CPO `target_id(g, uv)` is used to obtain the _id_ of the target vertex of ed
  4. Returns `get<0>(uv)`, if
     * `G` is `std::ranges::forward_range`, and
     * `std::ranges::range_value_t<G>` is `std::ranges::forward_range`, and
-    * `std::ranges::range_value_t<std::ranges::range_value_t<G>>` is <code><em>tuple-like</em></code>,
+    * `std::ranges::range_value_t<std::ranges::range_value_t<G>>` is <code><em>tuple-like</em></code>, and
     * `std::tuple_element_t<0, std::ranges::range_value_t<std::ranges::range_value_t<G>>>` is `std::integral`.
 
 
