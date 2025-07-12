@@ -48,10 +48,10 @@ We also use its return type to determine the type of the vertex: `vertex_t<G>`.
 
 ### `vertex_id`
 
-The CPO `vertex_id(g, ui)` is used obtain the _id_ of the vertex, given the iterator.
+The CPO `vertex_id(g, ui)` is used obtain the _id_ of the vertex, given the iterator. <br>
 We also use its return type to determine the type of the vertex id: `vertex_id_t<G>`.
 
-#### Coustomization
+#### Customization
 
  1. Returns `ui->vertex_id(g)`, if this expression is valid and its type is `std::move_constructible`.
  2. Returns `vertex_id(g, ui)`, if this expression is valid and its type is `std::move_constructible`.
@@ -67,13 +67,56 @@ We also use its return type to determine the type of the vertex id: `vertex_id_t
 
 TODO `find_vertex(g, uid)`
 
+
 ### `edges(g, u)`
+
+The CPO `edges(g, u)` is used to obtain the sequence of outgoing edges for a vertex 
+denoted by reference `u`. <br>
+We also use its return type to determine the type of the edge type: `edge_t<G>`.
+
+#### Customization
+
+ 1. Returns `u.edges(g)`, if this expression is valid and its type is `std::move_constructible`.
+ 2. Returns `edges(g, u)`, if this expression is valid and its type is `std::move_constructible`.
+ 3. `u`, if `G` is a user-defined type and type `vertex_t<G>` is `std::ranges::forward_range;
+
 
 ### `edges(g, uid)`
 
+The CPO `edges(g, uid)` is used to obtain the sequence of outgoing edges for a vertex 
+denoted by _id_ `uid`.
+
+#### Customization
+
+ 1. Returns `edges(g, uid)`, if this expression is valid and its type is `std::move_constructible`.
+ 2. Returns `*find_vertex(g, uid)`, if
+    * `vertex_t<G>` is `std::ranges::forward_range`, and
+    * expression `find_vertex(g, uid)` is valid and its type is `std::move_constructible`.
+ 
+
 ### `num_edges(g)`
 
+TODO
+
+
 ### `target_id(g, uv)`
+
+The CPO `target_id(g, uv)` is used to obtain the _id_ of the target vertex of edge `uv`.
+
+#### Customization
+
+ 1. Returns `uv.target_id(g)`, if this expression is valid and its type is `std::move_constructible`.
+ 2. Returns `target_id(g, uv)`, if this expression is valid and its type is `std::move_constructible`.
+ 3. Returns `uv`, if
+    * `G` is `std::ranges::forward_range`, and
+    * `std::ranges::range_value_t<G>` is `std::ranges::forward_range`, and
+    * `std::ranges::range_value_t<std::ranges::range_value_t<G>>` is `std::integral`.
+ 4. Returns `get<0>(uv)`, if
+    * `G` is `std::ranges::forward_range`, and
+    * `std::ranges::range_value_t<G>` is `std::ranges::forward_range`, and
+    * `std::ranges::range_value_t<std::ranges::range_value_t<G>>` is <code><em>tuple-like</em></code>,
+    * `std::tuple_element_t<0, std::ranges::range_value_t<std::ranges::range_value_t<G>>>` is `std::integral`.
+
 
 ### `target_id(e)`
 
@@ -81,7 +124,20 @@ TODO `find_vertex(g, uid)`
 
 ### `source_id(e)`
 
+
 ### `target(g, uv)`
+
+CPO `target(g, uv)` is used to access the target vertex of a given edge `uv`.
+
+#### Customization
+
+ 1. Returns `target(g, uv)`, if this expression is valid and its type is `std::move_constructible`. 
+ 2. Returns `*find_vertex(g, target_id(g, uv))`, if
+ 
+    * `vertex_range_t<G>` is a `std::ranges::random_access_range`, and
+    * `find_vertex(g, uid)` is valid and its type is `std::move_constructible`, and
+    * `target_id(g, uv)` is valid and its type is `std::integral`. 
+
 
 ### `source(g, uv)`
 
