@@ -1,11 +1,6 @@
-# Overview
+# Tutorial
 
-What this library has to offer:
-
- 1. A number of ready-to-use algorithms, like Dijkstra's shortest paths computation.
- 2. Make it easier for you to write your own graph algorithms: we provide a _view_ for traversing your graph in the preferred order (depth-first, breadth-first, topological), and you specify what is processed in each traversal step.
- 3. Customization of your graph representation, so that it can be used with our algorithms and views.
- 4. Our own container for representing a graph.  
+Note: this part is under development...
 
 ## Concepts
 
