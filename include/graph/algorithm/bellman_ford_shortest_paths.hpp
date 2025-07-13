@@ -164,11 +164,11 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&      //
     }
     distances[static_cast<size_t>(source)] = zero; // mark source as discovered
     if constexpr (has_on_discover_vertex<G, Visitor>) {
-      visitor.on_discover_vertex({source, vertex_value(g, source)});
+      visitor.on_discover_vertex({source, *find_vertex(g, source)});
     }
   }
 
-  // Evalute the shortest paths
+  // Evaluate the shortest paths
   bool at_least_one_edge_relaxed = false;
   for (id_type k = 0; k < N; ++k) {
     at_least_one_edge_relaxed = false;
