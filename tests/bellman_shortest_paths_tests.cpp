@@ -715,22 +715,21 @@ TEST_CASE("Bellman-Ford's General Shortest Distances", "[csv][vofl][shortest][di
         g, frankfurt_id, distance, weight, visitor, std::less<Distance>(), std::plus<Distance>());
 }
 
-class Visitor
-{
-  using G = std::vector<std::vector<int>>;
-  using VD = graph::vertex_info<graph::vertex_id_t<G>, graph::vertex_reference_t<G>, void>;    
+class Visitor {
+  using G  = std::vector<std::vector<int>>;
+  using VD = graph::vertex_info<graph::vertex_id_t<G>, graph::vertex_reference_t<G>, void>;
 
-public:   
+public:
   void on_discover_vertex(VD const& v) {}
 };
 
 TEST_CASE("Bellman-Ford compiles with a visitor", "[shortest][distances][bellman][general]") {
   init_console();
-  
+
   std::vector<std::vector<int>> g = {{1}, {0}};
-  std::vector<double> distances(g.size());
-  std::vector<int> predecessor(g.size());  
-  auto one = [](auto&&) { return 1.0; };
-  
+  std::vector<double>           distances(g.size());
+  std::vector<int>              predecessor(g.size());
+  auto                          one = [](auto&&) { return 1.0; };
+
   (void)graph::bellman_ford_shortest_paths(g, 0, distances, predecessor, one, Visitor{});
 }
