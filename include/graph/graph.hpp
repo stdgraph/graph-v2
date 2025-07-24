@@ -23,6 +23,7 @@
 #include <concepts>
 #include <type_traits>
 #include <stdexcept>
+#include <cassert>
 
 #include "graph_info.hpp"
 #include "detail/graph_cpo.hpp"
@@ -270,6 +271,22 @@ concept sourced_index_adjacency_list = index_vertex_range<G> &&  //
 
 //--------------------------------------------------------------------------------------------
 
+template <typename Cont, typename G>
+concept record_for = adjacency_list<G>
+&& requires(Cont& cont, vertex_id_t<G>& id)
+{
+  vertex_record(cont, id); // TODO: say that it returns a mutable reference
+
+  [](G& g) // semantic requirements
+  {
+    auto&& vtcs = vertices(g);
+    for (vertex_iterator_t<G> it = std::ranges::begin(vtcs), 
+                            iend = std::ranges::end(vtcs); it != iend; ++it)
+      assert(vertex_record(cont, vertex_id(g, it)) != nullptr); 
+  };
+};
+
+//----------------------------------------------------------------------------------------
 #  ifdef ENABLE_EDGELIST_RANGE
 template <class ELR>
 concept basic_edgelist_range = ranges::forward_range<ELR> && negation_v<basic_adjacency_list<ELR>>;

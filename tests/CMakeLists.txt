@@ -59,6 +59,7 @@ set(UNITTEST_SOURCES
     "mst_tests.cpp"
     "tc_tests.cpp"
     "cc_tests.cpp"
+    "map_adjacency_list_tests.cpp"
 
     "descriptor_tests.cpp"
     "tests.cpp"
