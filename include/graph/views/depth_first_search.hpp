@@ -253,7 +253,7 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
     };
 
   public:
@@ -362,7 +362,7 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
     };
 
   public:
@@ -479,7 +479,7 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
     };
 
   public:
@@ -587,7 +587,7 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
     };
 
   public:
@@ -722,7 +722,7 @@ namespace views {
 
     public:
       /**
-       * @brief Single Source, Breadth First Search for vertices
+       * @brief Single Source, Depth First Search for vertices
        * 
        * Complexity: O(V + E)
        * 
@@ -730,7 +730,7 @@ namespace views {
        * @tparam Alloc The allocator type.
        * @param g      A graph instance.
        * @param seed   The vertex id to start the search.
-       * @return A forward range for the breadth first search.
+       * @return A forward range for the depth first search.
       */
       template <class _G, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref<_G&, _Alloc>._Strategy != _St_ref::_None)
@@ -750,7 +750,7 @@ namespace views {
       }
 
       /**
-       * @brief Single Source, Breadth First Search for vertices with VVF
+       * @brief Single Source, Depth First Search for vertices with VVF
        * 
        * Complexity: O(V + E)
        * 
@@ -762,7 +762,7 @@ namespace views {
        * @param vvf    The vertex value function.
        * @param seed   The vertex id to start the search.
        * 
-       * @return A forward range for the breadth first search.
+       * @return A forward range for the depth first search.
       */
       template <class _G, class _VVF, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref_vvf<_G&, _VVF, _Alloc>._Strategy != _St_ref_vvf::_None)
@@ -871,7 +871,7 @@ namespace views {
 
     public:
       /**
-       * @brief Single Source, Breadth First Search for edges
+       * @brief Single Source, Depth First Search for edges
        * 
        * Complexity: O(V + E)
        * 
@@ -881,7 +881,7 @@ namespace views {
        * @param g      A graph instance.
        * @param seed   The vertex id to start the search.
        * 
-       * @return A forward range for the breadth first search.
+       * @return A forward range for the depth first search.
       */
       template <class _G, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref<_G&, _Alloc>._Strategy != _St_ref::_None)
@@ -901,7 +901,7 @@ namespace views {
       }
 
       /**
-       * @brief Single Source, Breadth First Search for edges with EVF
+       * @brief Single Source, Depth First Search for edges with EVF
        * 
        * Complexity: O(V + E)
        * 
@@ -913,7 +913,7 @@ namespace views {
        * @param evf    The vertex value function.
        * @param seed   The vertex id to start the search.
        * 
-       * @return A forward range for the breadth first search.
+       * @return A forward range for the depth first search.
       */
       template <class _G, class _EVF, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy != _St_ref_evf::_None)
@@ -923,7 +923,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return edges_depth_first_search(__g, seed, alloc); // intentional ADL
+          return edges_depth_first_search(__g, seed, evf, alloc); // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_depth_first_search_view<_G, _EVF, false>(__g, seed, evf, alloc); // default impl
         } else {
@@ -1024,7 +1024,7 @@ namespace views {
 
     public:
       /**
-       * @brief Single Source, Breadth First Search for source edges.
+       * @brief Single Source, Depth First Search for source edges.
        * 
        * Complexity: O(V + E)
        * 
@@ -1034,7 +1034,7 @@ namespace views {
        * @param g      A graph instance.
        * @param seed   The vertex id to start the search.
        * 
-       * @return A forward range for the breadth first search.
+       * @return A forward range for the depth first search.
       */
       template <class _G, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref<_G&, _Alloc>._Strategy != _St_ref::_None)
@@ -1055,7 +1055,7 @@ namespace views {
 
 
       /**
-       * @brief Single Source, Breadth First Search for edges with EVF
+       * @brief Single Source, Depth First Search for edges with EVF
        * 
        * Complexity: O(V + E)
        * 
@@ -1067,7 +1067,7 @@ namespace views {
        * @param evf    The vertex value function.
        * @param seed   The vertex id to start the search.
        * 
-       * @return A forward range for the breadth first search.
+       * @return A forward range for the depth first search.
       */
       template <class _G, class _EVF, class _Alloc = std::allocator<bool>>
       requires(_Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy != _St_ref_evf::_None)
@@ -1077,7 +1077,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return sourced_edges_depth_first_search(__g, seed, alloc); // intentional ADL
+          return sourced_edges_depth_first_search(__g, seed, evf, alloc); // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_depth_first_search_view<_G, _EVF, true>(__g, seed, evf, alloc); // default impl
         } else {
