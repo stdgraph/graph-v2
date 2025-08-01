@@ -190,9 +190,9 @@ using dynamic_adjacency_graph = dynamic_graph<typename Traits::edge_value_type,
  * This is one of three composable classes used to define properties for a @c dynamic_edge, the
  * others being dynamic_edge_source for the source id and dynamic_edge_value for an edge value.
  * 
- * Unlike the other composable edge property classes, this class doesn't have an open for not
+ * Unlike the other composable edge property classes, this class doesn't have an option for not
  * existing. The target id always exists. It could easily be merged into the dynamic_edge class,
- * but was kept separate for design symmatry with the other property classes.
+ * but was kept separate for design symmetry with the other property classes.
  * 
  * @tparam EV      The edge value type. If "void" is used no user value is stored on the edge and 
  *                 calls to @c edge_value(g,uv) will generate a compile error.
@@ -299,7 +299,7 @@ private:
   friend constexpr vertex_type& source(graph_type& g, edge_type& uv) noexcept {
     return begin(vertices(g))[uv.source_id_];
   }
-  friend constexpr const vertex_type& source_fn(const graph_type& g, const edge_type& uv) noexcept {
+  friend constexpr const vertex_type& source(const graph_type& g, const edge_type& uv) noexcept {
     return begin(vertices(g))[uv.source_id_];
   }
 };
@@ -356,7 +356,7 @@ public:
   using value_type  = EV;
   using graph_type  = dynamic_graph<EV, VV, GV, VId, Sourced, Traits>;
   using vertex_type = dynamic_vertex<EV, VV, GV, VId, Sourced, Traits>;
-  using edge_type   = dynamic_edge_value<EV, VV, GV, VId, Sourced, Traits>;
+  using edge_type   = dynamic_edge<EV, VV, GV, VId, Sourced, Traits>;
 
 public:
   constexpr dynamic_edge_value(const value_type& value) : value_(value) {}
@@ -815,7 +815,7 @@ public:
  * No additional space is used if the edge value type (EV) or vertex value type (VV) is void.
  * 
  * The partition function is intended to determine the partition id for a vertex id on constructors.
- * It has been added to assure the same interface as the compresssed_graph, but is not implemented
+ * It has been added to assure the same interface as the compressed_graph, but is not implemented
  * at this time.
  * 
  * @tparam EV      The edge value type. If "void" is used no user value is stored on the edge and 
@@ -1283,10 +1283,10 @@ private: // CPO properties
   friend constexpr vertices_type&       vertices(dynamic_graph_base& g) { return g.vertices_; }
   friend constexpr const vertices_type& vertices(const dynamic_graph_base& g) { return g.vertices_; }
 
-  friend auto num_edges(const dynamic_graph_base& g) { return g.edge_count_; }
-  friend bool has_edge(const dynamic_graph_base& g) { return g.edge_count_ > 0; }
+  friend constexpr auto num_edges(const dynamic_graph_base& g) { return g.edge_count_; }
+  friend constexpr bool has_edge(const dynamic_graph_base& g) { return g.edge_count_ > 0; }
 
-  friend vertex_id_type vertex_id(const dynamic_graph_base& g, typename vertices_type::const_iterator ui) {
+  friend constexpr vertex_id_type vertex_id(const dynamic_graph_base& g, typename vertices_type::const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.vertices_.begin());
   }
 
@@ -1308,7 +1308,7 @@ private: // CPO properties
 
   friend constexpr auto num_vertices(const dynamic_graph_base& g, partition_id_type pid) {
     assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
-    g.partition_[pid + 1] - g.partition_[pid];
+    return g.partition_[pid + 1] - g.partition_[pid];
   }
 
   friend constexpr auto vertices(const dynamic_graph_base& g, partition_id_type pid) {
@@ -1340,7 +1340,7 @@ private: // CPO properties
  * used as a key to find a vertex in the vertices container.
  * 
  * The partition function is intended to determine the partition id for a vertex id on constructors.
- * It has been added to assure the same interface as the compresssed_graph, but is not implemented
+ * It has been added to assure the same interface as the compressed_graph, but is not implemented
  * at this time.
  * 
  * @tparam EV      @showinitializer =void The edge value type. If "void" is used no user value is stored on the edge
@@ -1521,14 +1521,14 @@ public: // Construction/Destruction/Assignment
   */
   template <class ERng, class EProj, class VRng, forward_range PartRng, class VProj = identity>
   requires convertible_to<range_value_t<PartRng>, VId>
-  dynamic_graph(const ERng&    erng,
+  dynamic_graph(GV&&           gv,
+                const ERng&    erng,
                 const VRng&    vrng,
                 EProj          eproj,
                 VProj          vproj,
-                GV&&           gv,
                 const PartRng& partition_start_ids = std::vector<VId>(),
                 allocator_type alloc               = allocator_type())
-        : base_type(erng, vrng, eproj, vproj, partition_start_ids, alloc), value_(move(gv)) {}
+        : base_type(erng, vrng, eproj, vproj, partition_start_ids, alloc), value_(std::move(gv)) {}
 
 
   //       max_vertex_id, erng, eproj, alloc
@@ -1539,7 +1539,7 @@ public: // Construction/Destruction/Assignment
    * @brief Construct the graph given the maximum vertex id and edge data range.
    * 
    * The vertices container is pre-extended to accomodate the number of vertices referenced by edges and avoids
-   * the need to scan the edges to determine the maximum vertex id.
+   * the need to scan the edges to determine the maximum vertex id. 
    * 
    * The graph value is default-constructed.
    * 
@@ -1752,7 +1752,7 @@ private: // CPO properties
  * See the dynamic_graph description for more information about this class.
  * 
  * The partition function is intended to determine the partition id for a vertex id on constructors.
- * It has been added to assure the same interface as the compresssed_graph, but is not implemented
+ * It has been added to assure the same interface as the compressed_graph, but is not implemented
  * at this time.
  * 
  * @tparam EV      @showinitializer =void The edge value type. If "void" is used no user value is stored on the edge

@@ -63,7 +63,7 @@ protected:
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
     ~internal_value() {}
-    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
   };
 
 public:
@@ -145,7 +145,7 @@ protected:
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
     ~internal_value() {}
-    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
   };
 
 public:
@@ -163,8 +163,7 @@ public:
 public:
   constexpr reference operator*() const {
     value_.shadow_.vertex = &*iter_;
-    if constexpr (!is_void_v<vertex_value_type>)
-      value_.shadow_.value = this->value_fn_(*iter_);
+    // vertex_value_type is void, so no value assignment needed
     return value_.value_;
   }
 
@@ -328,16 +327,15 @@ namespace views {
 
     public:
       /**
-       * @brief The number of outgoing edges of a vertex.
+       * @brief Get a range of vertices for a graph.
        * 
        * Complexity: O(1)
        * 
-       * Default implementation: size(edges(g, u))
+       * Default implementation: vertexlist_view<_G, void>(vertices(g))
        * 
        * @tparam G The graph type.
        * @param g A graph instance.
-       * @param u A vertex instance.
-       * @return The number of outgoing edges of vertex u.
+       * @return A range of vertices with their ids.
       */
       template <class _G>
       requires(_Choice_all<_G>._Strategy != _St_all::_None)
@@ -354,6 +352,19 @@ namespace views {
         }
       }
 
+      /**
+       * @brief Get a range of vertices for a graph with values.
+       * 
+       * Complexity: O(1)
+       * 
+       * Default implementation: Uses vertexlist_iterator with vertex value function
+       * 
+       * @tparam G The graph type.
+       * @tparam VVF The vertex value function type.
+       * @param g A graph instance.
+       * @param vvf Vertex value function.
+       * @return A range of vertices with their ids and values.
+      */
       template <class _G, class VVF>
       requires(_Choice_vvf_all<_G, VVF>._Strategy != _St_all::_None)
       [[nodiscard]] constexpr auto operator()(_G&& __g, const VVF& vvf) const
@@ -406,6 +417,21 @@ namespace views {
         }
       }
 
+      /**
+       * @brief Get a range of vertices for a graph from a vertex range with values.
+       * 
+       * Complexity: O(1)
+       * 
+       * Default implementation: Uses vertexlist_iterator with vertex range and value function
+       * 
+       * @tparam G The graph type.
+       * @tparam Rng The vertex range type.
+       * @tparam VVF The vertex value function type.
+       * @param g A graph instance.
+       * @param vr A range of vertices.
+       * @param vvf Vertex value function.
+       * @return A range of vertices with their ids and values.
+      */
       template <class _G, class Rng, class VVF>
       requires(_Choice_vvf_rng<_G, Rng, VVF>._Strategy != _St_rng::_None)
       [[nodiscard]] constexpr auto operator()(_G&& __g, Rng&& vr, const VVF& vvf) const

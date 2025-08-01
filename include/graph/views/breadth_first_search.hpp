@@ -16,10 +16,10 @@
 //           for(auto&& [vid,uv,val] : edges_breadth_first_search(g,seed,evf))
 //           for(auto&& [vid,uv,val] : edges_breadth_first_search(g,seeds,evf))
 //
-//           for(auto&& [uid,vid,uv]     : sourced_edges_depth_first_search(g,seed))
-//           for(auto&& [uid,vid,uv]     : sourced_edges_depth_first_search(g,seeds))
-//           for(auto&& [uid,vid,uv,val] : sourced_edges_depth_first_search(g,seed,evf))
-//           for(auto&& [uid,vid,uv,val] : sourced_edges_depth_first_search(g,seeds,evf))
+//           for(auto&& [uid,vid,uv]     : sourced_edges_breadth_first_search(g,seed))
+//           for(auto&& [uid,vid,uv]     : sourced_edges_breadth_first_search(g,seeds))
+//           for(auto&& [uid,vid,uv,val] : sourced_edges_breadth_first_search(g,seed,evf))
+//           for(auto&& [uid,vid,uv,val] : sourced_edges_breadth_first_search(g,seeds,evf))
 //
 // Given bfs is one of the breadth-first views above, the following functions are also available.
 //
@@ -268,7 +268,7 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
     };
 
   public:
@@ -387,7 +387,7 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
     };
 
   public:
@@ -509,7 +509,7 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
     };
 
   public:
@@ -623,7 +623,7 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
     };
 
   public:
@@ -960,7 +960,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return edges_breadth_first_search(__g, seed, evf, alloc); // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_breadth_first_search_view<_G, _EVF, false>(__g, seed, evf, alloc); // default impl
         } else {
@@ -1113,7 +1113,7 @@ namespace views {
         constexpr _St_ref_evf _Strat_ref_evf = _Choice_ref_evf<_G&, _EVF, _Alloc>._Strategy;
 
         if constexpr (_Strat_ref_evf == _St_ref_evf::_Non_member) {
-          return sourced_edges_breadth_first_search(__g, seed, alloc); // intentional ADL
+          return sourced_edges_breadth_first_search(__g, seed, evf, alloc); // intentional ADL
         } else if constexpr (_Strat_ref_evf == _St_ref_evf::_Auto_eval) {
           return edges_breadth_first_search_view<_G, _EVF, true>(__g, seed, evf, alloc); // default impl
         } else {

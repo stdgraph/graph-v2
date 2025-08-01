@@ -240,7 +240,7 @@ protected:
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
     ~internal_value() {}
-    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
   };
 
 public:
@@ -426,7 +426,7 @@ namespace views {
                                           && invocable<EVF, edge_reference_t<_G>>;
 
 #ifdef ENABLE_EDGELIST_RANGE
-    template <class ELR, class class Proj>
+    template <class ELR, class Proj>
     concept _Has_edgelist_all_proj_ADL = edgelist_range<ELR> //
                                          && invocable<Proj, range_value_t<ELR>>;
     template <class ELR, class Proj>
@@ -568,13 +568,15 @@ namespace views {
      * Complexity: O(E)
      * 
      * Default implementation: 
-     *  using iterator_type = edgelist_iterator<G, void>;
-     *  edgelist_view<G, void>(iterator_type(g), end(vertices(g)));
+     *  using iterator_type = edgelist_iterator<G, EVF>;
+     *  edgelist_view<G, EVF>(iterator_type(g, evf), end(vertices(g)));
      * 
      * @tparam G The graph type.
+     * @tparam EVF The edge value function type.
      * @param g A graph instance.
+     * @param evf The edge value function.
      * @return A range of edges in graph g where the range value_type is 
-     *         edge_info<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+     *         edge_info<vertex_id_t<G>,true,edge_reference_t<G>,invoke_result_t<EVF,edge_reference_t<G>>>
     */
       template <class _G, class EVF>
       requires(_Choice_all_evf<_G&, EVF>._Strategy != _St_adjlist_all::_None)
@@ -583,7 +585,7 @@ namespace views {
         constexpr _St_adjlist_all _Strat_ref = _Choice_all_evf<_G&, EVF>._Strategy;
 
         if constexpr (_Strat_ref == _St_adjlist_all::_Non_member) {
-          return edgelist(__g); // intentional ADL
+          return edgelist(__g, evf); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_all::_Auto_eval) {
           using iterator_type = edgelist_iterator<_G, EVF>;
           return edgelist_view<_G, EVF>(iterator_type(__g, evf), end(vertices(__g)));
@@ -605,8 +607,10 @@ namespace views {
      * 
      * @tparam G The graph type.
      * @param __g A graph instance.
+     * @param first First vertex id in range.
+     * @param last Last vertex id in range.
      * @return A range of edges in graph __g where the range value_type is 
-     *         edge_info<vertex_id_t<G>,false,vertex_reference_t<G>,void>
+     *         edge_info<vertex_id_t<G>,true,edge_reference_t<G>,void>
     */
       template <class _G>
       requires(_Choice_idrng<_G&>._Strategy != _St_adjlist_idrng::_None)
@@ -615,7 +619,7 @@ namespace views {
         constexpr _St_adjlist_idrng _Strat_ref = _Choice_idrng<_G&>._Strategy;
 
         if constexpr (_Strat_ref == _St_adjlist_idrng::_Non_member) {
-          return edgelist(__g); // intentional ADL
+          return edgelist(__g, first, last); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_idrng::_Auto_eval) {
           using iterator_type = edgelist_iterator<_G, void>;
           return edgelist_view<_G, void>(iterator_type(__g, find_vertex(__g, first)), find_vertex(__g, last));
@@ -627,18 +631,22 @@ namespace views {
 
       // edgelist(g,uid,vid,evf)
       /**
-     * @brief Get the edgelist of all edges in a graph, with edge values.
+     * @brief Get the edgelist of edges in a graph within a vertex id range, with edge values.
      * 
      * Complexity: O(E)
      * 
      * Default implementation: 
-     *  using iterator_type = edgelist_iterator<_G, void>;
-     *  edgelist_view<_G, void>(iterator_type(g), end(vertices(g)));
+     *  using iterator_type = edgelist_iterator<_G, EVF>;
+     *  edgelist_view<_G, EVF>(iterator_type(__g, evf), end(vertices(__g)));
      * 
      * @tparam _G The graph type.
-     * @param g A graph instance.
-     * @return A range of edges in graph g where the range value_type is 
-     *         edge_info<vertex_id_t<_G>,false,vertex_reference_t<_G>,void>
+     * @tparam EVF The edge value function type.
+     * @param __g A graph instance.
+     * @param first First vertex id in range.
+     * @param last Last vertex id in range.
+     * @param evf The edge value function.
+     * @return A range of edges in graph __g where the range value_type is 
+     *         edge_info<vertex_id_t<_G>,true,edge_reference_t<_G>,invoke_result_t<EVF,edge_reference_t<_G>>>
     */
       template <class _G, class EVF>
       requires(_Choice_idrng_evf<_G&, EVF>._Strategy != _St_adjlist_idrng::_None)
@@ -648,10 +656,10 @@ namespace views {
         constexpr _St_adjlist_idrng _Strat_ref = _Choice_idrng_evf<_G&, EVF>._Strategy;
 
         if constexpr (_Strat_ref == _St_adjlist_idrng::_Non_member) {
-          return edgelist(__g); // intentional ADL
+          return edgelist(__g, first, last, evf); // intentional ADL
         } else if constexpr (_Strat_ref == _St_adjlist_idrng::_Auto_eval) {
           using iterator_type = edgelist_iterator<_G, EVF>;
-          return edgelist_view<_G, void>(iterator_type(__g, evf), end(vertices(__g))); // default impl
+          return edgelist_view<_G, EVF>(iterator_type(__g, evf), end(vertices(__g))); // default impl
         } else {
           static_assert(_AlwaysFalse<_G>,
                         "edgelist(g,uid,vid,evf) is not defined and the default implementation cannot be evaluated");

@@ -532,7 +532,7 @@ public: // Operations
 
   void resize_vertices(size_type count) {
     row_index_.resize(count + 1); // +1 for terminating row
-    row_values_resize(count);
+    row_values_base::resize(count);
   }
   void resize_edges(size_type count) {
     col_index_.reserve(count);
@@ -562,7 +562,7 @@ public: // Operations
   /**
    * Load vertex values, callable either before or after @c load_edges(erng,eproj).
    *
-   * If @c load_edges(vrng,vproj) has been called before this, the @c row_values_ vector will be
+   * If @c load_vertices(vrng,vproj) has been called before this, the @c row_values_ vector will be
    * extended to match the number of @c row_index_.size()-1 to avoid out-of-bounds errors when
    * accessing vertex values.
    *
@@ -703,7 +703,7 @@ public: // Operations
         std::string msg = std::format(
               "source id of {} on line {} of the data input is not ordered after source id of {} on the previous line",
               edge.source_id, debug_count, last_uid);
-        std::cout << std::format("\n{}\n", msg);
+        //std::cout << std::format("\n{}\n", msg);
         assert(false);
         throw graph_error(move(msg));
       }
@@ -736,7 +736,7 @@ public: // Operations
    * See @c load_edges() and @c load_vertices() for more information.
    *
    * @tparam EProj   Edge Projection Function type
-   * @tparam VProj   Vertex Projectiong Function type
+   * @tparam VProj   Vertex Projection Function type
    * @tparam ERng    Edge Range type
    * @tparam VRng    Vertex Range type
    * @tparam PartRng Range of starting vertex Ids for each partition
@@ -824,7 +824,7 @@ private: // CPO properties
   }
   friend constexpr bool has_edge(const compressed_graph_base& g) { return g.col_index_.size() > 0; }
 
-  friend vertex_id_type vertex_id(const compressed_graph_base& g, const_iterator ui) {
+  friend constexpr vertex_id_type vertex_id(const compressed_graph_base& g, const_iterator ui) {
     return static_cast<vertex_id_type>(ui - g.row_index_.begin());
   }
 
@@ -881,7 +881,7 @@ private: // CPO properties
 
   friend constexpr auto num_vertices(const compressed_graph_base& g, partition_id_type pid) {
     assert(static_cast<size_t>(pid) < g.partition_.size() - 1);
-    g.partition_[pid + 1] - g.partition_[pid];
+    return g.partition_[pid + 1] - g.partition_[pid];
   }
 
   friend constexpr auto vertices(const compressed_graph_base& g, partition_id_type pid) {

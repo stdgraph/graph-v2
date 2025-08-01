@@ -18,7 +18,7 @@
 // Since uid is passed to neighbors(), there's no need to include Sourced versions of
 // incidence().
 // basic_neighbors(g,uid) is the same as basic_incidence(g,uid). It is retained for
-// symmatry and to avoid confusion.
+// symmetry and to avoid confusion.
 //
 namespace graph {
 
@@ -28,10 +28,10 @@ class neighbor_iterator;
 
 
 /**
- * @brief Iterator for an neighbors range of edges for a vertex.
+ * @brief Iterator for a neighbors range of vertices for a vertex.
  *
  * @tparam G    Graph type
- * @tparam VVF  Edge Value Function type
+ * @tparam VVF  Vertex Value Function type
 */
 template <adjacency_list G, bool Sourced, class VVF>
 class neighbor_iterator
@@ -87,7 +87,7 @@ protected:
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
     ~internal_value() {}
-    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
   };
 
 public:
@@ -98,11 +98,11 @@ public:
     if constexpr (unordered_edge<G>) {
       static_assert(sourced_adjacency_list<G>);
       if (target_id(*g_, *iter_) != this->source_vertex_id()) {
-        value_.shadow_.source_id = source_id(*g_.*iter_);
+        value_.shadow_.source_id = source_id(*g_, *iter_);
         value_.shadow_.target_id = target_id(*g_, *iter_);
         value_.shadow_.target    = const_cast<shadow_vertex_type*>(&target(*g_, *iter_));
       } else {
-        value_.shadow_.source_id = target_id(*g_.*iter_);
+        value_.shadow_.source_id = target_id(*g_, *iter_);
         value_.shadow_.target_id = source_id(*g_, *iter_);
         value_.shadow_.target    = const_cast<shadow_vertex_type*>(&source(*g_, *iter_));
       }
@@ -186,7 +186,7 @@ protected:
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
     ~internal_value() {}
-    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
   };
 
 public:
@@ -210,11 +210,11 @@ public:
     if constexpr (unordered_edge<G>) {
       static_assert(sourced_adjacency_list<G>);
       if (target_id(*g_, *iter_) != this->source_vertex_id()) {
-        value_.shadow_.source_id = source_id(*g_.*iter_);
+        value_.shadow_.source_id = source_id(*g_, *iter_);
         value_.shadow_.target_id = target_id(*g_, *iter_);
         value_.shadow_.target    = const_cast<shadow_vertex_type*>(&target(*g_, *iter_));
       } else {
-        value_.shadow_.source_id = target_id(*g_.*iter_);
+        value_.shadow_.source_id = target_id(*g_, *iter_);
         value_.shadow_.target_id = source_id(*g_, *iter_);
         value_.shadow_.target    = const_cast<shadow_vertex_type*>(&source(*g_, *iter_));
       }
@@ -366,18 +366,20 @@ namespace views {
       }
 
       /**
-       * @brief Get the outgoing neighbors edges of a vertex id and include an edge value in the result.
+       * @brief Get the outgoing neighbors edges of a vertex id and include a vertex value in the result.
        * 
        * Complexity: O(n)
        * 
        * Default implementation: 
-       *      neighbors_view<_G, false, void>(neighbor_iterator<_G, false, void>(__g, uid),
-       *                                      end(edges(__g, uid)));
+       *      neighbors_view<_G, false, VVF>(neighbor_iterator<_G, false, VVF>(__g, uid, vvf),
+       *                                     end(edges(__g, uid)));
        * 
        * @tparam G The graph type.
+       * @tparam VVF The vertex value function type.
        * @param g A graph instance.
        * @param uid Vertex id.
-       * @return A range of the outgoing neighbors edges.
+       * @param vvf Vertex value function.
+       * @return A range of the outgoing neighbors edges with values.
       */
       template <class _G, class VVF>
       requires(_Choice_id_vvf<_G&, VVF>._Strategy != _St_id::_None)
@@ -386,7 +388,7 @@ namespace views {
         constexpr _St_id _Strat_id = _Choice_id_vvf<_G&, VVF>._Strategy;
 
         if constexpr (_Strat_id == _St_id::_Non_member) {
-          return neighbors(__g, uid); // intentional ADL
+          return neighbors(__g, uid, vvf); // intentional ADL
         } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
           // default impl
           return neighbors_view<_G, false, VVF>(neighbor_iterator<_G, false, VVF>(__g, uid, vvf), end(edges(__g, uid)));

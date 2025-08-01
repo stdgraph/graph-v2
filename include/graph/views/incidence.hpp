@@ -82,7 +82,7 @@ protected:
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
     ~internal_value() {}
-    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
   };
 
 public:
@@ -174,7 +174,7 @@ protected:
     internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
     internal_value() : shadow_{} {}
     ~internal_value() {}
-    internal_value& operator=(const internal_value& rhs) { value_.shadow = rhs.value_.shadow; }
+    internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
   };
 
 public:
@@ -195,10 +195,10 @@ public:
     if constexpr (unordered_edge<G>) {
       static_assert(sourced_adjacency_list<G>);
       if (target_id(*g_, *iter_) != this->source_vertex_id()) {
-        value_.shadow_.source_id = source_id(*g_.*iter_);
+        value_.shadow_.source_id = source_id(*g_, *iter_);
         value_.shadow_.target_id = target_id(*g_, *iter_);
       } else {
-        value_.shadow_.source_id = target_id(*g_.*iter_);
+        value_.shadow_.source_id = target_id(*g_, *iter_);
         value_.shadow_.target_id = source_id(*g_, *iter_);
       }
     } else if constexpr (Sourced) {
@@ -207,7 +207,7 @@ public:
         value_.shadow_.target_id = target_id(*g_, *iter_);
       } else {
         value_.shadow_.source_id = this->source_vertex_id();
-        value_.target_id         = target_id(*g_, *iter_);
+        value_.shadow_.target_id = target_id(*g_, *iter_);
       }
     } else {
       value_.shadow_.target_id = target_id(*g_, *iter_);
@@ -348,13 +348,15 @@ namespace views {
      * Complexity: O(n)
      * 
      * Default implementation: 
-     *      incidence_view<_G, false, void>(incidence_iterator<_G, false, void>(__g, uid),
-     *                                      end(edges(__g, uid)));
+     *      incidence_view<_G, false, EVF>(incidence_iterator<_G, false, EVF>(__g, uid, evf),
+     *                                     end(edges(__g, uid)));
      * 
      * @tparam G The graph type.
+     * @tparam EVF The edge value function type.
      * @param g A graph instance.
      * @param uid Vertex id.
-     * @return A range of the outgoing incidence edges.
+     * @param evf Edge value function.
+     * @return A range of the outgoing incidence edges with values.
     */
       template <class _G, class EVF>
       requires(_Choice_id_evf<_G&, EVF>._Strategy != _St_id::_None)
@@ -363,7 +365,7 @@ namespace views {
         constexpr _St_id _Strat_id = _Choice_id_evf<_G&, EVF>._Strategy;
 
         if constexpr (_Strat_id == _St_id::_Non_member) {
-          return incidence(__g, uid); // intentional ADL
+          return incidence(__g, uid, evf); // intentional ADL
         } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
           // default impl
           return incidence_view<_G, false, EVF>(incidence_iterator<_G, false, EVF>(__g, uid, evf),

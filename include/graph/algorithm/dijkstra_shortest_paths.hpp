@@ -29,9 +29,9 @@ namespace graph {
 /**
  * @brief Dijkstra's single-source shortest paths algorithm with a visitor.
  * 
- * The implementation was taken from boost::graph dijkstra_shortes_paths_no_init.
+ * The implementation was taken from boost::graph dijkstra_shortest_paths_no_init.
  * 
- * Complexity: O(V * E)
+ * Complexity: O((V + E) log V)
  * 
  * Pre-conditions:
  *  - 0 <= source < num_vertices(g)
@@ -52,9 +52,9 @@ namespace graph {
  * @tparam Predecessors The predecessor random access range.
  * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Visitor      Visitor type with functions called for different events in the algorithm.
- *                      Function calls are removed by the optimizer if not uesd.
+ *                      Function calls are removed by the optimizer if not used.
  * @tparam Compare      Comparison function for Distance values. Defaults to less<distance_type>.
- * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanctValue>.
+ * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanceValue>.
  */
 template <index_adjacency_list G,
           input_range          Sources,
@@ -83,7 +83,7 @@ constexpr void dijkstra_shortest_paths(
   using distance_type = range_value_t<Distances>;
   using weight_type   = invoke_result_t<WF, edge_reference_t<G>>;
 
-  // relxing the target is the function of reducing the distance from the source to the target
+  // relaxing the target is the function of reducing the distance from the source to the target
   auto relax_target = [&g, &predecessor, &distances, &compare, &combine] //
         (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     const id_type       vid = target_id(g, e);
@@ -233,7 +233,7 @@ constexpr void dijkstra_shortest_paths(
 }
 
 /**
- * @brief Shortest distnaces from a single source using Dijkstra's single-source shortest paths algorithm 
+ * @brief Shortest distances from a single source using Dijkstra's single-source shortest paths algorithm 
  *         with a visitor.
  * 
  * This is identical to dijkstra_shortest_paths() except that it does not require a predecessors range.
@@ -254,9 +254,9 @@ constexpr void dijkstra_shortest_paths(
  * @tparam Distances    The distance random access range.
  * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Visitor      Visitor type with functions called for different events in the algorithm.
- *                      Function calls are removed by the optimizer if not uesd.
+ *                      Function calls are removed by the optimizer if not used.
  * @tparam Compare      Comparison function for Distance values. Defaults to less<distance_type>.
- * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanctValue>.
+ * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanceValue>.
  */
 template <index_adjacency_list G,
           input_range          Sources,
