@@ -11,11 +11,6 @@ template <class G, class F>
 concept edge_weight_function = // e.g. weight(uv)
       std::copy_constructible<F> && is_arithmetic_v<invoke_result_t<F, edge_reference_t<G>>>;
 
-
-//edge_weight_function<G, WF> &&
-//strict_weak_order<Compare, range_value_t<Distance>, range_value_t<Distance>> &&
-//assignable_from <range_reference_t<Distance>, invoke_result_t <Combine, invoke_result_t<WF, edge_t<G>>,
-
 template <class G, class WF, class Distance, class Compare, class Combine>
 concept basic_edge_weight_function2 = // e.g. weight(uv)
       is_arithmetic_v<range_value_t<Distance>> &&
@@ -67,8 +62,8 @@ constexpr auto print_types(Ts...) {
  * @tparam Distance The distance range type.
  * @tparam Predecessor The predecessor range type.
  *
- * @param graph The graph.
- * @param source The source vertex.
+ * @param g The graph.
+ * @param seed The source vertex.
  * @param distance The distance vector.
  * @param predecessor The predecessor vector.
  * @param weight The edge weight function.
@@ -159,7 +154,7 @@ void dijkstra_clrs(
       WF&& weight = [](edge_identifier_t<G> uv) { return range_value_t<Distance>(1); }) // default weight(uv) -> 1
 {
   using id_type         = vertex_id_t<G>;
-  using weight_type     = invoke_result_t<WF, edge_identifer_t<G>>;
+  using weight_type     = invoke_result_t<WF, edge_identifier_t<G>>;
   const id_type seed_id = vertex_id(g, seed);
 
   size_t N(num_vertices(g));

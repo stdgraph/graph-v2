@@ -39,7 +39,7 @@ namespace graph {
  * 
  * @param g              The graph.
  * @param predecessor    The predecessor range.
- * @param cycle_vertex_id A vertex id in the negative weight cycle. IF no negative weight cycle exists 
+ * @param cycle_vertex_id A vertex id in the negative weight cycle. If no negative weight cycle exists 
  *                       then there will be no vertex id defined.
  * @param out_cycle      The output iterator that the vertex ids in the cycle are output to.
  */
@@ -84,9 +84,9 @@ void find_negative_cycle(G&                              g,
  * @tparam Predecessors The predecessor random access range.
  * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Visitor      Visitor type with functions called for different events in the algorithm.
- *                      Function calls are removed by the optimizer if not uesd.
+ *                      Function calls are removed by the optimizer if not used.
  * @tparam Compare      Comparison function for Distance values. Defaults to less<DistanceValue>.
- * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanctValue>.
+ * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanceValue>.
  * 
  * @return optional<vertex_id_t<G>>, where no vertex id is returned if all edges were minimized.
  *         If an edge was not minimized, the on_edge_not_minimized event is called and a vertex id
@@ -120,7 +120,7 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&      //
   using weight_type   = invoke_result_t<WF, edge_reference_t<G>>;
   using return_type   = optional<vertex_id_t<G>>;
 
-  // relxing the target is the function of reducing the distance from the source to the target
+  // relaxing the target is the function of reducing the distance from the source to the target
   auto relax_target = [&g, &predecessor, &distances, &compare, &combine] //
         (edge_reference_t<G> e, vertex_id_t<G> uid, const weight_type& w_e) -> bool {
     id_type             vid = target_id(g, e);
@@ -139,14 +139,14 @@ requires convertible_to<range_value_t<Sources>, vertex_id_t<G>> &&      //
 
   if (size(distances) < size(vertices(g))) {
     throw std::out_of_range(
-          std::format("bellman_ford_shortest_paths: size of distances is {} is less than the number of vertices {}",
+          std::format("bellman_ford_shortest_paths: size of distances of {} is less than the number of vertices {}",
                       size(distances), size(vertices(g))));
   }
 
   if constexpr (!is_same_v<Predecessors, _null_range_type>) {
     if (size(predecessor) < size(vertices(g))) {
       throw std::out_of_range(
-            std::format("bellman_ford_shortest_paths: size of predecessor is {} is less than the number of vertices {}",
+            std::format("bellman_ford_shortest_paths: size of predecessor of {} is less than the number of vertices {}",
                         size(predecessor), size(vertices(g))));
     }
   }
@@ -259,9 +259,9 @@ requires is_arithmetic_v<range_value_t<Distances>> &&                   //
  * @tparam Distances    The distance random access range.
  * @tparam WF           Edge weight function. Defaults to a function that returns 1.
  * @tparam Visitor      Visitor type with functions called for different events in the algorithm.
- *                      Function calls are removed by the optimizer if not uesd.
+ *                      Function calls are removed by the optimizer if not used.
  * @tparam Compare      Comparison function for Distance values. Defaults to less<DistanceValue>.
- * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanctValue>.
+ * @tparam Combine      Combine function for Distance values. Defaults to plus<DistanceValue>.
  * 
  * @return optional<vertex_id_t<G>>, where no vertex id is returned if all edges were minimized.
  *         If an edge was not minimized, the on_edge_not_minimized event is called and a vertex id
