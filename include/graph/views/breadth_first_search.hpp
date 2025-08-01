@@ -268,7 +268,10 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
+      internal_value& operator=(const internal_value& rhs) {
+        shadow_ = rhs.shadow_;
+        return *this;
+      }
     };
 
   public:
@@ -387,7 +390,10 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
+      internal_value& operator=(const internal_value& rhs) {
+        shadow_ = rhs.shadow_;
+        return *this;
+      }
     };
 
   public:
@@ -509,7 +515,10 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
+      internal_value& operator=(const internal_value& rhs) {
+        shadow_ = rhs.shadow_;
+        return *this;
+      }
     };
 
   public:
@@ -623,7 +632,10 @@ public:
       internal_value(const internal_value& rhs) : shadow_(rhs.shadow_) {}
       internal_value() : shadow_{} {}
       ~internal_value() {}
-      internal_value& operator=(const internal_value& rhs) { shadow_ = rhs.shadow_; return *this; }
+      internal_value& operator=(const internal_value& rhs) {
+        shadow_ = rhs.shadow_;
+        return *this;
+      }
     };
 
   public:
