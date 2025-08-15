@@ -97,7 +97,7 @@ concept _el_index_tuple_edge = _el_tuple_edge<_E> && //
                                integral<tuple_element_t<0, _E>>;
 
 //
-// Suport the use of edge_info for edgelist edge definitions
+// Support the use of edge_info for edgelist edge definitions
 // (Only types and values needed from edge_info are used and there is no
 // explicit use of edge_info. This is deemed more flexible and no
 // functionality is compromised for it.)
@@ -1319,9 +1319,9 @@ namespace _Source {
      * Complexity: O(1)
      * 
      * Default implementation: *(begin(vertices(g)) + source_id(g, uv)), 
-     #         if @source_id(g,uv) is defined for G and random_access_range<vertex_range_t<G>>
+     *         if @source_id(g,uv) is defined for G and random_access_range<vertex_range_t<G>>
      * 
-     * Not all graphs support a source on an edge. The existance of @c source_id(g,uv) function 
+     * Not all graphs support a source on an edge. The existence of @c source_id(g,uv) function 
      * for a graph type G determines if it is considered a "sourced" edge or not. If it is, 
      * @c source(g,uv) will also exist.
      * 
@@ -2561,7 +2561,7 @@ namespace _HasEdge {
         return has_edge(__g); // intentional ADL
       } else if constexpr (_Strat_id == _St_ref::_Auto_eval) {
         for (auto&& u : vertices(__g))
-          if (empty(edges(__g, u)))
+          if (!empty(edges(__g, u)))
             return true;
         return false;
       } else {

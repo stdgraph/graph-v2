@@ -7,7 +7,12 @@
  * @defgroup graph_views        Views / Adaptors
  * @defgroup graph_containers   Containers
  * @defgroup graph_construction Graph Construction
- * @defgroup graph_io           Graph I/O
+ * @defgroup graph_io  #  ifdef ENABLE_EDGELIST_RANGE
+template <class ELR>
+concept basic_edgelist_range = std::ranges::forward_range<ELR> && std::negation_v<basic_adjacency_list<ELR>>;
+template <class ELR>
+concept edgelist_range = std::ranges::forward_range<ELR> && std::negation_v<adjacency_list<ELR>>;
+#  endif   Graph I/O
  * @defgroup graph_utilities    Utilities
  * 
  * @defgroup graph_concepts Graph Concepts
@@ -283,7 +288,7 @@ concept edgelist_range = ranges::forward_range<ELR> && negation_v<adjacency_list
 
 /**
  * @ingroup graph_properties
- * @brief Concept for the existance of degree function for graph G.
+ * @brief Concept for the existence of degree function for graph G.
  * 
  * Returns true if degree(g) exists for graph G.
  * 
@@ -300,7 +305,7 @@ concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
 
 /**
  * @ingroup graph_properties
- * @brief Concept for the existance of the find_vertex(g,uid) function for graph G.
+ * @brief Concept for the existence of the find_vertex(g,uid) function for graph G.
  * 
  * Returns true if find_vertex(g,uid) exists for graph G.
  * 
@@ -313,7 +318,7 @@ concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
 
 /**
  * @ingroup graph_properties
- * @brief Concept for the existance of the find_vertex_edge(g,uid,vid) function for graph G.
+ * @brief Concept for the existence of the find_vertex_edge(g,uid,vid) function for graph G.
  * 
  * Returns true if find_vertex_edge(g,u,vid) and find_vertex_edge(g,uid,vid) exists for graph G.
  * 
@@ -327,7 +332,7 @@ concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G
 
 /**
  * @ingroup graph_properties
- * @brief Concept for the existance of the has_contains_edge(g,uid,vid) function for graph G.
+ * @brief Concept for the existence of the has_contains_edge(g,uid,vid) function for graph G.
  * 
  * Returns true if has_contains_edge(g,uid,vid) exists for graph G.
  * 
@@ -341,7 +346,7 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
 
 /**
  * @ingroup graph_properties
- * @ brief Specializable to define that a graph type has unordered edges.
+ * @brief Specializable to define that a graph type has unordered edges.
  * 
  * Override for a graph type where source_id and target_id are unordered
  * on an edge so views and algorithms know to choose the correct target
@@ -362,7 +367,7 @@ concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> v
  *  namespace my_namespace {
  *      template <class T>
  *      class my_graph { ... };
- *      template class< T>
+ *      template <class T>
  *      class my_edge { int src_id; int tgt_id; ... };
  *  }
  *  namespace graph {
