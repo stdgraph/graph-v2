@@ -77,6 +77,9 @@ if (ENABLE_PCH)
     <utility>)
 endif()
 
+# Add a compile-time include directive to treat graph library as if installed.
+# With this, test and examples can use angle brackets: #include <graph/graph.hpp>"
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Add thirdparty libraries
 include(${PROJECT_SOURCE_DIR}/cmake/FetchCatch.cmake)
