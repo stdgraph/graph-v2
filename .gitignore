@@ -78,3 +78,6 @@ externals/
 
 # Ignore pulled repositories
 csv-parser/
+
+#Emacs
+*~
