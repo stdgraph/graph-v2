@@ -85,7 +85,7 @@ G load_graph(std::vector<std::tuple<vv_type const, vv_type const>> const &edges)
 
     G g;
     g.load_vertices(vertex_label_id, swap_label_id);
-
+    
     // Parse and load edges from label pairs
     auto eproj =
         [&g,&vertex_label_id](std::tuple<vv_type const,vv_type const> const &edge)
@@ -94,8 +94,6 @@ G load_graph(std::vector<std::tuple<vv_type const, vv_type const>> const &edges)
             using copyable_edge_type = graph::copyable_edge_t<vid_type, edge_value_type>;
             std::cout << std::get<0>(edge) << ","
                       << std::get<1>(edge) << std::endl;
-            std::cout << get_vid(g, std::get<0>(edge)) << ","
-                      << get_vid(g, std::get<1>(edge)) << std::endl;
             std::cout << vertex_label_id[std::get<0>(edge)] << ","
                       << vertex_label_id[std::get<1>(edge)] << std::endl;
             // return copyable_edge_type {
@@ -110,6 +108,13 @@ G load_graph(std::vector<std::tuple<vv_type const, vv_type const>> const &edges)
     std::cout << "size(e): " << edges.size() << std::endl;
     std::cout << "num_edges:" << num_edges << std::endl;
     g.load_edges(edges, eproj, size(vertex_label_id), num_edges);
+
+    // get_vid will only work after load_edges apparently
+    for ( auto& edge : edges ) {
+      std::cout << get_vid(g, std::get<0>(edge)) << ","
+		<< get_vid(g, std::get<1>(edge)) << std::endl;
+    }
+    
     return g;
 }
 
@@ -120,10 +125,20 @@ int main()
     auto g = load_graph(file_dependencies);
 
     std::cout << "Print vertices?\n";
-    for (auto v : graph::vertices(g))
+    for (auto& v : graph::vertices(g))
     {
         auto vv{graph::vertex_value(g, v)};
         std::cout << "Vertex: " << vv << std::endl;
+    }
+
+    for (auto& v : graph::vertices(g))
+    {
+        for (auto&& uv : graph::edges(g, v)) {
+	  std::cout << "Edge from " << graph::vertex_value(g, v)
+		    << " to "
+		    << graph::vertex_value(g, graph::target(g, uv))
+		    << std::endl;
+	}
     }
 
     return 0;
