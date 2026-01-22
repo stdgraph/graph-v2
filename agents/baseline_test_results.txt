@@ -1,0 +1,63 @@
+Test project /home/phil/dev_graph/graph-v2/out/build/linux-gcc-debug
+      Start  1: examples
+ 1/29 Test  #1: examples .........................   Passed    0.01 sec
+      Start  2: co_bfs_tests
+ 2/29 Test  #2: co_bfs_tests .....................   Passed    0.00 sec
+      Start  3: co_dijkstra_tests
+ 3/29 Test  #3: co_dijkstra_tests ................   Passed    0.00 sec
+      Start  4: visitor_dijkstra_tests
+ 4/29 Test  #4: visitor_dijkstra_tests ...........   Passed    0.00 sec
+      Start  5: breadth_first_search_tests
+ 5/29 Test  #5: breadth_first_search_tests .......   Passed    0.00 sec
+      Start  6: depth_first_search_tests
+ 6/29 Test  #6: depth_first_search_tests .........   Passed    0.00 sec
+      Start  7: topological_sort_tests
+ 7/29 Test  #7: topological_sort_tests ...........   Passed    0.00 sec
+      Start  8: csv_routes_vofl_tests
+ 8/29 Test  #8: csv_routes_vofl_tests ............   Passed    0.00 sec
+      Start  9: csv_routes
+ 9/29 Test  #9: csv_routes .......................   Passed    0.00 sec
+      Start 10: csv_routes_dov_tests
+10/29 Test #10: csv_routes_dov_tests .............   Passed    0.00 sec
+      Start 11: csv_routes_csr_tests
+11/29 Test #11: csv_routes_csr_tests .............   Passed    0.00 sec
+      Start 12: vertexlist_tests
+12/29 Test #12: vertexlist_tests .................   Passed    0.00 sec
+      Start 13: incidence_tests
+13/29 Test #13: incidence_tests ..................   Passed    0.01 sec
+      Start 14: neighbors_tests
+14/29 Test #14: neighbors_tests ..................   Passed    0.00 sec
+      Start 15: edgelist_tests
+15/29 Test #15: edgelist_tests ...................   Passed    0.00 sec
+      Start 16: edgelist_view_tests
+16/29 Test #16: edgelist_view_tests ..............   Passed    0.00 sec
+      Start 17: examples_tests
+17/29 Test #17: examples_tests ...................   Passed    0.00 sec
+      Start 18: bellman_shortest_paths_tests
+18/29 Test #18: bellman_shortest_paths_tests .....   Passed    0.01 sec
+      Start 19: dijkstra_shortest_paths_tests
+19/29 Test #19: dijkstra_shortest_paths_tests ....   Passed    0.01 sec
+      Start 20: transitive_closure_tests
+20/29 Test #20: transitive_closure_tests .........   Passed    0.00 sec
+      Start 21: dfs_tests
+21/29 Test #21: dfs_tests ........................   Passed    0.01 sec
+      Start 22: bfs_tests
+22/29 Test #22: bfs_tests ........................   Passed    0.01 sec
+      Start 23: mis_tests
+23/29 Test #23: mis_tests ........................   Passed    0.00 sec
+      Start 24: mst_tests
+24/29 Test #24: mst_tests ........................   Passed    0.00 sec
+      Start 25: tc_tests
+25/29 Test #25: tc_tests .........................   Passed    0.00 sec
+      Start 26: cc_tests
+26/29 Test #26: cc_tests .........................   Passed    0.00 sec
+      Start 27: descriptor_tests
+27/29 Test #27: descriptor_tests .................   Passed    0.00 sec
+      Start 28: tests
+28/29 Test #28: tests ............................   Passed    0.00 sec
+      Start 29: compressed_graph_tests
+29/29 Test #29: compressed_graph_tests ...........   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 29
+
+Total Test time (real) =   0.13 sec

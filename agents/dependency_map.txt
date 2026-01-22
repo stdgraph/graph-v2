@@ -1,0 +1,223 @@
+=== ./graph_utility.hpp ===
+#include "graph/edgelist.hpp"
+#include <map>
+#include <ranges>
+#include <tuple>
+#include <vector>
+
+=== ./detail/co_generator.hpp ===
+#include <coroutine>
+
+=== ./detail/graph_using.hpp ===
+#include <algorithm>
+#include <concepts>
+#include <functional>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <ranges>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+=== ./detail/graph_cpo.hpp ===
+#include "graph/detail/descriptor.hpp"
+#include "graph/graph_info.hpp"
+
+=== ./detail/descriptor.hpp ===
+#include <graph/detail/graph_using.hpp>
+
+=== ./views/neighbors.hpp ===
+#include "graph/graph.hpp"
+#include "graph/graph_utility.hpp"
+
+=== ./views/depth_first_search.hpp ===
+#include "graph/graph.hpp"
+#include "graph/graph_utility.hpp"
+#include <functional>
+#include <stack>
+#include <vector>
+
+=== ./views/edgelist.hpp ===
+#include "graph/graph.hpp"
+
+=== ./views/vertexlist.hpp ===
+#include "graph/graph.hpp"
+#include "graph/graph_utility.hpp"
+#include <functional>
+
+=== ./views/breadth_first_search.hpp ===
+#include "graph/graph.hpp"
+#include "graph/graph_utility.hpp"
+#include <functional>
+#include <queue>
+#include <vector>
+
+=== ./views/incidence.hpp ===
+#include "graph/graph.hpp"
+#include "graph/graph_utility.hpp"
+#include <functional>
+
+=== ./edgelist.hpp ===
+#include "graph.hpp"
+
+=== ./algorithm/bellman_ford_shortest_paths.hpp ===
+#include "graph/algorithm/common_shortest_paths.hpp"
+#include "graph/graph.hpp"
+#include "graph/views/edgelist.hpp"
+#include "graph/views/incidence.hpp"
+#include <format>
+#include <optional>
+#include <ranges>
+#include <stdexcept>
+
+=== ./algorithm/transitive_closure.hpp ===
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+#include "graph/views/vertexlist.hpp"
+#include <vector>
+
+=== ./algorithm/depth_first_search.hpp ===
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+#include <limits>
+#include <queue>
+#include <ranges>
+#include <vector>
+
+=== ./algorithm/topological_sort.hpp ===
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+#include <limits>
+#include <queue>
+#include <ranges>
+#include <vector>
+
+=== ./algorithm/tc.hpp ===
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+
+=== ./algorithm/mis.hpp ===
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+
+=== ./algorithm/breadth_first_search.hpp ===
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+#include <limits>
+#include <queue>
+#include <ranges>
+#include <vector>
+
+=== ./algorithm/experimental/co_dijkstra.hpp ===
+#include "graph/algorithm/experimental/co_cmn.hpp"
+#include "graph/detail/co_generator.hpp"
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <queue>
+#include <ranges>
+#include <variant>
+
+=== ./algorithm/experimental/bfs_cmn.hpp ===
+#include "graph/graph.hpp"
+#include <algorithm>
+#include <queue>
+
+=== ./algorithm/experimental/co_cmn.hpp ===
+#include "bfs_cmn.hpp"
+#include "graph/detail/co_generator.hpp"
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+#include <variant>
+
+=== ./algorithm/experimental/co_bfs.hpp ===
+#include "graph/algorithm/experimental/co_cmn.hpp"
+
+=== ./algorithm/experimental/visitor_dijkstra.hpp ===
+#include "graph/algorithm/experimental/bfs_cmn.hpp"
+#include "graph/algorithm/experimental/co_cmn.hpp"
+#include "graph/detail/co_generator.hpp"
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+#include <format>
+#include <ranges>
+#include <variant>
+
+=== ./algorithm/dijkstra_clrs.hpp ===
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+#include <algorithm>
+#include <queue>
+
+=== ./algorithm/dijkstra_shortest_paths.hpp ===
+#include "graph/algorithm/common_shortest_paths.hpp"
+#include "graph/graph.hpp"
+#include "graph/views/incidence.hpp"
+#include <format>
+#include <queue>
+#include <ranges>
+#include <vector>
+
+=== ./algorithm/mst.hpp ===
+#include "graph/edgelist.hpp"
+#include "graph/graph.hpp"
+#include "graph/views/edgelist.hpp"
+#include <queue>
+
+=== ./algorithm/common_shortest_paths.hpp ===
+#include <algorithm>
+#include <graph/detail/graph_using.hpp>
+#include <numeric>
+
+=== ./algorithm/connected_components.hpp ===
+#include "graph/graph.hpp"
+#include "graph/views/breadth_first_search.hpp"
+#include "graph/views/depth_first_search.hpp"
+#include "graph/views/incidence.hpp"
+#include "graph/views/vertexlist.hpp"
+#include <numeric>
+#include <random>
+#include <stack>
+
+=== ./graph.hpp ===
+#include "detail/graph_cpo.hpp"
+#include "graph_info.hpp"
+#include <concepts>
+#include <ranges>
+#include <stdexcept>
+#include <type_traits>
+
+=== ./container/dynamic_graph.hpp ===
+#include "container_utility.hpp"
+#include "graph/graph.hpp"
+#include <algorithm>
+#include <concepts>
+#include <forward_list>
+#include <list>
+#include <vector>
+
+=== ./container/utility_edgelist.hpp ===
+#include "graph/edgelist.hpp"
+
+=== ./container/container_utility.hpp ===
+
+=== ./container/compressed_graph.hpp ===
+#include "container_utility.hpp"
+#include "graph/graph.hpp"
+#include <algorithm>
+#include <cassert>
+#include <concepts>
+#include <cstdint>
+#include <format>
+#include <functional>
+#include <iostream>
+#include <ranges>
+#include <vector>
+
+=== ./graph_info.hpp ===
+#include "detail/graph_using.hpp"
+#include <concepts>
+
