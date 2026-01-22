@@ -486,34 +486,47 @@ Follow same pattern as Task 2.2:
 
 ### Task 2.4: Move Remaining CPOs to graph::adj_list
 
+**Status**: ✅ COMPLETED (commit c0e80b6)
+
 **Goal**: Move all remaining adjacency list CPOs.
 
 **File**: `include/graph/detail/graph_cpo.hpp`
 
-**CPOs to move** (follow pattern from Tasks 2.2-2.3):
+**CPOs moved** (following pattern from Tasks 2.2-2.3):
 - `vertex_id(g, ui)`
+- `find_vertex(g, uid)`
 - `target_id(g, uv)`
 - `source_id(g, uv)`
 - `target(g, uv)`
 - `source(g, uv)`
-- `find_vertex(g, uid)`
+- `num_edges(g)`
+- `find_vertex_edge(g, u, vid)`
+- `contains_edge(g, uid, vid)`
+- `partition_id(g, u)`
 - `num_vertices(g)`
 - `degree(g, u)`
-- `vertex_value(g, u)` (if exists)
-- `edge_value(g, uv)` (if exists)
-- `graph_value(g)` (if exists)
+- `vertex_value(g, u)`
+- `edge_value(g, uv)`
+- `graph_value(g)`
+- `num_partitions(g)`
+- `has_edge(g, uid, vid)`
 
-**For each CPO**:
-1. Wrap namespace in `namespace adj_list`
-2. Add to `inline namespace _Cpos`
-3. Add `using` declaration in `graph` namespace
+**Implementation**:
+1. Wrapped each CPO namespace in `namespace adj_list { ... }`
+2. Added to `inline namespace _Cpos` inside adj_list
+3. Added `using adj_list::<cpo_name>;` declarations for compatibility
+4. Fixed _Source namespace opening that was missing adj_list wrapper
+5. Updated test file references to graph::adj_list::_Target_id, _Source_id, _Edge_value
 
 **Validation**:
-- [ ] File compiles
-- [ ] Each CPO works in both namespaces
-- [ ] All existing tests pass
+- [x] File compiles
+- [x] Each CPO works in both namespaces (graph:: and graph::adj_list::)
+- [x] All 31/31 tests passing
+- [x] Updated edgelist_tests.cpp to use new namespace paths
 
-**Commit point**: `git commit -m "Phase 2: Move CPOs to adj_list namespace"`
+**Commit point**: `git commit -m "Task 2.4: Move all remaining CPOs to graph::adj_list namespace"`
+
+**Completed**: All 19 core CPOs now in graph::adj_list namespace with backward compatibility
 
 ---
 
