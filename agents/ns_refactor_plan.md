@@ -532,101 +532,64 @@ Follow same pattern as Task 2.2:
 
 ## Phase 3: Move Type Aliases
 
-### Task 3.1: Add Type Aliases to graph::adj_list
+### Task 3.1: Add Type Aliases to graph::adj_list ✅ COMPLETED
 
 **Goal**: Add type aliases for adjacency list types.
 
-**File**: `include/graph/detail/graph_using.hpp` or inline in `graph.hpp`
+**File**: `include/graph/detail/graph_cpo.hpp`
 
-**Changes**:
+**Status**: COMPLETED (Commit: d1cceaf)
 
-Add to `graph.hpp` inside `namespace adj_list`:
-
-```cpp
-namespace adj_list {
-    // Vertex type aliases
-    template <class G>
-    using vertex_range_t = decltype(vertices(declval<G&>()));
-    
-    template <class G>
-    using vertex_iterator_t = iterator_t<vertex_range_t<G>>;
-    
-    template <class G>
-    using vertex_t = range_value_t<vertex_range_t<G>>;
-    
-    template <class G>
-    using vertex_reference_t = range_reference_t<vertex_range_t<G>>;
-    
-    template <class G>
-    using vertex_id_t = decltype(vertex_id(declval<G&>(), declval<vertex_iterator_t<G>>()));
-    
-    // Edge type aliases
-    template <class G>
-    using edge_range_t = decltype(edges(declval<G&>(), declval<vertex_id_t<G>>()));
-    
-    template <class G>
-    using edge_iterator_t = iterator_t<edge_range_t<G>>;
-    
-    template <class G>
-    using edge_t = range_value_t<edge_range_t<G>>;
-    
-    template <class G>
-    using edge_reference_t = range_reference_t<edge_range_t<G>>;
-    
-    template <class G>
-    using vertex_edge_range_t = edge_range_t<G>;
-    
-    template <class G>
-    using vertex_edge_iterator_t = edge_iterator_t<G>;
-    
-} // namespace adj_list
-
-// Compatibility: keep aliases in graph namespace too
-template <class G>
-using vertex_range_t = adj_list::vertex_range_t<G>;
-
-template <class G>
-using vertex_iterator_t = adj_list::vertex_iterator_t<G>;
-
-// ... etc for all aliases
-```
+**Implementation Notes**:
+- All 11 type aliases moved to graph::adj_list namespace
+- Critical insight: Each type alias placed **immediately after** its corresponding CPO to avoid circular dependencies
+- Type alias locations:
+  * Lines 249-262: 4 vertex aliases after vertices CPO
+  * Lines 389-391: vertex_id_t after vertex_id CPO
+  * Lines 639-658: 5 edge aliases after edges CPO
+  * Lines 1704-1706: partition_id_t after partition_id CPO
+  * Lines 2079-2081: vertex_value_t after vertex_value CPO
+  * Lines 2249-2251: edge_value_t after edge_value CPO
+- Compatibility layer updated (lines 2575-2593): using declarations in graph namespace reference adj_list versions
+- Fixed compatibility layer: added find_vertex_edge, contains_edge, num_partitions; removed non-existent edge_id
 
 **Validation**:
-- [ ] Compiles
-- [ ] Type aliases work: `graph::adj_list::vertex_id_t<G>`
-- [ ] Old aliases still work: `graph::vertex_id_t<G>`
-
-**Rollback**: Remove added aliases
+- ✅ Compiles successfully
+- ✅ Type aliases work: `graph::adj_list::vertex_id_t<G>`
+- ✅ Old aliases still work: `graph::vertex_id_t<G>`
+- ✅ All 31 tests passing
 
 ---
 
-### Task 3.2: Test Type Alias Resolution
+### Task 3.2: Test Type Alias Resolution ✅ COMPLETED
 
 **Goal**: Verify type aliases deduce correctly.
 
-**Test to add**:
-```cpp
-TEST_CASE("Type aliases in adj_list namespace") {
-    using G = std::vector<std::vector<int>>;
-    
-    // New namespace
-    using vid_t = graph::adj_list::vertex_id_t<G>;
-    static_assert(std::is_same_v<vid_t, size_t>);
-    
-    using vref_t = graph::adj_list::vertex_reference_t<G>;
-    static_assert(std::is_same_v<vref_t, std::vector<int>&>);
-    
-    // Old namespace (compatibility)
-    using vid_t_old = graph::vertex_id_t<G>;
-    static_assert(std::is_same_v<vid_t_old, vid_t>);
-}
-```
+**Status**: COMPLETED (Commit: 9d739a0)
+
+**Test file**: `tests/namespace_validation_phase3_task3_2.cpp` (88 lines)
+
+**Implemented Tests**:
+1. **Vertex type aliases** - Validates 5 vertex-related aliases match between namespaces:
+   - vertex_range_t, vertex_iterator_t, vertex_t, vertex_reference_t, vertex_id_t
+2. **Edge type aliases** - Validates 5 edge-related aliases match:
+   - vertex_edge_range_t, vertex_edge_iterator_t, edge_t, edge_reference_t, edge_descriptor_t
+3. **Partition type alias** - Validates partition_id_t matches
+4. **Functional test** - Proves CPOs work correctly with types from both namespaces using vector<vector<int>> graph
+
+**Implementation Notes**:
+- Test went through 5 iterations to fix compilation errors and runtime issues
+- Final version uses vector<vector<int>> as test graph type
+- Validates both static type equivalence (via static_assert) and functional correctness (runtime CPO calls)
+- Added to tests/CMakeLists.txt line 71
 
 **Validation**:
-- [ ] Test compiles and passes
-- [ ] Type deduction works correctly
+- ✅ Test compiles and passes
+- ✅ Type deduction works correctly
+- ✅ All 32 tests passing (30 original + 2 validation tests)
+- ✅ Both namespace access patterns work correctly
 
-**Commit point**: `git commit -m "Phase 3: Add type aliases to adj_list namespace"`
+**Commit point**: Phase 3 complete with commits d1cceaf (Task 3.1) and 9d739a0 (Task 3.2)
 
 ---
 

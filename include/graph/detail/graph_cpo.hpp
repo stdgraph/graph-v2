@@ -1206,7 +1206,6 @@ namespace adj_list {
 } // namespace adj_list
 
 
-
 //
 // source(g,uv) -> vertex_reference_t<G>
 //      default = *(begin(g,vertices(g)) + source_id(g,uv))
@@ -1295,7 +1294,6 @@ namespace adj_list {
     inline constexpr _Source::_Cpo source;
   }
 } // namespace adj_list
-
 
 
 //
@@ -1457,7 +1455,6 @@ namespace adj_list {
 } // namespace adj_list
 
 
-
 //
 // contains_edge(g,uid,vid) -> bool
 //      default = uid < size(vertices(g)) && vid < size(vertices(g)), if adjacency_matrix<G>
@@ -1556,7 +1553,6 @@ namespace adj_list {
     inline constexpr _Contains_edge::_Cpo contains_edge;
   }
 } // namespace adj_list
-
 
 
 // partition_id(g,uid) -> ?   default = vertex_id_t<G>() if not overridden; must be overridden for bipartite or multipartite graphs
@@ -1998,7 +1994,6 @@ namespace adj_list {
 } // namespace adj_list
 
 
-
 //
 // vertex_value(g,u) -> <<user-defined type>>
 //
@@ -2330,7 +2325,6 @@ namespace adj_list {
 } // namespace adj_list
 
 
-
 // num_partitions(g) -> ?   default = vertex_id_t<G>(1) when vertex_id_t<G> is integral, size_t(0) otherwise
 //
 namespace adj_list {
@@ -2413,7 +2407,6 @@ namespace adj_list {
     inline constexpr _Num_partitions::_Cpo num_partitions;
   }
 } // namespace adj_list
-
 
 
 //
@@ -2689,7 +2682,6 @@ using edge_value_t = adj_list::edge_value_t<G>;
 //  { target_id(e) };
 //}
 //using edge_value_t = decltype(edge_value(declval<EL>()));
-
 
 
 } // namespace graph
