@@ -296,39 +296,19 @@ TEST_CASE("adj_list namespace concepts") {
 **File**: `include/graph/edgelist.hpp`
 
 **Changes**:
-1. Find the line `namespace edgelist {` (around line 82)
-2. Change to:
-   ```cpp
-   // New namespace name (underscore instead of no separator)
-   namespace edge_list {
-   ```
-
-3. At the end of the namespace (around line 146), change:
-   ```cpp
-   } // namespace edge_list
-   
-   // Temporary compatibility alias
-   namespace edgelist = edge_list;
-   
-   } // namespace graph
-   ```
+1. Changed line ~82: `namespace edgelist {` → `namespace edge_list {`
+2. Changed line ~146: Added compatibility alias before closing `} // namespace graph`
 
 **Validation**:
-- [ ] File compiles
-- [ ] New namespace works: `graph::edge_list::basic_sourced_edgelist<EL>`
-- [ ] Old namespace still works: `graph::edgelist::basic_sourced_edgelist<EL>`
-
-**Test to add**:
-```cpp
-TEST_CASE("edge_list namespace rename") {
-    // Both should work
-    using EL = std::vector<std::pair<int, int>>;
-    static_assert(graph::edge_list::basic_sourced_edgelist<EL>);
-    static_assert(graph::edgelist::basic_sourced_edgelist<EL>); // compatibility
-}
-```
+- [x] File compiles
+- [x] New namespace works: `graph::edge_list::basic_sourced_edgelist<EL>`
+- [x] Old namespace still works: `graph::edgelist::basic_sourced_edgelist<EL>`
+- [x] Test added to namespace_validation_phase1.cpp
+- [x] All 30 tests pass
 
 **Rollback**: Revert namespace names
+
+**Completed**: Commit ad72cbc
 
 ---
 

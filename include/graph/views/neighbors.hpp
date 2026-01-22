@@ -411,4 +411,12 @@ namespace views {
   }
 
 } // namespace views
+
+namespace adj_list {
+  namespace views {
+    // Factory functions will be added in Phase 6
+    // Placeholder for now to establish namespace structure
+  } // namespace views
+} // namespace adj_list
+
 } // namespace graph

@@ -25,11 +25,11 @@ TEST_CASE("Phase 1: Namespace structure exists", "[namespace][phase1]") {
 
   SECTION("edge_list namespace renamed (Task 1.4)") {
     using EL = std::vector<std::pair<int, int>>;
-    
+
     // New namespace works
     static_assert(graph::edge_list::basic_sourced_edgelist<EL>);
     static_assert(graph::edge_list::basic_sourced_index_edgelist<EL>);
-    
+
     // Old namespace still works (compatibility)
     static_assert(graph::edgelist::basic_sourced_edgelist<EL>);
     static_assert(graph::edgelist::basic_sourced_index_edgelist<EL>);
