@@ -65,6 +65,7 @@ set(UNITTEST_SOURCES
     "compressed_graph_tests.cpp"
     
     "namespace_validation_phase1.cpp"
+    "namespace_validation_phase2_task2_2.cpp"
 )
 
 foreach(SOURCE IN LISTS UNITTEST_SOURCES)

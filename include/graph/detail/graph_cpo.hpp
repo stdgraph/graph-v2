@@ -150,57 +150,62 @@ template <class G>
 concept adjacency_matrix = is_adjacency_matrix_v<G>;
 
 //
-// vertices(g) -> vertex_range_t<G>
+// New namespace structure for refactoring
 //
-// vertex_range_t<G>     = decltype(vertices(g))
-// vertex_iterator_t<G>  = ranges::iterator_t<vertex_range_t<G>>
-// vertex_t<G>           = ranges::range_value_t<vertex_range_t<G>>
-// vertex_reference_t<G> = ranges::range_reference_t<vertex_range_t<G>>
-//
-namespace _Vertices {
+namespace adj_list {
+
+  //
+  // vertices(g) -> vertex_range_t<G>
+  //
+  // vertex_range_t<G>     = decltype(vertices(g))
+  // vertex_iterator_t<G>  = ranges::iterator_t<vertex_range_t<G>>
+  // vertex_t<G>           = ranges::range_value_t<vertex_range_t<G>>
+  // vertex_reference_t<G> = ranges::range_reference_t<vertex_range_t<G>>
+  //
+  namespace _Vertices {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void vertices() = delete;                  // Block unqualified name lookup
+    void vertices() = delete;                // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
-  void vertices();
+    void vertices();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G>
-  concept _Has_ref_member = _HasClassOrEnumType<_G> && //
-                            requires(_G&& __g) {
-                              { _Fake_copy_init(__g.vertices()) };
-                            };
-  template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
-                         && requires(_G&& __g) {
-                              { _Fake_copy_init(vertices(__g)) }; // intentional ADL
-                            };
-
-  template <class _G>
-  concept _Can_ref_eval = _HasClassOrEnumType<_G> && random_access_range<_G>;
-
-  class _Cpo {
-  private:
-    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+    template <class _G>
+    concept _Has_ref_member = _HasClassOrEnumType<_G> && //
+                              requires(_G&& __g) {
+                                { _Fake_copy_init(__g.vertices()) };
+                              };
+    template <class _G>
+    concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
+                           && requires(_G&& __g) {
+                                { _Fake_copy_init(vertices(__g)) }; // intentional ADL
+                              };
 
     template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
-      if constexpr (_Has_ref_member<_G>) {
-        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().vertices()))};
-      } else if constexpr (_Has_ref_ADL<_G>) {
-        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(vertices(declval<_G>())))}; // intentional ADL
-      } else if constexpr (_Can_ref_eval<_G>) {
-        return {_St_ref::_Auto_eval, noexcept(true)};
-      } else {
-        return {_St_ref::_None};
+    concept _Can_ref_eval = _HasClassOrEnumType<_G> && random_access_range<_G>;
+
+    class _Cpo {
+    private:
+      enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        if constexpr (_Has_ref_member<_G>) {
+          return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().vertices()))};
+        } else if constexpr (_Has_ref_ADL<_G>) {
+          return {_St_ref::_Non_member, noexcept(_Fake_copy_init(vertices(declval<_G>())))}; // intentional ADL
+        } else if constexpr (_Can_ref_eval<_G>) {
+          return {_St_ref::_Auto_eval, noexcept(true)};
+        } else {
+          return {_St_ref::_None};
+        }
       }
-    }
 
-    template <class _G>
-    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+      template <class _G>
+      static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
 
-  public:
-    /**
+    public:
+      /**
      * @brief Returns the vertices range for a graph G.
      * 
      * Default implementation: n/a.
@@ -213,28 +218,33 @@ namespace _Vertices {
      * @tparam G The graph type
      * @param g A graph instance
     */
-    template <class _G>
-    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
-      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+      template <class _G>
+      requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
+        constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
-      if constexpr (_Strat_ref == _St_ref::_Member) {
-        return __g.vertices();
-      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        //static_assert(is_reference_v<decltype(vertices(__g))>);
-        return vertices(__g); // intentional ADL
-      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return std::forward<_G>(__g); // intentional ADL
-      } else {
-        static_assert(_AlwaysFalse<_G>, "vertices(g) is not defined");
+        if constexpr (_Strat_ref == _St_ref::_Member) {
+          return __g.vertices();
+        } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+          //static_assert(is_reference_v<decltype(vertices(__g))>);
+          return vertices(__g); // intentional ADL
+        } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+          return std::forward<_G>(__g); // intentional ADL
+        } else {
+          static_assert(_AlwaysFalse<_G>, "vertices(g) is not defined");
+        }
       }
-    }
-  };
-} // namespace _Vertices
+    };
+  } // namespace _Vertices
 
-inline namespace _Cpos {
-  inline constexpr _Vertices::_Cpo vertices;
-}
+  inline namespace _Cpos {
+    inline constexpr _Vertices::_Cpo vertices;
+  }
+
+} // namespace adj_list
+
+// Temporary: keep in graph namespace for compatibility
+using adj_list::vertices;
 
 /**
  * @brief The vertex range type for a graph G.
