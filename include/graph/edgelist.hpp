@@ -78,8 +78,8 @@
 
 namespace graph {
 
-
-namespace edgelist {
+// New namespace name (underscore instead of no separator)
+namespace edge_list {
   //
   // edgelist concepts
   //
@@ -143,7 +143,11 @@ namespace edgelist {
   //template <basic_sourced_edgelist EL> // For exposition only
   //using vid_t = decltype(source_id(declval<edge_t<EL>>()));
 
-} // namespace edgelist
+} // namespace edge_list
+
+// Temporary compatibility alias
+namespace edgelist = edge_list;
+
 } // namespace graph
 
 #endif
