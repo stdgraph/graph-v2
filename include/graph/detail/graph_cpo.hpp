@@ -279,82 +279,82 @@ using vertex_reference_t = range_reference_t<vertex_range_t<G>>;
 // vertex_id(g,ui) -> vertex_id_t<G>
 //      default = ui - begin(vertices(g)), if random_access_iterator<ui>
 //
-namespace _Vertex_id {
+namespace adj_list {
+  namespace _Vertex_id {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void vertex_id() = delete;                 // Block unqualified name lookup
+    void vertex_id() = delete;               // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
-  void vertex_id();
+    void vertex_id();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G>
-  concept _Has_ref_member = requires(_G&& __g, vertex_iterator_t<_G> ui) {
-    { _Fake_copy_init(ui->vertex_id(__g)) };
-  };
-  template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
-                         && requires(_G&& __g, const vertex_iterator_t<_G> ui) {
-                              { _Fake_copy_init(vertex_id(__g, ui)) }; // intentional ADL
-                            };
-  template <class _G>
-  concept _Can_ref_eval = random_access_range<vertex_range_t<_G>>;
-
-  class _Cpo {
-  private:
-    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
-
     template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
-      if constexpr (_Has_ref_member<_G>) {
-        return {_St_ref::_Member,
-                noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>()->vertex_id(declval<_G>())))};
-      } else if constexpr (_Has_ref_ADL<_G>) {
-        return {
-              _St_ref::_Non_member,
-              noexcept(_Fake_copy_init(vertex_id(declval<_G>(), declval<vertex_iterator_t<_G>>())))}; // intentional ADL
-      } else if constexpr (_Can_ref_eval<_G>) {
-        return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>() -
-                                                              begin(vertices(declval<_G>()))))}; // intentional ADL
-      } else {
-        return {_St_ref::_None};
+    concept _Has_ref_member = requires(_G&& __g, vertex_iterator_t<_G> ui) {
+      { _Fake_copy_init(ui->vertex_id(__g)) };
+    };
+    template <class _G>
+    concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
+                           && requires(_G&& __g, const vertex_iterator_t<_G> ui) {
+                                { _Fake_copy_init(vertex_id(__g, ui)) }; // intentional ADL
+                              };
+    template <class _G>
+    concept _Can_ref_eval = random_access_range<vertex_range_t<_G>>;
+
+    class _Cpo {
+    private:
+      enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        if constexpr (_Has_ref_member<_G>) {
+          return {_St_ref::_Member,
+                  noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>()->vertex_id(declval<_G>())))};
+        } else if constexpr (_Has_ref_ADL<_G>) {
+          return {_St_ref::_Non_member, noexcept(_Fake_copy_init(vertex_id(
+                                              declval<_G>(), declval<vertex_iterator_t<_G>>())))}; // intentional ADL
+        } else if constexpr (_Can_ref_eval<_G>) {
+          return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(declval<vertex_iterator_t<_G>>() -
+                                                                begin(vertices(declval<_G>()))))}; // intentional ADL
+        } else {
+          return {_St_ref::_None};
+        }
       }
-    }
 
-    template <class _G>
-    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+      template <class _G>
+      static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
 
-    template <class _G>
-    struct _al_vertex_id {
-      using type = size_t; // default vertex_id is size_t
-    };
+      template <class _G>
+      struct _al_vertex_id {
+        using type = size_t; // default vertex_id is size_t
+      };
 
-    template <_al_simple_id _G>
-    struct _al_vertex_id<_G> {
-      using type = _al_edge_t<_G>; // The target id type is a single integral value, eg. vector<vector<int>>
-    };
+      template <_al_simple_id _G>
+      struct _al_vertex_id<_G> {
+        using type = _al_edge_t<_G>; // The target id type is a single integral value, eg. vector<vector<int>>
+      };
 
-    template <_al_tuple_id _G>
-    struct _al_vertex_id<_G> {
-      using type =
-            tuple_element_t<0,
-                            _al_edge_t<_G>>; // The target id is the first element of a single integral value of a tuple
-    };
+      template <_al_tuple_id _G>
+      struct _al_vertex_id<_G> {
+        using type = tuple_element_t<
+              0,
+              _al_edge_t<_G>>; // The target id is the first element of a single integral value of a tuple
+      };
 
-    template <class _G>
-    using _al_vertex_id_t = typename _al_vertex_id<_G>::type;
+      template <class _G>
+      using _al_vertex_id_t = typename _al_vertex_id<_G>::type;
 
 
-    // The vertex_id type is defined using the following criteria, with the first one found will be used
-    //  1. return value of vertex_id(g,ui) if it is overridden for a graph
-    //  2. for range-of-ranges patterns:
-    //      a.  e.g. vector<vector<int>> uses int
-    //      b.  e.g. vector<vector<tuple<int,...>>> uses int
-    //  3. size_t for the final default to match with type used for index vector & deque
-    //template <class _G>
-    //using _vid_t = _al_vertex_id_t<_G>;
+      // The vertex_id type is defined using the following criteria, with the first one found will be used
+      //  1. return value of vertex_id(g,ui) if it is overridden for a graph
+      //  2. for range-of-ranges patterns:
+      //      a.  e.g. vector<vector<int>> uses int
+      //      b.  e.g. vector<vector<tuple<int,...>>> uses int
+      //  3. size_t for the final default to match with type used for index vector & deque
+      //template <class _G>
+      //using _vid_t = _al_vertex_id_t<_G>;
 
-  public:
-    /**
+    public:
+      /**
      * @brief Get's the id of a vertex.
      * 
      * Complexity: O(1)
@@ -379,28 +379,31 @@ namespace _Vertex_id {
      * @param ui A vertex iterator for a vertext in graph G.
      * @return The vertex id of a vertex.
     */
-    template <class _G>
-    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_iterator_t<_G> ui) const
-          noexcept(_Choice_ref<_G&>._No_throw) {
-      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+      template <class _G>
+      requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_iterator_t<_G> ui) const
+            noexcept(_Choice_ref<_G&>._No_throw) {
+        constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
-      if constexpr (_Strat_ref == _St_ref::_Member) {
-        return ui->vertex_id(__g);
-      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        return vertex_id(__g, ui); // intentional ADL
-      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return static_cast<_al_vertex_id_t<_G>>(ui - begin(vertices(__g)));
-      } else {
-        static_assert(_AlwaysFalse<_G>, "vertices(g) is not defined or is not random-access");
+        if constexpr (_Strat_ref == _St_ref::_Member) {
+          return ui->vertex_id(__g);
+        } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+          return vertex_id(__g, ui); // intentional ADL
+        } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+          return static_cast<_al_vertex_id_t<_G>>(ui - begin(vertices(__g)));
+        } else {
+          static_assert(_AlwaysFalse<_G>, "vertices(g) is not defined or is not random-access");
+        }
       }
-    }
-  };
-} // namespace _Vertex_id
+    };
+  } // namespace _Vertex_id
 
-inline namespace _Cpos {
-  inline constexpr _Vertex_id::_Cpo vertex_id;
-} // namespace _Cpos
+  inline namespace _Cpos {
+    inline constexpr _Vertex_id::_Cpo vertex_id;
+  } // namespace _Cpos
+} // namespace adj_list
+
+using adj_list::vertex_id;
 
 /**
  * @brief Defines the type of the vertex id.
@@ -455,46 +458,47 @@ using vertex_id_t = decltype(vertex_id(std::declval<G&&>(), std::declval<vertex_
 //
 // default = begin(vertices(g)) + uid, if random_access_range<vertex_range_t<G>>
 //
-namespace _Find_vertex {
+namespace adj_list {
+  namespace _Find_vertex {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void find_vertex() = delete;               // Block unqualified name lookup
+    void find_vertex() = delete;             // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
-  void find_vertex();
+    void find_vertex();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G>
-  concept _Has_member = requires(_G&& __g, const vertex_id_t<_G>& uid) {
-    { _Fake_copy_init(__g.find_vertex(uid)) };
-  };
-
-  template <class _G>
-  concept _Has_ADL = _HasClassOrEnumType<_G> //
-                     && requires(_G&& __g, const vertex_id_t<_G>& uid) {
-                          { _Fake_copy_init(find_vertex(__g, uid)) }; // intentional ADL
-                        };
-
-  class _Cpo {
-  private:
-    enum class _St { _None, _Member, _Non_member };
+    template <class _G>
+    concept _Has_member = requires(_G&& __g, const vertex_id_t<_G>& uid) {
+      { _Fake_copy_init(__g.find_vertex(uid)) };
+    };
 
     template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St> _Choose() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
-      if constexpr (_Has_member<_G>) {
-        return {_St::_Member, noexcept(_Fake_copy_init(declval<_G>().find_vertex(declval<vertex_id_t<_G>>())))};
-      } else if constexpr (_Has_ADL<_G>) {
-        return {_St::_Non_member,
-                noexcept(_Fake_copy_init(find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
-      } else {
-        return {_St::_None};
+    concept _Has_ADL = _HasClassOrEnumType<_G> //
+                       && requires(_G&& __g, const vertex_id_t<_G>& uid) {
+                            { _Fake_copy_init(find_vertex(__g, uid)) }; // intentional ADL
+                          };
+
+    class _Cpo {
+    private:
+      enum class _St { _None, _Member, _Non_member };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St> _Choose() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        if constexpr (_Has_member<_G>) {
+          return {_St::_Member, noexcept(_Fake_copy_init(declval<_G>().find_vertex(declval<vertex_id_t<_G>>())))};
+        } else if constexpr (_Has_ADL<_G>) {
+          return {_St::_Non_member,
+                  noexcept(_Fake_copy_init(find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
+        } else {
+          return {_St::_None};
+        }
       }
-    }
 
-    template <class _G>
-    static constexpr _Choice_t<_St> _Choice = _Choose<_G>();
+      template <class _G>
+      static constexpr _Choice_t<_St> _Choice = _Choose<_G>();
 
-  public:
-    /**
+    public:
+      /**
      * @brief Find a vertex given a vertex id.
      * 
      * Complexity: O(1)
@@ -506,32 +510,35 @@ namespace _Find_vertex {
      * @param uid Vertex id.
      * @return An iterator to the vertex if the vertex exists, or end(vertices(g)) if it doesn't exist.
     */
-    template <class _G>
-    [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid) const
-          noexcept(_Choice<_G&>._No_throw) {
-      constexpr _St _Strat = _Choice<_G&>._Strategy;
+      template <class _G>
+      [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid) const
+            noexcept(_Choice<_G&>._No_throw) {
+        constexpr _St _Strat = _Choice<_G&>._Strategy;
 
-      if constexpr (_Strat == _St::_Member) {
-        return __g.find_vertex(uid);
-      } else if constexpr (_Strat == _St::_Non_member) {
-        return find_vertex(__g, uid); // intentional ADL
-      } else if constexpr (random_access_iterator<vertex_iterator_t<_G>>) {
-        auto uid_diff = static_cast<range_difference_t<vertex_range_t<_G>>>(uid);
-        if (uid_diff < ssize(vertices(__g)))
-          return begin(vertices(__g)) + uid_diff;
-        else
-          return end(vertices(__g));
-      } else {
-        static_assert(_AlwaysFalse<_G>,
-                      "find_vertex(g,uid) has not been defined and the default implemenation cannot be evaluated");
+        if constexpr (_Strat == _St::_Member) {
+          return __g.find_vertex(uid);
+        } else if constexpr (_Strat == _St::_Non_member) {
+          return find_vertex(__g, uid); // intentional ADL
+        } else if constexpr (random_access_iterator<vertex_iterator_t<_G>>) {
+          auto uid_diff = static_cast<range_difference_t<vertex_range_t<_G>>>(uid);
+          if (uid_diff < ssize(vertices(__g)))
+            return begin(vertices(__g)) + uid_diff;
+          else
+            return end(vertices(__g));
+        } else {
+          static_assert(_AlwaysFalse<_G>,
+                        "find_vertex(g,uid) has not been defined and the default implemenation cannot be evaluated");
+        }
       }
-    }
-  };
-} // namespace _Find_vertex
+    };
+  } // namespace _Find_vertex
 
-inline namespace _Cpos {
-  inline constexpr _Find_vertex::_Cpo find_vertex;
-}
+  inline namespace _Cpos {
+    inline constexpr _Find_vertex::_Cpo find_vertex;
+  }
+} // namespace adj_list
+
+using adj_list::find_vertex;
 
 //
 // edges(g,u)  -> vertex_edge_range_t<G>
@@ -544,79 +551,80 @@ inline namespace _Cpos {
 // edge_reference_t          = ranges::range_reference_t<vertex_edge_range_t<G>>
 //
 namespace adj_list {
-namespace _Edges {
+  namespace _Edges {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void edges() = delete;                     // Block unqualified name lookup
+    void edges() = delete;                   // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
-  void edges();
+    void edges();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G>
-  concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u) {
-    { _Fake_copy_init(u.edges(__g)) };
-  };
-  template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
-                         && requires(_G&& __g, const vertex_reference_t<_G>& u) {
-                              { _Fake_copy_init(edges(__g, u)) }; // intentional ADL
-                            };
-  template <class _G>
-  concept _Can_ref_eval = _HasClassOrEnumType<_G> && forward_range<vertex_t<_G>>;
-
-  template <class _G>
-  concept _Has_id_ADL = _HasClassOrEnumType<_G> //
-                        && requires(_G&& __g, const vertex_id_t<_G>& uid) {
-                             { _Fake_copy_init(edges(__g, uid)) }; // intentional ADL
-                           };
-  template <class _G>
-  concept _Can_id_eval = _HasClassOrEnumType<_G> && forward_range<vertex_t<_G>> //
-                         && requires(_G&& __g, vertex_id_t<_G> uid) {
-                              { _Fake_copy_init(find_vertex(__g, uid)) };
-                            };
-
-  class _Cpo {
-  private:
-    enum class _St_id { _None, _Non_member, _Auto_eval };
-    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+    template <class _G>
+    concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u) {
+      { _Fake_copy_init(u.edges(__g)) };
+    };
+    template <class _G>
+    concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
+                           && requires(_G&& __g, const vertex_reference_t<_G>& u) {
+                                { _Fake_copy_init(edges(__g, u)) }; // intentional ADL
+                              };
+    template <class _G>
+    concept _Can_ref_eval = _HasClassOrEnumType<_G> && forward_range<vertex_t<_G>>;
 
     template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
-      if constexpr (_Has_id_ADL<_G>) {
-        return {_St_id::_Non_member,
-                noexcept(_Fake_copy_init(edges(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
-      } else if constexpr (_Can_id_eval<_G>) {
-        return {_St_id::_Auto_eval,
-                noexcept(_Fake_copy_init(*find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))}; // default impl
-      } else {
-        return {_St_id::_None};
+    concept _Has_id_ADL = _HasClassOrEnumType<_G> //
+                          && requires(_G&& __g, const vertex_id_t<_G>& uid) {
+                               { _Fake_copy_init(edges(__g, uid)) }; // intentional ADL
+                             };
+    template <class _G>
+    concept _Can_id_eval = _HasClassOrEnumType<_G> && forward_range<vertex_t<_G>> //
+                           && requires(_G&& __g, vertex_id_t<_G> uid) {
+                                { _Fake_copy_init(find_vertex(__g, uid)) };
+                              };
+
+    class _Cpo {
+    private:
+      enum class _St_id { _None, _Non_member, _Auto_eval };
+      enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_id> _Choose_id() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        if constexpr (_Has_id_ADL<_G>) {
+          return {_St_id::_Non_member,
+                  noexcept(_Fake_copy_init(edges(declval<_G>(), declval<vertex_id_t<_G>>())))}; // intentional ADL
+        } else if constexpr (_Can_id_eval<_G>) {
+          return {_St_id::_Auto_eval,
+                  noexcept(_Fake_copy_init(*find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))}; // default impl
+        } else {
+          return {_St_id::_None};
+        }
       }
-    }
 
-    template <class _G>
-    static constexpr _Choice_t<_St_id> _Choice_id = _Choose_id<_G>();
+      template <class _G>
+      static constexpr _Choice_t<_St_id> _Choice_id = _Choose_id<_G>();
 
-    template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
-      if constexpr (_Has_ref_member<_G>) {
-        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().edges(declval<_G>())))};
-      } else if constexpr (_Has_ref_ADL<_G>) {
-        return {_St_ref::_Non_member,
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        if constexpr (_Has_ref_member<_G>) {
+          return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<vertex_reference_t<_G>>().edges(declval<_G>())))};
+        } else if constexpr (_Has_ref_ADL<_G>) {
+          return {
+                _St_ref::_Non_member,
                 noexcept(_Fake_copy_init(edges(declval<_G>(), declval<vertex_reference_t<_G>>())))}; // intentional ADL
-      } else if constexpr (_Can_ref_eval<_G>) {
-        return {_St_ref::_Auto_eval,
-                noexcept(_Fake_copy_init(*find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))};
-      } else {
-        return {_St_ref::_None};
+        } else if constexpr (_Can_ref_eval<_G>) {
+          return {_St_ref::_Auto_eval,
+                  noexcept(_Fake_copy_init(*find_vertex(declval<_G>(), declval<vertex_id_t<_G>>())))};
+        } else {
+          return {_St_ref::_None};
+        }
       }
-    }
 
-    template <class _G>
-    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+      template <class _G>
+      static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
 
-  public:
-    /**
+    public:
+      /**
      * @brief The number of outgoing edges of a vertex.
      * 
      * Complexity: O(1)
@@ -628,24 +636,25 @@ namespace _Edges {
      * @param u A vertex instance.
      * @return The number of outgoing edges of vertex u.
     */
-    template <class _G>
-    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const
-          noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
-      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+      template <class _G>
+      requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, vertex_reference_t<_G> u) const
+            noexcept(_Choice_ref<_G&>._No_throw) -> decltype(auto) {
+        constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
-      if constexpr (_Strat_ref == _St_ref::_Member) {
-        return u.edges(__g);
-      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        return edges(__g, u); // intentional ADL
-      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return u; // default impl
-      } else {
-        static_assert(_AlwaysFalse<_G>, "edges(g,u) is not defined and the default implementation cannot be evaluated");
+        if constexpr (_Strat_ref == _St_ref::_Member) {
+          return u.edges(__g);
+        } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+          return edges(__g, u); // intentional ADL
+        } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+          return u; // default impl
+        } else {
+          static_assert(_AlwaysFalse<_G>,
+                        "edges(g,u) is not defined and the default implementation cannot be evaluated");
+        }
       }
-    }
 
-    /**
+      /**
      * @brief Get the outgoing edges of a vertex id.
      * 
      * Complexity: O(1)
@@ -657,38 +666,38 @@ namespace _Edges {
      * @param uid Vertex id.
      * @return A range of the outgoing edges.
     */
-    template <class _G>
-    requires(_Choice_id<_G&>._Strategy != _St_id::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid) const
-          noexcept(_Choice_id<_G&>._No_throw) -> decltype(auto) {
-      constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
+      template <class _G>
+      requires(_Choice_id<_G&>._Strategy != _St_id::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, const vertex_id_t<_G>& uid) const
+            noexcept(_Choice_id<_G&>._No_throw) -> decltype(auto) {
+        constexpr _St_id _Strat_id = _Choice_id<_G&>._Strategy;
 
 #  if USE_EDGE_DESCRIPTOR
-      if constexpr (_Strat_id == _St_id::_Non_member) {
-        return to_descriptor_view(edges(__g, uid)); // intentional ADL
-      } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
-        return to_descriptor_view(*find_vertex(__g, uid)); // default impl
-      } else {
-        static_assert(_AlwaysFalse<_G>,
-                      "edges(g,uid) is not defined and the default implementation cannot be evaluated");
-      }
+        if constexpr (_Strat_id == _St_id::_Non_member) {
+          return to_descriptor_view(edges(__g, uid)); // intentional ADL
+        } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
+          return to_descriptor_view(*find_vertex(__g, uid)); // default impl
+        } else {
+          static_assert(_AlwaysFalse<_G>,
+                        "edges(g,uid) is not defined and the default implementation cannot be evaluated");
+        }
 #  else
-      if constexpr (_Strat_id == _St_id::_Non_member) {
-        return edges(__g, uid); // intentional ADL
-      } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
-        return *find_vertex(__g, uid); // default impl
-      } else {
-        static_assert(_AlwaysFalse<_G>,
-                      "edges(g,uid) is not defined and the default implementation cannot be evaluated");
-      }
+        if constexpr (_Strat_id == _St_id::_Non_member) {
+          return edges(__g, uid); // intentional ADL
+        } else if constexpr (_Strat_id == _St_id::_Auto_eval) {
+          return *find_vertex(__g, uid); // default impl
+        } else {
+          static_assert(_AlwaysFalse<_G>,
+                        "edges(g,uid) is not defined and the default implementation cannot be evaluated");
+        }
 #  endif
-    }
-  };
-} // namespace _Edges
+      }
+    };
+  } // namespace _Edges
 
-inline namespace _Cpos {
-  inline constexpr _Edges::_Cpo edges;
-}
+  inline namespace _Cpos {
+    inline constexpr _Edges::_Cpo edges;
+  }
 } // namespace adj_list
 
 using adj_list::edges;
@@ -742,53 +751,54 @@ using edge_reference_t = range_reference_t<vertex_edge_range_t<G>>;
 // num_edges(g,)      -> integral   default = n=0; for (const auto& u : vertices(g)) n += distance(edges(g,u))
 // num_edges(g,u,pid) -> integral   default = ?
 //
-namespace _NumEdges {
+namespace adj_list {
+  namespace _NumEdges {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void num_edges() = delete;                 // Block unqualified name lookup
+    void num_edges() = delete;               // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
-  void num_edges();
+    void num_edges();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G>
-  concept _Has_ref_member = requires(_G&& __g) {
-    { _Fake_copy_init(__g.num_edges()) };
-  };
-  template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
-                         && requires(_G&& __g) {
-                              { _Fake_copy_init(num_edges(__g)) }; // intentional ADL
-                            };
-  template <class _G>
-  concept _Can_ref_eval = requires(_G&& __g, vertex_t<_G> __u) {
-    { vertices(__g) };
-    { _Fake_copy_init(std::ranges::distance(edges(__g, __u))) };
-  };
-
-  class _Cpo {
-  private:
-    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
-    enum class _St_id { _None, _Non_member, _Auto_eval };
-
     template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
-      if constexpr (_Has_ref_member<_G>) {
-        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().num_edges()))};
-      } else if constexpr (_Has_ref_ADL<_G>) {
-        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(num_edges(declval<_G>())))}; // intentional ADL
-      } else if constexpr (_Can_ref_eval<_G>) {
-        return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(std::ranges::distance(
-                                           edges(declval<_G>(), declval<vertex_reference_t<_G>>()))))};
-      } else {
-        return {_St_ref::_None};
+    concept _Has_ref_member = requires(_G&& __g) {
+      { _Fake_copy_init(__g.num_edges()) };
+    };
+    template <class _G>
+    concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
+                           && requires(_G&& __g) {
+                                { _Fake_copy_init(num_edges(__g)) }; // intentional ADL
+                              };
+    template <class _G>
+    concept _Can_ref_eval = requires(_G&& __g, vertex_t<_G> __u) {
+      { vertices(__g) };
+      { _Fake_copy_init(std::ranges::distance(edges(__g, __u))) };
+    };
+
+    class _Cpo {
+    private:
+      enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+      enum class _St_id { _None, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        if constexpr (_Has_ref_member<_G>) {
+          return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_G>().num_edges()))};
+        } else if constexpr (_Has_ref_ADL<_G>) {
+          return {_St_ref::_Non_member, noexcept(_Fake_copy_init(num_edges(declval<_G>())))}; // intentional ADL
+        } else if constexpr (_Can_ref_eval<_G>) {
+          return {_St_ref::_Auto_eval, noexcept(_Fake_copy_init(std::ranges::distance(
+                                             edges(declval<_G>(), declval<vertex_reference_t<_G>>()))))};
+        } else {
+          return {_St_ref::_None};
+        }
       }
-    }
 
-    template <class _G>
-    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+      template <class _G>
+      static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
 
-  public:
-    /**
+    public:
+      /**
        * @brief The number of edges in a graph.
        * 
        * Complexity: 
@@ -805,143 +815,147 @@ namespace _NumEdges {
        * @param g A graph instance.
        * @return The number of edges in g.
       */
-    template <class _G>
-    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) {
-      constexpr _St_ref _Strat_id = _Choice_ref<_G&>._Strategy;
+      template <class _G>
+      requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g) const noexcept(_Choice_ref<_G&>._No_throw) {
+        constexpr _St_ref _Strat_id = _Choice_ref<_G&>._Strategy;
 
-      if constexpr (_Strat_id == _St_ref::_Member) {
-        return __g.num_edges();
-      } else if constexpr (_Strat_id == _St_ref::_Non_member) {
-        return num_edges(__g); // intentional ADL
-      } else if constexpr (_Strat_id == _St_ref::_Auto_eval) {
-        using size_type = decltype(std::ranges::distance(edges(__g, declval<vertex_reference_t<_G>>())));
-        size_type n     = 0; // default impl
-        for (auto&& u : vertices(__g))
-          n += std::ranges::distance(edges(__g, u));
-        return n;
-      } else {
-        static_assert(_AlwaysFalse<_G>,
-                      "num_edges(g) is not defined and the default implementation cannot be evaluated");
+        if constexpr (_Strat_id == _St_ref::_Member) {
+          return __g.num_edges();
+        } else if constexpr (_Strat_id == _St_ref::_Non_member) {
+          return num_edges(__g); // intentional ADL
+        } else if constexpr (_Strat_id == _St_ref::_Auto_eval) {
+          using size_type = decltype(std::ranges::distance(edges(__g, declval<vertex_reference_t<_G>>())));
+          size_type n     = 0; // default impl
+          for (auto&& u : vertices(__g))
+            n += std::ranges::distance(edges(__g, u));
+          return n;
+        } else {
+          static_assert(_AlwaysFalse<_G>,
+                        "num_edges(g) is not defined and the default implementation cannot be evaluated");
+        }
       }
-    }
-  };
-} // namespace _NumEdges
+    };
+  } // namespace _NumEdges
 
-inline namespace _Cpos {
-  inline constexpr _NumEdges::_Cpo num_edges;
-}
+  inline namespace _Cpos {
+    inline constexpr _NumEdges::_Cpo num_edges;
+  }
+} // namespace adj_list
+
+using adj_list::num_edges;
 
 //
 // target_id(g,uv) -> vertex_id_t<G>
 //
 // Graph data structure must define
 //
-namespace _Target_id {
+namespace adj_list {
+  namespace _Target_id {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void target_id() = delete;                 // Block unqualified name lookup
+    void target_id() = delete;               // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
-  void target_id();
+    void target_id();
 #  endif                                     // ^^^ workaround ^^^
 
 #  if USE_EDGE_DESCRIPTOR
-  template <class _G>
-  concept _Has_adjl_ref_member = requires(_G&& __g, edge_descriptor_t<_G> uv) {
-    { _Fake_copy_init(uv.target_id(__g)) };
-  };
-  template <class _G>
-  concept _Has_adjl_ref_ADL = requires(_G&& __g, edge_descriptor_t<_G> uv) {
-    { _Fake_copy_init(target_id(__g, uv)) }; // intentional ADL
-  };
+    template <class _G>
+    concept _Has_adjl_ref_member = requires(_G&& __g, edge_descriptor_t<_G> uv) {
+      { _Fake_copy_init(uv.target_id(__g)) };
+    };
+    template <class _G>
+    concept _Has_adjl_ref_ADL = requires(_G&& __g, edge_descriptor_t<_G> uv) {
+      { _Fake_copy_init(target_id(__g, uv)) }; // intentional ADL
+    };
 #  else
-  template <class _G>
-  concept _Has_adjl_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
-    { _Fake_copy_init(uv.target_id(__g)) };
-  };
-  template <class _G>
-  concept _Has_adjl_ref_ADL = requires(_G&& __g, edge_reference_t<_G> uv) {
-    { _Fake_copy_init(target_id(__g, uv)) }; // intentional ADL
-  };
+    template <class _G>
+    concept _Has_adjl_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
+      { _Fake_copy_init(uv.target_id(__g)) };
+    };
+    template <class _G>
+    concept _Has_adjl_ref_ADL = requires(_G&& __g, edge_reference_t<_G> uv) {
+      { _Fake_copy_init(target_id(__g, uv)) }; // intentional ADL
+    };
 #  endif
 
-  template <class _G>
-  concept _Is_basic_id_adj = integral<_al_edge_t<_G>>; // vertex<vertex<int>>
-
-  template <class _G>
-  concept _Is_tuple_id_adj = integral<tuple_element_t<0, _al_edge_t<_G>>>; // vertex<vertex<tuple<int,...>>>
-
-  template <class _E>
-  concept _Has_edgl_ref_member = requires(_E&& e) {
-    { _Fake_copy_init(e.target_id()) };
-  };
-  template <class _E>
-  concept _Has_edgl_ref_ADL = requires(_E&& __e) {
-    { _Fake_copy_init(target_id(__e)) }; // intentional ADL
-  };
-
-  template <class _E>
-  concept _is_tuple_edge = _el_tuple_edge<_E>;
-
-  template <class _E>
-  concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
-
-  class _Cpo {
-  private:
-    enum class _St_adjl_ref { _None, _Member, _Non_member, _Basic_id, _Tuple_id, _Auto_eval };
+    template <class _G>
+    concept _Is_basic_id_adj = integral<_al_edge_t<_G>>; // vertex<vertex<int>>
 
     template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St_adjl_ref> _Choose_adjl_ref() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
-
-      if constexpr (_Has_adjl_ref_member<_G>) {
-        return {_St_adjl_ref::_Member,
-                noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().target_id(declval<_G>())))};
-      } else if constexpr (_Has_adjl_ref_ADL<_G>) {
-        return {
-              _St_adjl_ref::_Non_member,
-              noexcept(_Fake_copy_init(target_id(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
-      } else if constexpr (_Is_basic_id_adj<_G>) {
-        return {_St_adjl_ref::_Basic_id,
-                noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>()))}; // e.g. vector<list<int>>
-      } else if constexpr (_Is_tuple_id_adj<_G>) {
-        return {
-              _St_adjl_ref::_Tuple_id,
-              noexcept(_Fake_copy_init(get<0>(declval<edge_reference_t<_G>>())))}; // e.g. vector<list<tuple<int,...>>>
-      } else {
-        return {_St_adjl_ref::_None};
-      }
-    }
-
-    template <class _G>
-    static constexpr _Choice_t<_St_adjl_ref> _Choice_adjl_ref = _Choose_adjl_ref<_G>();
-
-  private:
-    enum class _St_edgl_ref { _None, _Member, _Non_member, _Tuple_id, _EDesc_id };
+    concept _Is_tuple_id_adj = integral<tuple_element_t<0, _al_edge_t<_G>>>; // vertex<vertex<tuple<int,...>>>
 
     template <class _E>
-    [[nodiscard]] static consteval _Choice_t<_St_edgl_ref> _Choose_edgl_ref() noexcept {
-      //static_assert(is_lvalue_reference_v<_E>);
-
-      if constexpr (_Has_edgl_ref_member<_E>) {
-        return {_St_edgl_ref::_Member, noexcept(_Fake_copy_init(declval<_E&>().target_id()))};
-      } else if constexpr (_Has_edgl_ref_ADL<_E>) {
-        return {_St_edgl_ref::_Non_member, noexcept(_Fake_copy_init(target_id(declval<_E>())))}; // intentional ADL
-      } else if constexpr (_is_tuple_edge<_E>) {
-        return {_St_edgl_ref::_Tuple_id,
-                noexcept(_Fake_copy_init(declval<tuple_element_t<0, _E>>()))}; // first element of tuple/pair
-      } else if constexpr (_is_edge_desc<_E>) {
-        return {_St_edgl_ref::_EDesc_id,
-                noexcept(_Fake_copy_init(declval<typename _E::target_id_type>()))}; // target_id of edge_info
-      } else {
-        return {_St_edgl_ref::_None};
-      }
-    }
+    concept _Has_edgl_ref_member = requires(_E&& e) {
+      { _Fake_copy_init(e.target_id()) };
+    };
+    template <class _E>
+    concept _Has_edgl_ref_ADL = requires(_E&& __e) {
+      { _Fake_copy_init(target_id(__e)) }; // intentional ADL
+    };
 
     template <class _E>
-    static constexpr _Choice_t<_St_edgl_ref> _Choice_edgl_ref = _Choose_edgl_ref<remove_reference_t<_E>>();
+    concept _is_tuple_edge = _el_tuple_edge<_E>;
 
-  public:
-    /**
+    template <class _E>
+    concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
+
+    class _Cpo {
+    private:
+      enum class _St_adjl_ref { _None, _Member, _Non_member, _Basic_id, _Tuple_id, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_adjl_ref> _Choose_adjl_ref() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+
+        if constexpr (_Has_adjl_ref_member<_G>) {
+          return {_St_adjl_ref::_Member,
+                  noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().target_id(declval<_G>())))};
+        } else if constexpr (_Has_adjl_ref_ADL<_G>) {
+          return {_St_adjl_ref::_Non_member,
+                  noexcept(
+                        _Fake_copy_init(target_id(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+        } else if constexpr (_Is_basic_id_adj<_G>) {
+          return {_St_adjl_ref::_Basic_id,
+                  noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>()))}; // e.g. vector<list<int>>
+        } else if constexpr (_Is_tuple_id_adj<_G>) {
+          return {_St_adjl_ref::_Tuple_id,
+                  noexcept(
+                        _Fake_copy_init(get<0>(declval<edge_reference_t<_G>>())))}; // e.g. vector<list<tuple<int,...>>>
+        } else {
+          return {_St_adjl_ref::_None};
+        }
+      }
+
+      template <class _G>
+      static constexpr _Choice_t<_St_adjl_ref> _Choice_adjl_ref = _Choose_adjl_ref<_G>();
+
+    private:
+      enum class _St_edgl_ref { _None, _Member, _Non_member, _Tuple_id, _EDesc_id };
+
+      template <class _E>
+      [[nodiscard]] static consteval _Choice_t<_St_edgl_ref> _Choose_edgl_ref() noexcept {
+        //static_assert(is_lvalue_reference_v<_E>);
+
+        if constexpr (_Has_edgl_ref_member<_E>) {
+          return {_St_edgl_ref::_Member, noexcept(_Fake_copy_init(declval<_E&>().target_id()))};
+        } else if constexpr (_Has_edgl_ref_ADL<_E>) {
+          return {_St_edgl_ref::_Non_member, noexcept(_Fake_copy_init(target_id(declval<_E>())))}; // intentional ADL
+        } else if constexpr (_is_tuple_edge<_E>) {
+          return {_St_edgl_ref::_Tuple_id,
+                  noexcept(_Fake_copy_init(declval<tuple_element_t<0, _E>>()))}; // first element of tuple/pair
+        } else if constexpr (_is_edge_desc<_E>) {
+          return {_St_edgl_ref::_EDesc_id,
+                  noexcept(_Fake_copy_init(declval<typename _E::target_id_type>()))}; // target_id of edge_info
+        } else {
+          return {_St_edgl_ref::_None};
+        }
+      }
+
+      template <class _E>
+      static constexpr _Choice_t<_St_edgl_ref> _Choice_edgl_ref = _Choose_edgl_ref<remove_reference_t<_E>>();
+
+    public:
+      /**
      * @brief The target_id of an adjancy list edge
      * 
      * Complexity: O(1)
@@ -956,26 +970,26 @@ namespace _Target_id {
      * @param uv An edge instance.
      * @return The target_id on an edge for an ajacency_list
     */
-    template <class _G>
-    //requires(_Choice_adjl_ref<_G&>._Strategy != _St_adjl_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
-          noexcept(_Choice_adjl_ref<_G&>._No_throw) {
-      constexpr _St_adjl_ref _Strat_ref = _Choice_adjl_ref<_G&>._Strategy;
+      template <class _G>
+      //requires(_Choice_adjl_ref<_G&>._Strategy != _St_adjl_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+            noexcept(_Choice_adjl_ref<_G&>._No_throw) {
+        constexpr _St_adjl_ref _Strat_ref = _Choice_adjl_ref<_G&>._Strategy;
 
-      if constexpr (_Strat_ref == _St_adjl_ref::_Member) {
-        return uv.target_id(__g);
-      } else if constexpr (_Strat_ref == _St_adjl_ref::_Non_member) {
-        return target_id(__g, uv); // intentional ADL
-      } else if constexpr (_Strat_ref == _St_adjl_ref::_Basic_id) {
-        return uv;
-      } else if constexpr (_Strat_ref == _St_adjl_ref::_Tuple_id) {
-        return get<0>(uv);
-      } else {
-        static_assert(_AlwaysFalse<_G>, "target_id(g,uv) or g.target_id(uv) is not defined");
+        if constexpr (_Strat_ref == _St_adjl_ref::_Member) {
+          return uv.target_id(__g);
+        } else if constexpr (_Strat_ref == _St_adjl_ref::_Non_member) {
+          return target_id(__g, uv); // intentional ADL
+        } else if constexpr (_Strat_ref == _St_adjl_ref::_Basic_id) {
+          return uv;
+        } else if constexpr (_Strat_ref == _St_adjl_ref::_Tuple_id) {
+          return get<0>(uv);
+        } else {
+          static_assert(_AlwaysFalse<_G>, "target_id(g,uv) or g.target_id(uv) is not defined");
+        }
       }
-    }
 
-    /**
+      /**
      * @brief The target_id of an edgelist edge.
      * 
      * Complexity: O(1)
@@ -989,30 +1003,33 @@ namespace _Target_id {
      * @param uv An edge instance.
      * @return The target_id on an edge for an ajacency_list
     */
-    template <class _E>
-    requires(_Choice_edgl_ref<_E>._Strategy != _St_edgl_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E>._No_throw) {
-      constexpr _St_edgl_ref _Strat_ref = _Choice_edgl_ref<_E>._Strategy;
+      template <class _E>
+      requires(_Choice_edgl_ref<_E>._Strategy != _St_edgl_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E>._No_throw) {
+        constexpr _St_edgl_ref _Strat_ref = _Choice_edgl_ref<_E>._Strategy;
 
-      if constexpr (_Strat_ref == _St_edgl_ref::_Member) {
-        return __e.target_id();
-      } else if constexpr (_Strat_ref == _St_edgl_ref::_Non_member) {
-        return target_id(__e); // intentional ADL
-      } else if constexpr (_Strat_ref == _St_edgl_ref::_Tuple_id) {
-        //static_assert(same_as<tuple_element<0, _E>, int>);
-        return get<0>(__e); // first element of tuple/pair
-      } else if constexpr (_Strat_ref == _St_edgl_ref::_EDesc_id) {
-        return __e.target_id;
-      } else {
-        static_assert(_AlwaysFalse<_E>, "target_id(e) or e.target_id() is not defined");
+        if constexpr (_Strat_ref == _St_edgl_ref::_Member) {
+          return __e.target_id();
+        } else if constexpr (_Strat_ref == _St_edgl_ref::_Non_member) {
+          return target_id(__e); // intentional ADL
+        } else if constexpr (_Strat_ref == _St_edgl_ref::_Tuple_id) {
+          //static_assert(same_as<tuple_element<0, _E>, int>);
+          return get<0>(__e); // first element of tuple/pair
+        } else if constexpr (_Strat_ref == _St_edgl_ref::_EDesc_id) {
+          return __e.target_id;
+        } else {
+          static_assert(_AlwaysFalse<_E>, "target_id(e) or e.target_id() is not defined");
+        }
       }
-    }
-  };
-} // namespace _Target_id
+    };
+  } // namespace _Target_id
 
-inline namespace _Cpos {
-  inline constexpr _Target_id::_Cpo target_id;
-}
+  inline namespace _Cpos {
+    inline constexpr _Target_id::_Cpo target_id;
+  }
+} // namespace adj_list
+
+using adj_list::target_id;
 
 //template<_al_adjlist T>
 //struct _vid_type {
@@ -1041,86 +1058,87 @@ inline namespace _Cpos {
 //
 // source_id(g,uv) -> vertex_id_t<G> (optional; only when a source_id exists on an edge)
 //
-namespace _Source_id {
+namespace adj_list {
+  namespace _Source_id {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void source_id() = delete;                 // Block unqualified name lookup
+    void source_id() = delete;               // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
-  void source_id();
+    void source_id();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G>
-  concept _Has_adjl_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
-    { _Fake_copy_init(uv.source_id(__g)) };
-  };
-  template <class _G>
-  concept _Has_adjl_ref_ADL = _HasClassOrEnumType<_G> //
-                              && requires(_G&& __g, const edge_reference_t<_G>& uv) {
-                                   { _Fake_copy_init(source_id(__g, uv)) }; // intentional ADL
-                                 };
-
-  template <class _E>
-  concept _Has_edgl_ref_member = requires(_E&& __e) {
-    { _Fake_copy_init(__e.source_id()) };
-  };
-  template <class _E>
-  concept _Has_edgl_ref_ADL = _HasClassOrEnumType<_E> //
-                              && requires(_E&& __e) {
-                                   { _Fake_copy_init(source_id(__e)) }; // intentional ADL
-                                 };
-
-  template <class _E>
-  concept _is_tuple_edge = _el_tuple_edge<_E>;
-
-  template <class _E>
-  concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
-
-  class _Cpo {
-  private:
-    enum class _St_adjl_ref { _None, _Member, _Non_member, _Auto_eval };
-
     template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St_adjl_ref> _Choose_adjl_ref() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
-      if constexpr (_Has_adjl_ref_member<_G>) {
-        return {_St_adjl_ref::_Member,
-                noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().source_id(declval<_G>())))};
-      } else if constexpr (_Has_adjl_ref_ADL<_G>) {
-        return {
-              _St_adjl_ref::_Non_member,
-              noexcept(_Fake_copy_init(source_id(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
-      } else {
-        return {_St_adjl_ref::_None};
+    concept _Has_adjl_ref_member = requires(_G&& __g, edge_reference_t<_G> uv) {
+      { _Fake_copy_init(uv.source_id(__g)) };
+    };
+    template <class _G>
+    concept _Has_adjl_ref_ADL = _HasClassOrEnumType<_G> //
+                                && requires(_G&& __g, const edge_reference_t<_G>& uv) {
+                                     { _Fake_copy_init(source_id(__g, uv)) }; // intentional ADL
+                                   };
+
+    template <class _E>
+    concept _Has_edgl_ref_member = requires(_E&& __e) {
+      { _Fake_copy_init(__e.source_id()) };
+    };
+    template <class _E>
+    concept _Has_edgl_ref_ADL = _HasClassOrEnumType<_E> //
+                                && requires(_E&& __e) {
+                                     { _Fake_copy_init(source_id(__e)) }; // intentional ADL
+                                   };
+
+    template <class _E>
+    concept _is_tuple_edge = _el_tuple_edge<_E>;
+
+    template <class _E>
+    concept _is_edge_desc = _el_basic_sourced_edge_desc<_E>;
+
+    class _Cpo {
+    private:
+      enum class _St_adjl_ref { _None, _Member, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_adjl_ref> _Choose_adjl_ref() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+        if constexpr (_Has_adjl_ref_member<_G>) {
+          return {_St_adjl_ref::_Member,
+                  noexcept(_Fake_copy_init(declval<edge_reference_t<_G>>().source_id(declval<_G>())))};
+        } else if constexpr (_Has_adjl_ref_ADL<_G>) {
+          return {_St_adjl_ref::_Non_member,
+                  noexcept(
+                        _Fake_copy_init(source_id(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+        } else {
+          return {_St_adjl_ref::_None};
+        }
       }
-    }
 
-    template <class _E>
-    static constexpr _Choice_t<_St_adjl_ref> _Choice_adjl_ref = _Choose_adjl_ref<_E>();
+      template <class _E>
+      static constexpr _Choice_t<_St_adjl_ref> _Choice_adjl_ref = _Choose_adjl_ref<_E>();
 
-    enum class _St_edgl_ref { _None, _Member, _Non_member, _Tuple_id, _EDesc_id };
+      enum class _St_edgl_ref { _None, _Member, _Non_member, _Tuple_id, _EDesc_id };
 
-    template <class _E>
-    [[nodiscard]] static consteval _Choice_t<_St_edgl_ref> _Choose_edgl_ref() noexcept {
-      //static_assert(is_lvalue_reference_v<_E>);
-      if constexpr (_Has_edgl_ref_member<_E>) {
-        return {_St_edgl_ref::_Member, noexcept(_Fake_copy_init(declval<_E>().source_id()))};
-      } else if constexpr (_Has_edgl_ref_ADL<_E>) {
-        return {_St_edgl_ref::_Non_member, noexcept(_Fake_copy_init(source_id(declval<_E>())))}; // intentional ADL
-      } else if constexpr (_is_tuple_edge<_E>) {
-        return {_St_edgl_ref::_Tuple_id,
-                noexcept(_Fake_copy_init(declval<tuple_element_t<1, _E>>()))}; // first element of tuple/pair
-      } else if constexpr (_is_edge_desc<_E>) {
-        return {_St_edgl_ref::_EDesc_id,
-                noexcept(_Fake_copy_init(declval<typename _E::source_id_type>()))}; // source_id of edge_info
-      } else {
-        return {_St_edgl_ref::_None};
+      template <class _E>
+      [[nodiscard]] static consteval _Choice_t<_St_edgl_ref> _Choose_edgl_ref() noexcept {
+        //static_assert(is_lvalue_reference_v<_E>);
+        if constexpr (_Has_edgl_ref_member<_E>) {
+          return {_St_edgl_ref::_Member, noexcept(_Fake_copy_init(declval<_E>().source_id()))};
+        } else if constexpr (_Has_edgl_ref_ADL<_E>) {
+          return {_St_edgl_ref::_Non_member, noexcept(_Fake_copy_init(source_id(declval<_E>())))}; // intentional ADL
+        } else if constexpr (_is_tuple_edge<_E>) {
+          return {_St_edgl_ref::_Tuple_id,
+                  noexcept(_Fake_copy_init(declval<tuple_element_t<1, _E>>()))}; // first element of tuple/pair
+        } else if constexpr (_is_edge_desc<_E>) {
+          return {_St_edgl_ref::_EDesc_id,
+                  noexcept(_Fake_copy_init(declval<typename _E::source_id_type>()))}; // source_id of edge_info
+        } else {
+          return {_St_edgl_ref::_None};
+        }
       }
-    }
 
-    template <class _E>
-    static constexpr _Choice_t<_St_edgl_ref> _Choice_edgl_ref = _Choose_edgl_ref<remove_reference_t<_E>>();
+      template <class _E>
+      static constexpr _Choice_t<_St_edgl_ref> _Choice_edgl_ref = _Choose_edgl_ref<remove_reference_t<_E>>();
 
-  public:
-    /**
+    public:
+      /**
      * @brief The source_id of an adjacency list edge
      * 
      * Note that source_id may not be implemented for an edge type.
@@ -1134,22 +1152,22 @@ namespace _Source_id {
      * @param uv An edge instance.
      * @return The source_id of the edge.
     */
-    template <class _G>
-    requires(_Choice_adjl_ref<_G&>._Strategy != _St_adjl_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
-          noexcept(_Choice_adjl_ref<_G&>._No_throw) {
-      constexpr _St_adjl_ref _Strat_ref = _Choice_adjl_ref<_G&>._Strategy;
+      template <class _G>
+      requires(_Choice_adjl_ref<_G&>._Strategy != _St_adjl_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_G&& __g, edge_reference_t<_G> uv) const
+            noexcept(_Choice_adjl_ref<_G&>._No_throw) {
+        constexpr _St_adjl_ref _Strat_ref = _Choice_adjl_ref<_G&>._Strategy;
 
-      if constexpr (_Strat_ref == _St_adjl_ref::_Member) {
-        return uv.source_id(__g);
-      } else if constexpr (_Strat_ref == _St_adjl_ref::_Non_member) {
-        return source_id(__g, uv); // intentional ADL
-      } else {
-        static_assert(_AlwaysFalse<_G>, "source_id(g,uv) or g.source_id(uv) is not defined");
+        if constexpr (_Strat_ref == _St_adjl_ref::_Member) {
+          return uv.source_id(__g);
+        } else if constexpr (_Strat_ref == _St_adjl_ref::_Non_member) {
+          return source_id(__g, uv); // intentional ADL
+        } else {
+          static_assert(_AlwaysFalse<_G>, "source_id(g,uv) or g.source_id(uv) is not defined");
+        }
       }
-    }
 
-    /**
+      /**
      * @brief The source_id of an edgelist edge
      * 
      * Complexity: O(1)
@@ -1162,30 +1180,33 @@ namespace _Source_id {
      * @param e A edgelist edge instance.
      * @return The source_id of the edge.
     */
-    template <class _E>
-    requires(_Choice_edgl_ref<_E>._Strategy != _St_edgl_ref::_None)
-    [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E>._No_throw) {
-      constexpr _St_edgl_ref _Strat_ref = _Choice_edgl_ref<_E>._Strategy;
+      template <class _E>
+      requires(_Choice_edgl_ref<_E>._Strategy != _St_edgl_ref::_None)
+      [[nodiscard]] constexpr auto operator()(_E&& __e) const noexcept(_Choice_edgl_ref<_E>._No_throw) {
+        constexpr _St_edgl_ref _Strat_ref = _Choice_edgl_ref<_E>._Strategy;
 
-      if constexpr (_Strat_ref == _St_edgl_ref::_Member) {
-        return __e.source_id();
-      } else if constexpr (_Strat_ref == _St_edgl_ref::_Non_member) {
-        return source_id(__e); // intentional ADL
-      } else if constexpr (_Strat_ref == _St_edgl_ref::_Tuple_id) {
-        return get<1>(__e); // first element of tuple/pair
-      } else if constexpr (_Strat_ref == _St_edgl_ref::_EDesc_id) {
-        return __e.source_id;
-      } else {
-        static_assert(_AlwaysFalse<_E>, "source_id(e) or e.source_id() is not defined");
+        if constexpr (_Strat_ref == _St_edgl_ref::_Member) {
+          return __e.source_id();
+        } else if constexpr (_Strat_ref == _St_edgl_ref::_Non_member) {
+          return source_id(__e); // intentional ADL
+        } else if constexpr (_Strat_ref == _St_edgl_ref::_Tuple_id) {
+          return get<1>(__e); // first element of tuple/pair
+        } else if constexpr (_Strat_ref == _St_edgl_ref::_EDesc_id) {
+          return __e.source_id;
+        } else {
+          static_assert(_AlwaysFalse<_E>, "source_id(e) or e.source_id() is not defined");
+        }
       }
-    }
-  };
+    };
 
-} // namespace _Source_id
+  } // namespace _Source_id
 
-inline namespace _Cpos {
-  inline constexpr _Source_id::_Cpo source_id;
-} // namespace _Cpos
+  inline namespace _Cpos {
+    inline constexpr _Source_id::_Cpo source_id;
+  } // namespace _Cpos
+} // namespace adj_list
+
+using adj_list::source_id;
 
 //template <class EL>
 //requires _el_edgelist<EL>
@@ -1201,50 +1222,51 @@ inline namespace _Cpos {
 //      for random_access_range<vertices(g)> and integral<target_id(g,uv))
 //      uv can be from edges(g,u) or vertices(g,u)
 //
-namespace _Target {
+namespace adj_list {
+  namespace _Target {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
-  void target() = delete;                    // Block unqualified name lookup
+    void target() = delete;                  // Block unqualified name lookup
 #  else                                      // ^^^ no workaround / workaround vvv
-  void target();
+    void target();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G>
-  concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
-                         && requires(_G&& __g, const edge_reference_t<_G>& uv) {
-                              { _Fake_copy_init(target(__g, uv)) }; // intentional ADL
-                            };
-  template <class _G>
-  concept _Can_ref_eval = random_access_range<vertex_range_t<_G>> //
-                          && requires(_G&& __g, edge_reference_t<_G> uv, vertex_id_t<_G> uid) {
-                               { _Fake_copy_init(find_vertex(__g, uid)) };
-                               { _Fake_copy_init(target_id(__g, uv)) } -> integral;
-                             };
-
-  class _Cpo {
-  private:
-    enum class _St_ref { _None, _Non_member, _Auto_eval };
-
     template <class _G>
-    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
-      static_assert(is_lvalue_reference_v<_G>);
+    concept _Has_ref_ADL = _HasClassOrEnumType<_G> //
+                           && requires(_G&& __g, const edge_reference_t<_G>& uv) {
+                                { _Fake_copy_init(target(__g, uv)) }; // intentional ADL
+                              };
+    template <class _G>
+    concept _Can_ref_eval = random_access_range<vertex_range_t<_G>> //
+                            && requires(_G&& __g, edge_reference_t<_G> uv, vertex_id_t<_G> uid) {
+                                 { _Fake_copy_init(find_vertex(__g, uid)) };
+                                 { _Fake_copy_init(target_id(__g, uv)) } -> integral;
+                               };
 
-      if constexpr (_Has_ref_ADL<_G>) {
-        return {_St_ref::_Non_member,
-                noexcept(_Fake_copy_init(target(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
-      } else if constexpr (_Can_ref_eval<_G>) {
-        return {_St_ref::_Auto_eval,
-                noexcept(_Fake_copy_init(*find_vertex(
-                      declval<_G>(), target_id(declval<_G>(), declval<edge_reference_t<_G>>()))))}; // intentional ADL
-      } else {
-        return {_St_ref::_None};
+    class _Cpo {
+    private:
+      enum class _St_ref { _None, _Non_member, _Auto_eval };
+
+      template <class _G>
+      [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+        static_assert(is_lvalue_reference_v<_G>);
+
+        if constexpr (_Has_ref_ADL<_G>) {
+          return {_St_ref::_Non_member,
+                  noexcept(_Fake_copy_init(target(declval<_G>(), declval<edge_reference_t<_G>>())))}; // intentional ADL
+        } else if constexpr (_Can_ref_eval<_G>) {
+          return {_St_ref::_Auto_eval,
+                  noexcept(_Fake_copy_init(*find_vertex(
+                        declval<_G>(), target_id(declval<_G>(), declval<edge_reference_t<_G>>()))))}; // intentional ADL
+        } else {
+          return {_St_ref::_None};
+        }
       }
-    }
 
-    template <class _G>
-    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
+      template <class _G>
+      static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_G>();
 
-  public:
-    /**
+    public:
+      /**
      * @brief The number of outgoing edges of a vertex.
      * 
      * Complexity: O(1)
@@ -1256,26 +1278,29 @@ namespace _Target {
      * @param uv A vertex instance.
      * @return The number of outgoing edges of vertex uv.
     */
-    template <class _G>
-    requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
-    [[nodiscard]] constexpr auto&& operator()(_G&& __g, edge_reference_t<_G> uv) const
-          noexcept(_Choice_ref<_G&>._No_throw) {
-      constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
+      template <class _G>
+      requires(_Choice_ref<_G&>._Strategy != _St_ref::_None)
+      [[nodiscard]] constexpr auto&& operator()(_G&& __g, edge_reference_t<_G> uv) const
+            noexcept(_Choice_ref<_G&>._No_throw) {
+        constexpr _St_ref _Strat_ref = _Choice_ref<_G&>._Strategy;
 
-      if constexpr (_Strat_ref == _St_ref::_Non_member) {
-        return target(__g, uv); // intentional ADL
-      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
-        return *find_vertex(__g, target_id(__g, uv));
-      } else {
-        static_assert(_AlwaysFalse<_G>, "target(g,uv) or uv.target(g) or g.target_id(g,uv) is not defined");
+        if constexpr (_Strat_ref == _St_ref::_Non_member) {
+          return target(__g, uv); // intentional ADL
+        } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+          return *find_vertex(__g, target_id(__g, uv));
+        } else {
+          static_assert(_AlwaysFalse<_G>, "target(g,uv) or uv.target(g) or g.target_id(g,uv) is not defined");
+        }
       }
-    }
-  };
-} // namespace _Target
+    };
+  } // namespace _Target
 
-inline namespace _Cpos {
-  inline constexpr _Target::_Cpo target;
-}
+  inline namespace _Cpos {
+    inline constexpr _Target::_Cpo target;
+  }
+} // namespace adj_list
+
+using adj_list::target;
 
 
 //
@@ -1285,6 +1310,7 @@ inline namespace _Cpos {
 //      for random_access_range<vertices(g)> and integral<source_id(g,uv))
 //      uv can be from edges(g,u) or vertices(g,u)
 //
+namespace adj_list {
 namespace _Source {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void source() = delete;                    // Block unqualified name lookup
@@ -1364,6 +1390,9 @@ namespace _Source {
 inline namespace _Cpos {
   inline constexpr _Source::_Cpo source;
 }
+} // namespace adj_list
+
+using adj_list::source;
 
 
 //
@@ -1373,6 +1402,7 @@ inline namespace _Cpos {
 // find_vertex_edge(g,uid,vid) -> vertex_edge_iterator<G>
 //      default = find_vertex_edge(g,*find_vertex(g,uid),vid)
 //
+namespace adj_list {
 namespace _Find_vertex_edge {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void find_vertex_edge() = delete;          // Block unqualified name lookup
@@ -1519,6 +1549,9 @@ namespace _Find_vertex_edge {
 inline namespace _Cpos {
   inline constexpr _Find_vertex_edge::_Cpo find_vertex_edge;
 }
+} // namespace adj_list
+
+using adj_list::find_vertex_edge;
 
 
 //
@@ -1526,6 +1559,7 @@ inline namespace _Cpos {
 //      default = uid < size(vertices(g)) && vid < size(vertices(g)), if adjacency_matrix<G>
 //              = find_vertex_edge(g,uid) != end(edges(g,uid));
 //
+namespace adj_list {
 namespace _Contains_edge {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void contains_edge() = delete;             // Block unqualified name lookup
@@ -1616,11 +1650,15 @@ namespace _Contains_edge {
 inline namespace _Cpos {
   inline constexpr _Contains_edge::_Cpo contains_edge;
 }
+} // namespace adj_list
+
+using adj_list::contains_edge;
 
 
 // partition_id(g,uid) -> ?   default = vertex_id_t<G>() if not overridden; must be overridden for bipartite or multipartite graphs
 // partition_id(g,u)          default = partition_id(g,vertex_id(u))
 //
+namespace adj_list {
 namespace _Partition_id {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void partition_id() = delete;              // Block unqualified name lookup
@@ -1758,6 +1796,9 @@ namespace _Partition_id {
 inline namespace _Cpos {
   inline constexpr _Partition_id::_Cpo partition_id;
 }
+} // namespace adj_list
+
+using adj_list::partition_id;
 
 template <class G>
 using partition_id_t = decltype(partition_id(declval<G>(), declval<vertex_reference_t<G>>()));
@@ -1767,6 +1808,7 @@ using partition_id_t = decltype(partition_id(declval<G>(), declval<vertex_refere
 // num_vertices(g,)    -> integral        default = size(vertices(g))
 // num_vertices(g,pid) -> integral        default = size(vertices(g,pid))
 //
+namespace adj_list {
 namespace _NumVertices {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void num_vertices() = delete;              // Block unqualified name lookup
@@ -1904,11 +1946,15 @@ namespace _NumVertices {
 inline namespace _Cpos {
   inline constexpr _NumVertices::_Cpo num_vertices;
 }
+} // namespace adj_list
+
+using adj_list::num_vertices;
 
 //
 // degree(g,u  ) -> integral        default = size(edges(g,u))   if sized_range<vertex_edge_range_t<G>>
 // degree(g,uid) -> integral        default = size(edges(g,uid)) if sized_range<vertex_edge_range_t<G>>
 //
+namespace adj_list {
 namespace _Degree {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void degree() = delete;                    // Block unqualified name lookup
@@ -2047,6 +2093,9 @@ namespace _Degree {
 inline namespace _Cpos {
   inline constexpr _Degree::_Cpo degree;
 }
+} // namespace adj_list
+
+using adj_list::degree;
 
 
 //
@@ -2054,6 +2103,7 @@ inline namespace _Cpos {
 //
 // vertex_value_t<G> = decltype(vertex_value(g,u))
 //
+namespace adj_list {
 namespace _Vertex_value {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void vertex_value() = delete;              // Block unqualified name lookup
@@ -2125,6 +2175,9 @@ namespace _Vertex_value {
 inline namespace _Cpos {
   inline constexpr _Vertex_value::_Cpo vertex_value;
 }
+} // namespace adj_list
+
+using adj_list::vertex_value;
 
 template <class G>
 using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_reference_t<G>>()));
@@ -2134,6 +2187,7 @@ using vertex_value_t = decltype(vertex_value(declval<G&&>(), declval<vertex_refe
 //
 // edge_value_t<G> = decltype(edge_value(g,uv))
 //
+namespace adj_list {
 namespace _Edge_value {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void edge_value() = delete;                // Block unqualified name lookup
@@ -2292,6 +2346,9 @@ namespace _Edge_value {
 inline namespace _Cpos {
   inline constexpr _Edge_value::_Cpo edge_value;
 }
+} // namespace adj_list
+
+using adj_list::edge_value;
 
 
 // edge value types
@@ -2314,6 +2371,7 @@ using edge_value_t = decltype(edge_value(declval<G&&>(), declval<edge_reference_
 //
 // graph_value_t<G> = decltype(graph_value(g))
 //
+namespace adj_list {
 namespace _Graph_value {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void graph_value() = delete;               // Block unqualified name lookup
@@ -2382,10 +2440,14 @@ namespace _Graph_value {
 inline namespace _Cpos {
   inline constexpr _Graph_value::_Cpo graph_value;
 }
+} // namespace adj_list
+
+using adj_list::graph_value;
 
 
 // num_partitions(g) -> ?   default = vertex_id_t<G>(1) when vertex_id_t<G> is integral, size_t(0) otherwise
 //
+namespace adj_list {
 namespace _Num_partitions {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void num_partitions() = delete;            // Block unqualified name lookup
@@ -2464,12 +2526,16 @@ namespace _Num_partitions {
 inline namespace _Cpos {
   inline constexpr _Num_partitions::_Cpo num_partitions;
 }
+} // namespace adj_list
+
+using adj_list::num_partitions;
 
 
 //
 // has_edge(g,)      -> bool        default = for(const auto& u : vertices(g)) if (!empty(edges(g,u))) return true; return false;
 // has_edge(g,u,pid) -> bool        default = ?
 //
+namespace adj_list {
 namespace _HasEdge {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void has_edge() = delete;                  // Block unqualified name lookup
@@ -2618,6 +2684,9 @@ namespace _HasEdge {
 inline namespace _Cpos {
   inline constexpr _HasEdge::_Cpo has_edge;
 }
+} // namespace adj_list
+
+using adj_list::has_edge;
 
 
 } // namespace graph
