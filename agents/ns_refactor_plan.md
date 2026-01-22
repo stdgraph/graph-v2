@@ -401,6 +401,8 @@ TEST_CASE("adj_list namespace concepts") {
 
 ### Task 2.2: Move vertices() CPO to graph::adj_list
 
+**Status**: ✅ COMPLETED (commit 453ba25)
+
 **Goal**: Move the first CPO as a template for others.
 
 **File**: `include/graph/detail/graph_cpo.hpp`
@@ -432,10 +434,11 @@ namespace graph {
 ```
 
 **Validation**:
-- [ ] File compiles
-- [ ] `graph::adj_list::vertices(g)` works
-- [ ] `graph::vertices(g)` still works (via using declaration)
-- [ ] Test: Create simple test calling both versions
+- [x] File compiles
+- [x] `graph::adj_list::vertices(g)` works
+- [x] `graph::vertices(g)` still works (via using declaration)
+- [x] Test: Create simple test calling both versions (namespace_validation_phase2_task2_2.cpp)
+- [x] All 31/31 tests passing
 
 **Test to add**:
 ```cpp
@@ -458,6 +461,8 @@ TEST_CASE("vertices CPO in adj_list namespace") {
 
 ### Task 2.3: Move edges() CPO to graph::adj_list
 
+**Status**: ✅ COMPLETED (commit cb5f084)
+
 **Goal**: Move edges CPO following same pattern.
 
 **File**: `include/graph/detail/graph_cpo.hpp`
@@ -470,9 +475,10 @@ Follow same pattern as Task 2.2:
 4. Add `using adj_list::edges;` in `graph` namespace
 
 **Validation**:
-- [ ] Compiles
-- [ ] Both `graph::adj_list::edges(g, u)` and `graph::edges(g, u)` work
-- [ ] Test with actual graph
+- [x] Compiles
+- [x] Both `graph::adj_list::edges(g, u)` and `graph::edges(g, u)` work
+- [x] Test with actual graph (added to namespace_validation_phase2_task2_2.cpp)
+- [x] All 31/31 tests passing
 
 **Rollback**: Revert changes
 
