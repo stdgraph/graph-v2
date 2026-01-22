@@ -761,44 +761,46 @@ TEST_CASE("dynamic_graph container operations", "[dynamic_graph]") {
 
 ---
 
-## Phase 5: Add CPO Support to Containers
+## Phase 5: Verify CPO Support for Containers
+
+**Overview**: Test that graph containers properly satisfy adjacency list concepts and that CPOs resolve correctly through ADL. Each container gets its own task to ensure thorough testing.
 
 ### Task 5.1: Test compressed_graph CPO Resolution
 
-**Goal**: Verify CPOs resolve correctly via ADL or member functions.
+**Goal**: Verify compressed_graph satisfies adjacency list concepts and CPOs resolve correctly.
 
-**Test to add**:
+**Test to add** in `tests/compressed_graph_tests.cpp`:
 ```cpp
-TEST_CASE("compressed_graph CPO satisfaction") {
+TEST_CASE("compressed_graph CPO and concept satisfaction", "[compressed_graph][cpo]") {
     using namespace graph::container;
-    using namespace graph::adj_list;
-    using Edge = copyable_edge_t<uint32_t, double>;
+    using Edge = graph::copyable_edge_t<uint32_t, double>;
     
-    std::vector<Edge> edges = {{0, 1, 1.0}, {1, 2, 2.0}};
+    std::vector<Edge> edge_data = {{0, 1, 1.0}, {1, 2, 2.0}};
     compressed_graph<double> g;
-    g.load_edges(edges);
+    g.load_edges(edge_data);
     
-    // Test CPO calls
-    auto vr = vertices(g);           // CPO from adj_list
+    // Test CPO calls work correctly
+    auto vr = graph::vertices(g);
     REQUIRE(std::ranges::size(vr) == 3);
     
-    auto er = edges(g, 0);           // CPO from adj_list
+    auto er = graph::edges(g, 0);
     REQUIRE(std::ranges::size(er) == 1);
     
-    auto n = num_vertices(g);        // CPO from adj_list
+    auto n = graph::num_vertices(g);
     REQUIRE(n == 3);
     
     // Test concept satisfaction
-    static_assert(adjacency_list<compressed_graph<double>>);
-    static_assert(index_adjacency_list<compressed_graph<double>>);
+    using G = compressed_graph<double>;
+    static_assert(graph::adj_list::adjacency_list<G>);
+    static_assert(graph::adj_list::index_adjacency_list<G>);
 }
 ```
 
 **Validation**:
 - [ ] Test compiles
 - [ ] Test passes
-- [ ] All CPO calls resolve correctly
-- [ ] Concepts are satisfied
+- [ ] All CPO calls resolve correctly via ADL
+- [ ] Adjacency list concepts are satisfied
 
 **Rollback**: Remove test
 
@@ -806,16 +808,45 @@ TEST_CASE("compressed_graph CPO satisfaction") {
 
 ### Task 5.2: Test dynamic_graph CPO Resolution
 
-**Goal**: Same as 5.1 for dynamic_graph.
+**Goal**: Verify dynamic_graph satisfies adjacency list concepts and CPOs resolve correctly.
 
-**Test to add**: Similar to Task 5.1 but for all dynamic_graph variants (vofl, vol, vov)
+**Test to add** in `tests/dynamic_graph_tests.cpp`:
+```cpp
+TEST_CASE("dynamic_graph CPO and concept satisfaction", "[dynamic_graph][cpo]") {
+    using namespace graph::container;
+    using routes_vofl_graph_traits = vofl_graph_traits<double>;
+    using G = dynamic_adjacency_graph<routes_vofl_graph_traits>;
+    using Edge = graph::copyable_edge_t<uint32_t, double>;
+    
+    std::vector<Edge> edge_data = {{0, 1, 1.0}, {1, 2, 2.0}};
+    
+    G g;
+    g.resize_vertices(3);
+    g.load_edges(edge_data, std::identity{});
+    
+    // Test CPO calls work correctly
+    auto vr = graph::vertices(g);
+    REQUIRE(std::ranges::size(vr) == 3);
+    
+    auto er = graph::edges(g, 0);
+    REQUIRE(std::ranges::distance(er) == 1);
+    
+    auto n = graph::num_vertices(g);
+    REQUIRE(n == 3);
+    
+    // Test concept satisfaction
+    static_assert(graph::adj_list::adjacency_list<G>);
+    static_assert(graph::adj_list::index_adjacency_list<G>);
+}
+```
 
 **Validation**:
-- [ ] Tests pass
-- [ ] CPOs work
-- [ ] Concepts satisfied
+- [ ] Test compiles
+- [ ] Test passes
+- [ ] All CPO calls resolve correctly via ADL
+- [ ] Adjacency list concepts are satisfied
 
-**Commit point**: `git commit -m "Phase 5: Verify CPO support for containers"`
+**Commit point**: `git commit -m "Phase 5: Verify CPO support for graph containers"`
 
 ---
 
