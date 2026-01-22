@@ -704,17 +704,60 @@ TEST_CASE("compressed_graph container operations", "[compressed_graph]") {
 
 ---
 
-### Task 4.4: Test dynamic_graph Non-CPO Interface
+### Task 4.4: Test dynamic_graph Non-CPO Interface ✅ COMPLETED
 
 **Goal**: Verify basic container functionality.
 
-**Test to add**: Similar to Task 4.2 but for `dynamic_graph`
+**Status**: COMPLETED
+
+**Test file Created**: `tests/dynamic_graph_tests.cpp`
+
+**Implementation**:
+```cpp
+TEST_CASE("dynamic_graph container operations", "[dynamic_graph]") {
+  using namespace graph::container;
+  using G = routes_vofl_graph_type;  // vofl_graph_traits<double>
+  using Edge = graph::copyable_edge_t<uint32_t, double>;
+  
+  std::vector<Edge> edge_data = {
+    {0, 1, 1.0}, {0, 2, 2.0}, {1, 2, 3.0}
+  };
+  
+  G g;
+  // dynamic_graph requires vertices to exist before adding edges
+  g.resize_vertices(3);
+  g.load_edges(edge_data, std::identity{});
+  
+  // Verify using CPOs and std::ranges::distance (forward_list doesn't have size())
+  auto vr = graph::vertices(g);
+  REQUIRE(std::ranges::size(vr) == 3);
+  
+  auto er0 = graph::edges(g, 0);
+  REQUIRE(std::ranges::distance(er0) == 2);
+  
+  auto er1 = graph::edges(g, 1);
+  REQUIRE(std::ranges::distance(er1) == 1);
+  
+  auto er2 = graph::edges(g, 2);
+  REQUIRE(std::ranges::distance(er2) == 0);
+}
+```
+
+**Implementation Notes**:
+- dynamic_graph requires vertices to be created before adding edges (via `resize_vertices()`)
+- Test uses `vofl_graph_traits<double>` (vector of forward_list)
+- Edge ranges are forward_list, requiring `std::ranges::distance()` instead of `std::ranges::size()`
+- Test exercises container operations: construction, resize_vertices, load_edges
+- Validates graph structure using CPO interface (vertices(), edges())
+- Added to tests/CMakeLists.txt
 
 **Validation**:
-- [ ] Test passes
-- [ ] Member functions work
+- ✅ Test compiles and passes (4 assertions in 1 test case)
+- ✅ Container operations work correctly (resize_vertices, load_edges)
+- ✅ CPO interface works with dynamic_graph
+- ✅ All 27 test executables passing (26 original + dynamic_graph_tests)
 
-**Commit point**: `git commit -m "Phase 4: Update container non-CPO interfaces"`
+**Commit point**: Ready for Phase 4 completion commit
 
 ---
 

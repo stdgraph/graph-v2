@@ -63,6 +63,7 @@ set(UNITTEST_SOURCES
     "descriptor_tests.cpp"
     "tests.cpp"
     "compressed_graph_tests.cpp"
+    "dynamic_graph_tests.cpp"
     
     "namespace_validation_phase1.cpp"
     "namespace_validation_phase2_task2_2.cpp"
