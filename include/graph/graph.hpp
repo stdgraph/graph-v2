@@ -401,6 +401,267 @@ public:
 };
 
 
+//
+// New namespace structure for refactoring
+//
+namespace adj_list {
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for a targeted edge.
+   * 
+   * A basic targeted edge has only the @c target_id(g,uv) function defined for it.
+   * 
+   * @tparam G The graph type.
+   * @tparam E The edge type.
+   */
+  template <class G> // For exposition only
+  concept basic_targeted_edge = requires(G&& g, edge_reference_t<G> uv) { target_id(g, uv); };
+
+  template <class G> // For exposition only
+  concept basic_sourced_edge = requires(G&& g, edge_reference_t<G> uv) { source_id(g, uv); };
+
+  template <class G> // For exposition only
+  concept basic_sourced_targeted_edge = basic_targeted_edge<G> && basic_sourced_edge<G>;
+
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for a targeted edge.
+   * 
+   * A normal targeted edge has both the @c target_id(g,uv) and @c target(g,uv) function defined for it.
+   * 
+   * @tparam G The graph type.
+   * @tparam E The edge type.
+   */
+  template <class G>                                // For exposition only
+  concept targeted_edge = basic_targeted_edge<G> && //
+                          requires(G&& g, edge_reference_t<G> uv) { target(g, uv); };
+
+  template <class G>                              // For exposition only
+  concept sourced_edge = basic_sourced_edge<G> && //
+                         requires(G&& g, edge_reference_t<G> uv) { source(g, uv); };
+
+  template <class G> // For exposition only
+  concept sourced_targeted_edge = targeted_edge<G> && sourced_edge<G>;
+
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for a basic range of vertices.
+   * 
+   * A vertex range must be a sized range, at a minimum.
+   *
+   * Required functions that must also be defined include
+   *  * @c vertices(g) that returns a range of vertices of a graph (via vertex_range_t<G>)
+   *  * @c vertex_id(g,ui) that returns a vertex id for a graph and vertex iterator of the graph.
+   * 
+   * @tparam G The graph type.
+   */
+  template <class G>                                               // (exposition only)
+  concept _common_vertex_range = sized_range<vertex_range_t<G>> && //
+                                 requires(G&& g, vertex_iterator_t<G> ui) { vertex_id(g, ui); };
+
+  template <class G>                                                // For exposition only
+  concept vertex_range = _common_vertex_range<vertex_range_t<G>> && //
+                         forward_range<vertex_range_t<G>>;
+
+  template <class G>                                                      // For exposition only
+  concept index_vertex_range = _common_vertex_range<vertex_range_t<G>> && //
+                               random_access_range<vertex_range_t<G>> &&  //
+                               integral<vertex_id_t<G>>;
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for a target edge range
+  */
+  template <class G> // For exposition only
+  concept basic_targeted_edge_range = requires(G&& g, vertex_id_t<G> uid) {
+    { edges(g, uid) } -> forward_range;
+  };
+
+  template <class G>                                            // For exposition only
+  concept targeted_edge_range = basic_targeted_edge_range<G> && //
+                                requires(G&& g, vertex_reference_t<G> u) {
+                                  { edges(g, u) } -> forward_range;
+                                };
+
+  //--------------------------------------------------------------------------------------------
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for an adjacency list graph.
+   * 
+   * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+   * and without a vertex object.
+   * 
+   * @tparam G The graph type.
+  */
+  template <class G>                                             // For exposition only
+  concept basic_adjacency_list = vertex_range<G> &&              //
+                                 basic_targeted_edge_range<G> && //
+                                 targeted_edge<G>;
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for an adjacency list graph.
+   * 
+   * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+   * and without a vertex object. It also requires that vertices are in a random-access
+   * range and the vertex_id is integral.
+   * 
+   * @tparam G The graph type.
+  */
+  template <class G>                                                   // For exposition only
+  concept basic_index_adjacency_list = index_vertex_range<G> &&        //
+                                       basic_targeted_edge_range<G> && //
+                                       basic_targeted_edge<G>;
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for an adjacency list graph.
+   * 
+   * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+   * and without a vertex object. The edge type has a source_id.
+   * 
+   * @tparam G The graph type.
+  */
+  template <class G>                                                     // For exposition only
+  concept basic_sourced_adjacency_list = vertex_range<G> &&              //
+                                         basic_targeted_edge_range<G> && //
+                                         basic_sourced_targeted_edge<G>;
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for an adjacency list graph.
+   * 
+   * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+   * and without a vertex object. It also requires that vertices are in a random-access
+   * range, the vertex_id is integral and the edge type has a source_id.
+   * 
+   * @tparam G The graph type.
+  */
+  template <class G>                                                           // For exposition only
+  concept basic_sourced_index_adjacency_list = index_vertex_range<G> &&        //
+                                               basic_targeted_edge_range<G> && //
+                                               basic_sourced_targeted_edge<G>;
+
+  //--------------------------------------------------------------------------------------------
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for an adjacency list graph.
+   * 
+   * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+   * and *with* a vertex object.
+   * 
+   * @tparam G The graph type.
+  */
+  template <class G>                                 // For exposition only
+  concept adjacency_list = vertex_range<G> &&        //
+                           targeted_edge_range<G> && //
+                           targeted_edge<G>;
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for an adjacency list graph.
+   * 
+   * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+   * and *with* a vertex object. It also requires that vertices are in a random-access
+   * range, the vertex_id is integral and the edge type has a source_id.
+   * 
+   * @tparam G The graph type.
+  */
+  template <class G>                                       // For exposition only
+  concept index_adjacency_list = index_vertex_range<G> &&  //
+                                 targeted_edge_range<G> && //
+                                 targeted_edge<G>;
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for an adjacency list graph.
+   * 
+   * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+   * and *with* a vertex object. The edge type has a source_id.
+   * 
+   * @tparam G The graph type.
+  */
+  template <class G>                                         // For exposition only
+  concept sourced_adjacency_list = vertex_range<G> &&        //
+                                   targeted_edge_range<G> && //
+                                   sourced_targeted_edge<G>;
+
+  /**
+   * @ingroup graph_concepts
+   * @brief Concept for an adjacency list graph.
+   * 
+   * A basic_adjacency_list list defines the minimal adjacency list concept with a vertex_id
+   * and *with* a vertex object. It also requires that vertices are in a random-access
+   * range, the vertex_id is integral and the edge type has a source_id.
+   * 
+   * @tparam G The graph type.
+  */
+  template <class G>                                               // For exposition only
+  concept sourced_index_adjacency_list = index_vertex_range<G> &&  //
+                                         targeted_edge_range<G> && //
+                                         sourced_targeted_edge<G>;
+
+
+  /**
+   * @ingroup graph_properties
+   * @brief Concept for the existence of degree function for graph G.
+   * 
+   * Returns true if degree(g) exists for graph G.
+   * 
+   * @tparam G The graph type
+  */
+  template <class G> // For exposition only
+  concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
+    { degree(g, u) };
+  };
+
+  /**
+   * @ingroup graph_properties
+   * @brief Concept for the existence of the find_vertex(g,uid) function for graph G.
+   * 
+   * Returns true if find_vertex(g,uid) exists for graph G.
+   * 
+   * @tparam G The graph type
+  */
+  template <class G> // For exposition only
+  concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
+    { find_vertex(g, uid) } -> forward_iterator;
+  };
+
+  /**
+   * @ingroup graph_properties
+   * @brief Concept for the existence of the find_vertex_edge(g,uid,vid) function for graph G.
+   * 
+   * Returns true if find_vertex_edge(g,u,vid) and find_vertex_edge(g,uid,vid) exists for graph G.
+   * 
+   * @tparam G The graph type
+  */
+  template <class G> // For exposition only
+  concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
+    { find_vertex_edge(g, u, vid) } -> forward_iterator;
+    { find_vertex_edge(g, uid, vid) } -> forward_iterator;
+  };
+
+  /**
+   * @ingroup graph_properties
+   * @brief Concept for the existence of the has_contains_edge(g,uid,vid) function for graph G.
+   * 
+   * Returns true if has_contains_edge(g,uid,vid) exists for graph G.
+   * 
+   * @tparam G The graph type
+  */
+  template <class G> // For exposition only
+  concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
+    { contains_edge(g, uid, vid) } -> convertible_to<bool>;
+  };
+
+} // namespace adj_list
+
+
 } // namespace graph
 
 #endif //GRAPH_HPP
