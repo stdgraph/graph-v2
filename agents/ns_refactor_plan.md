@@ -365,9 +365,9 @@ TEST_CASE("adj_list namespace concepts") {
 
 **File**: `include/graph/detail/graph_cpo.hpp`
 
-**Actions**:
-1. Review the file structure (~2600 lines)
-2. CPO namespaces identified (from cpo_inventory.txt):
+**Status**: ✅ COMPLETED in Phase 0 (Task 0.2)
+
+**CPO namespaces identified** (from agents/cpo_inventory.txt):
    - `_Vertices` (line 181) → `vertices(g)` - declared line 236
    - `_Vertex_id` (line 291) → `vertex_id(g, ui)` - declared line 392
    - `_Find_vertex` (line 466) → `find_vertex(g, uid)` - declared line 523
@@ -391,8 +391,11 @@ TEST_CASE("adj_list namespace concepts") {
 **Validation**:
 - [x] All CPOs identified with exact line numbers in `agents/cpo_inventory.txt`
 - [x] Line ranges documented above for reference
+- [x] Completed in Phase 0 commit 16dbca0
 
-**Rollback**: N/A (just analysis)
+**Rollback**: N/A (analysis only)
+
+**Completed**: Phase 0, Task 0.2
 
 ---
 
