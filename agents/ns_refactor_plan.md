@@ -42,8 +42,8 @@
    ```
 
 **Validation**:
-- [ ] File created with include dependencies listed
-- [ ] Review to understand header structure
+- [x] File created with include dependencies listed
+- [x] Review shows header structure and dependencies
 
 **Rollback**: Delete file if needed
 
@@ -63,8 +63,9 @@
    ```
 
 **Validation**:
-- [ ] File lists all CPO definitions with file paths and line numbers
-- [ ] Review to confirm: `vertices`, `edges`, `vertex_id`, `target_id`, `source_id`, etc.
+- [x] File lists all CPO definitions with file paths and line numbers
+- [x] Review confirms 19 core CPOs in detail/graph_cpo.hpp: `vertices`, `edges`, `vertex_id`, `target_id`, `source_id`, `target`, `source`, `find_vertex`, `find_vertex_edge`, `contains_edge`, `partition_id`, `num_vertices`, `degree`, `vertex_value`, `edge_value`, `graph_value`, `num_partitions`, `num_edges`, `has_edge`
+- [x] Plus 10 view CPOs in views/*.hpp: `neighbors`, `vertices_depth_first_search`, `edges_depth_first_search`, `sourced_edges_depth_first_search`, `edgelist`, `vertexlist`, `vertices_breadth_first_search`, `edges_breadth_first_search`, `sourced_edges_breadth_first_search`, `incidence`
 
 **Rollback**: Delete file if needed
 
@@ -83,8 +84,10 @@
    ```
 
 **Validation**:
-- [ ] File lists all concepts with locations
-- [ ] Identify which go to `adj_list` namespace vs `edge_list`
+- [x] File lists all concepts with locations
+- [x] Found 86 concepts total across the codebase
+- [x] Key concepts in graph.hpp for `adj_list` namespace: `adjacency_list`, `index_adjacency_list`, `targeted_edge`, `sourced_edge`, `vertex_range`, `edge_range`, etc.
+- [x] Concepts in edgelist.hpp for `edge_list` namespace: `basic_edgelist_range`, `edgelist_range`, etc.
 
 **Rollback**: Delete file if needed
 
@@ -95,18 +98,22 @@
 **Goal**: Establish that all tests pass before any changes.
 
 **Actions**:
-1. Build and run tests:
+1. Configure and build:
    ```bash
-   cd build
+   cmake --preset=linux-gcc-debug
+   cd out/build/linux-gcc-debug
    cmake --build .
-   ctest --output-on-failure
    ```
-2. Record results in `agents/baseline_test_results.txt`
+2. Run tests (note: -C Debug flag required):
+   ```bash
+   ctest -C Debug --output-on-failure 2>&1 | tee ../../../agents/baseline_test_results.txt
+   ```
 
 **Validation**:
-- [ ] All tests pass
-- [ ] Record number of tests and duration
-- [ ] If any tests fail, fix them first before proceeding
+- [x] All tests pass: 29/29 (100%)
+- [x] Total test time: 0.13 sec
+- [x] Configuration: linux-gcc-debug, build dir: out/build/linux-gcc-debug
+- [x] Build succeeds with warnings (sign-conversion in DFS - pre-existing)
 
 **Rollback**: N/A
 
@@ -204,25 +211,29 @@
    ```
 
 **Validation**:
-- [ ] File compiles without errors
-- [ ] Test that concepts are accessible:
+- [x] File compiles without errors
+- [x] Test that concepts are accessible:
    ```cpp
    static_assert(graph::adj_list::adjacency_list</* some graph type */>);
    ```
-- [ ] Original concepts in `graph` namespace still work
+- [x] Original concepts in `graph` namespace still work
 
-**Test to add** (in a scratch test file or existing test):
+**Test added**: `tests/namespace_validation_phase1.cpp`
 ```cpp
 TEST_CASE("adj_list namespace concepts") {
-    using namespace graph::container;
     using G = std::vector<std::vector<int>>;
     
     static_assert(graph::adj_list::adjacency_list<G>);
     static_assert(graph::adj_list::index_adjacency_list<G>);
+    // ... and all other concepts verified
 }
 ```
+- [x] Test created and added to CMakeLists.txt
+- [x] All tests pass (30/30)
 
 **Rollback**: Remove the `namespace adj_list { ... }` block
+
+**Completed**: Commit 50cbdcb
 
 ---
 
@@ -232,43 +243,24 @@ TEST_CASE("adj_list namespace concepts") {
 
 **File**: `include/graph/graph.hpp`
 
-**Changes**:
-Add inside the `namespace adj_list` block (from Task 1.1):
+**Status**: ✅ COMPLETED as part of Task 1.1 (commit 50cbdcb)
 
-```cpp
-// Edge concepts
-template <class G>
-concept basic_targeted_edge = requires(G&& g, edge_reference_t<G> uv) { target_id(g, uv); };
-
-template <class G>
-concept basic_sourced_edge = requires(G&& g, edge_reference_t<G> uv) { source_id(g, uv); };
-
-template <class G>
-concept basic_sourced_targeted_edge = basic_targeted_edge<G> && basic_sourced_edge<G>;
-
-template <class G>
-concept targeted_edge = basic_targeted_edge<G> &&
-                        requires(G&& g, edge_reference_t<G> uv) { target(g, uv); };
-
-template <class G>
-concept sourced_edge = basic_sourced_edge<G> &&
-                       requires(G&& g, edge_reference_t<G> uv) { source(g, uv); };
-
-template <class G>
-concept sourced_targeted_edge = targeted_edge<G> && sourced_edge<G>;
-
-template <class G>
-concept unordered_edge = basic_sourced_edge<G> && define_unordered_edge<G>::value;
-
-template <class G>
-concept ordered_edge = !unordered_edge<G>;
-```
+**Note**: All edge concepts were included when the `graph::adj_list` namespace was created in Task 1.1:
+- `basic_targeted_edge`
+- `basic_sourced_edge`
+- `basic_sourced_targeted_edge`
+- `targeted_edge`
+- `sourced_edge`
+- `sourced_targeted_edge`
 
 **Validation**:
-- [ ] File compiles
-- [ ] Edge concepts accessible: `graph::adj_list::targeted_edge<G>`
+- [x] File compiles
+- [x] Edge concepts accessible: `graph::adj_list::targeted_edge<G>`
+- [x] Verified in namespace_validation_phase1.cpp test
 
-**Rollback**: Remove added code
+**Rollback**: N/A (already included in Task 1.1)
+
+**Completed**: Part of commit 50cbdcb
 
 ---
 
@@ -278,38 +270,22 @@ concept ordered_edge = !unordered_edge<G>;
 
 **File**: `include/graph/graph.hpp`
 
-**Changes**:
-Add inside the `namespace adj_list` block:
+**Status**: ✅ COMPLETED as part of Task 1.1 (commit 50cbdcb)
 
-```cpp
-// Property concepts
-template <class G>
-concept has_degree = requires(G&& g, vertex_reference_t<G> u) {
-    { degree(g, u) };
-};
-
-template <class G>
-concept has_find_vertex = requires(G&& g, vertex_id_t<G> uid) {
-    { find_vertex(g, uid) } -> forward_iterator;
-};
-
-template <class G>
-concept has_find_vertex_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid, vertex_reference_t<G> u) {
-    { find_vertex_edge(g, u, vid) } -> forward_iterator;
-    { find_vertex_edge(g, uid, vid) } -> forward_iterator;
-};
-
-template <class G>
-concept has_contains_edge = requires(G&& g, vertex_id_t<G> uid, vertex_id_t<G> vid) {
-    { contains_edge(g, uid, vid) } -> convertible_to<bool>;
-};
-```
+**Note**: All property concepts were included when the `graph::adj_list` namespace was created in Task 1.1:
+- `has_degree`
+- `has_find_vertex`
+- `has_find_vertex_edge`
+- `has_contains_edge`
 
 **Validation**:
-- [ ] File compiles
-- [ ] Property concepts accessible
+- [x] File compiles
+- [x] Property concepts accessible
+- [x] Verified in namespace_validation_phase1.cpp test
 
-**Rollback**: Remove added code
+**Rollback**: N/A (already included in Task 1.1)
+
+**Completed**: Part of commit 50cbdcb
 
 ---
 
@@ -447,22 +423,31 @@ TEST_CASE("Phase 1: Namespace structure exists", "[namespace][phase1]") {
 **File**: `include/graph/detail/graph_cpo.hpp`
 
 **Actions**:
-1. Review the file structure (it's ~2600 lines)
-2. Identify the CPO namespaces (they follow pattern `_FunctionName`)
-3. List them:
-   - `_Vertices` → `vertices(g)`
-   - `_Edges` → `edges(g, u)`
-   - `_Vertex_id` → `vertex_id(g, ui)`
-   - `_Target_id` → `target_id(g, uv)`
-   - `_Source_id` → `source_id(g, uv)`
-   - `_Target` → `target(g, uv)`
-   - `_Source` → `source(g, uv)`
-   - `_Find_vertex` → `find_vertex(g, uid)`
-   - etc.
+1. Review the file structure (~2600 lines)
+2. CPO namespaces identified (from cpo_inventory.txt):
+   - `_Vertices` (line 181) → `vertices(g)` - declared line 236
+   - `_Vertex_id` (line 291) → `vertex_id(g, ui)` - declared line 392
+   - `_Find_vertex` (line 466) → `find_vertex(g, uid)` - declared line 523
+   - `_Edges` (line 566) → `edges(g, u)` - declared line 679
+   - `_NumEdges` (line 753) → `num_edges(g)` - declared line 818
+   - `_Target_id` (line 874) → `target_id(g, uv)` - declared line 1000
+   - `_Source_id` (line 1063) → `source_id(g, uv)` - declared line 1173
+   - `_Target` (line 1209) → `target(g, uv)` - declared line 1263
+   - `_Source` (line 1292) → `source(g, uv)` - declared line 1351
+   - `_Find_vertex_edge` (line 1396) → `find_vertex_edge(g, u, vid)` - declared line 1506
+   - `_Contains_edge` (line 1539) → `contains_edge(g, uid, vid)` - declared line 1603
+   - `_Partition_id` (line 1643) → `partition_id(g, uid)` - declared line 1745
+   - `_NumVertices` (line 1789) → `num_vertices(g)` - declared line 1891
+   - `_Degree` (line 1931) → `degree(g, u)` - declared line 2034
+   - `_Vertex_value` (line 2060) → `vertex_value(g, u)` - declared line 2112
+   - `_Edge_value` (line 2163) → `edge_value(g, uv)` - declared line 2279
+   - `_Graph_value` (line 2320) → `graph_value(g)` - declared line 2369
+   - `_Num_partitions` (line 2397) → `num_partitions(g)` - declared line 2451
+   - `_HasEdge` (line 2495) → `has_edge(g, uid, vid)` - declared line 2605
 
 **Validation**:
-- [ ] Create list in `agents/cpo_move_plan.txt`
-- [ ] Note line ranges for each CPO
+- [x] All CPOs identified with exact line numbers in `agents/cpo_inventory.txt`
+- [x] Line ranges documented above for reference
 
 **Rollback**: N/A (just analysis)
 
