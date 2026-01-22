@@ -543,6 +543,7 @@ inline namespace _Cpos {
 // edge_t                    = ranges::range_value_t<vertex_edge_range_t<G>>
 // edge_reference_t          = ranges::range_reference_t<vertex_edge_range_t<G>>
 //
+namespace adj_list {
 namespace _Edges {
 #  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
   void edges() = delete;                     // Block unqualified name lookup
@@ -688,6 +689,9 @@ namespace _Edges {
 inline namespace _Cpos {
   inline constexpr _Edges::_Cpo edges;
 }
+} // namespace adj_list
+
+using adj_list::edges;
 
 /**
  * @brief The outgoing edge range type of a vertex for graph G.

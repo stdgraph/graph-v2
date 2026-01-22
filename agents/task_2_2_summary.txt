@@ -1,0 +1,51 @@
+Task 2.2: Move vertices() CPO to graph::adj_list namespace
+=================================================================
+
+Objective:
+- Move the first CPO (vertices) to graph::adj_list namespace
+- Establish pattern for remaining 18 CPO migrations
+- Maintain backward compatibility via using declarations
+
+Implementation:
+1. Modified include/graph/detail/graph_cpo.hpp:
+   - Wrapped _Vertices namespace (lines 161-236) in graph::adj_list namespace
+   - Added namespace opening at line 151
+   - Moved constexpr declaration into adj_list::_Cpos at line 241
+   - Added compatibility using declaration at line 245
+   
+2. Pattern established:
+   ```cpp
+   namespace adj_list {
+     namespace _Vertices {
+       // CPO implementation (~80 lines)
+     }
+     inline namespace _Cpos {
+       inline constexpr _Vertices::_Cpo vertices;
+     }
+   }
+   using adj_list::vertices; // Backward compatibility
+   ```
+
+3. Created validation test:
+   - tests/namespace_validation_phase2_task2_2.cpp
+   - Verifies both graph::vertices(g) and graph::adj_list::vertices(g) work
+   - Tests type identity between both namespace versions
+   - Added to tests/CMakeLists.txt
+
+Validation:
+- Build: SUCCESS (pre-existing shadow warnings in graph_utility.hpp)
+- Tests: 31/31 passing (was 30/30, added 1 new test)
+- Both namespaces produce identical results
+
+Key Learnings:
+- Shadow warnings from parameter names in make_*_graph functions are pre-existing
+- Pattern is straightforward and can be replicated for remaining CPOs
+- Compatibility layer works seamlessly
+
+Next Steps:
+- Task 2.3: Move edges() CPO following same pattern
+- Continue through remaining 17 CPOs
+- Group CPOs logically for efficient commits
+
+Commit: 453ba25
+Status: COMPLETE ✅
