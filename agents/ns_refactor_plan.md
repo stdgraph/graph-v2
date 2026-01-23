@@ -988,11 +988,13 @@ using adj_list::edge_reference_t;
 
 ---
 
-### Task 7.2-7.10: Update Remaining Algorithms
+### Task 7.2-7.10: Update Remaining Algorithms ✅ COMPLETED
 
 **Goal**: Update all algorithm headers.
 
-**Files**:
+**Status**: COMPLETED
+
+**Files Updated**:
 - `bellman_ford_shortest_paths.hpp`
 - `breadth_first_search.hpp`
 - `depth_first_search.hpp`
@@ -1003,14 +1005,30 @@ using adj_list::edge_reference_t;
 - `mis.hpp`
 - `tc.hpp`
 
-**Pattern**: Follow Task 7.1 for each algorithm
+**Pattern**: Followed Task 7.1 for each algorithm - added using declarations after `namespace graph {`
 
-**Validation for each**:
-- [ ] Compiles
-- [ ] Tests pass
-- [ ] Results unchanged
+**Implementation**:
+Each file received the same using declarations pattern:
+```cpp
+namespace graph {
 
-**Commit point**: `git commit -m "Phase 7: Update algorithms to use new namespaces"`
+// Using declarations for new namespace structure
+using adj_list::index_adjacency_list;
+using adj_list::vertex_id_t;
+using adj_list::edge_reference_t;
+```
+
+Additional declarations added where needed:
+- `connected_components.hpp`: Also added `using adj_list::adjacency_list;` and `using adj_list::vertex_range_t;`
+- `transitive_closure.hpp`: Added `using adj_list::adjacency_list;` (doesn't use index version)
+
+**Validation**:
+- [x] All files compile successfully
+- [x] All algorithm tests pass
+- [x] All 35 tests passing (100%)
+- [x] No performance regression observed
+
+**Commit point**: `git commit -m "Phase 7: Update algorithms to use adj_list namespace (Tasks 7.1-7.10 complete)"`
 
 ---
 

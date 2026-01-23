@@ -23,6 +23,11 @@
 
 namespace graph {
 
+// Using declarations for new namespace structure
+using adj_list::index_adjacency_list;
+using adj_list::vertex_id_t;
+using adj_list::edge_reference_t;
+
 template <class VId>
 struct disjoint_element {
   VId    id    = VId();

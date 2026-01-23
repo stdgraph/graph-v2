@@ -77,13 +77,13 @@ TEST_CASE("edgelist in adj_list::views namespace", "[edgelist][views][namespace]
 
 TEST_CASE("BFS views in adj_list::views namespace", "[bfs][views][namespace]") {
   // Create a simple graph with edges
-  std::vector<std::vector<int>> g = {{1, 2}, {2}, {}};
-  vertex_id_t<decltype(g)> seed = 0;
+  std::vector<std::vector<int>> g    = {{1, 2}, {2}, {}};
+  vertex_id_t<decltype(g)>      seed = 0;
 
   SECTION("vertices_breadth_first_search") {
     auto vbfs1 = graph::views::vertices_breadth_first_search(g, seed);
     auto vbfs2 = graph::adj_list::views::vertices_breadth_first_search(g, seed);
-    
+
     // Both namespaces should produce same results
     REQUIRE(std::ranges::distance(vbfs1) == std::ranges::distance(vbfs2));
   }
@@ -91,7 +91,7 @@ TEST_CASE("BFS views in adj_list::views namespace", "[bfs][views][namespace]") {
   SECTION("edges_breadth_first_search") {
     auto ebfs1 = graph::views::edges_breadth_first_search(g, seed);
     auto ebfs2 = graph::adj_list::views::edges_breadth_first_search(g, seed);
-    
+
     // Both namespaces should produce same results
     REQUIRE(std::ranges::distance(ebfs1) == std::ranges::distance(ebfs2));
   }
@@ -99,7 +99,7 @@ TEST_CASE("BFS views in adj_list::views namespace", "[bfs][views][namespace]") {
   SECTION("sourced_edges_breadth_first_search") {
     auto sebfs1 = graph::views::sourced_edges_breadth_first_search(g, seed);
     auto sebfs2 = graph::adj_list::views::sourced_edges_breadth_first_search(g, seed);
-    
+
     // Both namespaces should produce same results
     REQUIRE(std::ranges::distance(sebfs1) == std::ranges::distance(sebfs2));
   }
@@ -107,13 +107,13 @@ TEST_CASE("BFS views in adj_list::views namespace", "[bfs][views][namespace]") {
 
 TEST_CASE("DFS views in adj_list::views namespace", "[dfs][views][namespace]") {
   // Create a simple graph with edges
-  std::vector<std::vector<int>> g = {{1, 2}, {2}, {}};
-  vertex_id_t<decltype(g)> seed = 0;
+  std::vector<std::vector<int>> g    = {{1, 2}, {2}, {}};
+  vertex_id_t<decltype(g)>      seed = 0;
 
   SECTION("vertices_depth_first_search") {
     auto vdfs1 = graph::views::vertices_depth_first_search(g, seed);
     auto vdfs2 = graph::adj_list::views::vertices_depth_first_search(g, seed);
-    
+
     // Both namespaces should produce same results
     REQUIRE(std::ranges::distance(vdfs1) == std::ranges::distance(vdfs2));
   }
@@ -121,7 +121,7 @@ TEST_CASE("DFS views in adj_list::views namespace", "[dfs][views][namespace]") {
   SECTION("edges_depth_first_search") {
     auto edfs1 = graph::views::edges_depth_first_search(g, seed);
     auto edfs2 = graph::adj_list::views::edges_depth_first_search(g, seed);
-    
+
     // Both namespaces should produce same results
     REQUIRE(std::ranges::distance(edfs1) == std::ranges::distance(edfs2));
   }
@@ -129,7 +129,7 @@ TEST_CASE("DFS views in adj_list::views namespace", "[dfs][views][namespace]") {
   SECTION("sourced_edges_depth_first_search") {
     auto sedfs1 = graph::views::sourced_edges_depth_first_search(g, seed);
     auto sedfs2 = graph::adj_list::views::sourced_edges_depth_first_search(g, seed);
-    
+
     // Both namespaces should produce same results
     REQUIRE(std::ranges::distance(sedfs1) == std::ranges::distance(sedfs2));
   }

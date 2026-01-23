@@ -7,6 +7,11 @@
 
 namespace graph {
 
+// Using declarations for new namespace structure
+using adj_list::adjacency_list;
+using adj_list::vertex_id_t;
+using adj_list::edge_reference_t;
+
 template <adjacency_list G>
 struct reaches {
   vertex_id_t<G> from;

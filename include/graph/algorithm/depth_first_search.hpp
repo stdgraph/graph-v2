@@ -23,6 +23,11 @@
 
 namespace graph {
 
+// Using declarations for new namespace structure
+using adj_list::index_adjacency_list;
+using adj_list::vertex_id_t;
+using adj_list::edge_reference_t;
+
 using vertex_id_type = int;
 using Graph          = std::vector<std::vector<vertex_id_type>>;
 using Predecessors   = std::vector<vertex_id_type>;
