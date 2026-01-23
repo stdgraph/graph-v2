@@ -68,6 +68,7 @@ set(UNITTEST_SOURCES
     "namespace_validation_phase1.cpp"
     "namespace_validation_phase2_task2_2.cpp"
     "namespace_validation_phase3_task3_2.cpp"
+    "namespace_validation_phase6_task6_1.cpp"
 )
 
 foreach(SOURCE IN LISTS UNITTEST_SOURCES)

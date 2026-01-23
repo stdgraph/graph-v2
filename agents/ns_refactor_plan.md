@@ -856,43 +856,48 @@ TEST_CASE("dynamic_graph CPO and concept satisfaction", "[dynamic_graph][cpo]") 
 
 ## Phase 6: Update View Implementations
 
-### Task 6.1: Add vertexlist() to graph::adj_list::views
+### Task 6.1: Add vertexlist() to graph::adj_list::views ✅ COMPLETED
 
 **Goal**: Make vertexlist accessible via the views namespace.
+
+**Status**: COMPLETED
 
 **File**: `include/graph/views/vertexlist.hpp`
 
 **Changes**:
-In the `namespace adj_list::views` block added in Phase 1, add factory function:
+In the `namespace adj_list::views` block added in Phase 1, added factory function that reuses the existing CPO implementation:
 
 ```cpp
 namespace adj_list {
-    namespace views {
-        namespace _Vertexlist {
-            template <class G>
-            class _Cpo {
-                // Implementation that returns the existing graph::vertexlist_view<G>
-            };
-        }
-        
-        inline namespace _Cpos {
-            inline constexpr _Vertexlist::_Cpo vertexlist;
-        }
-    } // namespace views
-} // namespace adj_list
-
-// Compatibility: keep in graph::views too
-namespace views {
-    using adj_list::views::vertexlist;
+  namespace views {
+    namespace _Vertexlist {
+#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+      void vertexlist() = delete;  // Block unqualified name lookup
+#else
+      void vertexlist();
+#endif
+      // Reuse the _Cpo implementation from graph::views::_Vertexlist
+      using _Cpo = graph::views::_Vertexlist::_Cpo;
+    }
+    
+    inline namespace _Cpos {
+      inline constexpr _Vertexlist::_Cpo vertexlist;
+    }
+  }
 }
 ```
 
-**Validation**:
-- [ ] Compiles
-- [ ] `graph::adj_list::views::vertexlist(g)` works
-- [ ] `graph::views::vertexlist(g)` still works
+**Implementation Notes**:
+- Reused existing `graph::views::_Vertexlist::_Cpo` implementation via type alias
+- No need for compatibility "using" declaration since both `graph::views::vertexlist` and `graph::adj_list::views::vertexlist` are separate CPO instances that work independently
+- Both namespaces can be used interchangeably without conflict
 
-**Rollback**: Remove added code
+**Validation**:
+- [x] Compiles successfully
+- [x] `graph::adj_list::views::vertexlist(g)` works
+- [x] `graph::views::vertexlist(g)` still works
+- [x] Test created: `tests/namespace_validation_phase6_task6_1.cpp` validates both namespace paths produce equivalent results
+- [x] All 34 tests passing
 
 ---
 

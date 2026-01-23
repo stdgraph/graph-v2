@@ -469,8 +469,20 @@ namespace views {
 
 namespace adj_list {
   namespace views {
-    // Factory functions will be added in Phase 6
-    // Placeholder for now to establish namespace structure
+    namespace _Vertexlist {
+#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__) // TRANSITION, VSO-1681199
+      void vertexlist() = delete;                                 // Block unqualified name lookup
+#else                                                             // ^^^ no workaround / workaround vvv
+      void vertexlist();
+#endif // ^^^ workaround ^^^
+
+      // Reuse the _Cpo implementation from graph::views::_Vertexlist
+      using _Cpo = graph::views::_Vertexlist::_Cpo;
+    } // namespace _Vertexlist
+
+    inline namespace _Cpos {
+      inline constexpr _Vertexlist::_Cpo vertexlist;
+    }
   } // namespace views
 } // namespace adj_list
 
