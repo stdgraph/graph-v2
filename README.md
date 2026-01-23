@@ -18,6 +18,16 @@ to provide easy integration with external adjacency list graphs.
 - Comments and questions are welcome and can be directed to GitHub [discussions](https://github.com/stdgraph/graph-v2/discussions) 
   or [issues](https://github.com/stdgraph/graph-v2/issues).
 
+### Namespace Structure
+The library uses a hierarchical namespace structure:
+- **`graph::adj_list`** - Primary namespace containing core concepts, type aliases, and CPOs
+- **`graph::adj_list::views`** - View factory functions for graph traversal
+- **`graph::container`** - Graph container implementations
+- **`graph`** - Root namespace with algorithms and backward-compatible `using` declarations
+
+For new code, prefer using `graph::adj_list` and `graph::adj_list::views` namespaces directly. 
+The root `graph` namespace provides compatibility aliases for existing code.
+
 ### Purpose
 This prototype library is an implementation of the proposed Graph Library for ISO Standard C++. 
 It has gone through major revisions since it was first introduced in 2019. While we are comfortable of the core design, there is

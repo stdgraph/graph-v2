@@ -16,7 +16,8 @@ Often, the last item from the list serves the purpose of a "fallback" or "defaul
 If none of the customization ways is valid for a given type, or set of types, the customization point is considered _invalid_ for this set of types. 
 The property or being valid or invalid can be statically tested in the program via SFINAE (like `enable_if`) tricks or `requires`-expressions.
 
-All the customization points in this library are defined in namespace `::graph` and brought into the program code via including header  `<graph/graph.hpp>`.
+All the customization points in this library are defined in namespace `::graph::adj_list` and brought into the program code via including header  `<graph/graph.hpp>`.
+For backward compatibility, they are also accessible through `::graph` namespace via `using` declarations.
 
 
 ## The list of customization points
@@ -24,14 +25,14 @@ All the customization points in this library are defined in namespace `::graph` 
 We use the following notation to represent the customization points:
 
 
-| Symbol | Type                           | Meaning                                  |
-|--------|--------------------------------|------------------------------------------|
-| `G`    |                                | the type of the graph representation     |
-| `g`    | `G`                            | the graph representation                 | 
-| `u`    | `graph::vertex_reference_t<G>` | vertex in `g`                            |
-| `ui`   | `graph::vertex_iterator_t<G>`  | iterator to a vertex in `g`              |
-| `uid`  | `graph::vertex_id_t<G>`        | _id_ of a vertex in `g` (often an index) |
-| `uv`   | `graph::edge_reference_t<G>`   | an edge in `g`                           |
+| Symbol | Type                                     | Meaning                                  |
+|--------|------------------------------------------|------------------------------------------|
+| `G`    |                                          | the type of the graph representation     |
+| `g`    | `G`                                      | the graph representation                 | 
+| `u`    | `graph::adj_list::vertex_reference_t<G>` | vertex in `g`                            |
+| `ui`   | `graph::adj_list::vertex_iterator_t<G>`  | iterator to a vertex in `g`              |
+| `uid`  | `graph::adj_list::vertex_id_t<G>`        | _id_ of a vertex in `g` (often an index) |
+| `uv`   | `graph::adj_list::edge_reference_t<G>`   | an edge in `g`                           |
 
 
 ### `vertices`

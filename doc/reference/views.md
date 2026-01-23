@@ -4,6 +4,10 @@ This library comes with a number of factory functions that allow you to represen
 a graph or parts thereof as _views_ over vertices or edges. Using these views you can 
 define your own algorithms more conveniently.
 
+All view factory functions are defined in namespace `::graph::adj_list::views` and brought 
+into the program code via including the respective view header files (e.g., `<graph/views/breadth_first_search.hpp>`).
+For backward compatibility, they are also accessible through `::graph::views` namespace via `using` declarations.
+
 
 ## The "info" classes
 
@@ -11,7 +15,7 @@ TODO: describe `vertex_info` and `edge_info`.
 
 ## Breadth-first search views
 
-Header `<graph/views/breadth_first_search.hpp>` defines view factories in namespace `graph`:
+Header `<graph/views/breadth_first_search.hpp>` defines view factories in namespace `graph::adj_list::views`:
 
 ```c++
 for (auto [vid, v]            : vertices_breadth_first_search(g, source))         {}
