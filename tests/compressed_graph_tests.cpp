@@ -63,7 +63,7 @@ TEST_CASE("compressed_graph CPO and concept satisfaction", "[compressed_graph][c
   using namespace graph::container;
   using Edge = graph::copyable_edge_t<uint32_t, double>;
 
-  std::vector<Edge> edge_data = {{0, 1, 1.0}, {1, 2, 2.0}};
+  std::vector<Edge>        edge_data = {{0, 1, 1.0}, {1, 2, 2.0}};
   compressed_graph<double> g;
   g.load_edges(edge_data);
 

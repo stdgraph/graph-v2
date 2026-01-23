@@ -1147,37 +1147,37 @@ namespace views {
 namespace adj_list {
   namespace views {
     namespace _Vertices_BFS {
-#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+#  if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
       void vertices_breadth_first_search() = delete;
-#else
+#  else
       void vertices_breadth_first_search();
-#endif
+#  endif
       using _Cpo = graph::views::_Vertices_BFS::_Cpo;
-    }
-    
+    } // namespace _Vertices_BFS
+
     namespace _Edges_BFS {
-#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+#  if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
       void edges_breadth_first_search() = delete;
-#else
+#  else
       void edges_breadth_first_search();
-#endif
+#  endif
       using _Cpo = graph::views::_Edges_BFS::_Cpo;
-    }
-    
+    } // namespace _Edges_BFS
+
     namespace _Sourced_Edges_BFS {
-#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+#  if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
       void sourced_edges_breadth_first_search() = delete;
-#else
+#  else
       void sourced_edges_breadth_first_search();
-#endif
+#  endif
       using _Cpo = graph::views::_Sourced_Edges_BFS::_Cpo;
-    }
-    
+    } // namespace _Sourced_Edges_BFS
+
     inline namespace _Cpos {
-      inline constexpr _Vertices_BFS::_Cpo vertices_breadth_first_search;
-      inline constexpr _Edges_BFS::_Cpo edges_breadth_first_search;
+      inline constexpr _Vertices_BFS::_Cpo      vertices_breadth_first_search;
+      inline constexpr _Edges_BFS::_Cpo         edges_breadth_first_search;
       inline constexpr _Sourced_Edges_BFS::_Cpo sourced_edges_breadth_first_search;
-    }
+    } // namespace _Cpos
   } // namespace views
 } // namespace adj_list
 

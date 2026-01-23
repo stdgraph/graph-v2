@@ -416,14 +416,14 @@ namespace adj_list {
   namespace views {
     namespace _Neighbors {
 #if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
-      void neighbors() = delete;  // Block unqualified name lookup
+      void neighbors() = delete; // Block unqualified name lookup
 #else
       void neighbors();
 #endif
       // Reuse the _Cpo implementation from graph::views::_Neighbors
       using _Cpo = graph::views::_Neighbors::_Cpo;
-    }
-    
+    } // namespace _Neighbors
+
     inline namespace _Cpos {
       inline constexpr _Neighbors::_Cpo neighbors;
     }
