@@ -48,3 +48,30 @@ TEST_CASE("dynamic_graph container operations", "[dynamic_graph]") {
   auto er2 = graph::edges(g, 2);
   REQUIRE(std::ranges::distance(er2) == 0);
 }
+
+TEST_CASE("dynamic_graph CPO and concept satisfaction", "[dynamic_graph][cpo]") {
+  using namespace graph::container;
+  using routes_vofl_graph_traits = vofl_graph_traits<double>;
+  using G                        = dynamic_adjacency_graph<routes_vofl_graph_traits>;
+  using Edge                     = graph::copyable_edge_t<uint32_t, double>;
+
+  std::vector<Edge> edge_data = {{0, 1, 1.0}, {1, 2, 2.0}};
+
+  G g;
+  g.resize_vertices(3);
+  g.load_edges(edge_data, std::identity{});
+
+  // Test CPO calls work correctly
+  auto vr = graph::vertices(g);
+  REQUIRE(std::ranges::size(vr) == 3);
+
+  auto er = graph::edges(g, 0);
+  REQUIRE(std::ranges::distance(er) == 1);
+
+  auto n = graph::num_vertices(g);
+  REQUIRE(n == 3);
+
+  // Test concept satisfaction
+  static_assert(graph::adj_list::adjacency_list<G>);
+  static_assert(graph::adj_list::index_adjacency_list<G>);
+}
