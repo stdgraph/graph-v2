@@ -26,9 +26,9 @@ We use the following notation to represent the customization points:
 
 
 | Symbol | Type                                     | Meaning                                  |
-|--------|------------------------------------------|------------------------------------------|
+| ------ | ---------------------------------------- | ---------------------------------------- |
 | `G`    |                                          | the type of the graph representation     |
-| `g`    | `G`                                      | the graph representation                 | 
+| `g`    | `G`                                      | the graph representation                 |
 | `u`    | `graph::adj_list::vertex_reference_t<G>` | vertex in `g`                            |
 | `ui`   | `graph::adj_list::vertex_iterator_t<G>`  | iterator to a vertex in `g`              |
 | `uid`  | `graph::adj_list::vertex_id_t<G>`        | _id_ of a vertex in `g` (often an index) |

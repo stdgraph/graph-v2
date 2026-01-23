@@ -73,57 +73,57 @@ See https://docs.microsoft.com/en-us/cpp/build/cmake-presets-vs?view=msvc-170 fo
 ### Graph Algorithms ([P3128](https://wg21.link/P3128))
 The following algorithms are planned for the Graph Library.
 
-| Algorithm                           | Status                                                                          |
-| :---------------------------------- | :-------------------------------------------------------------------------------|
-| Breadth First Search                | revision scheduled                                                              |
-| Depth First Search                  | revision scheduled                                                              |
-| Topological Sort                    | implementation scheduled                                                        |
-| Dijkstra Shortest Paths             | Completed                                                                       |
-| Bellman-Ford Shortest Paths         | Completed                                                                       |
-| Triangle Counting                   | needs implementation                                                            |
-| Label propagation (Comm. Detection) | needs implementation                                                            |
-| Articulation Points                 | needs implementation                                                            |
-| Bi-Connected Components             | needs implementation                                                            |
-| Connected Components                | needs implementation                                                            |
-| Strongly Connected Components       | needs implementation                                                            |
-| Maximal Independent Set             | needs implementation                                                            |
-| Jaccard Coefficient                 | needs implementation                                                            |
-| Kruskell Minimum Spanning Tree      | needs implementation                                                            |
-| Prim Minimum Spanning Tre           | needs implementation                                                            |
+| Algorithm                           | Status                   |
+| :---------------------------------- | :----------------------- |
+| Breadth First Search                | revision scheduled       |
+| Depth First Search                  | revision scheduled       |
+| Topological Sort                    | implementation scheduled |
+| Dijkstra Shortest Paths             | Completed                |
+| Bellman-Ford Shortest Paths         | Completed                |
+| Triangle Counting                   | needs implementation     |
+| Label propagation (Comm. Detection) | needs implementation     |
+| Articulation Points                 | needs implementation     |
+| Bi-Connected Components             | needs implementation     |
+| Connected Components                | needs implementation     |
+| Strongly Connected Components       | needs implementation     |
+| Maximal Independent Set             | needs implementation     |
+| Jaccard Coefficient                 | needs implementation     |
+| Kruskell Minimum Spanning Tree      | needs implementation     |
+| Prim Minimum Spanning Tre           | needs implementation     |
 
 
 ### Graph Views ([P3129](https://wg21.link/P3129) )
 
-| View                            | Description                                                                     | 
-| :-------------------------------| :-------------------------------------------------------------------------------|
-| vertexlist                      | Iterates over vertices                                                          |
-| incidence                       | Iterates over outgoing edges of a vertex                                        |
-| neighbors                       | Iterates over outgoing neighbor vertices of a vertex                            |
-| edgelist                        | Iterates over edges of a graph                                                  |
-| depth_first_search              | Iterates over vertices or edges of a seed vertex in depth-first order           |
-| breadth_first_search            | Iterates over vertices or edges of a seed vertex in breadth-first order         |
-| topological_sort                | Iterates over vertices or edges of a seed vertex in topological sort order      |
+| View                 | Description                                                                |
+| :------------------- | :------------------------------------------------------------------------- |
+| vertexlist           | Iterates over vertices                                                     |
+| incidence            | Iterates over outgoing edges of a vertex                                   |
+| neighbors            | Iterates over outgoing neighbor vertices of a vertex                       |
+| edgelist             | Iterates over edges of a graph                                             |
+| depth_first_search   | Iterates over vertices or edges of a seed vertex in depth-first order      |
+| breadth_first_search | Iterates over vertices or edges of a seed vertex in breadth-first order    |
+| topological_sort     | Iterates over vertices or edges of a seed vertex in topological sort order |
 
 ### Graph Containers ([P3131](https://wg21.link/P3130))
 
-| Container                       | Description                                                                     | 
-| :-------------------------------| :-------------------------------------------------------------------------------|
-| compressed_graph                | Compresed Sparse Row graph. High performance, static structure.                 |
-| dynamic_graph                   | Easy to use different containers for vertices and edges.                        |
-| (std containers)                | Use standard containers like `vector` and `list` to define a simple graph.      |
+| Container        | Description                                                                |
+| :--------------- | :------------------------------------------------------------------------- |
+| compressed_graph | Compresed Sparse Row graph. High performance, static structure.            |
+| dynamic_graph    | Easy to use different containers for vertices and edges.                   |
+| (std containers) | Use standard containers like `vector` and `list` to define a simple graph. |
 
 ## Papers
 The following papers make up the current proposal for the Graph Library.
 
-| Paper                                                     | Description                                                                                             | 
-| :---------------------------------------------------------| :-------------------------------------------------------------------------------------------------------|
-| [P3126 Overview](https://wg21.link/P3126)                 | Describes the big picture of what we are proposing.                                                     |
-| [P3127 Background](https://wg21.link/P3127)               | Background and Terminology, provides the motivation and theoretical background underlying the proposal. |
-| [P3128 Algoritms](https://wg21.link/P3128)                | Covers the initial algorithms as well as the ones we'd like to see in the future.                       |
-| [P3129 Views](https://wg21.link/P3129)                    | Helpful views for traversing a graph.                                                                   |
-| [P3130 Graph Container Interface](https://wg21.link/P3130)| The core interface for uniformly accessing graph data structure and adapting to external graphs.        |
-| [P3131 Graph Containers](https://wg21.link/P3130)         | Includes the `compressed_graph` and how to use standard containers to define simple graphs.            |
-| [P3337 Graph Comparison](https://wg21.link/P3337)         | *[future]* Syntax and performance comparison to the Boost Graph Library.                                |
+| Paper                                                      | Description                                                                                             |
+| :--------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| [P3126 Overview](https://wg21.link/P3126)                  | Describes the big picture of what we are proposing.                                                     |
+| [P3127 Background](https://wg21.link/P3127)                | Background and Terminology, provides the motivation and theoretical background underlying the proposal. |
+| [P3128 Algoritms](https://wg21.link/P3128)                 | Covers the initial algorithms as well as the ones we'd like to see in the future.                       |
+| [P3129 Views](https://wg21.link/P3129)                     | Helpful views for traversing a graph.                                                                   |
+| [P3130 Graph Container Interface](https://wg21.link/P3130) | The core interface for uniformly accessing graph data structure and adapting to external graphs.        |
+| [P3131 Graph Containers](https://wg21.link/P3130)          | Includes the `compressed_graph` and how to use standard containers to define simple graphs.             |
+| [P3337 Graph Comparison](https://wg21.link/P3337)          | *[future]* Syntax and performance comparison to the Boost Graph Library.                                |
 
 
 ## Acknowledgments

@@ -107,15 +107,15 @@ graph                           # Root namespace - compatibility layer & algorit
 
 ### Namespace Details
 
-| Namespace                | Purpose                              | Key Contents                                                                                                                                                                                           |
-| ------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `graph`                  | Core library & compatibility layer   | Algorithms, compatibility `using` declarations that reference `adj_list` namespace, `graph_error` exception                                                                                             |
-| `graph::adj_list`        | Adjacency list implementation        | **Primary namespace** - Concepts (`adjacency_list`, `index_adjacency_list`), type aliases (`vertex_id_t<G>`, `edge_reference_t<G>`), CPOs (`vertices`, `edges`, `vertex_id`, `target_id`)              |
-| `graph::adj_list::views` | View factory functions               | **Primary view namespace** - `vertexlist(g)`, `incidence(g,u)`, `neighbors(g,u)`, `edgelist(g)`, `vertices_breadth_first_search(g,seed)`, `edges_depth_first_search(g,seed)`, etc.                    |
-| `graph::views`           | View compatibility layer             | `using` declarations that reference `graph::adj_list::views` for backward compatibility                                                                                                                |
-| `graph::container`       | Graph containers                     | `compressed_graph`, `dynamic_graph`, `dynamic_edge`, `dynamic_vertex`, traits (`vofl_graph_traits`, `vol_graph_traits`, `vov_graph_traits`), `copyable_edge_t`, `copyable_vertex_t`                    |
-| `graph::edge_list`       | Edgelist abstractions                | Concepts (`basic_sourced_edgelist`, `basic_sourced_index_edgelist`), type aliases (`edge_t<EL>`, `vertex_id_t<EL>`), `source_id(e)`, `target_id(e)` for edgelists                                      |
-| `graph::experimental`    | Unstable features                    | Coroutine-based algorithms (`co_bfs`, `co_dijkstra`), visitor-based Dijkstra variants                                                                                                                  |
+| Namespace                | Purpose                            | Key Contents                                                                                                                                                                              |
+| ------------------------ | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `graph`                  | Core library & compatibility layer | Algorithms, compatibility `using` declarations that reference `adj_list` namespace, `graph_error` exception                                                                               |
+| `graph::adj_list`        | Adjacency list implementation      | **Primary namespace** - Concepts (`adjacency_list`, `index_adjacency_list`), type aliases (`vertex_id_t<G>`, `edge_reference_t<G>`), CPOs (`vertices`, `edges`, `vertex_id`, `target_id`) |
+| `graph::adj_list::views` | View factory functions             | **Primary view namespace** - `vertexlist(g)`, `incidence(g,u)`, `neighbors(g,u)`, `edgelist(g)`, `vertices_breadth_first_search(g,seed)`, `edges_depth_first_search(g,seed)`, etc.        |
+| `graph::views`           | View compatibility layer           | `using` declarations that reference `graph::adj_list::views` for backward compatibility                                                                                                   |
+| `graph::container`       | Graph containers                   | `compressed_graph`, `dynamic_graph`, `dynamic_edge`, `dynamic_vertex`, traits (`vofl_graph_traits`, `vol_graph_traits`, `vov_graph_traits`), `copyable_edge_t`, `copyable_vertex_t`       |
+| `graph::edge_list`       | Edgelist abstractions              | Concepts (`basic_sourced_edgelist`, `basic_sourced_index_edgelist`), type aliases (`edge_t<EL>`, `vertex_id_t<EL>`), `source_id(e)`, `target_id(e)` for edgelists                         |
+| `graph::experimental`    | Unstable features                  | Coroutine-based algorithms (`co_bfs`, `co_dijkstra`), visitor-based Dijkstra variants                                                                                                     |
 
 ### Usage Patterns
 
@@ -148,13 +148,13 @@ graph::container::compressed_graph<double> csr;
 
 ### Internal Namespaces (Implementation Details)
 
-| Namespace                                                            | Purpose                                       |
-| -------------------------------------------------------------------- | --------------------------------------------- |
-| `graph::adj_list::_Vertices`, `graph::adj_list::_Vertex_id`, etc.   | CPO implementation details in `graph_cpo.hpp` |
-| `graph::adj_list::views::_Vertexlist`, `graph::adj_list::views::_Incidence`, etc. | View CPO implementations      |
-| `graph::adj_list::views::_Cpos`                                     | Inline namespace exposing view CPO objects    |
-| `graph::container::detail`                                           | Container implementation helpers              |
-| `graph::_detail`                                                     | Shared implementation utilities               |
+| Namespace                                                                         | Purpose                                       |
+| --------------------------------------------------------------------------------- | --------------------------------------------- |
+| `graph::adj_list::_Vertices`, `graph::adj_list::_Vertex_id`, etc.                 | CPO implementation details in `graph_cpo.hpp` |
+| `graph::adj_list::views::_Vertexlist`, `graph::adj_list::views::_Incidence`, etc. | View CPO implementations                      |
+| `graph::adj_list::views::_Cpos`                                                   | Inline namespace exposing view CPO objects    |
+| `graph::container::detail`                                                        | Container implementation helpers              |
+| `graph::_detail`                                                                  | Shared implementation utilities               |
 
 > **Note:** Namespaces prefixed with `_` are implementation details and should not be used directly.
 
