@@ -765,11 +765,13 @@ TEST_CASE("dynamic_graph container operations", "[dynamic_graph]") {
 
 **Overview**: Test that graph containers properly satisfy adjacency list concepts and that CPOs resolve correctly through ADL. Each container gets its own task to ensure thorough testing.
 
-### Task 5.1: Test compressed_graph CPO Resolution
+### Task 5.1: Test compressed_graph CPO Resolution ✅ COMPLETED
 
 **Goal**: Verify compressed_graph satisfies adjacency list concepts and CPOs resolve correctly.
 
-**Test to add** in `tests/compressed_graph_tests.cpp`:
+**Status**: COMPLETED
+
+**Test added** in `tests/compressed_graph_tests.cpp`:
 ```cpp
 TEST_CASE("compressed_graph CPO and concept satisfaction", "[compressed_graph][cpo]") {
     using namespace graph::container;
@@ -797,12 +799,11 @@ TEST_CASE("compressed_graph CPO and concept satisfaction", "[compressed_graph][c
 ```
 
 **Validation**:
-- [ ] Test compiles
-- [ ] Test passes
-- [ ] All CPO calls resolve correctly via ADL
-- [ ] Adjacency list concepts are satisfied
-
-**Rollback**: Remove test
+- [x] Test compiles
+- [x] Test passes (3 runtime assertions + 2 static_asserts)
+- [x] All CPO calls resolve correctly via ADL (vertices, edges, num_vertices)
+- [x] Adjacency list concepts are satisfied (both adjacency_list and index_adjacency_list)
+- [x] All 33 tests passing
 
 ---
 
