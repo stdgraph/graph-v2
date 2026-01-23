@@ -720,4 +720,23 @@ namespace views {
   }
 
 } // namespace views
+
+namespace adj_list {
+  namespace views {
+    namespace _Edgelist {
+#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+      void edgelist() = delete;  // Block unqualified name lookup
+#else
+      void edgelist();
+#endif
+      // Reuse the _Cpo implementation from graph::views::_Edgelist
+      using _Cpo = graph::views::_Edgelist::_Cpo;
+    }
+    
+    inline namespace _Cpos {
+      inline constexpr _Edgelist::_Cpo edgelist;
+    }
+  } // namespace views
+} // namespace adj_list
+
 } // namespace graph

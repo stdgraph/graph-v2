@@ -471,10 +471,10 @@ namespace adj_list {
   namespace views {
     namespace _Vertexlist {
 #if defined(__clang__) || defined(__EDG__) || defined(__GNUC__) // TRANSITION, VSO-1681199
-      void vertexlist() = delete;                                 // Block unqualified name lookup
-#else                                                             // ^^^ no workaround / workaround vvv
+      void vertexlist() = delete;                               // Block unqualified name lookup
+#else                                                           // ^^^ no workaround / workaround vvv
       void vertexlist();
-#endif // ^^^ workaround ^^^
+#endif                                                          // ^^^ workaround ^^^
 
       // Reuse the _Cpo implementation from graph::views::_Vertexlist
       using _Cpo = graph::views::_Vertexlist::_Cpo;

@@ -1106,6 +1106,44 @@ namespace views {
   }
 
 } // namespace views
+
+namespace adj_list {
+  namespace views {
+    namespace _Vertices_DFS {
+#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+      void vertices_depth_first_search() = delete;
+#else
+      void vertices_depth_first_search();
+#endif
+      using _Cpo = graph::views::_Vertices_DFS::_Cpo;
+    }
+    
+    namespace _Edges_DFS {
+#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+      void edges_depth_first_search() = delete;
+#else
+      void edges_depth_first_search();
+#endif
+      using _Cpo = graph::views::_Edges_DFS::_Cpo;
+    }
+    
+    namespace _Sourced_Edges_DFS {
+#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+      void sourced_edges_depth_first_search() = delete;
+#else
+      void sourced_edges_depth_first_search();
+#endif
+      using _Cpo = graph::views::_Sourced_Edges_DFS::_Cpo;
+    }
+    
+    inline namespace _Cpos {
+      inline constexpr _Vertices_DFS::_Cpo vertices_depth_first_search;
+      inline constexpr _Edges_DFS::_Cpo edges_depth_first_search;
+      inline constexpr _Sourced_Edges_DFS::_Cpo sourced_edges_depth_first_search;
+    }
+  } // namespace views
+} // namespace adj_list
+
 } // namespace graph
 
 

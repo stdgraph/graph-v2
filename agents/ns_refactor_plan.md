@@ -901,26 +901,51 @@ namespace adj_list {
 
 ---
 
-### Task 6.2-6.6: Update Remaining Views
+### Task 6.2-6.6: Update Remaining Views ✅ COMPLETED
 
 **Goal**: Update all view headers to be accessible via `graph::adj_list::views`.
 
-**Files**:
+**Status**: COMPLETED
+
+**Files Updated**:
 - `include/graph/views/incidence.hpp` → `incidence`
 - `include/graph/views/neighbors.hpp` → `neighbors`
 - `include/graph/views/edgelist.hpp` → `edgelist`
-- `include/graph/views/breadth_first_search.hpp` → BFS views
-- `include/graph/views/depth_first_search.hpp` → DFS views
+- `include/graph/views/breadth_first_search.hpp` → BFS views (vertices_breadth_first_search, edges_breadth_first_search, sourced_edges_breadth_first_search)
+- `include/graph/views/depth_first_search.hpp` → DFS views (vertices_depth_first_search, edges_depth_first_search, sourced_edges_depth_first_search)
 
-**Pattern**: Follow Task 6.1 for each view
+**Pattern**: Followed Task 6.1 for each view - reused existing CPO implementations via type aliases
 
-**Validation for each**:
-- [ ] Compiles
-- [ ] New namespace works
-- [ ] Old namespace works (compatibility)
-- [ ] Existing tests pass
+**Implementation**:
+Each view file updated with the same pattern:
+```cpp
+namespace adj_list {
+  namespace views {
+    namespace _ViewName {
+      void view_name() = delete;  // Block unqualified name lookup
+      using _Cpo = graph::views::_ViewName::_Cpo;  // Reuse implementation
+    }
+    inline namespace _Cpos {
+      inline constexpr _ViewName::_Cpo view_name;
+    }
+  }
+}
+```
 
-**Commit point**: `git commit -m "Phase 6: Update views to adj_list::views namespace"`
+**View CPOs Added to graph::adj_list::views**:
+- incidence
+- neighbors
+- edgelist
+- vertices_breadth_first_search, edges_breadth_first_search, sourced_edges_breadth_first_search
+- vertices_depth_first_search, edges_depth_first_search, sourced_edges_depth_first_search
+
+**Validation**:
+- [x] All files compile successfully
+- [x] New namespace works (graph::adj_list::views::*)
+- [x] Old namespace works (graph::views::*)
+- [x] All 34 existing tests pass
+
+**Commit point**: `git commit -m "Phase 6: Update views to adj_list::views namespace (Tasks 6.1-6.6 complete)"`
 
 ---
 

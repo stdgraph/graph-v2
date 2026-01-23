@@ -391,8 +391,19 @@ namespace views {
 
 namespace adj_list {
   namespace views {
-    // Factory functions will be added in Phase 6
-    // Placeholder for now to establish namespace structure
+    namespace _Incidence {
+#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+      void incidence() = delete;  // Block unqualified name lookup
+#else
+      void incidence();
+#endif
+      // Reuse the _Cpo implementation from graph::views::_Incidence
+      using _Cpo = graph::views::_Incidence::_Cpo;
+    }
+    
+    inline namespace _Cpos {
+      inline constexpr _Incidence::_Cpo incidence;
+    }
   } // namespace views
 } // namespace adj_list
 

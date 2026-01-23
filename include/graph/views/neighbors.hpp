@@ -414,8 +414,19 @@ namespace views {
 
 namespace adj_list {
   namespace views {
-    // Factory functions will be added in Phase 6
-    // Placeholder for now to establish namespace structure
+    namespace _Neighbors {
+#if defined(__clang__) || defined(__EDG__) || defined(__GNUC__)
+      void neighbors() = delete;  // Block unqualified name lookup
+#else
+      void neighbors();
+#endif
+      // Reuse the _Cpo implementation from graph::views::_Neighbors
+      using _Cpo = graph::views::_Neighbors::_Cpo;
+    }
+    
+    inline namespace _Cpos {
+      inline constexpr _Neighbors::_Cpo neighbors;
+    }
   } // namespace views
 } // namespace adj_list
 
