@@ -26,6 +26,11 @@
 
 namespace graph {
 
+// Using declarations for new namespace structure
+using adj_list::index_adjacency_list;
+using adj_list::vertex_id_t;
+using adj_list::edge_reference_t;
+
 /**
  * @brief Dijkstra's single-source shortest paths algorithm with a visitor.
  * 
