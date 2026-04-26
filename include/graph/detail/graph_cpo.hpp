@@ -236,6 +236,7 @@ inline namespace _Cpos {
   inline constexpr _Vertices::_Cpo vertices;
 }
 
+
 /**
  * @brief The vertex range type for a graph G.
  * @tparam G The graph type.
@@ -440,6 +441,103 @@ using vertex_id_t = decltype(vertex_id(std::declval<G&&>(), std::declval<vertex_
 //template<class G_or_EL>
 //using vertex_id_t = typename _vertex_id_type<G_or_EL>::type;
 
+
+
+
+
+
+
+
+//=== AK
+
+#  if defined(__clang__) || defined(__EDG__) // TRANSITION, VSO-1681199
+#     define  GRAPH_DELETE_HACK = delete     // Block unqualified name lookup
+#  else                                      // ^^^ no workaround / workaround vvv
+#     define  GRAPH_DELETE_HACK
+#  endif                                     // ^^^ workaround ^^^
+
+
+namespace _Vertex_record {
+  void vertex_record() GRAPH_DELETE_HACK;
+
+  template <class _C, class _G>
+  concept _Has_ref_member = _HasClassOrEnumType<_C> && //
+                            requires(_C&& __c, _G&& __uid) {
+                              { _Fake_copy_init(__c.vertex_record(__uid)) };
+                            };
+  template <class _C, class _G>
+  concept _Has_ref_ADL = _HasClassOrEnumType<_C> //
+                         
+                         && requires(_C&& __c, _G&& __uid) {
+                              { _Fake_copy_init(vertex_record(__c, __uid)) }; // intentional ADL
+                            };
+
+  template <class _C, class>
+  concept _Can_ref_eval = _HasClassOrEnumType<_C> && random_access_range<_C> && sized_range<_C>;
+
+  class _Cpo {
+  private:
+    enum class _St_ref { _None, _Member, _Non_member, _Auto_eval };
+
+    template <class _C, class _G>
+    [[nodiscard]] static consteval _Choice_t<_St_ref> _Choose_ref() noexcept {
+      static_assert(is_lvalue_reference_v<_C>);
+      if constexpr (_Has_ref_member<_C, _G>) {
+        return {_St_ref::_Member, noexcept(_Fake_copy_init(declval<_C>().vertex_record(declval<_G>())))};
+      } else if constexpr (_Has_ref_ADL<_C, _G>) {
+        return {_St_ref::_Non_member, noexcept(_Fake_copy_init(vertex_record(declval<_C>(), declval<_G>())))}; // intentional ADL
+      } else if constexpr (_Can_ref_eval<_C, _G>) {
+        return {_St_ref::_Auto_eval, noexcept(true)};
+      } else {
+        return {_St_ref::_None};
+      }
+    }
+
+    template <class _C, class _G>
+    static constexpr _Choice_t<_St_ref> _Choice_ref = _Choose_ref<_C, _G>();
+
+  public:
+
+    template <class _C, class _ID>
+    requires(_Choice_ref<_C&, _ID const&>._Strategy != _St_ref::_None)
+    [[nodiscard]] constexpr auto operator()(_C&& __c, _ID&& __uid) const noexcept(_Choice_ref<_C&, _ID const&>._No_throw) -> decltype(auto) {
+      constexpr _St_ref _Strat_ref = _Choice_ref<_C&, _ID const&>._Strategy;
+
+      if constexpr (_Strat_ref == _St_ref::_Member) {
+        return __c.vertex_record(__uid);
+      } else if constexpr (_Strat_ref == _St_ref::_Non_member) {
+        //static_assert(is_reference_v<decltype(vertices(__g))>);
+        return vertex_record(__c, __uid); // intentional ADL
+      } else if constexpr (_Strat_ref == _St_ref::_Auto_eval) {
+        if (__uid >= 0 && __uid < static_cast<std::remove_reference_t<_ID>>(__c.size()))
+          return &__c[__uid];
+        else
+          return static_cast<decltype(&__c[__uid])>(nullptr);
+      } else {
+        static_assert(_AlwaysFalse<_C>, "vertex_record(cont, uid) is not defined");
+      }
+    }
+  };
+} // namespace _Vertex_record
+
+inline namespace _Cpos {
+  inline constexpr _Vertex_record::_Cpo vertex_record;
+}
+
+template <typename Cont, typename G>
+using record_t = std::remove_reference_t<
+  decltype(*vertex_record(std::declval<Cont&>(), std::declval<vertex_id_t<G>>()))
+>;
+
+// === AK end
+
+
+
+
+
+
+
+
 //
 // find_vertex(g,uid) -> vertex_iterator_t<G>
 //
@@ -540,7 +638,7 @@ namespace _Edges {
   void edges();
 #  endif                                     // ^^^ workaround ^^^
 
-  template <class _G>
+  template <class _G>   
   concept _Has_ref_member = requires(_G&& __g, vertex_reference_t<_G> u) {
     { _Fake_copy_init(u.edges(__g)) };
   };
