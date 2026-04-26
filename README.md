@@ -1,4 +1,9 @@
 # Graph Library Proposal for the C++ Standard
+
+> [!CAUTION]
+> ## DEPRECATED
+> This repository is no longer maintained. Please use the successor project **[graph-v3](https://github.com/stdgraph/graph-v3)** instead.
+
 [![codecov](https://codecov.io/github/stdgraph/graph-v2/branch/master/graph/badge.svg?token=49LGWDN0U1)](https://codecov.io/github/stdgraph/graph-v2) [![MacOS](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml) [![Ubuntu](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml) [![Windows](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml) [![Documentation](https://github.com/stdgraph/graph-v2/actions/workflows/pages.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/pages.yml)
 
 > This library is in the **alpha stage** that may include significant changes to the interface. It is not 
