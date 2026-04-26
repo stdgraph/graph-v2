@@ -2,7 +2,7 @@
 
 > [!CAUTION]
 > ## DEPRECATED
-> This repository is no longer maintained. Please use the successor project **[graph-v3](https://github.com/stdgraph/graph-v3)** instead.
+> This repository is no longer maintained. Please use the successor project **[graph-v3](https://github.com/stdgraph/graph-v3)** instead. It changes from the current reference-based to a descriptor value-based design to accomodate more types of graphs, and offers more features with a full set of documentation.
 
 [![codecov](https://codecov.io/github/stdgraph/graph-v2/branch/master/graph/badge.svg?token=49LGWDN0U1)](https://codecov.io/github/stdgraph/graph-v2) [![MacOS](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/macos.yml) [![Ubuntu](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/ubuntu.yml) [![Windows](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/windows.yml) [![Documentation](https://github.com/stdgraph/graph-v2/actions/workflows/pages.yml/badge.svg)](https://github.com/stdgraph/graph-v2/actions/workflows/pages.yml)
 
