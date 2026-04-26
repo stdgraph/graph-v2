@@ -64,11 +64,11 @@ constexpr auto max_vertex_id(const ERng& erng, const EProj& eprojection) {
 //
 // forward declarations
 //
-template <class EV        = void,            // edge value type
-          class VV        = void,            // vertex value type
-          class GV        = void,            // graph value type
-          integral VId    = uint32_t,        // vertex id type
-          integral EIndex = uint32_t,        // edge index type
+template <class EV        = void,                // edge value type
+          class VV        = void,                // vertex value type
+          class GV        = void,                // graph value type
+          integral VId    = uint32_t,            // vertex id type
+          integral EIndex = uint32_t,            // edge index type
           class Alloc     = std::allocator<VId>> // for internal containers
 class compressed_graph;
 

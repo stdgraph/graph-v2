@@ -52,9 +52,9 @@ constexpr bfs_events operator|(bfs_events lhs, bfs_events rhs) noexcept { return
 // @param events A bitmap of the different events to stop at
 //
 template <index_adjacency_list G>
-Generator<bfs_value_t<bfs_events, G>> co_bfs(G&&            g,    // graph
-                                             vertex_id_t<G> seed, // starting vertex_id
-                                             bfs_events     events)   // events to stop at
+Generator<bfs_value_t<bfs_events, G>> co_bfs(G&&            g,      // graph
+                                             vertex_id_t<G> seed,   // starting vertex_id
+                                             bfs_events     events) // events to stop at
 {
   using id_type         = vertex_id_t<G>;
   using bfs_vertex_type = bfs_vertex_value_t<G>;
